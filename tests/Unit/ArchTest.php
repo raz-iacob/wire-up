@@ -9,5 +9,3 @@ arch()->preset()->security();
 arch('controllers')
     ->expect('App\Http\Controllers')
     ->not->toBeUsed();
-
-//

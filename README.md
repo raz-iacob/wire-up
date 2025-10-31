@@ -1,96 +1,173 @@
-- Blade (this project) version: **[github.com/nunomaduro/laravel-starter-kit](https://github.com/nunomaduro/laravel-starter-kit)**
-- Inertia & React version: **[github.com/nunomaduro/laravel-starter-kit-inertia-react](https://github.com/nunomaduro/laravel-starter-kit-inertia-react)**
+![Wire-Up Logo](resources/images/logo.svg)
 
+Wire-Up is a powerful web framework that combines the robustness of Laravel with the reactive capabilities of Livewire to create dynamic websites without the complexity of traditional JavaScript frameworks. Built for developers who want to create modern web applications with server-side rendering while maintaining rich client-side interactions.
 
-<p align="center">
-    <a href="https://youtu.be/VhzP0XWGTC4" target="_blank">
-        <img src="/art/banner.png" alt="Overview Laravel Starter Kit" style="width:70%;">
-    </a>
-</p>
+---
 
-<p>
-    <a href="https://github.com/nunomaduro/laravel-starter-kit/actions"><img src="https://github.com/nunomaduro/laravel-starter-kit/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit"><img src="https://img.shields.io/packagist/dt/nunomaduro/laravel-starter-kit" alt="Total Downloads"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit"><img src="https://img.shields.io/packagist/v/nunomaduro/laravel-starter-kit" alt="Latest Stable Version"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit"><img src="https://img.shields.io/packagist/l/nunomaduro/laravel-starter-kit" alt="License"></a>
-</p>
+### Key Features
 
-**Laravel Starter Kit** is an ultra-strict, type-safe [Laravel](https://laravel.com) skeleton engineered for developers who refuse to compromise on code quality. This opinionated starter kit enforces rigorous development standards through meticulous tooling configuration and architectural decisions that prioritize type safety, immutability, and fail-fast principles.
+- **Real-time Interactivity** - Dynamic content updates without page refreshes
+- **Server-side Rendering** - Fast initial page loads with SEO-friendly content
+- **Modern UI Components** - Built with Flux UI Pro for beautiful, accessible interfaces
+- **Developer Experience** - Hot reloading, type-safe code, and comprehensive testing
+- **Responsive Design** - Mobile-first approach with Tailwind CSS
+- **Security First** - Laravel's built-in security features and best practices
 
-## Why This Starter Kit?
+## Built With
 
-Modern PHP has evolved into a mature, type-safe language, yet many Laravel projects still operate with loose conventions and optional typing. This starter kit changes that paradigm by enforcing:
+- **[Laravel 12](https://laravel.com)** - The PHP framework for web artisans
+- **[Livewire 4](https://livewire.laravel.com)** - Full-stack framework for Laravel
+- **[Flux UI Pro](https://fluxui.dev)** - Beautiful UI components for Livewire
+- **[Tailwind CSS v4](https://tailwindcss.com)** - Utility-first CSS framework
+- **[Pest 4](https://pestphp.com)** - Delightful PHP testing framework
+- **[Laravel Pint](https://laravel.com/docs/pint)** - Code style fixer
+- **[Vite](https://vitejs.dev)** - Fast build tool and dev server
 
-- **100% Type Coverage**: Every method, property, and parameter is explicitly typed
-- **Zero Tolerance for Code Smells**: Rector and PHPStan at maximum strictness catch issues before they become bugs
-- **Immutable-First Architecture**: Data structures favor immutability to prevent unexpected mutations
-- **Fail-Fast Philosophy**: Errors are caught at compile-time, not runtime
-- **Automated Code Quality**: Pre-configured tools ensure consistent, pristine code across your entire team
-- **Just Better Laravel Defaults**: Thanks to **[Essentials](https://github.com/nunomaduro/essentials)** / strict models, auto eager loading, immutable dates, and more...
+## Requirements
 
-This isn't just another Laravel boilerplate—it's a statement that PHP applications can and should be built with the same rigor as strongly-typed languages like Rust or TypeScript.
+- PHP 8.4+
+- Node.js 18+
+- Composer 2.0+
+- MySQL/PostgreSQL/SQLite
 
 ## Getting Started
 
-> **Requires [PHP 8.4+](https://php.net/releases/)**.
+### Installation
 
-Create your type-safe Laravel application using [Composer](https://getcomposer.org):
+1. **Clone the repository**
 
-```bash
-composer create-project nunomaduro/laravel-starter-kit --prefer-dist example-app
+    ```bash
+    git clone https://github.com/your-username/wire-up.git
+    cd wire-up
+    ```
+
+2. **Install PHP & Node.js dependencies and Environment setup**
+
+    ```bash
+    composer setup
+    ```
+
+## Project Structure
+
+```
+wire-up/
+├── app/                   # Application logic
+│   ├── Actions/           # Action classes (business logic)
+│   ├── Enums/             # Application enums
+│   ├── Http/
+│   │   ├── Controllers/   # HTTP controllers
+│   │   └── Requests/      # Form request validation
+│   ├── Livewire/          # Livewire components
+│   ├── Models/            # Eloquent models
+│   ├── Providers/         # Service providers
+│   └── Services/          # Business logic services
+├── bootstrap/             # Application bootstrapping
+├── config/                # Configuration files
+├── database/
+│   ├── factories/         # Model factories
+│   ├── migrations/        # Database migrations
+│   └── seeders/           # Database seeders
+├── resources/
+│   ├── css/               # Stylesheets
+│   ├── images/            # Images and logos
+│   ├── js/                # JavaScript files
+│   └── views/             # Blade templates
+├── routes/                # Application routes
+├── tests/                 # Test suites
+│   ├── Feature/           # Feature tests
+│   ├── Unit/              # Unit tests
+│   └── Browser/           # Browser tests (Pest v4)
+└── public/                # Web-accessible files
 ```
 
-### Initial Setup
+## Testing
 
-Navigate to your project and complete the setup:
-
-```bash
-cd example-app
-
-# Setup project
-composer setup
-
-# Start the development server
-composer dev
-```
-
-### Optional: Browser Testing Setup
-
-If you plan to use Pest's browser testing capabilities:
+Wire-Up uses Pest v4 for testing, including browser testing capabilities:
 
 ```bash
-npm install playwright
-npx playwright install
-```
-
-### Verify Installation
-
-Run the test suite to ensure everything is configured correctly:
-
-```bash
+# Run the test suit
 composer test
 ```
 
-You should see 100% test coverage and all quality checks passing.
+## Code Style
 
-## Available Tooling
+The project uses Laravel Pint for code formatting:
 
-### Development
-- `composer dev` - Starts Laravel server, queue worker, log monitoring, and Vite dev server concurrently
+```bash
+# Fix code style issues
+vendor/bin/pint
 
-### Code Quality
-- `composer lint` - Runs Rector (refactoring), Pint (PHP formatting), and Prettier (JS/TS formatting)
-- `composer test:lint` - Dry-run mode for CI/CD pipelines
+# Check for style issues without fixing
+vendor/bin/pint --test
+```
 
-### Testing
-- `composer test:type-coverage` - Ensures 100% type coverage with Pest
-- `composer test:types` - Runs PHPStan at level 9 (maximum strictness)
-- `composer test:unit` - Runs Pest tests with 100% code coverage requirement
-- `composer test` - Runs the complete test suite (type coverage, unit tests, linting, static analysis)
+## Deployment
 
-### Maintenance
-- `composer update:requirements` - Updates all PHP and NPM dependencies to latest versions
+### Production Build
+
+```bash
+# Build assets for production
+npm run build
+
+# Optimize application
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### Environment Configuration
+
+Ensure these environment variables are set in production:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-domain.com
+
+# Database configuration
+DB_CONNECTION=mysql
+DB_HOST=your-db-host
+DB_DATABASE=your-database
+DB_USERNAME=your-username
+DB_PASSWORD=your-password
+
+# Queue configuration (recommended)
+QUEUE_CONNECTION=redis
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow Laravel conventions and best practices
+- Write tests for new features
+- Use meaningful commit messages
+- Ensure code passes all tests and style checks
+
+## Documentation
+
+- [Laravel Documentation](https://laravel.com/docs)
+- [Livewire Documentation](https://livewire.laravel.com/docs)
+- [Flux UI Documentation](https://fluxui.dev/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 
 ## License
 
-**Laravel Starter Kit** was created by **[Nuno Maduro](https://x.com/enunomaduro)** under the **[MIT license](https://opensource.org/licenses/MIT)**.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [Laravel](https://laravel.com) team for the amazing framework
+- [Livewire](https://livewire.laravel.com) team for making full-stack development delightful
+- [Flux UI](https://fluxui.dev) for beautiful components
+- [Tailwind CSS](https://tailwindcss.com) for excellent utility classes
+
+---
+
+Built with ❤️ using Laravel + Livewire
