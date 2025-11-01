@@ -17,6 +17,11 @@ use Illuminate\Notifications\Notifiable;
  * @property-read string $email
  * @property-read CarbonInterface|null $email_verified_at
  * @property-read string $password
+ * @property-read string|null $stripe_id
+ * @property-read array<string, mixed>|null $details
+ * @property-read bool $admin
+ * @property-read bool $active
+ * @property-read string $language
  * @property-read string|null $remember_token
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
@@ -32,6 +37,7 @@ final class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'stripe_id',
     ];
 
     /**
@@ -45,6 +51,11 @@ final class User extends Authenticatable implements MustVerifyEmail
             'email' => 'string',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'stripe_id' => 'string',
+            'details' => 'json',
+            'admin' => 'boolean',
+            'active' => 'boolean',
+            'language' => 'string',
             'remember_token' => 'string',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',

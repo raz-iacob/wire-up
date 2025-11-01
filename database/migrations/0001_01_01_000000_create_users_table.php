@@ -6,8 +6,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class() extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table): void {
@@ -16,6 +19,19 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
+            /**
+             * Details can include information about a person such as gender,
+             * birthday, position, location, phone number etc.
+             */
+            $table->json('details')->nullable();
+
+            $table->string('stripe_id')->nullable();
+
+            $table->boolean('admin')->default(false)->comment('admin users can access the admin panel');
+            $table->boolean('active')->default(true);
+            $table->char('language', 2)->default('ro');
+
             $table->rememberToken();
             $table->timestamps();
         });
@@ -28,11 +44,22 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table): void {
             $table->string('id')->primary();
+            $table->foreignId('admin_id')->nullable()->index();
             $table->foreignId('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('sessions');
     }
 };
