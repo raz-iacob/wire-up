@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
 it('renders forgot password page', function (): void {
-    $response = $this->get('/forgot-password');
-    $response->assertStatus(200);
+    $response = $this->fromRoute('login')
+        ->get(route('password.request'));
+
+    $response->assertOk()
+        ->assertSeeLivewire('pages::forgot-password');
 });
 
 it('can request a reset password link', function (): void {

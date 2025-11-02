@@ -9,13 +9,11 @@ use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 
 it('can render the login screen', function (): void {
-    $response = $this->get(route('login'));
-    $response->assertOk();
-});
+    $response = $this->fromRoute('home')
+        ->get(route('login'));
 
-it('renders the livewire login component', function (): void {
-    Livewire::test('pages::login')
-        ->assertStatus(200);
+    $response->assertOk()
+        ->assertSeeLivewire('pages::login');
 });
 
 it('can authenticate users using the login screen', function (): void {
