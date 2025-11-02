@@ -12,7 +12,7 @@ it('renders forgot password page', function (): void {
         ->get(route('password.request'));
 
     $response->assertOk()
-        ->assertSeeLivewire('pages::forgot-password');
+        ->assertSeeLivewire('pages::auth.forgot-password');
 });
 
 it('can request a reset password link', function (): void {
@@ -20,7 +20,7 @@ it('can request a reset password link', function (): void {
 
     $user = User::factory()->create();
 
-    Livewire::test('pages::forgot-password')
+    Livewire::test('pages::auth.forgot-password')
         ->set('email', $user->email)
         ->call('sendPasswordResetLink');
 
@@ -32,7 +32,7 @@ it('can render the reset password screen', function (): void {
 
     $user = User::factory()->create();
 
-    Livewire::test('pages::forgot-password')
+    Livewire::test('pages::auth.forgot-password')
         ->set('email', $user->email)
         ->call('sendPasswordResetLink');
 
@@ -50,12 +50,12 @@ it('can reset the password with valid token', function (): void {
 
     $user = User::factory()->create();
 
-    Livewire::test('pages::forgot-password')
+    Livewire::test('pages::auth.forgot-password')
         ->set('email', $user->email)
         ->call('sendPasswordResetLink');
 
     Notification::assertSentTo($user, ResetPasswordNotification::class, function ($notification) use ($user): true {
-        $response = Livewire::test('pages::reset-password', ['token' => $notification->token])
+        $response = Livewire::test('pages::auth.reset-password', ['token' => $notification->token])
             ->set('email', $user->email)
             ->set('password', 'pass123WORD!@£')
             ->set('password_confirmation', 'pass123WORD!@£')
@@ -72,7 +72,7 @@ it('can reset the password with valid token', function (): void {
 it('fails with invalid token', function (): void {
     $user = User::factory()->create();
 
-    $response = Livewire::test('pages::reset-password', ['token' => 'invalid-token'])
+    $response = Livewire::test('pages::auth.reset-password', ['token' => 'invalid-token'])
         ->set('email', $user->email)
         ->set('password', 'pass123WORD!@£')
         ->set('password_confirmation', 'pass123WORD!@£')
@@ -82,7 +82,7 @@ it('fails with invalid token', function (): void {
 });
 
 it('fails with non-existent email', function (): void {
-    $response = Livewire::test('pages::reset-password', ['token' => 'some-token'])
+    $response = Livewire::test('pages::auth.reset-password', ['token' => 'some-token'])
         ->set('email', 'nonexistent@example.com')
         ->set('password', 'pass123WORD!@£')
         ->set('password_confirmation', 'pass123WORD!@£')
@@ -92,7 +92,7 @@ it('fails with non-existent email', function (): void {
 });
 
 it('requires email', function (): void {
-    $response = Livewire::test('pages::reset-password', ['token' => 'some-token'])
+    $response = Livewire::test('pages::auth.reset-password', ['token' => 'some-token'])
         ->set('email', '')
         ->set('password', 'pass123WORD!@£')
         ->set('password_confirmation', 'pass123WORD!@£')
@@ -103,7 +103,7 @@ it('requires email', function (): void {
 it('requires password', function (): void {
     $user = User::factory()->create();
 
-    $response = Livewire::test('pages::reset-password', ['token' => 'some-token'])
+    $response = Livewire::test('pages::auth.reset-password', ['token' => 'some-token'])
         ->set('email', $user->email)
         ->set('password', '')
         ->set('password_confirmation', '')
@@ -114,7 +114,7 @@ it('requires password', function (): void {
 it('requires password confirmation', function (): void {
     $user = User::factory()->create();
 
-    $response = Livewire::test('pages::reset-password', ['token' => 'some-token'])
+    $response = Livewire::test('pages::auth.reset-password', ['token' => 'some-token'])
         ->set('email', $user->email)
         ->set('password', 'pass123WORD!@£')
         ->set('password_confirmation', 'different-password')
@@ -125,7 +125,7 @@ it('requires password confirmation', function (): void {
 it('requires matching password confirmation', function (): void {
     $user = User::factory()->create();
 
-    $response = Livewire::test('pages::reset-password', ['token' => 'some-token'])
+    $response = Livewire::test('pages::auth.reset-password', ['token' => 'some-token'])
         ->set('email', $user->email)
         ->set('password', 'pass123WORD!@£')
         ->set('password_confirmation', 'different-password')

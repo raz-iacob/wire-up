@@ -13,13 +13,13 @@ it('renders registration page', function (): void {
         ->get(route('register'));
 
     $response->assertOk()
-        ->assertSeeLivewire('pages::register');
+        ->assertSeeLivewire('pages::auth.register');
 });
 
 it('may register a new user', function (): void {
     Event::fake([Registered::class]);
 
-    $component = Livewire::test('pages::register');
+    $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
         ->set('email', 'test@example.com')
@@ -43,7 +43,7 @@ it('may register a new user', function (): void {
 });
 
 it('requires name', function (): void {
-    $component = Livewire::test('pages::register');
+    $component = Livewire::test('pages::auth.register');
 
     $component->set('email', 'test@example.com')
         ->set('password', 'password')
@@ -54,7 +54,7 @@ it('requires name', function (): void {
 });
 
 it('requires email', function (): void {
-    $component = Livewire::test('pages::register');
+    $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
         ->set('password', 'password')
@@ -65,7 +65,7 @@ it('requires email', function (): void {
 });
 
 it('requires valid email', function (): void {
-    $component = Livewire::test('pages::register');
+    $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
         ->set('email', 'not-an-email')
@@ -79,7 +79,7 @@ it('requires valid email', function (): void {
 it('requires unique email', function (): void {
     User::factory()->create(['email' => 'test@example.com']);
 
-    $component = Livewire::test('pages::register');
+    $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
         ->set('email', 'test@example.com')
@@ -91,7 +91,7 @@ it('requires unique email', function (): void {
 });
 
 it('requires password', function (): void {
-    $component = Livewire::test('pages::register');
+    $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
         ->set('email', 'test@example.com')
@@ -101,7 +101,7 @@ it('requires password', function (): void {
 });
 
 it('requires password confirmation', function (): void {
-    $component = Livewire::test('pages::register');
+    $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
         ->set('email', 'test@example.com')
@@ -112,7 +112,7 @@ it('requires password confirmation', function (): void {
 });
 
 it('requires matching password confirmation', function (): void {
-    $component = Livewire::test('pages::register');
+    $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
         ->set('email', 'test@example.com')
