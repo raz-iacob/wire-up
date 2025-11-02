@@ -176,3 +176,29 @@ it('uses correct throttle key based on email and IP', function (): void {
     $component2->assertHasNoErrors()
         ->assertRedirect(route('home'));
 });
+
+it('redirects authenticated non-admin users away from login', function (): void {
+    $user = User::factory()->create([
+        'active' => true,
+        'admin' => false,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('home')
+        ->get(route('login'));
+
+    $response->assertRedirectToRoute('home');
+});
+
+it('redirects authenticated admin users away from login', function (): void {
+    $user = User::factory()->create([
+        'active' => true,
+        'admin' => true,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('home')
+        ->get(route('login'));
+
+    $response->assertRedirectToRoute('admin.dashboard');
+});

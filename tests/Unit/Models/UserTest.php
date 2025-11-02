@@ -21,3 +21,15 @@ test('to array', function (): void {
             'updated_at',
         ]);
 });
+
+test('initials method', function (): void {
+    $user = User::factory()->create(['name' => 'John Doe']);
+
+    expect($user->initials())->toBe('JD');
+
+    $user->name = 'Alice';
+    expect($user->initials())->toBe('A');
+
+    $user->name = 'Bob Charles Dylan';
+    expect($user->initials())->toBe('BC');
+});

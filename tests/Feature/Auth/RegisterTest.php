@@ -123,12 +123,28 @@ it('requires matching password confirmation', function (): void {
     $component->assertHasErrors('password');
 });
 
-it('redirects authenticated users away from registration', function (): void {
-    $user = User::factory()->create();
+it('redirects authenticated non-admin users away from registration', function (): void {
+    $user = User::factory()->create([
+        'active' => true,
+        'admin' => false,
+    ]);
 
     $response = $this->actingAs($user)
         ->fromRoute('home')
         ->get(route('register'));
 
     $response->assertRedirectToRoute('home');
+});
+
+it('redirects authenticated admin users away from registration', function (): void {
+    $user = User::factory()->create([
+        'active' => true,
+        'admin' => true,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('home')
+        ->get(route('register'));
+
+    $response->assertRedirectToRoute('admin.dashboard');
 });

@@ -1,15 +1,14 @@
 <?php
 
-use Livewire\Component;
-use Illuminate\Support\Str;
-use Livewire\Attributes\Locked;
+declare(strict_types=1);
+
 use App\Actions\CreateUserPassword;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password as RulesPassword;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
+use Livewire\Component;
 
 new class extends Component
 {
