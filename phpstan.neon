@@ -13,7 +13,11 @@ parameters:
         - public
         - routes
 
-
     level: max
 
     tmpDir: /tmp/phpstan
+
+    ignoreErrors:
+        -   # Livewire route macro
+            message: '#Cannot call method name\(\) on mixed\.#'
+            path: routes/web.php
