@@ -8,48 +8,32 @@ new class extends Component
 };
 ?>
 
-<flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-    <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+<flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <flux:sidebar.header>
+        <flux:sidebar.brand
+            href="{{ route('home') }}"
+            logo="{{ Vite::asset('resources/images/logo-icon-light.svg') }}"
+            logo:dark="{{ Vite::asset('resources/images/logo-icon-dark.svg') }}"
+            name="{{ config('app.name') }}"
+        />
+        <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
+    </flux:sidebar.header>
 
-    <a
-        href="{{ route('admin.dashboard') }}"
-        class="me-5 flex items-center space-x-2 rtl:space-x-reverse"
-        wire:navigate
-    >
-        <livewire:logo class="h-6 text-black dark:text-white" />
-    </a>
-
-    <flux:navlist variant="outline">
-        <flux:navlist.group :heading="__('Platform')" class="grid">
-            <flux:navlist.item
-                icon="home"
-                :href="route('admin.dashboard')"
-                :current="request()->routeIs('admin.dashboard')"
-                wire:navigate
-            >
-                {{ __('Dashboard') }}
-            </flux:navlist.item>
-        </flux:navlist.group>
-    </flux:navlist>
+    <flux:sidebar.nav>
+        <flux:sidebar.item icon="home" href="#" current>{{ __('Dashboard') }}</flux:sidebar.item>
+    </flux:sidebar.nav>
 
     <flux:spacer />
 
-    <flux:navlist variant="outline">
-        <flux:navlist.item
-            icon="folder"
-            href="https://github.com/laravel/livewire-starter-kit"
-            target="_blank"
-        >
-            {{ __('Repository') }}
-        </flux:navlist.item>
+    <flux:sidebar.nav>
+        <flux:sidebar.item icon="cog-6-tooth" href="#">Settings</flux:sidebar.item>
+        <flux:sidebar.item icon="information-circle" href="#">Help</flux:sidebar.item>
+    </flux:sidebar.nav>
 
-    </flux:navlist>
-
-    <flux:dropdown position="bottom" align="start">
-        <flux:profile
+    <flux:dropdown position="top" align="start" class="max-lg:hidden">
+        <flux:sidebar.profile 
             :name="auth()->user()->name"
             :initials="auth()->user()->initials()"
-            icon-trailing="chevron-up-down"
         />
 
         <flux:menu class="w-[220px]">
@@ -74,11 +58,11 @@ new class extends Component
 
             <flux:menu.separator />
 
-            <flux:menu.radio.group>
-                {{-- <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>
+            {{-- <flux:menu.radio.group>
+                <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>
                     {{ __('Settings') }}
-                </flux:menu.item> --}}
-            </flux:menu.radio.group>
+                </flux:menu.item>
+            </flux:menu.radio.group> --}}
 
             <flux:menu.separator />
 
