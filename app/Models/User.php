@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
  * @property-read array<string, mixed>|null $details
  * @property-read bool $admin
  * @property-read bool $active
- * @property-read string $language
+ * @property-read string $locale
  * @property-read string|null $remember_token
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
@@ -56,7 +56,7 @@ final class User extends Authenticatable implements MustVerifyEmail
             'details' => 'json',
             'admin' => 'boolean',
             'active' => 'boolean',
-            'language' => 'string',
+            'locale' => 'string',
             'remember_token' => 'string',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',

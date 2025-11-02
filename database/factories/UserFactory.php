@@ -34,7 +34,7 @@ final class UserFactory extends Factory
             ],
             'admin' => fake()->boolean(),
             'active' => fake()->boolean(),
-            'language' => fake()->languageCode(),
+            'locale' => fake()->languageCode(),
             'remember_token' => Str::random(10),
         ];
     }

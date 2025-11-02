@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="Wire↑" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     @fluxAppearance
 
     <title>{{ $title ?? config('app.name') }}</title>

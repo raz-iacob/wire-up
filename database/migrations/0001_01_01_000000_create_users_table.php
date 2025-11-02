@@ -30,7 +30,7 @@ return new class() extends Migration
 
             $table->boolean('admin')->default(false)->comment('admin users can access the admin panel');
             $table->boolean('active')->default(true);
-            $table->char('language', 2)->default('ro');
+            $table->string('locale', 6)->default('en');
 
             $table->rememberToken();
             $table->timestamps();

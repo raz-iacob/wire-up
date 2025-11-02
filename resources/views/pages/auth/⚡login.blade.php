@@ -43,10 +43,11 @@ new class extends Component
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
 
-        // if(Auth::user()?->admin) {
-        //     $this->redirectIntended(default: route('admin.dashboard', absolute: false), navigate: true);
-        //     return;
-        // }
+        if(Auth::user()?->admin) {
+            $this->redirectIntended(default: route('admin.dashboard', absolute: false), navigate: true);
+            return;
+        }
+        
         $this->redirectIntended(default: route('home', absolute: false), navigate: true);
     }
 

@@ -21,6 +21,7 @@ it('can authenticate users using the login screen', function (): void {
         'email' => 'user@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
+        'admin' => false,
     ]);
     $component = Livewire::test('pages::auth.login');
 
@@ -69,6 +70,7 @@ it('allows login attempts when under rate limit threshold', function (): void {
         'email' => 'user@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
+        'admin' => false,
     ]);
 
     $component = Livewire::test('pages::auth.login');
@@ -148,6 +150,7 @@ it('uses correct throttle key based on email and IP', function (): void {
         'email' => 'user1@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
+        'admin' => false,
     ]);
 
     $user2 = User::factory()->create([

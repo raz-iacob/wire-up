@@ -16,7 +16,7 @@ test('to array', function (): void {
             'details',
             'admin',
             'active',
-            'language',
+            'locale',
             'created_at',
             'updated_at',
         ]);
