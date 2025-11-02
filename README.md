@@ -1,6 +1,12 @@
-![Wire-Up Logo](resources/images/logo.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="resources/images/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="resources/images/logo-light.svg">
+  <img alt="Wire-Up Logo" src="resources/images/logo.svg" width="172" height="32">
+</picture>
 
-Wire-Up is a powerful web framework that combines the robustness of Laravel with the reactive capabilities of Livewire to create dynamic websites without the complexity of traditional JavaScript frameworks. Built for developers who want to create modern web applications with server-side rendering while maintaining rich client-side interactions.
+<br>
+
+**Wire-Up** is an opinionated, very strict, and fully tested Livewire Laravel Starter Kit.
 
 ---
 
@@ -56,7 +62,6 @@ wire-up/
 │   ├── Enums/             # Application enums
 │   ├── Http/
 │   │   ├── Controllers/   # HTTP controllers
-│   │   └── Requests/      # Form request validation
 │   ├── Livewire/          # Livewire components
 │   ├── Models/            # Eloquent models
 │   ├── Providers/         # Service providers
