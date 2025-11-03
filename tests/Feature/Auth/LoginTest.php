@@ -122,6 +122,7 @@ it('clears rate limiter on successful authentication', function (): void {
         'email' => 'user@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
+        'admin' => false,
     ]);
 
     $throttleKey = mb_strtolower($user->email).'|127.0.0.1';
@@ -157,6 +158,7 @@ it('uses correct throttle key based on email and IP', function (): void {
         'email' => 'user2@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
+        'admin' => false,
     ]);
 
     $throttleKey1 = mb_strtolower($user1->email).'|127.0.0.1';
