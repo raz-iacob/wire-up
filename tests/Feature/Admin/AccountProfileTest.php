@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
@@ -115,4 +116,42 @@ it('can resend email verification', function (): void {
         );
 
     Notification::assertSentTo($user, VerifyEmail::class);
+});
+
+it('requires current password to delete account', function (): void {
+    $user = User::factory()->create([
+        'admin' => true,
+        'active' => true,
+    ]);
+
+    $this->actingAs($user);
+
+    $response = Livewire::test('pages::admin.account-profile')
+        ->set('password', 'wrong-password')
+        ->call('delete');
+
+    $response->assertHasErrors(['password']);
+    $this->assertDatabaseHas('users', [
+        'id' => $user->id,
+    ]);
+});
+
+it('allows admin users to delete their account', function (): void {
+    $user = User::factory()->create([
+        'password' => Hash::make('secret'),
+        'admin' => true,
+        'active' => true,
+    ]);
+
+    $this->actingAs($user);
+
+    $response = Livewire::test('pages::admin.account-profile')
+        ->set('password', 'secret')
+        ->call('delete');
+
+    $response->assertHasNoErrors();
+
+    expect($user->fresh())->toBeNull();
+
+    $this->assertGuest();
 });
