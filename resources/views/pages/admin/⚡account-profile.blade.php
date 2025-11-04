@@ -113,10 +113,10 @@ class extends Component
                 @endif
             </div>
 
-            <flux:button variant="primary" type="submit">{{ __('Save') }}</flux:button>
+            <flux:button variant="primary" type="submit">{{ __('Update') }}</flux:button>
         </form>
 
-        <section class="mt-10 space-y-6">
+        <section class="mt-32 space-y-6">
             <div class="relative mb-5">
                 <flux:heading>{{ __('Delete account') }}</flux:heading>
                 <flux:subheading>{{ __('Delete your account and all of its resources') }}</flux:subheading>

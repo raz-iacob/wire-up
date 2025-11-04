@@ -2,8 +2,8 @@
     <div class="me-10 w-full pb-4 md:w-[220px]">
         <flux:navlist>
             <flux:navlist.item :href="route('admin.account-profile')" wire:navigate>{{ __('Profile') }}</flux:navlist.item>
-            {{-- <flux:navlist.item :href="route('admin.account-password')" wire:navigate>Password</flux:navlist.item>
-            <flux:navlist.item :href="route('admin.account-appearance')" wire:navigate>Appearance</flux:navlist.item> --}}
+            <flux:navlist.item :href="route('admin.account-password')" wire:navigate>{{ __('Password') }}</flux:navlist.item>
+            {{-- <flux:navlist.item :href="route('admin.account-appearance')" wire:navigate>Appearance</flux:navlist.item> --}}
         </flux:navlist>
     </div>
 
