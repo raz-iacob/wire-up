@@ -40,7 +40,7 @@ return new class extends Component
 ?>
 
 <x-account-layout :heading="__('Change your password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
-    <form method="POST" wire:submit="update" class="mt-6 space-y-6">
+    <form method="POST" wire:submit="update" class="space-y-8">
         <flux:input
             wire:model="current_password"
             :label="__('Current password')"

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -19,6 +20,7 @@ use Illuminate\Support\Str;
  * @property-read string $email
  * @property-read CarbonInterface|null $email_verified_at
  * @property-read string $password
+ * @property-read string|null $photo
  * @property-read string|null $stripe_id
  * @property-read array<string, mixed>|null $details
  * @property-read bool $admin
@@ -30,6 +32,8 @@ use Illuminate\Support\Str;
  * @property-read string|null $remember_token
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
+ * @property-read string $initials
+ * @property-read string|null $photo_url
  */
 final class User extends Authenticatable implements MustVerifyEmail
 {
@@ -56,6 +60,7 @@ final class User extends Authenticatable implements MustVerifyEmail
             'email' => 'string',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'photo' => 'string',
             'stripe_id' => 'string',
             'details' => 'json',
             'admin' => 'boolean',
@@ -81,6 +86,20 @@ final class User extends Authenticatable implements MustVerifyEmail
                 ->take(2)
                 ->map(fn (string $word): string => Str::substr($word, 0, 1))
                 ->implode(''),
+        );
+    }
+
+    /**
+     * Get the avatar URL for the user.
+     *
+     * @return Attribute<string|null, null>
+     */
+    protected function photoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?string => $this->photo
+                ? Storage::url($this->photo)
+                : null,
         );
     }
 }

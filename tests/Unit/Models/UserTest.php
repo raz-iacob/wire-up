@@ -13,6 +13,7 @@ test('to array', function (): void {
             'name',
             'email',
             'email_verified_at',
+            'photo',
             'details',
             'admin',
             'active',
@@ -35,4 +36,14 @@ it('has initials attribute', function (): void {
 
     $user->name = 'Bob Charles Dylan';
     expect($user->initials)->toBe('BC');
+});
+
+it('has photo_url attribute', function (): void {
+    $user = User::factory()->create(['photo' => null]);
+    expect($user->photo_url)->toBeNull();
+
+    $user = User::factory()->create(['photo' => 'avatars/user-123.jpg']);
+    expect($user->photo_url)
+        ->toBeString()
+        ->toContain('avatars/user-123.jpg');
 });

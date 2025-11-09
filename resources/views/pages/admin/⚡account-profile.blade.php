@@ -7,16 +7,24 @@ use App\Actions\UpdateUser;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 return new class extends Component
 {
+    use WithFileUploads;
+
     public User $user;
+
+    public ?TemporaryUploadedFile $photo = null;
 
     public string $name = '';
 
@@ -25,6 +33,8 @@ return new class extends Component
     public bool $emailVerified = false;
 
     public string $password = '';
+
+    public bool $photoRemoved = false;
 
     public function mount(#[CurrentUser] User $user): void
     {
@@ -49,6 +59,16 @@ return new class extends Component
             ],
         ]);
 
+        if ($this->photo || $this->photoRemoved) {
+            $this->deletePhoto();
+
+            $credentials['photo'] = $this->photo
+                ? $this->uploadPhoto()
+                : null;
+
+            $this->reset(['photo', 'photoRemoved']);
+        }
+
         $action->handle($this->user, $credentials);
 
         Flux::toast(__('Your changes have been saved.'));
@@ -65,6 +85,28 @@ return new class extends Component
         $this->user->sendEmailVerificationNotification();
 
         Flux::toast(__('A new verification link has been sent to your email address.'));
+    }
+
+    public function updatedPhoto(): void
+    {
+        try {
+            $this->validate([
+                'photo' => ['image', 'max:10240'],
+            ]);
+        } catch (ValidationException $e) {
+            $this->removePhoto();
+            $this->setErrorBag($e->validator->getMessageBag());
+        }
+    }
+
+    public function removePhoto(): void
+    {
+        if ($this->photo) {
+            $this->photo->delete();
+            $this->photo = null;
+        }
+
+        $this->photoRemoved = true;
     }
 
     public function delete(DeleteUser $action): void
@@ -89,12 +131,53 @@ return new class extends Component
             ->title(__('Account Profile'))
             ->layout('layouts::admin');
     }
+
+    private function uploadPhoto(): string
+    {
+        $extension = $this->photo->getClientOriginalExtension();
+        $originalName = pathinfo($this->photo->getClientOriginalName(), PATHINFO_FILENAME);
+        $filename = "users/{$this->user->id}_{$originalName}.{$extension}";
+
+        return $this->photo->storeAs('', $filename, 'public');
+    }
+
+    private function deletePhoto(): void
+    {
+        if ($this->user->photo) {
+            Storage::disk('public')->delete($this->user->photo);
+        }
+    }
 };
 ?>
 
-<x-account-layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
-    <form wire:submit="update" class="my-6 w-full space-y-6">
-        <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
+<x-account-layout :heading="__('Edit profile')" :subheading="__('Update your name and email address')">
+    <form wire:submit="update" class="space-y-8">
+        <div class="flex flex-row items-start justify-between gap-8">
+            <div class="grow">
+                <flux:file-upload wire:model="photo" :label="__('Profile photo')" accept="image/png, image/jpeg">
+                    <flux:text class="mb-3">{{ __('Recommanded 300 x 300') }}</flux:text>
+                    <flux:button size="sm" variant="filled" x-on:click.prevent="$el.closest('[data-flux-file-upload]').querySelector('input[type=file]').click()">
+                        {{ ($user->photo_url || $photo) ? __('Change') : __('Upload') }}
+                    </flux:button>
+                    @if(($user->photo_url || $photo) && ! $photoRemoved)
+                        <flux:button size="sm" variant="filled" class="ms-3" wire:click="removePhoto">
+                            {{ __('Remove') }}
+                        </flux:button>
+                    @endif
+                </flux:file-upload>
+            </div>
+            <div class="relative flex items-center justify-center size-20 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-white/10 overflow-hidden">
+                @if ($photo)
+                    <img src="{{ $photo?->temporaryUrl() }}" class="size-full object-cover" />
+                @elseif ($user->photo_url && ! $photoRemoved)
+                    <img src="{{ $user->photo_url }}" alt="{{ $user->name }}" class="size-full object-cover" />
+                @else
+                    <flux:icon name="user" variant="solid" class="text-zinc-500 dark:text-zinc-400" />
+                @endif
+            </div>
+        </div>
+
+        <flux:input wire:model="name" :label="__('Full Name')" type="text" required autofocus autocomplete="name" />
 
         <div>
             <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
