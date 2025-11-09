@@ -6,7 +6,7 @@
 
 <br>
 
-**Wire-Up** is an opinionated, very strict, and fully tested Livewire Laravel Starter Kit.
+**Wire-Up** is an opinionated, strict and fully tested Livewire Laravel Starter Kit.
 
 ---
 

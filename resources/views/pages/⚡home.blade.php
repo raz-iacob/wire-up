@@ -3,10 +3,15 @@
 declare(strict_types=1);
 
 use Livewire\Component;
+use Illuminate\View\View;
 
-new class extends Component
+return new class extends Component
 {
-    //
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Welcome'));
+    }
 };
 ?>
 

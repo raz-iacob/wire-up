@@ -1,9 +1,10 @@
 <?php
 
-use Livewire\Component;
-use Illuminate\Support\Facades\Vite;
+declare(strict_types=1);
 
-new class extends Component
+use Livewire\Component;
+
+return new class extends Component
 {
     //
 };

@@ -8,15 +8,13 @@ use App\Models\User;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new
-#[Layout('layouts::admin')]
-class extends Component
+return new class extends Component
 {
     public User $user;
 
@@ -33,7 +31,7 @@ class extends Component
         $this->user = $user;
         $this->name = $user->name;
         $this->email = $user->email;
-        $this->emailVerified = $user instanceof MustVerifyEmail && $user->hasVerifiedEmail();
+        $this->emailVerified = $user->hasVerifiedEmail();
     }
 
     public function update(UpdateUser $action): void
@@ -84,6 +82,13 @@ class extends Component
 
         $this->redirect(route('home'), navigate: true);
     }
+
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Account Profile'))
+            ->layout('layouts::admin');
+    }
 };
 ?>
 
@@ -110,7 +115,7 @@ class extends Component
         <flux:button variant="primary" type="submit">{{ __('Update') }}</flux:button>
     </form>
 
-    <section class="mt-32 space-y-6">
+    <section class="mt-12 md:mt-20 space-y-6">
         <div class="relative mb-5">
             <flux:heading>{{ __('Delete account') }}</flux:heading>
             <flux:subheading>{{ __('Delete your account and all of its resources') }}</flux:subheading>

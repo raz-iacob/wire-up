@@ -6,13 +6,11 @@ use App\Actions\UpdateUserPassword;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
+use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rules\Password as PasswordRule;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new
-#[Layout('layouts::admin')]
-class extends Component
+return new class extends Component
 {
     public string $current_password = '';
 
@@ -30,6 +28,13 @@ class extends Component
         $action->handle($user, $this->password);
 
         Flux::toast(__('Your password has been updated successfully.'));
+    }
+
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Change Password'))
+            ->layout('layouts::admin');
     }
 };
 ?>

@@ -17,19 +17,22 @@ test('to array', function (): void {
             'admin',
             'active',
             'locale',
+            'last_seen_at',
+            'user_agent',
+            'last_ip',
             'created_at',
             'updated_at',
         ]);
 });
 
-test('initials method', function (): void {
+it('has initials attribute', function (): void {
     $user = User::factory()->create(['name' => 'John Doe']);
 
-    expect($user->initials())->toBe('JD');
+    expect($user->initials)->toBe('JD');
 
     $user->name = 'Alice';
-    expect($user->initials())->toBe('A');
+    expect($user->initials)->toBe('A');
 
     $user->name = 'Bob Charles Dylan';
-    expect($user->initials())->toBe('BC');
+    expect($user->initials)->toBe('BC');
 });

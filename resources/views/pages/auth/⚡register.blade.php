@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rules\Password as RulesPassword;
 
-new class extends Component
+return new class extends Component
 {
     public string $layout = 'simple';
 
@@ -30,6 +30,7 @@ new class extends Component
 
     public function register(CreateUser $action): void
     {
+        /** @var array<string, mixed> $credentials */
         $credentials = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
@@ -50,6 +51,7 @@ new class extends Component
     public function render(): View
     {
         return $this->view()
+            ->title(__('Register'))
             ->layout('layouts::auth.'.$this->layout);
     }
 };

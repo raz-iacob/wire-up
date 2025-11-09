@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
-new class extends Component
+return new class extends Component
 {
     public string $layout = 'simple';
 
@@ -29,6 +29,7 @@ new class extends Component
 
     public function login(): void
     {
+        /** @var array<string, string> $credentials */
         $credentials = $this->validate([
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
@@ -77,6 +78,7 @@ new class extends Component
     public function render(): View
     {
         return $this->view()
+            ->title(__('Log In'))
             ->layout('layouts::auth.'.$this->layout);
     }
 };

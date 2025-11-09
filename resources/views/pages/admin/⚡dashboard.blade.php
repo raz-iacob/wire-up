@@ -2,18 +2,21 @@
 
 declare(strict_types=1);
 
-use Livewire\Attributes\Layout;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
-new
-#[Layout('layouts::admin')]
-class extends Component
+return new class extends Component
 {
-    //
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Dashboard'))
+            ->layout('layouts::admin');
+    }
 };
 ?>
 
-<div class="space-y-8">
+<div class="space-y-6 md:space-y-8">
     <div class="flex flex-col md:flex-row justify-between items-center">
         <div class="flex items-center mb-6 md:mb-0">
             <flux:heading size="xl">{{ __('Dashboard') }}</flux:heading>

@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\text;
 
-final class CreateAdminUser extends Command
+final class CreateAdminUserCommand extends Command
 {
     /**
      * @var string

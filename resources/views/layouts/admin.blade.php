@@ -4,13 +4,17 @@
     <body class="min-h-screen bg-white dark:bg-zinc-800">
         <livewire:admin-sidebar />
 
-        <flux:header class="lg:hidden">
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+        <flux:header class="md:hidden">
+            <div class="flex items-center gap-4">
+                <flux:sidebar.toggle class="md:hidden" icon="bars-2" inset="left" />
+
+                <flux:heading>{{ $title ?? '' }}</flux:heading>
+            </div>
 
             <flux:spacer />
 
             <flux:dropdown position="top" align="end">
-                <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down" />
+                <flux:profile :initials="auth()->user()->initials" :chevron="false" />
 
                 <flux:menu>
                     <flux:menu.radio.group>
@@ -20,7 +24,7 @@
                                     <span
                                         class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
                                     >
-                                        {{ auth()->user()->initials() }}
+                                        {{ auth()->user()->initials }}
                                     </span>
                                 </span>
 
@@ -35,9 +39,9 @@
                     <flux:menu.separator />
 
                     <flux:menu.radio.group>
-                        {{-- <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
-                        </flux:menu.item> --}}
+                        <flux:menu.item :href="route('admin.account-profile')" icon="user" iconVariant="outline" wire:navigate>
+                            {{ __('Account') }}
+                        </flux:menu.item>
                     </flux:menu.radio.group>
 
                     <flux:menu.separator />

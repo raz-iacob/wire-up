@@ -12,12 +12,11 @@ parameters:
         - database
         - public
         - routes
+        - resources/views
 
-    level: max
+    level: 6
 
     tmpDir: /tmp/phpstan
 
     ignoreErrors:
-        -   # Livewire route macro
-            message: '#Cannot call method name\(\) on mixed\.#'
-            path: routes
+        - '#Call to an undefined method Livewire\\Component@anonymous.+::view#'

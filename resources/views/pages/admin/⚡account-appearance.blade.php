@@ -2,12 +2,18 @@
 
 declare(strict_types=1);
 
-use Livewire\Attributes\Layout;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
-new
-#[Layout('layouts::admin')]
-class extends Component {};
+return new class extends Component
+{
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Appearance'))
+            ->layout('layouts::admin');
+    }
+};
 ?>
 
 <x-account-layout :heading="__('Appearance')" :subheading="__('Update the appearance settings for your account')">

@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -23,6 +24,9 @@ use Illuminate\Support\Str;
  * @property-read bool $admin
  * @property-read bool $active
  * @property-read string $locale
+ * @property-read CarbonInterface|null $last_seen_at
+ * @property-read string|null $user_agent
+ * @property-read string|null $last_ip
  * @property-read string|null $remember_token
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
@@ -57,18 +61,26 @@ final class User extends Authenticatable implements MustVerifyEmail
             'admin' => 'boolean',
             'active' => 'boolean',
             'locale' => 'string',
+            'last_seen_at' => 'datetime',
+            'user_agent' => 'string',
+            'last_ip' => 'string',
             'remember_token' => 'string',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
     }
 
-    public function initials(): string
+    /**
+     * @return Attribute<string, null>
+     */
+    protected function initials(): Attribute
     {
-        return Str::of($this->name)
-            ->explode(' ')
-            ->take(2)
-            ->map(fn (string $word): string => Str::substr($word, 0, 1))
-            ->implode('');
+        return Attribute::make(
+            get: fn (): string => Str::of($this->name)
+                ->explode(' ')
+                ->take(2)
+                ->map(fn (string $word): string => Str::substr($word, 0, 1))
+                ->implode(''),
+        );
     }
 }

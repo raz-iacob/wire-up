@@ -14,5 +14,5 @@
     
     @fluxAppearance
 
-    <title>{{ $title ?? config('app.name') }}</title>
+    <title>{{ isset($title) ? "$title | " : '' }}{{ config('app.name') }}</title>
 </head>

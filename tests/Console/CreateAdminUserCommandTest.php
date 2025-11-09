@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Console\Commands\CreateAdminUser;
+use App\Console\Commands\CreateAdminUserCommand;
 
 it('creates an admin user', function (): void {
-    $this->artisan(CreateAdminUser::class)
+    $this->artisan(CreateAdminUserCommand::class)
         ->expectsOutput('Create a new admin user')
         ->expectsQuestion('Enter name', 'Admin User')
         ->expectsQuestion('Enter email', 'admin@example.com')
@@ -16,7 +16,7 @@ it('creates an admin user', function (): void {
 });
 
 it('retries the password if confirmation does not match', function (): void {
-    $this->artisan(CreateAdminUser::class)
+    $this->artisan(CreateAdminUserCommand::class)
         ->expectsOutput('Create a new admin user')
         ->expectsQuestion('Enter name', 'Admin User')
         ->expectsQuestion('Enter email', 'admin@example.com')

@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 use Livewire\Component;
 
-new class extends Component
+return new class extends Component
 {
     //
 };
@@ -20,7 +22,8 @@ new class extends Component
     </flux:sidebar.header>
 
     <flux:sidebar.nav>
-        <flux:sidebar.item icon="home" href="#" current>{{ __('Dashboard') }}</flux:sidebar.item>
+        <flux:sidebar.item icon="home" href="{{ route('admin.dashboard') }}" :current="request()->routeIs('admin.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
+        <flux:sidebar.item icon="users" :href="route('admin.users-index')" :current="request()->routeIs('admin.users-index')" wire:navigate>{{ __('Users') }}</flux:navlist.item>
     </flux:sidebar.nav>
 
     <flux:spacer />
@@ -33,7 +36,7 @@ new class extends Component
     <flux:dropdown position="top" align="start" class="max-lg:hidden">
         <flux:sidebar.profile 
             :name="auth()->user()->name"
-            :initials="auth()->user()->initials()"
+            :initials="auth()->user()->initials"
         />
 
         <flux:menu class="w-[220px]">
@@ -44,7 +47,7 @@ new class extends Component
                             <span
                                 class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
                             >
-                                {{ auth()->user()->initials() }}
+                                {{ auth()->user()->initials }}
                             </span>
                         </span>
 

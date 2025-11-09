@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\OnlyAdmins;
+use App\Http\Middleware\TrackUserAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 ? route('admin.dashboard')
                 : route('home')
         );
+
+        $middleware->appendToGroup('web', TrackUserAccess::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

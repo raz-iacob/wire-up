@@ -10,9 +10,9 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-new class extends Component
+return new class extends Component
 {
-    public $layout = 'simple';
+    public string $layout = 'simple';
 
     #[Locked]
     public string $token = '';
@@ -32,6 +32,7 @@ new class extends Component
 
     public function resetPassword(CreateUserPassword $action): void
     {
+        /** @var array<string, string> $credentials */
         $credentials = $this->validate([
             'token' => ['required'],
             'email' => ['required', 'string', 'email'],
@@ -50,6 +51,7 @@ new class extends Component
     public function render(): View
     {
         return $this->view()
+            ->title(__('Reset Password'))
             ->layout('layouts::auth.'.$this->layout);
     }
 };

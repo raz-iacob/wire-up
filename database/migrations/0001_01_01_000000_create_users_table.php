@@ -32,6 +32,10 @@ return new class() extends Migration
             $table->boolean('active')->default(true);
             $table->string('locale', 6)->default('en');
 
+            $table->dateTime('last_seen_at')->nullable();
+            $table->text('user_agent')->nullable();
+            $table->ipAddress('last_ip')->nullable();
+
             $table->rememberToken();
             $table->timestamps();
         });
@@ -44,7 +48,6 @@ return new class() extends Migration
 
         Schema::create('sessions', function (Blueprint $table): void {
             $table->string('id')->primary();
-            $table->foreignId('admin_id')->nullable()->index();
             $table->foreignId('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();

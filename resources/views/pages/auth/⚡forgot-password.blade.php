@@ -6,9 +6,9 @@ use Livewire\Component;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Password;
 
-new class extends Component
+return new class extends Component
 {
-    public $layout = 'simple';
+    public string $layout = 'simple';
 
     public string $email = '';
 
@@ -31,6 +31,7 @@ new class extends Component
     public function render(): View
     {
         return $this->view()
+            ->title(__('Forgot password'))
             ->layout('layouts::auth.'.$this->layout);
     }
 };

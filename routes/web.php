@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,10 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware('auth')->group(function (): void {
+
+    Route::get('verify-email/{id}/{hash}', [EmailVerificationController::class, 'update'])
+        ->name('verification.verify')
+        ->middleware(['signed', 'throttle:6,1']);
 
     Route::post('logout', [SessionController::class, 'destroy'])->name('logout');
 });
