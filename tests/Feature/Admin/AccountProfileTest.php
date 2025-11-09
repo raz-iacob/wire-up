@@ -264,12 +264,11 @@ it('validates photo file size', function (): void {
 
     $largeFile = UploadedFile::fake()->image('large.jpg')->size(11264);
 
-    Livewire::test('pages::admin.account-profile')
+    $component = Livewire::test('pages::admin.account-profile')
         ->set('photo', $largeFile)
         ->assertHasErrors(['photo']);
 
-    $user->refresh();
-    expect($user->photo)->toBeNull();
+    expect($component->get('photo'))->toBeNull();
 });
 
 it('validates photo mime types', function (): void {
@@ -284,12 +283,11 @@ it('validates photo mime types', function (): void {
 
     $webpFile = UploadedFile::fake()->create('image.pdf', 1024, 'image/pdf');
 
-    Livewire::test('pages::admin.account-profile')
+    $component = Livewire::test('pages::admin.account-profile')
         ->set('photo', $webpFile)
         ->assertHasErrors(['photo']);
 
-    $user->refresh();
-    expect($user->photo)->toBeNull();
+    expect($component->get('photo'))->toBeNull();
 });
 
 it('can remove temporary uploaded photo before saving', function (): void {
