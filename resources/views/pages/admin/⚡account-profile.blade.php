@@ -177,7 +177,7 @@ return new class extends Component
             </div>
         </div>
 
-        <flux:input wire:model="name" :label="__('Full Name')" type="text" required autofocus autocomplete="name" />
+        <flux:input wire:model="name" :label="__('Full name')" type="text" required autofocus autocomplete="name" />
 
         <div>
             <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />

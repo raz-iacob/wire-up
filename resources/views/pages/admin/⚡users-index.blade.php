@@ -77,9 +77,9 @@ return new class extends Component
             <flux:heading size="xl" level="1">{{ __('Users') }}</flux:heading>
             <flux:subheading size="lg" class="mb-6">{{ __('Manage your users and their permissions') }}</flux:subheading>
         </div>
-        <div class="flex items-center gap-3 mt-4 md:mt-0">
+        <div class="flex items-center gap-3">
             <div class="w-full md:w-52 sm:shrink-0">
-                <flux:select wire:model.live="status">
+                <flux:select variant="listbox" wire:model.live="status">
                     <flux:select.option value="">{{ __('All Users') }}</flux:select.option>
                     <flux:select.option value="active">{{ __('Active') }}</flux:select.option>
                     <flux:select.option value="disabled">{{ __('Disabled') }}</flux:select.option>
@@ -99,7 +99,6 @@ return new class extends Component
     <flux:table class="md:table-fixed md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->users" container:class="max-h-[calc(100dvh-12rem)]">
         <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
             <flux:table.column sortable :sorted="$sortBy === 'name'" :direction="$sortDirection" wire:click="sort('name')">Name</flux:table.column>
-            <flux:table.column sortable :sorted="$sortBy === 'email'" :direction="$sortDirection" wire:click="sort('email')">Email</flux:table.column>
             <flux:table.column class="w-1/6">Role</flux:table.column>
             <flux:table.column class="w-1/6">Status</flux:table.column>
             <flux:table.column class="w-1/6" sortable :sorted="$sortBy === 'last_seen_at'" :direction="$sortDirection" wire:click="sort('last_seen_at')">Last login</flux:table.column>
@@ -110,12 +109,16 @@ return new class extends Component
             @foreach ($this->users as $row)
             <flux:table.row wire:key="{{ $row->id }}">
                 <flux:table.cell>
-                    <a href="{{ route('admin.users-edit', $row->id) }}" class="hover:underline">{{ $row->name }}</a>
+                    <a href="{{ route('admin.users-edit', $row->id) }}" class="flex items-center gap-3">
+                        <flux:avatar :src="$row->photo_url" :name="$row->name" />
+                        <div>
+                            <flux:text variant="strong" class="hover:underline">{{ $row->name }}</flux:text>
+                            <flux:text>{{ $row->email }}</flux:text>
+                        </div>
+                    </a>
                 </flux:table.cell>
 
-                <flux:table.cell class="whitespace-nowrap">{{ $row->email }}</flux:table.cell>
-
-                <flux:table.cell class="whitespace-nowrap">-</flux:table.cell>
+                <flux:table.cell class="whitespace-nowrap">{{ $row->admin ? __('Admin') : __('User') }}</flux:table.cell>
 
                 <flux:table.cell>
                     <flux:badge color="{{ $row->active ? 'green' : 'zinc' }}" size="sm">

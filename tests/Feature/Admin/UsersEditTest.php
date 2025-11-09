@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 it('can render the users edit screen', function (): void {
@@ -424,4 +425,174 @@ it('shows success message after update', function (): void {
         ->call('update');
 
     $response->assertDispatched('toast-show', fn ($_, $payload): bool => str_contains($payload['slots']['text'] ?? '', __('User details have been updated')));
+});
+
+it('displays user photo when present', function (): void {
+    Storage::fake('public');
+
+    $admin = User::factory()->create([
+        'admin' => true,
+        'active' => true,
+    ]);
+
+    $user = User::factory()->create([
+        'name' => 'Test User',
+        'photo' => 'users/1_avatar.jpg',
+    ]);
+
+    Storage::disk('public')->put('users/1_avatar.jpg', 'fake image content');
+
+    $this->actingAs($admin);
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $user]);
+
+    $response->assertSee('Profile photo')
+        ->assertSee('Delete');
+});
+
+it('shows no photo section when user has no photo', function (): void {
+    $admin = User::factory()->create([
+        'admin' => true,
+        'active' => true,
+    ]);
+
+    $user = User::factory()->create([
+        'photo' => null,
+    ]);
+
+    $this->actingAs($admin);
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $user]);
+
+    $response->assertDontSee('Profile photo')
+        ->assertDontSee('Delete');
+});
+
+it('can remove user photo', function (): void {
+    Storage::fake('public');
+
+    $admin = User::factory()->create([
+        'admin' => true,
+        'active' => true,
+    ]);
+
+    $photoPath = 'users/1_avatar.jpg';
+    $user = User::factory()->create([
+        'photo' => $photoPath,
+    ]);
+
+    Storage::disk('public')->put($photoPath, 'fake image content');
+
+    $this->actingAs($admin);
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->call('removePhoto')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $user->refresh();
+
+    expect($user->photo)->toBeNull();
+
+    Storage::disk('public')->assertMissing($photoPath);
+});
+
+it('shows success message when removing photo', function (): void {
+    Storage::fake('public');
+
+    $admin = User::factory()->create([
+        'admin' => true,
+        'active' => true,
+    ]);
+
+    $user = User::factory()->create([
+        'photo' => 'users/1_avatar.jpg',
+    ]);
+
+    Storage::disk('public')->put('users/1_avatar.jpg', 'fake image content');
+
+    $this->actingAs($admin);
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->call('removePhoto')
+        ->call('update');
+
+    $response->assertDispatched('toast-show', fn ($_, $payload): bool => str_contains($payload['slots']['text'] ?? '', 'User details have been updated')
+    );
+});
+
+it('handles removing photo when file does not exist in storage', function (): void {
+    Storage::fake('public');
+
+    $admin = User::factory()->create([
+        'admin' => true,
+        'active' => true,
+    ]);
+
+    $user = User::factory()->create([
+        'photo' => 'users/nonexistent.jpg',
+    ]);
+
+    $this->actingAs($admin);
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->call('removePhoto')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $user->refresh();
+    expect($user->photo)->toBeNull();
+});
+
+it('does not affect other users photos when removing', function (): void {
+    Storage::fake('public');
+
+    $admin = User::factory()->create([
+        'admin' => true,
+        'active' => true,
+    ]);
+
+    [$userA, $userB] = User::factory()->createMany([
+        ['photo' => 'users/1_avatar.jpg'],
+        ['photo' => 'users/2_avatar.jpg'],
+    ]);
+
+    Storage::disk('public')->put('users/1_avatar.jpg', 'user A image');
+    Storage::disk('public')->put('users/2_avatar.jpg', 'user B image');
+
+    $this->actingAs($admin);
+
+    Livewire::test('pages::admin.users-edit', ['user' => $userA])
+        ->call('removePhoto')
+        ->call('update');
+
+    $userA->refresh();
+    $userB->refresh();
+
+    expect($userA->photo)->toBeNull()
+        ->and($userB->photo)->toBe('users/2_avatar.jpg');
+
+    Storage::disk('public')->assertMissing('users/1_avatar.jpg');
+    Storage::disk('public')->assertExists('users/2_avatar.jpg');
+});
+
+it('handles removing photo for user with null photo gracefully', function (): void {
+    $admin = User::factory()->create([
+        'admin' => true,
+        'active' => true,
+    ]);
+
+    $user = User::factory()->create([
+        'photo' => null,
+    ]);
+
+    $this->actingAs($admin);
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->call('removePhoto')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $user->refresh();
+    expect($user->photo)->toBeNull();
 });

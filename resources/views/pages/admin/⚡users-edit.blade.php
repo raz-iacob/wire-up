@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Actions\UpdateUser;
-use App\Actions\UpdateUserPassword;
-use App\Models\User;
 use Flux\Flux;
-use Illuminate\Contracts\View\View;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password as PasswordRule;
+use App\Models\User;
 use Livewire\Component;
+use App\Actions\UpdateUser;
+use Illuminate\Validation\Rule;
+use App\Actions\UpdateUserPassword;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 return new class extends Component
 {
@@ -18,6 +19,8 @@ return new class extends Component
     public string $name = '';
 
     public string $email = '';
+
+    public ?string $photo = null;
 
     public bool $active = false;
 
@@ -31,6 +34,7 @@ return new class extends Component
         $this->name = $user->name;
         $this->email = $user->email;
         $this->active = $user->active;
+        $this->photo = $user->photo_url;
     }
 
     public function update(UpdateUser $action, UpdateUserPassword $updatePassword): void
@@ -50,6 +54,11 @@ return new class extends Component
             'active' => ['boolean'],
         ]);
 
+        if (is_null($this->photo) && $this->user->photo) {
+            Storage::disk('public')->delete($this->user->photo);
+            $credentials['photo'] = null;
+        }
+
         $action->handle($this->user, $credentials);
 
         if ($this->password) {
@@ -63,6 +72,11 @@ return new class extends Component
         Flux::toast(__('User details have been updated.'));
     }
 
+    public function removePhoto(): void
+    {
+        $this->photo = null;
+    }
+
     public function render(): View
     {
         return $this->view()
@@ -74,7 +88,7 @@ return new class extends Component
 
 <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-3 gap-6 items-stretch">
     <div class="md:col-span-2">
-        <div class="mb-6 md:mb-0">
+        <div class="gap-4 mb-6 md:mb-0">
             <flux:heading size="xl" class="cursor-pointer hover:underline">
                 {{ __('Edit') }} {{ $user->name }}
             </flux:heading>
@@ -89,8 +103,19 @@ return new class extends Component
                 <flux:description>{{ __('Update the user\'s name and email associated with this account.') }}</flux:description>
 
                 <div class="grid md:grid-cols-2 gap-6 mt-6">
+                    @if ($photo)
+                    <div class="flex items-center gap-3 md:col-span-2">
+                        <flux:avatar size="xl" :src="$photo" :name="$user->name" />
+                        <div class="flex flex-col gap-3">
+                            <flux:label>{{ __('Profile photo') }}</flux:label>
+                            <flux:button type="button" size="sm" variant="filled" wire:click="removePhoto">
+                                {{ __('Delete') }}
+                            </flux:button>
+                        </div>
+                    </div>
+                    @endif
                     <div>
-                        <flux:input wire:model="name" label="{{ __('Name') }}" />
+                        <flux:input wire:model="name" label="{{ __('Full name') }}" />
                     </div>
                     <div>
                         <flux:input wire:model="email" type="email" label="{{ __('Email') }}" />
