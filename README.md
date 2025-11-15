@@ -12,6 +12,7 @@
 
 ### Key Features
 
+- **Multi-language Support** - Easily build applications with localization and translations
 - **Real-time Interactivity** - Dynamic content updates without page refreshes
 - **Server-side Rendering** - Fast initial page loads with SEO-friendly content
 - **Modern UI Components** - Built with Flux UI Pro for beautiful, accessible interfaces
