@@ -21,15 +21,11 @@ return new class() extends Migration
             $table->string('password');
             $table->string('photo')->nullable();
 
-            /**
-             * Details can include information about a person such as gender,
-             * birthday, position, location, phone number etc.
-             */
-            $table->json('details')->nullable();
+            $table->json('metadata')->nullable()->comment('Includes personal details about the user');
 
             $table->string('stripe_id')->nullable();
 
-            $table->boolean('admin')->default(false)->comment('admin users can access the admin panel');
+            $table->boolean('admin')->default(false)->comment('Admin users can access the admin panel');
             $table->boolean('active')->default(true);
             $table->string('locale', 6)->default('en');
 
@@ -55,15 +51,5 @@ return new class() extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
     }
 };

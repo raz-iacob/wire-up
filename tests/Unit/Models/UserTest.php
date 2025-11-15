@@ -14,7 +14,7 @@ test('to array', function (): void {
             'email',
             'email_verified_at',
             'photo',
-            'details',
+            'metadata',
             'admin',
             'active',
             'locale',
@@ -31,10 +31,10 @@ it('has initials attribute', function (): void {
 
     expect($user->initials)->toBe('JD');
 
-    $user->name = 'Alice';
+    $user->fill(['name' => 'Alice']);
     expect($user->initials)->toBe('A');
 
-    $user->name = 'Bob Charles Dylan';
+    $user->fill(['name' => 'Bob Charles Dylan']);
     expect($user->initials)->toBe('BC');
 });
 

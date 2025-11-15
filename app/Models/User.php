@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
  * @property-read string $password
  * @property-read string|null $photo
  * @property-read string|null $stripe_id
- * @property-read array<string, mixed>|null $details
+ * @property-read array<string, mixed>|null $metadata
  * @property-read bool $admin
  * @property-read bool $active
  * @property-read string $locale
@@ -62,7 +62,7 @@ final class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'photo' => 'string',
             'stripe_id' => 'string',
-            'details' => 'json',
+            'metadata' => 'json',
             'admin' => 'boolean',
             'active' => 'boolean',
             'locale' => 'string',
