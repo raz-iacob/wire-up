@@ -17,6 +17,8 @@ it('may create a user', function (): void {
         'email' => 'example@email.com',
     ], 'password');
 
+    $user->refresh();
+
     expect($user)->toBeInstanceOf(User::class)
         ->and($user->name)->toBe('Test User')
         ->and($user->email)->toBe('example@email.com')
