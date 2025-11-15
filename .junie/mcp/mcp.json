@@ -3,7 +3,7 @@
         "laravel-boost": {
             "command": "/Users/razvaniacob/Library/Application Support/Herd/bin/php84",
             "args": [
-                "/Users/razvaniacob/Documents/Work/Websites/wired-up/artisan",
+                "/Users/razvaniacob/Documents/Work/Websites/wire-up/artisan",
                 "boost:mcp"
             ]
         }
