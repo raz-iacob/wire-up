@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Actions\CreateUserPassword;
+use App\Actions\CreateUserPasswordAction;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rules\Password as RulesPassword;
@@ -30,7 +30,7 @@ return new class extends Component
         $this->email = request()->string('email')->value();
     }
 
-    public function resetPassword(CreateUserPassword $action): void
+    public function resetPassword(CreateUserPasswordAction $action): void
     {
         /** @var array<string, string> $credentials */
         $credentials = $this->validate([

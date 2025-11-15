@@ -9,7 +9,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use SensitiveParameter;
 
-final readonly class CreateUser
+final readonly class CreateUserAction
 {
     /**
      * @param  array<string, mixed>  $attributes

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Actions\UpdateUserPassword;
+use App\Actions\UpdateUserPasswordAction;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
@@ -18,7 +18,7 @@ return new class extends Component
 
     public string $password_confirmation = '';
 
-    public function update(#[CurrentUser] User $user, UpdateUserPassword $action): void
+    public function update(#[CurrentUser] User $user, UpdateUserPasswordAction $action): void
     {
         $this->validate([
             'current_password' => ['required', 'string', 'current_password'],

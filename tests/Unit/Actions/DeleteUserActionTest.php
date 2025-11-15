@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Actions\DeleteUser;
+use App\Actions\DeleteUserAction;
 use App\Models\User;
 
 it('may delete a user', function (): void {
     $user = User::factory()->create();
 
-    $action = app(DeleteUser::class);
+    $action = app(DeleteUserAction::class);
 
     $action->handle($user);
 

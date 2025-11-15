@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Actions\CreateUser;
+use App\Actions\CreateUserAction;
 use Illuminate\Console\Command;
 
 use function Laravel\Prompts\password;
@@ -15,14 +15,14 @@ final class CreateAdminUserCommand extends Command
     /**
      * @var string
      */
-    protected $signature = 'wireup:create-admin';
+    protected $signature = 'wireup:admin';
 
     /**
      * @var string
      */
     protected $description = 'Create a new admin user';
 
-    public function handle(CreateUser $action): int
+    public function handle(CreateUserAction $action): int
     {
         $this->info('Create a new admin user');
         $this->newLine();

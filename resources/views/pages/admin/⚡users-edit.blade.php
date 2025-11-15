@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Flux\Flux;
+use App\Actions\UpdateUserAction;
+use App\Actions\UpdateUserPasswordAction;
 use App\Models\User;
-use Livewire\Component;
-use App\Actions\UpdateUser;
-use Illuminate\Validation\Rule;
-use App\Actions\UpdateUserPassword;
+use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use Livewire\Component;
 
 return new class extends Component
 {
@@ -37,7 +37,7 @@ return new class extends Component
         $this->photo = $user->photo_url;
     }
 
-    public function update(UpdateUser $action, UpdateUserPassword $updatePassword): void
+    public function update(UpdateUserAction $action, UpdateUserPasswordAction $updatePassword): void
     {
         $credentials = $this->validate([
             'name' => ['required', 'string', 'max:255'],

@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use SensitiveParameter;
 
-final readonly class UpdateUserPassword
+final readonly class UpdateUserPasswordAction
 {
     public function handle(User $user, #[SensitiveParameter] string $password): void
     {

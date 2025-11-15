@@ -6,7 +6,7 @@ namespace App\Actions;
 
 use App\Models\User;
 
-final class UpdateUserLastAccess
+final readonly class UpdateUserLastAccessAction
 {
     public function handle(User $user, ?string $userAgent, ?string $ip = null): void
     {

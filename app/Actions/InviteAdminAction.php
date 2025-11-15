@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
-final class InviteAdmin
+final readonly class InviteAdminAction
 {
     public function handle(User $inviter, string $name, string $email): User
     {
         return DB::transaction(function () use ($inviter, $name, $email): User {
 
-            $user = app(CreateUser::class)->handle([
+            $user = app(CreateUserAction::class)->handle([
                 'name' => $name,
                 'email' => $email,
                 'admin' => true,

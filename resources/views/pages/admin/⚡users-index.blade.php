@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-use Flux\Flux;
+use App\Actions\InviteAdminAction;
+use App\Actions\UpdateUserAction;
 use App\Models\User;
-use Livewire\Component;
-use App\Actions\UpdateUser;
 use App\Traits\WithSorting;
-use App\Actions\InviteAdmin;
-use Livewire\WithPagination;
-use Livewire\Attributes\Computed;
-use Illuminate\Contracts\View\View;
+use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\View\View;
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 return new class extends Component
 {
@@ -29,7 +29,7 @@ return new class extends Component
 
     public int $perPage = 20;
 
-    public function create(#[CurrentUser] User $inviter, InviteAdmin $action): void
+    public function create(#[CurrentUser] User $inviter, InviteAdminAction $action): void
     {
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -42,7 +42,7 @@ return new class extends Component
         Flux::toast(__('Invitation email sent to '.$user->email));
     }
 
-    public function toggleStatus(User $user, UpdateUser $action): void
+    public function toggleStatus(User $user, UpdateUserAction $action): void
     {
         $action->handle($user, [
             'active' => ! $user->active,

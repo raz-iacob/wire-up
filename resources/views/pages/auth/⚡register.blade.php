@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Actions\CreateUserAction;
 use App\Models\User;
-use Livewire\Component;
-use App\Actions\CreateUser;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rules\Password as RulesPassword;
+use Livewire\Component;
 
 return new class extends Component
 {
@@ -28,7 +28,7 @@ return new class extends Component
         //
     }
 
-    public function register(CreateUser $action): void
+    public function register(CreateUserAction $action): void
     {
         /** @var array<string, mixed> $credentials */
         $credentials = $this->validate([

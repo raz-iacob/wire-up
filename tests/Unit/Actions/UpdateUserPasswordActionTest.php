@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Actions\UpdateUserPassword;
+use App\Actions\UpdateUserPasswordAction;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,7 +11,7 @@ it('may update a user password', function (): void {
         'password' => Hash::make('old-password'),
     ]);
 
-    $action = app(UpdateUserPassword::class);
+    $action = app(UpdateUserPasswordAction::class);
 
     $action->handle($user, 'new-password');
 

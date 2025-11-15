@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Actions\CreateUser;
+use App\Actions\CreateUserAction;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Event;
 it('may create a user', function (): void {
     Event::fake([Registered::class]);
 
-    $action = app(CreateUser::class);
+    $action = app(CreateUserAction::class);
 
     $user = $action->handle([
         'name' => 'Test User',

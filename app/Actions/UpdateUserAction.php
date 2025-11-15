@@ -6,7 +6,7 @@ namespace App\Actions;
 
 use App\Models\User;
 
-final readonly class UpdateUser
+final readonly class UpdateUserAction
 {
     /**
      * @param  array<string, mixed>  $attributes

@@ -6,7 +6,7 @@ namespace App\Actions;
 
 use App\Models\User;
 
-final readonly class DeleteUser
+final readonly class DeleteUserAction
 {
     public function handle(User $user): void
     {

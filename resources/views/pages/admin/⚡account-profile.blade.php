@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Actions\DeleteUser;
-use App\Actions\UpdateUser;
+use App\Actions\DeleteUserAction;
+use App\Actions\UpdateUserAction;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -44,7 +43,7 @@ return new class extends Component
         $this->emailVerified = $user->hasVerifiedEmail();
     }
 
-    public function update(UpdateUser $action): void
+    public function update(UpdateUserAction $action): void
     {
         $credentials = $this->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -109,7 +108,7 @@ return new class extends Component
         $this->photoRemoved = true;
     }
 
-    public function delete(DeleteUser $action): void
+    public function delete(DeleteUserAction $action): void
     {
         $this->validate([
             'password' => ['required', 'current_password'],
