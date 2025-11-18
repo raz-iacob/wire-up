@@ -69,7 +69,7 @@ it('saves translations on create for each active locale', function (): void {
 
     $translations = $page->translations()->get();
 
-    expect($translations)->toHaveCount(6)
+    expect($translations)->toHaveCount(4)
         ->and($translations->where('locale', 'en')->first()->body)->toBe('Test Title')
         ->and($translations->where('locale', 'fr')->first()->body)->toBe('Titre de test');
 });
@@ -94,13 +94,15 @@ it('updates translations correctly for each active locale', function (): void {
 
     $translations = $page->translations()->get();
 
-    expect($translations)->toHaveCount(6)
+    expect($translations)->toHaveCount(4)
         ->and($translations->where('locale', 'en')->first()->body)->toBe('Updated Title')
         ->and($translations->where('locale', 'fr')->first()->body)->toBe('Titre Mis à Jour');
 });
 
 it('deletes translations on model deletion', function (): void {
     Locale::query()->whereIn('code', ['en', 'fr'])->update(['active' => true]);
+
+    Page::query()->first()->delete();
 
     $page = Page::factory()->create([
         'title' => [
@@ -109,7 +111,7 @@ it('deletes translations on model deletion', function (): void {
         ],
     ]);
 
-    $this->assertDatabaseCount('translations', 6);
+    $this->assertDatabaseCount('translations', 4);
 
     $page->delete();
 
@@ -151,41 +153,138 @@ it('returns empty string if no translations are available', function (): void {
     expect($page->title)->toBe('');
 });
 
-it('includes translations array to model array if relation is loaded', function (): void {
+it('gets translations array for a specific field', function (): void {
     Locale::query()->whereIn('code', ['en', 'fr'])->update(['active' => true]);
 
     $page = Page::factory()->create([
-        'name' => 'Test Page',
         'title' => [
             'en' => 'English Title',
             'fr' => 'Titre Français',
         ],
     ]);
 
-    $page->load('translations');
+    $title = $page->translationsFor('title');
+    $description = $page->translationsFor('description');
 
-    $attributes = $page->toArray();
-
-    expect($attributes['title'])->toBe([
+    expect($title)->toBe([
         'en' => 'English Title',
         'fr' => 'Titre Français',
-    ])
-        ->and($attributes)->toHaveKey('translations');
+    ]);
+
+    expect($description)->toBe([
+        'en' => '',
+        'fr' => '',
+    ]);
 });
 
-it('does not include translations array to model array if relation is not loaded', function (): void {
+it('orders pages by translated title for the current locale', function (): void {
     Locale::query()->whereIn('code', ['en', 'fr'])->update(['active' => true]);
 
-    $page = Page::factory()->create([
-        'name' => 'Test Page',
+    Page::query()->delete();
+
+    $pageA = Page::factory()->create([
         'title' => [
-            'en' => 'English Title',
-            'fr' => 'Titre Français',
+            'en' => 'Banana',
+            'fr' => 'Citron',
         ],
     ]);
 
-    $attributes = $page->toArray();
+    $pageB = Page::factory()->create([
+        'title' => [
+            'en' => 'Apple',
+            'fr' => 'Banane',
+        ],
+    ]);
 
-    expect($attributes)->not->toHaveKey('title')
-        ->and($attributes)->not->toHaveKey('translations');
+    $pageC = Page::factory()->create([
+        'title' => [
+            'en' => 'Cherry',
+            'fr' => 'Abricot',
+        ],
+    ]);
+
+    app()->setLocale('en');
+
+    $orderedEn = Page::query()
+        ->orderByTranslation('title', 'ASC')
+        ->get();
+
+    expect($orderedEn->pluck('id')->toArray())->toBe([
+        $pageB->id,
+        $pageA->id,
+        $pageC->id,
+    ]);
+
+    app()->setLocale('fr');
+
+    $orderedFr = Page::query()
+        ->orderByTranslation('title', 'ASC')
+        ->get();
+
+    expect($orderedFr->pluck('id')->toArray())->toBe([
+        $pageC->id,
+        $pageB->id,
+        $pageA->id,
+    ]);
+});
+
+it('filters by translation using whereTranslation', function (): void {
+    Locale::query()->whereIn('code', ['en', 'de'])->update(['active' => true]);
+
+    Page::query()->delete();
+
+    $pageA = Page::factory()->create([
+        'title' => [
+            'en' => 'Hello World',
+            'de' => 'Hallo Welt',
+        ],
+    ]);
+
+    $pageB = Page::factory()->create([
+        'title' => [
+            'en' => 'Second Page',
+            'de' => 'Zweite Seite',
+        ],
+    ]);
+
+    $pageC = Page::factory()->create([
+        'title' => [
+            'en' => 'Third Page',
+            'de' => 'Dritte Seite',
+        ],
+    ]);
+
+    app()->setLocale('en');
+
+    $results = Page::query()
+        ->whereTranslationLike('title', 'Second')
+        ->pluck('id')
+        ->toArray();
+
+    expect($results)->toBe([$pageB->id]);
+
+    $results = Page::query()
+        ->whereTranslationLike('title', 'Hello')
+        ->orWhereTranslationLike('title', 'Third')
+        ->pluck('id')
+        ->toArray();
+
+    expect($results)->toBe([
+        $pageA->id,
+        $pageC->id,
+    ]);
+
+    app()->setLocale('de');
+
+    $frResults = Page::query()
+        ->whereTranslationLike('title', 'Seite')
+        ->pluck('id')
+        ->toArray();
+
+    expect($frResults)->toBe([
+        $pageB->id,
+        $pageC->id,
+    ]);
+
+    app()->setLocale('en');
 });

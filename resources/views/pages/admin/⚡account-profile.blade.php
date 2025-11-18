@@ -61,7 +61,7 @@ return new class extends Component
         if ($this->photo || $this->photoRemoved) {
             $this->deletePhoto();
 
-            $credentials['photo'] = $this->photo
+            $credentials['photo'] = $this->photo instanceof TemporaryUploadedFile
                 ? $this->uploadPhoto()
                 : null;
 
@@ -100,7 +100,7 @@ return new class extends Component
 
     public function removePhoto(): void
     {
-        if ($this->photo) {
+        if ($this->photo instanceof TemporaryUploadedFile) {
             $this->photo->delete();
             $this->photo = null;
         }

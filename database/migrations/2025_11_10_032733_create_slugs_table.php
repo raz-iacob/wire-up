@@ -17,7 +17,7 @@ return new class extends Migration
             $table->morphs('sluggable');
             $table->timestamps();
 
-            $table->foreign('locale')->references('code')->on('locales');
+            $table->foreign('locale')->references('code')->on('locales')->onDelete('cascade');
             $table->unique(['slug', 'locale'], 'slugs_unique');
         });
     }

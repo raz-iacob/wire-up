@@ -11,20 +11,24 @@ use Carbon\CarbonInterface;
 use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property-read int $id
- * @property-read string $name
  * @property-read array<string, mixed>|null $metadata
  * @property-read PageStatus $status
- * @property-read CarbonInterface|null $published_at
+ * @property-read Carbon|null $published_at
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read Collection<int, Translation> $translations
+ * @property-read string $title
+ * @property-read string $description
  * @property-read Collection<int, Slug> $slugs
+ * @property-read string $slug
  */
 final class Page extends Model
 {
@@ -38,7 +42,6 @@ final class Page extends Model
     {
         return [
             'id' => 'integer',
-            'name' => 'string',
             'metadata' => 'array',
             'status' => PageStatus::class,
             'published_at' => 'datetime',
@@ -52,7 +55,21 @@ final class Page extends Model
      */
     protected function translatedAttributes(): array
     {
-        return ['title', 'seo_title', 'seo_description'];
+        return ['title', 'description'];
+    }
+
+    /**
+     * @return Attribute<PageStatus, null>
+     */
+    protected function computedStatus(): Attribute
+    {
+        return Attribute::get(function (): PageStatus {
+            if ($this->status === PageStatus::PUBLISHED && $this->published_at?->isFuture()) {
+                return PageStatus::SCHEDULED;
+            }
+
+            return $this->status;
+        });
     }
 
     /**
@@ -61,6 +78,8 @@ final class Page extends Model
     #[Scope]
     protected function published(Builder $query): void
     {
-        $query->where('status', PageStatus::PUBLISHED)->where('published_at', '<=', now());
+        $query->where('status', PageStatus::PUBLISHED)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
     }
 }

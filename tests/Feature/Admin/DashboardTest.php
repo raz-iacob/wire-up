@@ -5,14 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 
 it('can render the dashboard screen', function (): void {
-    $user = User::factory()->create([
-        'email' => 'user@example.com',
-        'password' => bcrypt('secret'),
-        'active' => true,
-        'admin' => true,
-    ]);
-
-    $response = $this->actingAs($user)
+    $response = $this->actingAsAdmin()
         ->fromRoute('home')
         ->get(route('admin.dashboard'));
 

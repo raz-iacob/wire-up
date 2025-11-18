@@ -11,7 +11,6 @@ test('to array', function (): void {
     expect(array_keys($page->toArray()))
         ->toBe([
             'id',
-            'name',
             'metadata',
             'status',
             'published_at',
@@ -46,6 +45,9 @@ test('status enum casting works', function (): void {
 });
 
 it('can find pages by published scope', function (): void {
+
+    Page::query()->delete();
+
     $draft = Page::factory()->create([
         'status' => PageStatus::DRAFT,
         'published_at' => null,
@@ -63,11 +65,33 @@ it('can find pages by published scope', function (): void {
         'published_at' => now()->subDay(),
     ]);
 
-    $publishedPages = Page::published()->get();
+    $publishedPages = Page::query()
+        ->published()
+        ->get();
 
     expect($publishedPages)->toHaveCount(1)
         ->and($publishedPages->contains($published))->toBeTrue()
         ->and($publishedPages->contains($scheduled))->toBeFalse()
         ->and($publishedPages->contains($draft))->toBeFalse()
         ->and($publishedPages->contains($private))->toBeFalse();
+});
+
+it('computes status correctly', function (): void {
+    $draft = Page::factory()->create([
+        'status' => PageStatus::DRAFT,
+    ]);
+
+    $published = Page::factory()->create([
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $scheduled = Page::factory()->create([
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->addDay(),
+    ]);
+
+    expect($draft->computed_status)->toBe(PageStatus::DRAFT)
+        ->and($published->computed_status)->toBe(PageStatus::PUBLISHED)
+        ->and($scheduled->computed_status)->toBe(PageStatus::SCHEDULED);
 });

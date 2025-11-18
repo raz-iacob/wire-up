@@ -8,7 +8,7 @@ use App\Models\Page;
 
 it('may create a page', function (): void {
     $attributes = [
-        'name' => 'Test Page',
+        'title' => 'Test Page',
     ];
 
     $page = new CreatePageAction()->handle($attributes);
@@ -16,7 +16,7 @@ it('may create a page', function (): void {
     $page->refresh();
 
     expect($page)->toBeInstanceOf(Page::class)
-        ->and($page->name)->toBe('Test Page')
+        ->and($page->title)->toBe('Test Page')
         ->and($page->title)->toBe('Test Page')
         ->and($page->status)->toBe(PageStatus::DRAFT)
         ->and($page->published_at)->toBeNull()

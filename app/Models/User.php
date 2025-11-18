@@ -90,8 +90,6 @@ final class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the avatar URL for the user.
-     *
      * @return Attribute<string|null, null>
      */
     protected function photoUrl(): Attribute

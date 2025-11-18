@@ -7,14 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 
 it('can render the account password screen', function (): void {
-    $user = User::factory()->create([
-        'email' => 'user@example.com',
-        'password' => bcrypt('secret'),
-        'active' => true,
-        'admin' => true,
-    ]);
-
-    $response = $this->actingAs($user)
+    $response = $this->actingAsAdmin()
         ->fromRoute('home')
         ->get(route('admin.account-password'));
 

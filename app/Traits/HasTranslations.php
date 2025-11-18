@@ -6,9 +6,11 @@ namespace App\Traits;
 
 use App\Models\Translation;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\MassAssignmentException;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Query\JoinClause;
 
 trait HasTranslations
 {
@@ -76,21 +78,14 @@ trait HasTranslations
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, string>
      */
-    public function attributesToArray(): array
+    public function translationsFor(string $field): array
     {
-        $attributes = parent::attributesToArray();
-
-        if (! $this->relationLoaded('translations')) {
-            return $attributes;
-        }
-
-        foreach ($this->translatedAttributes() as $field) {
-            $attributes[$field] = $this->translationsFor($field);
-        }
-
-        return $attributes;
+        return $this->translations
+            ->where('key', $field)
+            ->mapWithKeys(fn ($t): array => [$t->locale => $t->body])
+            ->toArray();
     }
 
     protected static function bootHasTranslations(): void
@@ -106,18 +101,6 @@ trait HasTranslations
     protected function translatedAttributes(): array
     {
         return ['title'];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function translationsFor(string $field): array
-    {
-        return $this->translations
-            ->where('key', $field)
-            ->filter(fn ($t): bool => ! empty($t->body))
-            ->mapWithKeys(fn ($t): array => [$t->locale => $t->body])
-            ->toArray();
     }
 
     protected function findTranslation(string $key): ?Translation
@@ -147,5 +130,42 @@ trait HasTranslations
         ], [
             'body' => $body,
         ]);
+    }
+
+    #[Scope]
+    protected function orderByTranslation(Builder $query, string $field, string $order = 'ASC'): void
+    {
+        $table = $this->getTable();
+        $type = $this->getMorphClass();
+        $locale = app()->getLocale();
+
+        $query
+            ->leftJoin('translations', function (JoinClause $join) use ($table, $field, $type, $locale): void {
+                $join->on('translations.translatable_id', '=', $table.'.id')
+                    ->where('translations.translatable_type', $type)
+                    ->where('translations.key', $field)
+                    ->where('translations.locale', $locale);
+            })
+            ->orderBy('translations.body', $order)
+            ->select($table.'.*')
+            ->with('translations');
+    }
+
+    #[Scope]
+    protected function orWhereTranslationLike(Builder $query, string $field, string $value): void
+    {
+        $this->whereTranslationLike($query, $field, $value, true);
+    }
+
+    #[Scope]
+    protected function whereTranslationLike(Builder $query, string $field, string $value, bool $isOr = false): void
+    {
+        $method = $isOr ? 'orWhereHas' : 'whereHas';
+
+        $query->$method('translations', function (Builder $query) use ($field, $value): void {
+            $query->where('translations.key', $field)
+                ->whereLike('translations.body', '%'.$value.'%')
+                ->where('translations.locale', app()->getLocale());
+        });
     }
 }

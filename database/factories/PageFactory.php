@@ -19,7 +19,6 @@ final class PageFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->word(),
             'metadata' => null,
             'status' => PageStatus::DRAFT,
             'published_at' => null,

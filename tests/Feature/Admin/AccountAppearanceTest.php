@@ -5,12 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 
 it('can render the account appearance screen', function (): void {
-    $user = User::factory()->create([
-        'active' => true,
-        'admin' => true,
-    ]);
-
-    $response = $this->actingAs($user)
+    $response = $this->actingAsAdmin()
         ->fromRoute('home')
         ->get(route('admin.account-appearance'));
 

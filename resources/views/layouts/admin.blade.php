@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <x-head :title="isset($title) ? $title : null" />
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <livewire:admin-sidebar />
+        <x-admin-sidebar />
 
         <flux:header class="md:hidden">
             <div class="flex items-center gap-4">

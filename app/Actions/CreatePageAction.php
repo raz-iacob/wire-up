@@ -15,11 +15,7 @@ final readonly class CreatePageAction
     public function handle(array $attributes): Page
     {
         return DB::transaction(function () use ($attributes): Page {
-            $page = Page::query()->create([
-                ...$attributes,
-                'title' => $attributes['title'] ?? $attributes['name'],
-            ]);
-
+            $page = Page::query()->create($attributes);
             $page->setSlugs();
 
             return $page;

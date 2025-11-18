@@ -61,7 +61,7 @@ return new class extends Component
 
         $action->handle($this->user, $credentials);
 
-        if ($this->password) {
+        if ($this->password !== '' && $this->password !== '0') {
             $this->validate([
                 'password' => ['required', 'string', PasswordRule::defaults(), 'confirmed'],
             ]);
@@ -80,7 +80,7 @@ return new class extends Component
     public function render(): View
     {
         return $this->view()
-            ->title($this->user->name)
+            ->title(__('Edit').' '.$this->user->name)
             ->layout('layouts::admin');
     }
 };
@@ -144,7 +144,7 @@ return new class extends Component
         </div>
     </div>
     <div class="mb-10 md:mb-0">
-        <div class="flex flex-col-reverse md:flex-col items-center md:items-end md:justify-end gap-4 md:sticky top-0 pt-2">
+        <div class="flex flex-col-reverse md:flex-col items-center md:items-end md:justify-end gap-4 md:sticky md:top-8 pt-2">
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary" icon="check">
                     {{ __('Save') }}

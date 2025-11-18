@@ -11,14 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 it('can render the account profile screen', function (): void {
-    $user = User::factory()->create([
-        'email' => 'user@example.com',
-        'password' => bcrypt('secret'),
-        'active' => true,
-        'admin' => true,
-    ]);
-
-    $response = $this->actingAs($user)
+    $response = $this->actingAsAdmin()
         ->fromRoute('home')
         ->get(route('admin.account-profile'));
 
@@ -71,12 +64,7 @@ it('allows admin users to update their profile information', function (): void {
 });
 
 it('requires name and email when updating profile information', function (): void {
-    $user = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
-    $this->actingAs($user);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.account-profile')
         ->set('name', '')
@@ -87,13 +75,7 @@ it('requires name and email when updating profile information', function (): voi
 });
 
 it('will not resend email verification if email already verified', function (): void {
-    $user = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-        'email_verified_at' => now(),
-    ]);
-
-    $this->actingAs($user);
+    $this->actingAsAdmin();
 
     Livewire::test('pages::admin.account-profile')
         ->call('resendVerificationLink')
@@ -255,12 +237,7 @@ it('can delete current profile photo', function (): void {
 it('validates photo file size', function (): void {
     Storage::fake('public');
 
-    $user = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
-    $this->actingAs($user);
+    $this->actingAsAdmin();
 
     $largeFile = UploadedFile::fake()->image('large.jpg')->size(11264);
 
@@ -274,12 +251,7 @@ it('validates photo file size', function (): void {
 it('validates photo mime types', function (): void {
     Storage::fake('public');
 
-    $user = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
-    $this->actingAs($user);
+    $this->actingAsAdmin();
 
     $webpFile = UploadedFile::fake()->create('image.pdf', 1024, 'image/pdf');
 

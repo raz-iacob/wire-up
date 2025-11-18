@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\Config\RectorConfig;
 use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
+use Rector\Php85\Rector\Expression\NestedFuncCallsToPipeOperatorRector;
+use RectorLaravel\Rector\MethodCall\AssertStatusToAssertMethodRector;
 use RectorLaravel\Set\LaravelSetList;
 use RectorLaravel\Set\LaravelSetProvider;
 
@@ -25,6 +27,10 @@ return RectorConfig::configure()
     ->withImportNames(
         removeUnusedImports: true,
     )
+    ->withRules([
+        AssertStatusToAssertMethodRector::class,
+        NestedFuncCallsToPipeOperatorRector::class,
+    ])
     ->withComposerBased(laravel: true)
     ->withCache(
         cacheDirectory: '/tmp/rector',
@@ -37,6 +43,7 @@ return RectorConfig::configure()
         __DIR__.'/database',
         __DIR__.'/public',
         __DIR__.'/routes',
+        __DIR__.'/resources',
         __DIR__.'/tests',
     ])
     ->withSkip([

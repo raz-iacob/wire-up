@@ -1,15 +1,3 @@
-<?php
-
-declare(strict_types=1);
-
-use Livewire\Component;
-
-return new class extends Component
-{
-    //
-};
-?>
-
 <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
     <flux:sidebar.header>
         <flux:sidebar.brand
@@ -21,10 +9,7 @@ return new class extends Component
         <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
     </flux:sidebar.header>
 
-    <flux:sidebar.nav>
-        <flux:sidebar.item icon="home" href="{{ route('admin.dashboard') }}" :current="request()->routeIs('admin.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
-        <flux:sidebar.item icon="users" :href="route('admin.users-index')" :current="request()->routeIs('admin.users-index')" wire:navigate>{{ __('Users') }}</flux:navlist.item>
-    </flux:sidebar.nav>
+    <livewire:admin-sidebar-nav />
 
     <flux:spacer />
 

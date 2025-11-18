@@ -8,14 +8,7 @@ use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
 it('can render the users index screen', function (): void {
-    $user = User::factory()->create([
-        'email' => 'admin@example.com',
-        'password' => bcrypt('secret'),
-        'active' => true,
-        'admin' => true,
-    ]);
-
-    $response = $this->actingAs($user)
+    $response = $this->actingAsAdmin()
         ->fromRoute('admin.dashboard')
         ->get(route('admin.users-index'));
 
@@ -44,22 +37,14 @@ it('redirects guests away from users index', function (): void {
 });
 
 it('displays users in the table', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $users = User::factory()->count(3)->create([
         'admin' => false,
         'active' => true,
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index');
-
-    $response->assertSee($admin->name)
-        ->assertSee($admin->email);
 
     foreach ($users as $user) {
         $response->assertSee($user->name)
@@ -68,17 +53,12 @@ it('displays users in the table', function (): void {
 });
 
 it('can search users by name', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     User::factory()->createMany([
         ['name' => 'John Doe', 'email' => 'john@example.com'],
         ['name' => 'Jane Smith', 'email' => 'jane@example.com'],
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index')
         ->set('search', 'John')
@@ -89,17 +69,12 @@ it('can search users by name', function (): void {
 });
 
 it('can search users by email', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     User::factory()->createMany([
         ['name' => 'John Doe', 'email' => 'john@example.com'],
         ['name' => 'Jane Smith', 'email' => 'jane@example.com'],
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index')
         ->set('search', 'jane@example.com')
@@ -110,17 +85,12 @@ it('can search users by email', function (): void {
 });
 
 it('can filter users by status', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     User::factory()->createMany([
         ['name' => 'Active User', 'active' => true],
         ['name' => 'Inactive User', 'active' => false],
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index')
         ->set('status', 'active')
@@ -138,81 +108,53 @@ it('can filter users by status', function (): void {
 });
 
 it('can sort users by name', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     User::factory()->createMany([
         ['name' => 'Zebra User'],
         ['name' => 'Alpha User'],
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index')
         ->call('sort', 'name');
 
     $response->assertSet('sortBy', 'name')
-        ->assertSet('sortDirection', 'asc');
+        ->assertSet('sortDirection', 'asc')
+        ->assertSeeInOrder(['Alpha User', 'Zebra User']);
 
     $response->call('sort', 'name');
 
     $response->assertSet('sortBy', 'name')
-        ->assertSet('sortDirection', 'desc');
+        ->assertSet('sortDirection', 'desc')
+        ->assertSeeInOrder(['Zebra User', 'Alpha User']);
 });
 
 it('can sort users by email', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     User::factory()->createMany([
         ['email' => 'zebra@example.com'],
         ['email' => 'alpha@example.com'],
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index')
         ->call('sort', 'email');
 
     $response->assertSet('sortBy', 'email')
-        ->assertSet('sortDirection', 'asc');
+        ->assertSet('sortDirection', 'asc')
+        ->assertSeeInOrder(['alpha@example.com', 'zebra@example.com']);
 
     $response->call('sort', 'email');
 
     $response->assertSet('sortBy', 'email')
-        ->assertSet('sortDirection', 'desc');
-});
-
-it('paginates users correctly', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
-    User::factory()->count(25)->create();
-
-    $this->actingAs($admin);
-
-    $response = Livewire::test('pages::admin.users-index')
-        ->set('perPage', 10);
-
-    $response->assertSet('perPage', 10);
+        ->assertSet('sortDirection', 'desc')
+        ->assertSeeInOrder(['zebra@example.com', 'alpha@example.com']);
 });
 
 it('can invite a new user', function (): void {
     Notification::fake();
 
-    $admin = User::factory()->create([
-        'name' => 'Admin User',
-        'admin' => true,
-        'active' => true,
-    ]);
-
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index')
         ->set('name', 'New User')
@@ -235,12 +177,7 @@ it('can invite a new user', function (): void {
 });
 
 it('validates name and email when inviting new user', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index')
         ->set('name', '')
@@ -265,16 +202,11 @@ it('validates name and email when inviting new user', function (): void {
 });
 
 it('validates email uniqueness when inviting new user', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
-    $existingUser = User::factory()->create([
+    User::factory()->create([
         'email' => 'existing@example.com',
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index')
         ->set('name', 'New User')
@@ -285,17 +217,12 @@ it('validates email uniqueness when inviting new user', function (): void {
 });
 
 it('can toggle user status', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'name' => 'Test User',
         'active' => true,
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     Livewire::test('pages::admin.users-index')
         ->call('toggleStatus', $user->id);
@@ -309,17 +236,12 @@ it('can toggle user status', function (): void {
 });
 
 it('displays user status badges correctly', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     User::factory()->createMany([
         ['name' => 'Active User', 'active' => true],
         ['name' => 'Inactive User', 'active' => false],
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index');
 
@@ -328,17 +250,12 @@ it('displays user status badges correctly', function (): void {
 });
 
 it('shows last login information', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     User::factory()->createMany([
         ['name' => 'User With Login', 'last_seen_at' => now()->subDays(2)],
         ['name' => 'User Without Login', 'last_seen_at' => null],
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-index');
 

@@ -8,17 +8,12 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 it('can render the users edit screen', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'name' => 'John Doe',
         'email' => 'john@example.com',
     ]);
 
-    $response = $this->actingAs($admin)
+    $response = $this->actingAsAdmin()
         ->fromRoute('admin.users-index')
         ->get(route('admin.users-edit', $user));
 
@@ -51,18 +46,13 @@ it('redirects guests away from users edit', function (): void {
 });
 
 it('populates form with user data on mount', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'name' => 'Jane Smith',
         'email' => 'jane@example.com',
         'active' => false,
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user]);
 
@@ -73,18 +63,13 @@ it('populates form with user data on mount', function (): void {
 });
 
 it('displays user creation and last login information', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'name' => 'Test User',
         'last_seen_at' => now()->subDays(3),
         'created_at' => now()->subWeeks(2),
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user]);
 
@@ -93,17 +78,12 @@ it('displays user creation and last login information', function (): void {
 });
 
 it('shows never for users who have not logged in', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'name' => 'New User',
         'last_seen_at' => null,
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user]);
 
@@ -111,18 +91,13 @@ it('shows never for users who have not logged in', function (): void {
 });
 
 it('can update user basic information', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'name' => 'Old Name',
         'email' => 'old@example.com',
         'active' => false,
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('name', 'New Name')
@@ -141,17 +116,12 @@ it('can update user basic information', function (): void {
 });
 
 it('resets email verification when email changes', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'email' => 'verified@example.com',
         'email_verified_at' => now(),
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('email', 'newemail@example.com')
@@ -165,11 +135,6 @@ it('resets email verification when email changes', function (): void {
 });
 
 it('keeps email verification when email stays the same', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $verificationTime = now();
     $user = User::factory()->create([
         'name' => 'John Doe',
@@ -177,7 +142,7 @@ it('keeps email verification when email stays the same', function (): void {
         'email_verified_at' => $verificationTime,
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('name', 'John Smith')
@@ -192,14 +157,9 @@ it('keeps email verification when email stays the same', function (): void {
 });
 
 it('validates required fields', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create();
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('name', '')
@@ -210,14 +170,9 @@ it('validates required fields', function (): void {
 });
 
 it('validates email format', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create();
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('name', 'Valid Name')
@@ -228,12 +183,7 @@ it('validates email format', function (): void {
 });
 
 it('validates email uniqueness except for current user', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
-    $existingUser = User::factory()->create([
+    User::factory()->create([
         'email' => 'existing@example.com',
     ]);
 
@@ -241,7 +191,7 @@ it('validates email uniqueness except for current user', function (): void {
         'email' => 'current@example.com',
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $userToEdit])
         ->set('email', 'existing@example.com')
@@ -257,14 +207,9 @@ it('validates email uniqueness except for current user', function (): void {
 });
 
 it('validates name length', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create();
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('name', str_repeat('a', 256))
@@ -275,14 +220,9 @@ it('validates name length', function (): void {
 });
 
 it('validates email length', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create();
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $longEmail = str_repeat('a', 250).'@example.com';
 
@@ -295,16 +235,11 @@ it('validates email length', function (): void {
 });
 
 it('can update user password', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'password' => Hash::make('oldpassword'),
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('password', 'newpassword123')
@@ -318,14 +253,9 @@ it('can update user password', function (): void {
 });
 
 it('validates password confirmation', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create();
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('password', 'newpassword123')
@@ -336,14 +266,9 @@ it('validates password confirmation', function (): void {
 });
 
 it('validates password strength', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create();
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('password', '123')
@@ -354,17 +279,12 @@ it('validates password strength', function (): void {
 });
 
 it('does not require password to update other fields', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'name' => 'Old Name',
         'password' => Hash::make('originalpassword'),
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('name', 'New Name')
@@ -380,18 +300,13 @@ it('does not require password to update other fields', function (): void {
 });
 
 it('updates basic info and password together', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'name' => 'Old Name',
         'email' => 'old@example.com',
         'active' => false,
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('name', 'New Name')
@@ -411,14 +326,9 @@ it('updates basic info and password together', function (): void {
 });
 
 it('shows success message after update', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create();
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->set('name', 'Updated Name')
@@ -430,11 +340,6 @@ it('shows success message after update', function (): void {
 it('displays user photo when present', function (): void {
     Storage::fake('public');
 
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'name' => 'Test User',
         'photo' => 'users/1_avatar.jpg',
@@ -442,7 +347,7 @@ it('displays user photo when present', function (): void {
 
     Storage::disk('public')->put('users/1_avatar.jpg', 'fake image content');
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user]);
 
@@ -451,16 +356,11 @@ it('displays user photo when present', function (): void {
 });
 
 it('shows no photo section when user has no photo', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'photo' => null,
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user]);
 
@@ -471,11 +371,6 @@ it('shows no photo section when user has no photo', function (): void {
 it('can remove user photo', function (): void {
     Storage::fake('public');
 
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $photoPath = 'users/1_avatar.jpg';
     $user = User::factory()->create([
         'photo' => $photoPath,
@@ -483,9 +378,9 @@ it('can remove user photo', function (): void {
 
     Storage::disk('public')->put($photoPath, 'fake image content');
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
-    $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
+    Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->call('removePhoto')
         ->call('update')
         ->assertHasNoErrors();
@@ -500,18 +395,13 @@ it('can remove user photo', function (): void {
 it('shows success message when removing photo', function (): void {
     Storage::fake('public');
 
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'photo' => 'users/1_avatar.jpg',
     ]);
 
     Storage::disk('public')->put('users/1_avatar.jpg', 'fake image content');
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->call('removePhoto')
@@ -524,18 +414,13 @@ it('shows success message when removing photo', function (): void {
 it('handles removing photo when file does not exist in storage', function (): void {
     Storage::fake('public');
 
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'photo' => 'users/nonexistent.jpg',
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
-    $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
+    Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->call('removePhoto')
         ->call('update')
         ->assertHasNoErrors();
@@ -547,10 +432,7 @@ it('handles removing photo when file does not exist in storage', function (): vo
 it('does not affect other users photos when removing', function (): void {
     Storage::fake('public');
 
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
+    $this->actingAsAdmin();
 
     [$userA, $userB] = User::factory()->createMany([
         ['photo' => 'users/1_avatar.jpg'],
@@ -559,8 +441,6 @@ it('does not affect other users photos when removing', function (): void {
 
     Storage::disk('public')->put('users/1_avatar.jpg', 'user A image');
     Storage::disk('public')->put('users/2_avatar.jpg', 'user B image');
-
-    $this->actingAs($admin);
 
     Livewire::test('pages::admin.users-edit', ['user' => $userA])
         ->call('removePhoto')
@@ -577,18 +457,13 @@ it('does not affect other users photos when removing', function (): void {
 });
 
 it('handles removing photo for user with null photo gracefully', function (): void {
-    $admin = User::factory()->create([
-        'admin' => true,
-        'active' => true,
-    ]);
-
     $user = User::factory()->create([
         'photo' => null,
     ]);
 
-    $this->actingAs($admin);
+    $this->actingAsAdmin();
 
-    $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
+    Livewire::test('pages::admin.users-edit', ['user' => $user])
         ->call('removePhoto')
         ->call('update')
         ->assertHasNoErrors();
