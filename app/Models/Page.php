@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\PageStatus;
 use App\Traits\HasSlugs;
 use App\Traits\HasTranslations;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -15,13 +16,12 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 /**
  * @property-read int $id
  * @property-read array<string, mixed>|null $metadata
  * @property-read PageStatus $status
- * @property-read Carbon|null $published_at
+ * @property-read CarbonImmutable|null $published_at
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read Collection<int, Translation> $translations

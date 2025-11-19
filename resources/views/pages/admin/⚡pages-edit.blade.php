@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Flux\Flux;
-use App\Models\Page;
-use Livewire\Component;
-use App\Enums\PageStatus;
-use Livewire\Attributes\Url;
-use Illuminate\Support\Carbon;
-use Illuminate\Validation\Rule;
 use App\Actions\UpdatePageAction;
-use Illuminate\Contracts\View\View;
+use App\Enums\PageStatus;
+use App\Models\Page;
+use Carbon\CarbonImmutable;
+use Flux\Flux;
 use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Url;
+use Livewire\Component;
 
 return new class extends Component
 {
@@ -34,7 +34,7 @@ return new class extends Component
 
     public PageStatus $status;
 
-    public ?Carbon $published_at = null;
+    public ?CarbonImmutable $published_at = null;
 
     #[Url(except: 'en')]
     public string $locale;
