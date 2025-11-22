@@ -1,4 +1,3 @@
-
 <div class="space-y-6 md:space-y-8">
     <div class="hidden md:block">
         <flux:heading size="xl" level="1">{{ __('Account') }}</flux:heading>
