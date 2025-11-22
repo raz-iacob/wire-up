@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read string $code
  * @property-read string $name
  * @property-read string|null $endonym
+ * @property-read string|null $regional
  * @property-read string|null $script
  * @property-read bool $rtl
  * @property-read bool $active
@@ -39,6 +40,7 @@ final class Locale extends Model
             'code' => 'string',
             'name' => 'string',
             'endonym' => 'string',
+            'regional' => 'string',
             'script' => 'string',
             'rtl' => 'boolean',
             'active' => 'boolean',

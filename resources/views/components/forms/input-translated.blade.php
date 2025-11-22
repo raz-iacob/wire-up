@@ -1,4 +1,4 @@
-@props(['name' => 'title', 'locale' => app()->getLocale(), 'label' => '', 'note' => '', 'required' => false])
+@props(['name' => 'title', 'locale' => app()->getLocale(), 'multiple' => false, 'label' => '', 'note' => '', 'required' => false])
 
 <flux:field wire:key="{{ $name }}-{{ $locale }}">
     <div class="flex items-center gap-3 mb-2">
@@ -6,7 +6,7 @@
         <flux:label>{{ $label }}</flux:label>
         @endif
 
-        @if(app('locales')->count() > 1)
+        @if($multiple)
         <flux:tooltip content="{{ __('Change language') }}">
             <flux:badge size="sm" class="text-xs py-0.5!" as="button" x-on:click="$wire.dispatch('change-language')">{{ strtoupper($locale) }}</flux:badge>
         </flux:tooltip>

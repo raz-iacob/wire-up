@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\LocaleRedirect;
 use App\Http\Middleware\OnlyAdmins;
 use App\Http\Middleware\TrackUserAccess;
 use Illuminate\Foundation\Application;
@@ -25,7 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 : route('home')
         );
 
-        $middleware->appendToGroup('web', TrackUserAccess::class);
+        $middleware->appendToGroup('web', [
+            LocaleRedirect::class,
+            TrackUserAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

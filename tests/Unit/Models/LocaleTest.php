@@ -15,6 +15,7 @@ test('to array', function (): void {
             'name',
             'endonym',
             'script',
+            'regional',
             'rtl',
             'active',
             'published',

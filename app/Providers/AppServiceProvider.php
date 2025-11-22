@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Models\Locale;
+use App\Services\Localization;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
@@ -20,7 +18,7 @@ final class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton('locales', fn (): Collection => $this->siteActiveLocales());
+        $this->app->singleton('localization', Localization::class);
     }
 
     public function boot(): void
@@ -64,13 +62,5 @@ final class AppServiceProvider extends ServiceProvider
     private function configurePasswordValidation(): void
     {
         Password::defaults(fn () => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
-    }
-
-    /**
-     * @return Collection<int, string>
-     */
-    private function siteActiveLocales(): Collection
-    {
-        return Cache::rememberForever('site-locales', fn (): Collection => Locale::active()->pluck('code'));
     }
 }

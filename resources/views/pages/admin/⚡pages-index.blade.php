@@ -86,6 +86,12 @@ return new class extends Component
         return $paginator->paginate($this->perPage);
     }
 
+    #[Computed]
+    public function hasMultipleActiveLocales(): bool
+    {
+        return app('localization')->getActiveLocaleCodes()->count() > 1;
+    }
+
     public function render(): View
     {
         return $this->view()
@@ -124,7 +130,7 @@ return new class extends Component
         <flux:table class="md:table-fixed md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->pages" container:class="max-h-[calc(100dvh-12rem)]">
             <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
                 <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection" wire:click="sort('title')">{{ __('Title') }}</flux:table.column>
-                @if(app('locales')->count() > 1)
+                @if($this->hasMultipleActiveLocales())
                 <flux:table.column class="w-1/6">{{ __('Translations') }}</flux:table.column>
                 @endif
                 <flux:table.column class="w-1/6">{{ __('Status') }}</flux:table.column>
@@ -141,7 +147,7 @@ return new class extends Component
                         </a>
                     </flux:table.cell>
 
-                    @if(app('locales')->count() > 1)
+                    @if($this->hasMultipleActiveLocales())
                     <flux:table.cell class="whitespace-nowrap"></flux:table.cell>
                     @endif
 

@@ -2,23 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Models\Locale;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
+use App\Services\Localization;
 
-it('binds locales singleton with active locale codes and cache them', function (): void {
-    Cache::forget('site-locales');
+it('binds localization singleton', function (): void {
+    $localization = app('localization');
 
-    $fromCache = Cache::get('site-locales');
-    expect($fromCache?->toArray())->toBeNull();
-
-    Locale::query()->whereIn('code', ['en', 'fr'])->update(['active' => true]);
-
-    $locales = app('locales');
-
-    expect($locales)->toBeInstanceOf(Collection::class)
-        ->and($locales->toArray())->toBe(['en', 'fr']);
-
-    $fromCache = Cache::get('site-locales');
-    expect($fromCache->toArray())->toBe(['en', 'fr']);
+    expect($localization)->toBeInstanceOf(Localization::class);
 });

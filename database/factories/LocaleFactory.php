@@ -21,6 +21,7 @@ final class LocaleFactory extends Factory
             'code' => fake()->unique()->lexify('??????'),
             'name' => fake()->word(),
             'endonym' => fake()->optional()->word(),
+            'regional' => fake()->optional()->lexify('??-??'),
             'script' => fake()->optional()->randomElement(['Latin', 'Arabic', 'Han', 'Cyrillic']),
             'rtl' => fake()->boolean(20),
             'active' => fake()->boolean(70),

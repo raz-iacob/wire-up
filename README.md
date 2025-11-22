@@ -54,38 +54,6 @@
     composer setup
     ```
 
-## Project Structure
-
-```
-wire-up/
-├── app/                   # Application logic
-│   ├── Actions/           # Action classes (business logic)
-│   ├── Enums/             # Application enums
-│   ├── Http/
-│   │   ├── Controllers/   # HTTP controllers
-│   ├── Livewire/          # Livewire components
-│   ├── Models/            # Eloquent models
-│   ├── Providers/         # Service providers
-│   └── Services/          # Business logic services
-├── bootstrap/             # Application bootstrapping
-├── config/                # Configuration files
-├── database/
-│   ├── factories/         # Model factories
-│   ├── migrations/        # Database migrations
-│   └── seeders/           # Database seeders
-├── resources/
-│   ├── css/               # Stylesheets
-│   ├── images/            # Images and logos
-│   ├── js/                # JavaScript files
-│   └── views/             # Blade templates
-├── routes/                # Application routes
-├── tests/                 # Test suites
-│   ├── Feature/           # Feature tests
-│   ├── Unit/              # Unit tests
-│   └── Browser/           # Browser tests (Pest v4)
-└── public/                # Web-accessible files
-```
-
 ## Testing
 
 Wire-Up uses Pest v4 for testing, including browser testing capabilities:

@@ -39,16 +39,22 @@ return new class extends Component
     #[Url(except: 'en')]
     public string $locale;
 
+    /**
+     * @var array<string, mixed>
+     */
+    public array $activeLocales = [];
+
     public function mount(Page $page): void
     {
         $page->load('translations');
-        $this->locale = app()->getLocale();
         $this->page = $page;
         $this->status = $page->computed_status;
         $this->published_at = $page->published_at;
         $this->title = $page->translationsFor('title');
         $this->description = $page->translationsFor('description');
         $this->slugs = $page->getSlugsArray();
+        $this->locale = app()->getLocale();
+        $this->activeLocales = app('localization')->getActiveLocales();
     }
 
     public function update(UpdatePageAction $action): void
@@ -59,7 +65,7 @@ return new class extends Component
             'published_at' => ['nullable', 'date'],
         ];
 
-        foreach (app('locales') as $locale) {
+        foreach (array_keys($this->activeLocales) as $locale) {
             $rules["title.$locale"] = ['required', 'string', 'min:3'];
             $rules["description.$locale"] = ['nullable', 'string', 'max:160'];
             $rules["slugs.$locale"] = [
@@ -138,9 +144,9 @@ return new class extends Component
                 <flux:description>{{ __('Manage how this page appears in search results.') }}</flux:description>
 
                 <div class="flex flex-col gap-6 mt-6">
-                    <x-forms.input-translated name="title" :$locale label="{{ __('Title') }}" />
-                    <x-forms.url-translated name="slugs" :$locale label="{{ __('Web Address') }}" />
-                    <x-forms.textarea-translated name="description" :$locale label="{{ __('Description') }}" />
+                    <x-forms.input-translated name="title" :$locale :multiple="count($activeLocales) > 1" label="{{ __('Title') }}" />
+                    <x-forms.url-translated name="slugs" :$locale :multiple="count($activeLocales) > 1" label="{{ __('Web Address') }}" />
+                    <x-forms.textarea-translated name="description" :$locale :multiple="count($activeLocales) > 1" label="{{ __('Description') }}" />
                 </div>
             </flux:fieldset>
         </div>
