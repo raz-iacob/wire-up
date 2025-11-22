@@ -28,6 +28,11 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Prepare SQLite
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+
       - name: Add Flux license
         run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
 
