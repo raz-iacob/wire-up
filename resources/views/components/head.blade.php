@@ -1,4 +1,4 @@
-@props(['title' => null])
+@props(['title' => null, 'description' => null])
 
 <head>
     <meta charset="utf-8">
@@ -15,4 +15,7 @@
     @fluxAppearance
 
     <title>{{ isset($title) ? "$title | " : '' }}{{ config('app.name') }}</title>
+    @if (isset($description))
+    <meta name="description" content="{{ $description }}">
+    @endif
 </head>

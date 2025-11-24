@@ -28,7 +28,7 @@ return new class extends Migration
 
     private function addHomePage(): void
     {
-        $title = 'Welcome';
+        $title = 'Home';
         $description = 'Welcome to our website!';
 
         $pageId = DB::table('pages')->insertGetId([

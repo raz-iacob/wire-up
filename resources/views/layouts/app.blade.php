@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <x-head :title="isset($title) ? $title : null" />
+    <x-head :title="isset($title) ? $title : null" :description="isset($description) ? $description : null" />
     <body>
         <flux:main>
             {{ $slot }}

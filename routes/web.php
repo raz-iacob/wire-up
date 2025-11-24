@@ -26,4 +26,7 @@ Route::group(['prefix' => app('localization')->setLocale()], function (): void {
         Route::post('logout', [SessionController::class, 'destroy'])->name('logout');
     });
 
+    Route::livewire('{slug}', 'pages::page')
+        ->where('slug', '^(?!admin).*')
+        ->name('page');
 });
