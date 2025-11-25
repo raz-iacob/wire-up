@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Services\Localization;
+use App\Services\LocalizationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -18,7 +18,7 @@ final class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton('localization', Localization::class);
+        $this->app->singleton('localization', LocalizationService::class);
     }
 
     public function boot(): void

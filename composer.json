@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4.0",
+        "intervention/image": "^3.11",
         "laravel/framework": "^12.39.0",
         "livewire/flux": "^2.6.1",
         "livewire/flux-pro": "^2.6.1",

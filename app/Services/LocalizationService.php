@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
-final class Localization
+final class LocalizationService
 {
     private string $currentLocale;
 
