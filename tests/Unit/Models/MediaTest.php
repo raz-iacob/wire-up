@@ -73,26 +73,6 @@ it('has many mediables', function (): void {
         ->and($media->mediables->last()->id)->toBe($mediable2->id);
 });
 
-it('can filter media with published mediables using published scope', function (): void {
-    $publishedMedia = Media::factory()->create();
-    $unpublishedMedia = Media::factory()->create();
-
-    Mediable::factory()->create([
-        'media_id' => $publishedMedia->id,
-        'published' => true,
-    ]);
-
-    Mediable::factory()->create([
-        'media_id' => $unpublishedMedia->id,
-        'published' => false,
-    ]);
-
-    $result = Media::published()->get();
-
-    expect($result)->toHaveCount(1)
-        ->and($result->first()->id)->toBe($publishedMedia->id);
-});
-
 it('returns temporary url for photo type with expires parameter', function (): void {
     Storage::fake();
     $media = Media::factory()->create([

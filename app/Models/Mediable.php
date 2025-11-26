@@ -21,7 +21,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property array<string, mixed>|null $crop
  * @property array<string, mixed>|null $metadata
  * @property int|null $position
- * @property bool $published
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  * @property-read Media $media
@@ -63,7 +62,6 @@ final class Mediable extends Model
             'crop' => 'array',
             'metadata' => 'array',
             'position' => 'integer',
-            'published' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

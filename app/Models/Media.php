@@ -8,8 +8,6 @@ use App\Enums\MediaType;
 use App\Services\ImageService;
 use Carbon\CarbonImmutable;
 use Database\Factories\MediaFactory;
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -71,17 +69,6 @@ final class Media extends Model
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
-    }
-
-    /**
-     * @param  Builder<Media>  $query
-     */
-    #[Scope]
-    protected function published(Builder $query): void
-    {
-        $query->whereHas('mediables', function (Builder $query): void {
-            $query->where('published', true);
-        });
     }
 
     /**

@@ -41,7 +41,6 @@ return new class extends Migration
             $table->json('crop')->nullable();
             $table->json('metadata')->nullable();
             $table->unsignedSmallInteger('position')->default(0);
-            $table->boolean('published')->default(true);
             $table->timestamps();
 
             $table->foreign('locale')->references('code')->on('locales')->onDelete('cascade');

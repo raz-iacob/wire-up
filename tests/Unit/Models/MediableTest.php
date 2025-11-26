@@ -20,7 +20,6 @@ test('to array', function (): void {
             'crop',
             'metadata',
             'position',
-            'published',
             'created_at',
             'updated_at',
         ]);
@@ -48,14 +47,6 @@ it('has position cast to integer', function (): void {
 
     expect($mediable->position)->toBeInt()
         ->and($mediable->position)->toBe(5);
-});
-
-it('has published cast to boolean', function (): void {
-    $mediable = Mediable::factory()->create([
-        'published' => true,
-    ])->fresh();
-
-    expect($mediable->published)->toBeTrue();
 });
 
 it('belongs to media', function (): void {
