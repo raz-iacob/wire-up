@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\PageStatus;
+use App\Traits\HasMedia;
 use App\Traits\HasSlugs;
 use App\Traits\HasTranslations;
 use Carbon\CarbonImmutable;
@@ -33,7 +34,7 @@ use Illuminate\Database\Eloquent\Model;
 final class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
-    use HasFactory, HasSlugs, HasTranslations;
+    use HasFactory, HasMedia, HasSlugs, HasTranslations;
 
     /**
      * @return array<string, string>

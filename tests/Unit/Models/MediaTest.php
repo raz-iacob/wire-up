@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\MediaType;
 use App\Models\Media;
 use App\Models\Mediable;
+use App\Models\Page;
 use App\Services\ImageService;
 use Illuminate\Support\Facades\Storage;
 
@@ -64,13 +65,15 @@ it('has type as MediaType enum', function (): void {
 });
 
 it('has many mediables', function (): void {
+    $page = Page::factory()->create();
     $media = Media::factory()->create();
-    $mediable1 = Mediable::factory()->create(['media_id' => $media->id]);
-    $mediable2 = Mediable::factory()->create(['media_id' => $media->id]);
+
+    $page->media()->attach($media, ['role' => 'example', 'locale' => app()->getLocale()]);
+    $anotherPage = Page::factory()->create();
+    $anotherPage->media()->attach($media, ['role' => 'example2', 'locale' => app()->getLocale()]);
 
     expect($media->mediables)->toHaveCount(2)
-        ->and($media->mediables->first()->id)->toBe($mediable1->id)
-        ->and($media->mediables->last()->id)->toBe($mediable2->id);
+        ->and($media->mediables->first())->toBeInstanceOf(Mediable::class);
 });
 
 it('returns temporary url for photo type with expires parameter', function (): void {

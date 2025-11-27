@@ -34,6 +34,7 @@ use Illuminate\Support\Facades\Storage;
  * @property-read string $downloadUrl
  * @property-read string $dimensions
  * @property-read Collection<int, Mediable> $mediables
+ * @property-read Mediable $pivot
  */
 final class Media extends Model
 {

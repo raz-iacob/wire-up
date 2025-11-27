@@ -6,6 +6,7 @@ namespace App\Traits;
 
 use App\Enums\MediaType;
 use App\Models\Media;
+use App\Models\Mediable;
 use App\Services\ImageService;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
@@ -13,15 +14,38 @@ use Illuminate\Support\Arr;
 trait HasMedia
 {
     /**
-     * @return MorphToMany<Media, $this>
+     * @return MorphToMany<Media, $this, Mediable>
      */
     public function media(): MorphToMany
     {
         return $this->morphToMany(Media::class, 'mediable', 'mediables')
-            ->withPivot(['role', 'crop', 'locale', 'position'])
+            ->using(Mediable::class)
+            ->withPivot(['role', 'crop', 'metadata', 'locale', 'position'])
             ->withTimestamps()
             ->orderBy('mediables.position')
             ->orderByDesc('mediables.created_at');
+    }
+
+    public function firstMedia(MediaType $type, string $role): ?Media
+    {
+        return $this->media->sortBy('mediables.position')->first(fn (Media $media): bool => $media->type === $type
+            && $media->pivot->role === $role
+            && $media->pivot->locale === app()->getLocale()
+        );
+    }
+
+    /**
+     * @return array<int, Media>
+     */
+    public function allMedia(MediaType $type, string $role): array
+    {
+        return $this->media
+            ->filter(fn (Media $media): bool => $media->type === $type
+                && $media->pivot->role === $role
+                && $media->pivot->locale === app()->getLocale()
+            )
+            ->values()
+            ->all();
     }
 
     public function hasImage(string $role, string $crop = 'default'): bool
@@ -32,16 +56,15 @@ trait HasMedia
     /**
      * @param  array<string, mixed>  $params
      */
-    public function image(string $role, string $crop = 'default', array $params = [], bool $fallback = false, ?Media $media = null): ?string
+    public function image(string $role, string $crop = 'default', array $params = [], bool $fallback = true, ?Media $media = null): ?string
     {
         $media ??= $this->findImage($role, $crop);
 
-        return $fallback
-            ? ImageService::placeholder()
-            : ($media ? route('image.show', [
-                'options' => $this->cropString(($media->pivot->crop[$crop] ?? []) + $params),
+        return $media ?
+            route('image.show', [
+                'options' => $this->cropString([...($media->pivot->crop[$crop] ?? []), ...$params]),
                 'path' => $media->url,
-            ]) : null);
+            ]) : ($fallback ? ImageService::placeholder() : null);
     }
 
     /**
@@ -73,14 +96,6 @@ trait HasMedia
         $media ??= $this->findImage($role);
 
         return $media->pivot->metadata['caption'] ?? '';
-    }
-
-    public function findMedia(MediaType $type, string $role): ?Media
-    {
-        return $this->media->first(fn (Media $media): bool => $media->type === $type
-            && $media->pivot->role === $role
-            && $media->pivot->locale === app()->getLocale()
-        );
     }
 
     protected static function bootHasMedia(): void

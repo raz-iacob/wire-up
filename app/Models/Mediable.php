@@ -9,6 +9,7 @@ use Database\Factories\MediableFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
@@ -26,10 +27,25 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property-read Media $media
  * @property-read Model $mediable
  */
-final class Mediable extends Model
+final class Mediable extends MorphPivot
 {
     /** @use HasFactory<MediableFactory> */
     use HasFactory;
+
+    /**
+     * @var bool
+     */
+    public $incrementing = true;
+
+    /**
+     * @var string
+     */
+    protected $primaryKey = 'id';
+
+    /**
+     * @var string
+     */
+    protected $table = 'mediables';
 
     /**
      * @return BelongsTo<Media, $this>
