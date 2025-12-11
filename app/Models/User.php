@@ -96,7 +96,7 @@ final class User extends Authenticatable implements MustVerifyEmail
     {
         return Attribute::make(
             get: fn (): ?string => $this->photo
-                ? Storage::url($this->photo)
+                ? Storage::disk(config('filesystems.media'))->url($this->photo)
                 : null,
         );
     }

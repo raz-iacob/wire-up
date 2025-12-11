@@ -72,13 +72,29 @@ final class Media extends Model
         ];
     }
 
+    public function delete(): bool
+    {
+        if ($this->canDeleteSafely()) {
+            parent::delete();
+
+            Storage::disk(config('filesystems.media'))->delete($this->source);
+            if ($this->thumbnail) {
+                Storage::disk(config('filesystems.media'))->delete($this->thumbnail);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     /**
-     * @return Attribute<string, null>
+     * @return Attribute<?string, null>
      */
     protected function dimensions(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => $this->type === MediaType::PHOTO ? $this->width.' x '.$this->height : 'x'
+            get: fn (): ?string => $this->type === MediaType::IMAGE ? $this->width.' x '.$this->height : null
         );
     }
 
@@ -108,14 +124,19 @@ final class Media extends Model
     /**
      * @return Attribute<string, null>
      */
-    protected function thumbnail(): Attribute
+    protected function preview(): Attribute
     {
         return Attribute::make(
             get: fn (): string => match ($this->type) {
-                MediaType::PHOTO => route('image.show', ['w=300,h=300', $this->source]),
-                MediaType::VIDEO => 'https://i.ytimg.com/vi/'.($this->filename ?? 'AjWfY7SnMBI').'/hqdefault.jpg',
-                default => ImageService::placeholder(),
+                MediaType::IMAGE => route('image.show', ['w=350,h=200', $this->source]),
+                default => $this->thumbnail ? route('image.show', ['w=350,h=200', $this->thumbnail]) : ImageService::placeholder(),
             }
         );
+    }
+
+    private function canDeleteSafely(): bool
+    {
+        return $this->mediables()
+            ->where('media_id', $this->id)->doesntExist();
     }
 }

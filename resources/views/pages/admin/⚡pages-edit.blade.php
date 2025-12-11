@@ -30,6 +30,11 @@ return new class extends Component
     /**
      * @var array<string, string>
      */
+    public array $og_image = [];
+
+    /**
+     * @var array<string, string>
+     */
     public array $slugs = [];
 
     public PageStatus $status;
@@ -54,7 +59,7 @@ return new class extends Component
         $this->description = $page->translationsFor('description');
         $this->slugs = $page->getSlugsArray();
         $this->locale = app()->getLocale();
-        $this->activeLocales = app('localization')->getActiveLocales();
+        $this->activeLocales = resolve('localization')->getActiveLocales();
     }
 
     public function update(UpdatePageAction $action): void
@@ -144,9 +149,10 @@ return new class extends Component
                 <flux:description>{{ __('Manage how this page appears in search results.') }}</flux:description>
 
                 <div class="flex flex-col gap-6 mt-6">
-                    <x-forms.input-translated name="title" :$locale :multiple="count($activeLocales) > 1" label="{{ __('Title') }}" />
-                    <x-forms.url-translated name="slugs" :$locale :multiple="count($activeLocales) > 1" label="{{ __('Web Address') }}" />
-                    <x-forms.textarea-translated name="description" :$locale :multiple="count($activeLocales) > 1" label="{{ __('Description') }}" />
+                    <x-forms.input-translated name="title" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Title') }}" />
+                    <x-forms.url-translated name="slugs" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Web Address') }}" />
+                    <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Description') }}" />
+                    <x-forms.media type="any" name="og_image" :$locale :multi-locale="count($activeLocales) > 1" :multiple="true" label="{{ __('Open Graph Image') }}" />
                 </div>
             </flux:fieldset>
         </div>

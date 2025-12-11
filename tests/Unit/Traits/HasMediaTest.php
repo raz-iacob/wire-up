@@ -55,7 +55,7 @@ it('can retrieve all media by type and role in current locale', function (): voi
 
 it('can check if a model has an image', function (): void {
     $page = Page::factory()->create();
-    $media = Media::factory()->create(['type' => MediaType::PHOTO]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
 
     $page->media()->attach($media, ['role' => 'cover', 'crop' => ['default' => [0, 0, 100, 100]], 'locale' => app()->getLocale()]);
 
@@ -65,7 +65,7 @@ it('can check if a model has an image', function (): void {
 it('can return a specific image by role', function (): void {
     $page = Page::factory()->create();
     $media = Media::factory()->create([
-        'type' => MediaType::PHOTO,
+        'type' => MediaType::IMAGE,
         'source' => 'images/sample-photo.jpg',
     ]);
 
@@ -93,8 +93,8 @@ it('will return null if no image is found and fallback is false', function (): v
 
 it('can return all images for a role', function (): void {
     $page = Page::factory()->create();
-    $media1 = Media::factory()->create(['type' => MediaType::PHOTO]);
-    $media2 = Media::factory()->create(['type' => MediaType::PHOTO]);
+    $media1 = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $media2 = Media::factory()->create(['type' => MediaType::IMAGE]);
     $page->media()->attach($media1, ['role' => 'gallery', 'locale' => 'en', 'crop' => ['default' => [0, 0, 100, 100]]]);
     $page->media()->attach($media2, ['role' => 'gallery', 'locale' => 'en', 'crop' => ['default' => [0, 0, 200, 200]]]);
 
@@ -106,7 +106,7 @@ it('can return all images for a role', function (): void {
 
 it('can find an image by role and crop', function (): void {
     $page = Page::factory()->create();
-    $media = Media::factory()->create(['type' => MediaType::PHOTO]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
     $page->media()->attach($media, ['role' => 'avatar', 'locale' => 'en', 'crop' => ['thumb' => [10, 10, 50, 50]]]);
 
     $found = (fn () => $this->findImage('avatar', 'thumb'))->call($page);
@@ -117,7 +117,7 @@ it('can find an image by role and crop', function (): void {
 
 it('can get crop string for an image', function (): void {
     $page = Page::factory()->create();
-    $media = Media::factory()->create(['type' => MediaType::PHOTO]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
     $page->media()->attach($media, ['role' => 'cover', 'locale' => 'en', 'crop' => ['default' => ['w' => 100, 'h' => 100, 'x' => 0, 'y' => 0]]]);
 
     $image = $page->media()->first();
@@ -131,7 +131,7 @@ it('can get crop string for an image', function (): void {
 
 it('detaches media on model deletion', function (): void {
     $page = Page::factory()->create();
-    $media = Media::factory()->create(['type' => MediaType::PHOTO]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
     $page->media()->attach($media, ['role' => 'cover', 'locale' => 'en', 'crop' => ['default' => [0, 0, 100, 100]]]);
 
     $page->delete();
@@ -145,7 +145,7 @@ it('detaches media on model deletion', function (): void {
 it('gets media alt text', function (): void {
     $page = Page::factory()->create();
     $media = Media::factory()->create([
-        'type' => MediaType::PHOTO,
+        'type' => MediaType::IMAGE,
         'alt_text' => 'Sample Alt Text',
     ]);
 
@@ -158,7 +158,7 @@ it('gets media alt text', function (): void {
 
 it('gets media caption from pivot metadata', function (): void {
     $page = Page::factory()->create();
-    $media = Media::factory()->create(['type' => MediaType::PHOTO]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
 
     $page->media()->attach($media, [
         'role' => 'cover',

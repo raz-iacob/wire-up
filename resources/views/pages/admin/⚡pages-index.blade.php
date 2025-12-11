@@ -89,7 +89,7 @@ return new class extends Component
     #[Computed]
     public function hasMultipleActiveLocales(): bool
     {
-        return app('localization')->getActiveLocaleCodes()->count() > 1;
+        return resolve('localization')->getActiveLocaleCodes()->count() > 1;
     }
 
     public function render(): View

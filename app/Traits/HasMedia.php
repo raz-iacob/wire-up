@@ -74,7 +74,7 @@ trait HasMedia
     public function images(string $role, string $crop = 'default', array $params = []): array
     {
         return $this->media
-            ->filter(fn (Media $media): bool => $media->type === MediaType::PHOTO
+            ->filter(fn (Media $media): bool => $media->type === MediaType::IMAGE
                 && $media->pivot->role === $role
                 && ($media->pivot->crop[$crop] ?? false)
                 && $media->pivot->locale === app()->getLocale()
@@ -105,7 +105,7 @@ trait HasMedia
 
     private function findImage(string $role, string $crop = 'default'): ?Media
     {
-        return $this->media->first(fn (Media $media): bool => $media->type === MediaType::PHOTO
+        return $this->media->first(fn (Media $media): bool => $media->type === MediaType::IMAGE
             && $media->pivot->role === $role
             && ($media->pivot->crop[$crop] ?? false)
             && $media->pivot->locale === app()->getLocale()

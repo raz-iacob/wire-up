@@ -1,14 +1,14 @@
-@props(['name' => 'slugs', 'locale' => app()->getLocale(), 'multiple' => false, 'label' => '', 'required' => false])
+@props(['name' => 'slugs', 'locale' => app()->getLocale(), 'multiLocale' => false, 'label' => null, 'required' => false])
 
 <flux:field wire:key="{{ $name }}-{{ $locale }}">
     <div class="flex items-center gap-3 mb-2">
-        @if(!empty($label))
+        @if($label)
         <flux:label>{{ $label }}</flux:label>
         @endif
 
-        @if($multiple)
+        @if($multiLocale)
         <flux:tooltip content="{{ __('Change language') }}">
-            <flux:badge size="sm" class="text-xs py-0.5!" as="button" x-on:click="$wire.dispatch('change-language')">{{ strtoupper($locale) }}</flux:badge>
+            <flux:badge size="sm" class="text-xs py-0.5!" as="button" x-on:click="$wire.dispatch('change-locale')">{{ strtoupper($locale) }}</flux:badge>
         </flux:tooltip>
         @endif
     </div>

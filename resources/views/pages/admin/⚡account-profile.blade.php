@@ -135,15 +135,15 @@ return new class extends Component
     {
         $extension = $this->photo->getClientOriginalExtension();
         $originalName = pathinfo($this->photo->getClientOriginalName(), PATHINFO_FILENAME);
-        $filename = "users/{$this->user->id}_{$originalName}.{$extension}";
+        $filename = "{$this->user->id}_{$originalName}.{$extension}";
 
-        return $this->photo->storeAs('', $filename, 'public');
+        return $this->photo->storeAs('users', $filename, config('filesystems.media'));
     }
 
     private function deletePhoto(): void
     {
         if ($this->user->photo) {
-            Storage::disk('public')->delete($this->user->photo);
+            Storage::disk(config('filesystems.media'))->delete($this->user->photo);
         }
     }
 };

@@ -27,10 +27,10 @@ final class LocaleRedirect
 
         if (count($params) > 0) {
             $locale = $params[0];
-            $localization = app('localization');
+            $localization = resolve('localization');
             if ($localization->isActiveLocale($locale) && $locale === config()->string('app.locale', 'en')) {
                 $redirection = $localization->stripDefaultLocale($request->getPathInfo());
-                app(SessionManager::class)->reflash();
+                resolve(SessionManager::class)->reflash();
 
                 return new RedirectResponse($redirection, 302, ['Vary' => 'Accept-Language']);
             }

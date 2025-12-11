@@ -12,7 +12,7 @@ it('may delete a page', function (): void {
 
     $page->setSlugs();
 
-    $action = app(DeletePageAction::class);
+    $action = resolve(DeletePageAction::class);
 
     $action->handle($page);
 

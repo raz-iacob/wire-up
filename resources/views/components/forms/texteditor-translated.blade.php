@@ -1,12 +1,16 @@
-@props(['name' => 'title', 'lang' => 'en', 'label' => 'Description', 'required' => false, 'prefix' => 'form.translated'])
+@props(['name' => 'title', 'locale' => 'en', 'label' => null, 'required' => false, 'multiLocale' => false])
 
-<flux:field wire:key="{{ $name }}-{{ $lang }}">
+<flux:field wire:key="{{ $name }}-{{ $locale }}">
     <div class="flex items-center gap-3 mb-2">
-        <flux:label>{{ $label }} {{ $required ? '*' : '' }}</flux:label>
-        <flux:tooltip content="Change language">
-            <flux:badge size="sm" as="button" x-on:click="$wire.dispatch('change-language')">{{ strtoupper($lang) }}</flux:badge>
+        @if($label)
+        <flux:label>{{ $label }}</flux:label>
+        @endif
+        @if($multiLocale)
+        <flux:tooltip content="{{ __('Change language') }}">
+            <flux:badge size="sm" class="text-xs py-0.5!" as="button" x-on:click="$wire.dispatch('change-locale')">{{ strtoupper($locale) }}</flux:badge>
         </flux:tooltip>
+        @endif
     </div>
-    <flux:editor wire:model.lazy="{{ $prefix }}.{{ $name }}.{{ $lang }}" :required="$required" toolbar="bold italic underline | align ~ undo redo" class="**:data-[slot=content]:min-h-[100px]!" />
-    <flux:error name="{{ $prefix }}.{{ $name }}.{{ $lang }}" />
+    <flux:editor wire:model.lazy="{{ $name }}.{{ $locale }}" :required="$required" toolbar="bold italic underline | align ~ undo redo" class="**:data-[slot=content]:min-h-[100px]!" />
+    <flux:error name="{{ $name }}.{{ $locale }}" />
 </flux:field>

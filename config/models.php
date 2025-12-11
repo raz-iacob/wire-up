@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Media;
 use App\Models\Page;
 
 return [
@@ -16,5 +17,6 @@ return [
 
     'map' => [
         'page' => Page::class,
+        'media' => Media::class,
     ],
 ];

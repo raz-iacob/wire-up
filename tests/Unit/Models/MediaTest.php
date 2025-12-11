@@ -76,10 +76,10 @@ it('has many mediables', function (): void {
         ->and($media->mediables->first())->toBeInstanceOf(Mediable::class);
 });
 
-it('returns temporary url for photo type with expires parameter', function (): void {
+it('returns temporary url for image type with expires parameter', function (): void {
     Storage::fake();
     $media = Media::factory()->create([
-        'type' => MediaType::PHOTO,
+        'type' => MediaType::IMAGE,
         'source' => 'photos/test-image.jpg',
     ])->fresh();
 
@@ -90,30 +90,30 @@ it('returns temporary url for photo type with expires parameter', function (): v
         ->and($url)->toContain('expiration=');
 });
 
-it('returns photo thumbnail URL for photo media type', function (): void {
+it('returns image preview URL for image media type', function (): void {
     $media = Media::factory()->create([
-        'type' => MediaType::PHOTO,
+        'type' => MediaType::IMAGE,
         'source' => 'photos/test-image.jpg',
     ])->fresh();
 
-    $expectedThumbnailUrl = route('image.show', ['w=300,h=300', 'photos/test-image.jpg']);
+    $expectedPreviewUrl = route('image.show', ['w=350,h=200', 'photos/test-image.jpg']);
 
-    expect($media->thumbnail)->toBe($expectedThumbnailUrl);
+    expect($media->preview)->toBe($expectedPreviewUrl);
 });
 
-it('returns video thumbnail URL for video media type', function (): void {
+it('returns video preview URL for video media type when thumbnail is not null', function (): void {
     $media = Media::factory()->create([
         'type' => MediaType::VIDEO,
         'filename' => 'dQw4w9WgXcQ',
-        'source' => 'videos/test-video.mp4',
+        'thumbnail' => 'videos/test-video.mp4',
     ])->fresh();
 
-    $expectedThumbnailUrl = 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg';
+    $expectedPreviewUrl = route('image.show', ['w=350,h=200', 'videos/test-video.mp4']);
 
-    expect($media->thumbnail)->toBe($expectedThumbnailUrl);
+    expect($media->preview)->toBe($expectedPreviewUrl);
 });
 
-it('returns thumbnail placeholder for non-photo media types', function (): void {
+it('returns preview placeholder for non-image media types when thumbnail is null', function (): void {
     $expectedPlaceholder = ImageService::placeholder();
 
     $mediaTypes = [
@@ -125,9 +125,10 @@ it('returns thumbnail placeholder for non-photo media types', function (): void 
         $media = Media::factory()->create([
             'type' => $type,
             'source' => 'files/test-file.wav',
+            'thumbnail' => null,
         ])->fresh();
 
-        expect($media->thumbnail)->toBe($expectedPlaceholder);
+        expect($media->preview)->toBe($expectedPlaceholder);
     }
 });
 
@@ -141,7 +142,7 @@ it('returns downloadUrl for non-video media', function (): void {
         ->andReturn('https://fake-url/download');
 
     $media = Media::factory()->make([
-        'type' => MediaType::PHOTO,
+        'type' => MediaType::IMAGE,
         'source' => 'photos/test-image.jpg',
         'filename' => 'test.jpg',
         'mime_type' => 'image/jpeg',
@@ -159,4 +160,74 @@ it('returns null downloadUrl for video media', function (): void {
     ]);
 
     expect($media->downloadUrl)->toBeNull();
+});
+
+it('deletes media and files when safe to delete', function (): void {
+    Storage::fake(config('filesystems.media'));
+
+    $media = Media::factory()->create([
+        'source' => 'media/test.jpg',
+        'thumbnail' => 'media/test_thumb.jpg',
+    ]);
+
+    Storage::disk(config('filesystems.media'))->put('media/test.jpg', 'content');
+    Storage::disk(config('filesystems.media'))->put('media/test_thumb.jpg', 'thumbnail');
+
+    $mediaId = $media->id;
+
+    expect($media->delete())->toBeTrue()
+        ->and(Media::query()->where('id', $mediaId)->exists())->toBeFalse()
+        ->and(Storage::disk(config('filesystems.media'))->exists('media/test.jpg'))->toBeFalse()
+        ->and(Storage::disk(config('filesystems.media'))->exists('media/test_thumb.jpg'))->toBeFalse();
+});
+
+it('deletes media without thumbnail', function (): void {
+    Storage::fake(config('filesystems.media'));
+
+    $media = Media::factory()->create([
+        'source' => 'media/document.pdf',
+        'thumbnail' => null,
+    ]);
+
+    Storage::disk(config('filesystems.media'))->put('media/document.pdf', 'content');
+
+    $mediaId = $media->id;
+
+    expect($media->delete())->toBeTrue()
+        ->and(Media::query()->where('id', $mediaId)->exists())->toBeFalse()
+        ->and(Storage::disk(config('filesystems.media'))->exists('media/document.pdf'))->toBeFalse();
+});
+
+it('prevents deletion when media is attached to pages', function (): void {
+    Storage::fake(config('filesystems.media'));
+
+    $page = Page::factory()->create();
+    $media = Media::factory()->create([
+        'source' => 'media/test.jpg',
+    ]);
+
+    $page->media()->attach($media, ['role' => 'example', 'locale' => app()->getLocale()]);
+
+    Storage::disk(config('filesystems.media'))->put('media/test.jpg', 'content');
+
+    $mediaId = $media->id;
+
+    expect($media->delete())->toBeFalse()
+        ->and(Media::query()->where('id', $mediaId)->exists())->toBeTrue()
+        ->and(Storage::disk(config('filesystems.media'))->exists('media/test.jpg'))->toBeTrue();
+});
+
+it('can delete safely returns true when no mediables exist', function (): void {
+    $media = Media::factory()->create();
+
+    expect($media->delete())->toBeTrue();
+});
+
+it('can delete safely returns false when mediables exist', function (): void {
+    $page = Page::factory()->create();
+    $media = Media::factory()->create();
+
+    $page->media()->attach($media, ['role' => 'example', 'locale' => app()->getLocale()]);
+
+    expect($media->delete())->toBeFalse();
 });

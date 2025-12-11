@@ -114,7 +114,7 @@ trait HasTranslations
     protected function syncTranslations(): void
     {
         collect($this->translatedAttributes())->map(function (string $attribute): void {
-            app('localization')->getActiveLocaleCodes()->each(function (string $locale) use ($attribute): void {
+            resolve('localization')->getActiveLocaleCodes()->each(function (string $locale) use ($attribute): void {
                 $this->addOrUpdateTranslation($locale, $attribute, $this->translatedTexts[$attribute][$locale] ?? '');
             });
         });

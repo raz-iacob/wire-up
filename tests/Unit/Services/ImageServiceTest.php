@@ -7,8 +7,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function (): void {
-    Storage::fake();
-    Storage::put('test-image.jpg', file_get_contents(__DIR__.'/../../Fixtures/test-image.jpg'));
+    Storage::fake(config('filesystems.media'));
+    Storage::disk(config('filesystems.media'))->put('test-image.jpg', file_get_contents(__DIR__.'/../../Fixtures/test-image.jpg'));
 });
 
 it('creates instance and sets source file', function (): void {

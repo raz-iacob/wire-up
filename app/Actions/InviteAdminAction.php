@@ -16,7 +16,7 @@ final readonly class InviteAdminAction
     {
         return DB::transaction(function () use ($inviter, $name, $email): User {
 
-            $user = app(CreateUserAction::class)->handle([
+            $user = resolve(CreateUserAction::class)->handle([
                 'name' => $name,
                 'email' => $email,
                 'admin' => true,

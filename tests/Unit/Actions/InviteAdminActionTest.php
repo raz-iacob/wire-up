@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Notification;
 it('creates a new user and sends the invite notification', function (): void {
 
     $inviter = User::factory()->create();
-    $action = app(InviteAdminAction::class);
+    $action = resolve(InviteAdminAction::class);
     Notification::fake();
 
     $user = $action->handle($inviter, 'Test User', 'test@example.com');

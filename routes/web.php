@@ -7,7 +7,7 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
 
-Route::group(['prefix' => app('localization')->setLocale()], function (): void {
+Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
 
     Route::livewire('/', 'pages::home')->name('home');
 
@@ -32,7 +32,7 @@ Route::get('img/{options}/{path}', [ImageController::class, 'show'])
     ->where('path', '.*')
     ->name('image.show');
 
-Route::group(['prefix' => app('localization')->setLocale()], function (): void {
+Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
     Route::livewire('{slug}', 'pages::page')
         ->where('slug', '^(?!admin).*')
         ->name('page');

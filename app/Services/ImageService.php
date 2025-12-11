@@ -49,9 +49,9 @@ final class ImageService
      */
     public function setSourceFile(string $fileKey): self
     {
-        $stream = Storage::readStream($fileKey);
+        $stream = Storage::disk(config('filesystems.media'))->readStream($fileKey);
 
-        abort_if(empty($stream), 404, 'File not found');
+        abort_if(empty($stream), 404);
 
         $this->image = $this->manager()->read($stream);
 

@@ -11,7 +11,7 @@ it('may update a user password', function (): void {
         'password' => Hash::make('old-password'),
     ]);
 
-    $action = app(UpdateUserPasswordAction::class);
+    $action = resolve(UpdateUserPasswordAction::class);
 
     $action->handle($user, 'new-password');
 

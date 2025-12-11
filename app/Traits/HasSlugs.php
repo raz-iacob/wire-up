@@ -41,7 +41,7 @@ trait HasSlugs
     public function setSlugs(): void
     {
         $currentLocale = app()->getLocale();
-        app('localization')->getActiveLocaleCodes()->each(function (string $locale): void {
+        resolve('localization')->getActiveLocaleCodes()->each(function (string $locale): void {
             app()->setLocale($locale);
             $rawValue = $this->buildRawValueForLocale($locale);
             $slug = $this->resolveUniqueSlug(Str::slug($rawValue), $locale);

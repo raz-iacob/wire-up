@@ -12,7 +12,7 @@ it('may update a page', function (): void {
         'status' => PageStatus::DRAFT,
     ]);
 
-    $action = app(UpdatePageAction::class);
+    $action = resolve(UpdatePageAction::class);
 
     $action->handle($page, [
         'title' => 'New Title',
@@ -34,7 +34,7 @@ it('handles draft status', function (): void {
         'published_at' => now(),
     ]);
 
-    $action = app(UpdatePageAction::class);
+    $action = resolve(UpdatePageAction::class);
 
     $action->handle($page, [
         'status' => PageStatus::DRAFT,
@@ -51,7 +51,7 @@ it('handles published status', function (): void {
         'status' => PageStatus::DRAFT,
     ]);
 
-    $action = app(UpdatePageAction::class);
+    $action = resolve(UpdatePageAction::class);
 
     $action->handle($page, [
         'status' => PageStatus::PUBLISHED,
@@ -70,7 +70,7 @@ it('handles scheduled status', function (): void {
         'status' => PageStatus::DRAFT,
     ]);
 
-    $action = app(UpdatePageAction::class);
+    $action = resolve(UpdatePageAction::class);
 
     $action->handle($page, [
         'status' => PageStatus::SCHEDULED,
@@ -89,7 +89,7 @@ it('handles private status', function (): void {
         'published_at' => now(),
     ]);
 
-    $action = app(UpdatePageAction::class);
+    $action = resolve(UpdatePageAction::class);
 
     $action->handle($page, [
         'status' => PageStatus::PRIVATE,

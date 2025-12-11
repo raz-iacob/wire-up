@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Event;
 it('may create a user', function (): void {
     Event::fake([Registered::class]);
 
-    $action = app(CreateUserAction::class);
+    $action = resolve(CreateUserAction::class);
 
     $user = $action->handle([
         'name' => 'Test User',

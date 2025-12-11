@@ -7,8 +7,8 @@ use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\ImageManager;
 
 beforeEach(function (): void {
-    Storage::fake();
-    Storage::put('test-image.jpg', file_get_contents(__DIR__.'/../Fixtures/test-image.jpg'));
+    Storage::fake(config('filesystems.media'));
+    Storage::disk(config('filesystems.media'))->put('test-image.jpg', file_get_contents(__DIR__.'/../Fixtures/test-image.jpg'));
 });
 
 it('can grab an image from storage and apply optional formatting', function (): void {

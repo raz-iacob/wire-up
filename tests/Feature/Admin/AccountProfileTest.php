@@ -141,7 +141,7 @@ it('allows admin users to delete their account', function (): void {
 });
 
 it('can upload a profile photo', function (): void {
-    Storage::fake('public');
+    Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
         'admin' => true,
@@ -166,11 +166,11 @@ it('can upload a profile photo', function (): void {
         ->not->toBeNull()
         ->toStartWith('users/'.$user->id.'_profile');
 
-    Storage::disk('public')->assertExists($user->photo);
+    Storage::disk(config('filesystems.media'))->assertExists($user->photo);
 });
 
 it('can replace an existing profile photo', function (): void {
-    Storage::fake('public');
+    Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
         'admin' => true,
@@ -178,7 +178,7 @@ it('can replace an existing profile photo', function (): void {
         'photo' => 'users/1_old-photo.jpg',
     ]);
 
-    Storage::disk('public')->put('users/1_old-photo.jpg', 'old content');
+    Storage::disk(config('filesystems.media'))->put('users/1_old-photo.jpg', 'old content');
 
     $this->actingAs($user);
 
@@ -192,17 +192,17 @@ it('can replace an existing profile photo', function (): void {
 
     $user->refresh();
 
-    Storage::disk('public')->assertMissing('users/1_old-photo.jpg');
+    Storage::disk(config('filesystems.media'))->assertMissing('users/1_old-photo.jpg');
 
     expect($user->photo)
         ->toStartWith('users/'.$user->id.'_new-profile')
         ->toEndWith('.png');
 
-    Storage::disk('public')->assertExists($user->photo);
+    Storage::disk(config('filesystems.media'))->assertExists($user->photo);
 });
 
 it('can delete current profile photo', function (): void {
-    Storage::fake('public');
+    Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
         'admin' => true,
@@ -213,7 +213,7 @@ it('can delete current profile photo', function (): void {
     $photoPath = "users/{$user->id}_photo.jpg";
     $user->update(['photo' => $photoPath]);
 
-    Storage::disk('public')->put($photoPath, 'photo content');
+    Storage::disk(config('filesystems.media'))->put($photoPath, 'photo content');
 
     $this->actingAs($user);
 
@@ -231,11 +231,11 @@ it('can delete current profile photo', function (): void {
 
     expect($user->photo)->toBeNull();
 
-    expect(Storage::disk('public')->exists($photoPath))->toBeFalse();
+    expect(Storage::disk(config('filesystems.media'))->exists($photoPath))->toBeFalse();
 });
 
 it('validates photo file size', function (): void {
-    Storage::fake('public');
+    Storage::fake(config('filesystems.media'));
 
     $this->actingAsAdmin();
 
@@ -249,7 +249,7 @@ it('validates photo file size', function (): void {
 });
 
 it('validates photo mime types', function (): void {
-    Storage::fake('public');
+    Storage::fake(config('filesystems.media'));
 
     $this->actingAsAdmin();
 
@@ -263,7 +263,7 @@ it('validates photo mime types', function (): void {
 });
 
 it('can remove temporary uploaded photo before saving', function (): void {
-    Storage::fake('public');
+    Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
         'admin' => true,
@@ -289,7 +289,7 @@ it('can remove temporary uploaded photo before saving', function (): void {
 });
 
 it('can update profile with name and email while also uploading photo', function (): void {
-    Storage::fake('public');
+    Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
         'admin' => true,
@@ -317,11 +317,11 @@ it('can update profile with name and email while also uploading photo', function
         ->and($user->email)->toBe('new@example.com')
         ->and($user->photo)->not->toBeNull();
 
-    Storage::disk('public')->assertExists($user->photo);
+    Storage::disk(config('filesystems.media'))->assertExists($user->photo);
 });
 
 it('does not affect existing photo when updating profile without new photo', function (): void {
-    Storage::fake('public');
+    Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
         'admin' => true,
@@ -330,7 +330,7 @@ it('does not affect existing photo when updating profile without new photo', fun
         'photo' => 'users/1_existing.jpg',
     ]);
 
-    Storage::disk('public')->put('users/1_existing.jpg', 'existing content');
+    Storage::disk(config('filesystems.media'))->put('users/1_existing.jpg', 'existing content');
 
     $this->actingAs($user);
 
@@ -344,7 +344,7 @@ it('does not affect existing photo when updating profile without new photo', fun
     expect($user->name)->toBe('Updated Name')
         ->and($user->photo)->toBe('users/1_existing.jpg');
 
-    Storage::disk('public')->assertExists('users/1_existing.jpg');
+    Storage::disk(config('filesystems.media'))->assertExists('users/1_existing.jpg');
 });
 
 it('handles delete current photo when no photo exists', function (): void {

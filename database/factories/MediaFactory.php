@@ -56,7 +56,7 @@ final class MediaFactory extends Factory
     private function generateSource(MediaType $type): string
     {
         return match ($type) {
-            MediaType::PHOTO => 'images/'.$this->faker->uuid().'.jpg',
+            MediaType::IMAGE => 'images/'.$this->faker->uuid().'.jpg',
             MediaType::VIDEO => $this->faker->boolean()
                 ? 'videos/'.$this->faker->uuid().'.mp4'
                 : 'https://www.youtube.com/watch?v='.$this->faker->regexify('[A-Za-z0-9_-]{11}'),
@@ -68,7 +68,7 @@ final class MediaFactory extends Factory
     private function getExtension(MediaType $type): string
     {
         return match ($type) {
-            MediaType::PHOTO => $this->faker->randomElement(['jpg', 'jpeg', 'png', 'webp']),
+            MediaType::IMAGE => $this->faker->randomElement(['jpg', 'jpeg', 'png', 'webp']),
             MediaType::VIDEO => $this->faker->randomElement(['mp4', 'mov', 'avi']),
             MediaType::DOCUMENT => $this->faker->randomElement(['pdf', 'doc', 'docx']),
             MediaType::AUDIO => $this->faker->randomElement(['mp3', 'wav', 'ogg']),
@@ -78,7 +78,7 @@ final class MediaFactory extends Factory
     private function getMimeType(MediaType $type): string
     {
         return match ($type) {
-            MediaType::PHOTO => $this->faker->randomElement(['image/jpeg', 'image/png', 'image/webp']),
+            MediaType::IMAGE => $this->faker->randomElement(['image/jpeg', 'image/png', 'image/webp']),
             MediaType::VIDEO => $this->faker->randomElement(['video/mp4', 'video/quicktime', 'video/avi']),
             MediaType::DOCUMENT => $this->faker->randomElement(['application/pdf', 'application/msword']),
             MediaType::AUDIO => $this->faker->randomElement(['audio/mpeg', 'audio/wav', 'audio/ogg']),
