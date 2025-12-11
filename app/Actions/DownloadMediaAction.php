@@ -43,7 +43,12 @@ final class DownloadMediaAction
 
         return response()->streamDownload(function () use ($medias, $zipFileName): void {
 
-            $zipFilePath = storage_path('app/tmp/'.$zipFileName);
+            $tmpDir = storage_path('app/tmp');
+            if (! is_dir($tmpDir)) {
+                mkdir($tmpDir, 0755, true);
+            }
+
+            $zipFilePath = $tmpDir.'/'.$zipFileName;
 
             $zip = new ZipArchive();
             $zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
