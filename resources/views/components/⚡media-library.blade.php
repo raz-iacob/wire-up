@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\CreateMediaAction;
 use App\Actions\DownloadMediaAction;
+use App\Actions\UpdateMediaAction;
 use App\Enums\MediaType;
 use App\Models\Media;
 use Flux\Flux;
@@ -47,6 +48,10 @@ return new class extends Component
 
     public bool $hasMore = true;
 
+    public bool $showEditModal = false;
+
+    public string $altText = '';
+
     public bool $showDeleteModal = false;
 
     public bool $loaded = false;
@@ -71,7 +76,7 @@ return new class extends Component
     {
         $this->target = $target;
         $this->type = MediaType::tryFrom($type);
-        $this->typeFilter = $this->type ?? '';
+        $this->typeFilter = $this->type->value ?? '';
         $this->selected = collect($media ?? []);
         $this->showLibrary = true;
         $this->max = $max;
@@ -117,6 +122,33 @@ return new class extends Component
             'media' => $this->selected,
         ]);
         $this->showLibrary = false;
+    }
+
+    public function edit(): void
+    {
+        if ($this->selected->count() !== 1) {
+            return;
+        }
+
+        $this->altText = $this->selected->first()->alt_text;
+        $this->showEditModal = true;
+    }
+
+    public function update(UpdateMediaAction $action): void
+    {
+        if ($this->selected->count() !== 1) {
+            return;
+        }
+
+        $media = $this->selected->first();
+        $action->handle($media, [
+            'alt_text' => $this->altText,
+        ]);
+
+        $this->selected = collect([$media]);
+        $this->medias = collect();
+        $this->loadMedia();
+        $this->showEditModal = false;
     }
 
     public function confirmDelete(): void
@@ -447,7 +479,7 @@ return new class extends Component
                             </div>
 
                             <flux:button.group>
-                                <flux:button icon="pencil" square tooltip="{{ __('Edit') }}" x-on:click="$flux.modal('edit-digital-item').show()"></flux:button>
+                                <flux:button icon="pencil" square tooltip="{{ __('Edit') }}" wire:click="edit"></flux:button>
                                 <flux:button icon="arrow-down-tray" square tooltip="{{ __('Download') }}" wire:click="download"></flux:button>
                                 <flux:button icon="trash" square tooltip="{{ __('Delete') }}" wire:click="confirmDelete"></flux:button>
                             </flux:button.group>
@@ -514,6 +546,37 @@ return new class extends Component
                 @enderror
             </div>
         </div>
+    </flux:modal>
+
+    <flux:modal wire:model.self="showEditModal" class="min-w-88">
+        <form wire:submit="update" class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Edit file') }}</flux:heading>
+                <flux:text class="mt-2">{{ __('Modifying this item will update its content and details everywhere it’s used.') }}</flux:text>
+            </div>
+            <flux:input label="{{ __('Name') }}" wire:model="altText" autofocus />
+
+            {{-- <div x-show="$wire.selected?.type === 'video' && $wire.selected?.encoded?.status == 'COMPLETE'" x-cloak>
+                <flux:label>Preview image</flux:label>
+                <div class="grid grid-cols-4 gap-3 mt-3">
+                    <template x-for="(preview, index) in $wire.selected?.encoded?.previews" :key="preview.url">
+                        <button type="button" class="aspect-video bg-black"
+                            :class="{ 'outline-5 outline-green-400': preview.id === $wire.form.previewId }"
+                            x-on:click="switchPreview(preview)">
+                            <img :src="preview.url" :alt="`Preview ${index}`" class="w-full" />
+                        </button>
+                    </template>
+                </div>
+            </div> --}}
+
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
+            </div>
+        </form>
     </flux:modal>
 
     <flux:modal wire:model.self="showDeleteModal" class="min-w-88">

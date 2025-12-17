@@ -54,9 +54,6 @@ $button = match($type) {
                             <flux:icon.play
                                 class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white" />
                         </div>
-                        <div class="w-40 aspect-video bg-black/10 dark:bg-white/10 border border-zinc-200 dark:border-white/20 animate-pulse flex justify-center items-center cursor-pointer hover:opacity-85" x-show="progress && progress < 101" x-cloak>
-                            <flux:text size="sm">Processing <span x-text="progress"></span>%</flux:text>
-                        </div>
                     </div>
                     @elseif($type === 'audio')
                     <div class="w-40 aspect-video relative bg-black/10 dark:bg-white/10 border border-zinc-200 dark:border-white/20 cursor-pointer hover:opacity-85">
@@ -143,10 +140,9 @@ $button = match($type) {
             cropper: null,
             crop: {},
             refresh: 0,
-            progress: false,
             media: $wire[name]?.[locale],
             listeners: [],
-            key: `${name}.${locale}`,
+            target: `${name}.${locale}`,
             showCropper() {
                 const image = document.getElementById(name + "Image")
                 const preview = document.getElementById(name + "Preview")
@@ -205,20 +201,12 @@ $button = match($type) {
             init() {
                 this.listeners.push(
                     Livewire.on("media-selected", (event) => {
-                        if (event.for !== this.key) {
+                        console.log(event, this.target)
+                        if (event.target !== this.target) {
                             return
                         }
                         this.media = event.media
                         $wire.$set(event.for, event.media)
-                    }),
-                )
-
-                this.listeners.push(
-                    Livewire.on("media-progress", (event) => {
-                        if (event.for !== this.key) {
-                            return
-                        }
-                        this.progress = event.progress
                     }),
                 )
 

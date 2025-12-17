@@ -22,7 +22,7 @@ it('may register a new user', function (): void {
     $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
-        ->set('email', 'test@example.com')
+        ->set('email', 'raz@laravel.com')
         ->set('password', 'password1234')
         ->set('password_confirmation', 'password1234')
         ->call('register');
@@ -30,11 +30,11 @@ it('may register a new user', function (): void {
     $component->assertHasNoErrors()
         ->assertRedirect(route('home'));
 
-    $user = User::query()->where('email', 'test@example.com')->first();
+    $user = User::query()->where('email', 'raz@laravel.com')->first();
 
     expect($user)->not->toBeNull()
         ->and($user->name)->toBe('Test User')
-        ->and($user->email)->toBe('test@example.com')
+        ->and($user->email)->toBe('raz@laravel.com')
         ->and(Hash::check('password1234', $user->password))->toBeTrue();
 
     $this->assertAuthenticatedAs($user);
@@ -45,7 +45,7 @@ it('may register a new user', function (): void {
 it('requires name', function (): void {
     $component = Livewire::test('pages::auth.register');
 
-    $component->set('email', 'test@example.com')
+    $component->set('email', 'raz@laravel.com')
         ->set('password', 'password')
         ->set('password_confirmation', 'password')
         ->call('register');
@@ -77,12 +77,12 @@ it('requires valid email', function (): void {
 });
 
 it('requires unique email', function (): void {
-    User::factory()->create(['email' => 'test@example.com']);
+    User::factory()->create(['email' => 'raz@laravel.com']);
 
     $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
-        ->set('email', 'test@example.com')
+        ->set('email', 'raz@laravel.com')
         ->set('password', 'password')
         ->set('password_confirmation', 'password')
         ->call('register');
@@ -94,7 +94,7 @@ it('requires password', function (): void {
     $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
-        ->set('email', 'test@example.com')
+        ->set('email', 'raz@laravel.com')
         ->call('register');
 
     $component->assertHasErrors('password');
@@ -104,7 +104,7 @@ it('requires password confirmation', function (): void {
     $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
-        ->set('email', 'test@example.com')
+        ->set('email', 'raz@laravel.com')
         ->set('password', 'password')
         ->call('register');
 
@@ -115,7 +115,7 @@ it('requires matching password confirmation', function (): void {
     $component = Livewire::test('pages::auth.register');
 
     $component->set('name', 'Test User')
-        ->set('email', 'test@example.com')
+        ->set('email', 'raz@laravel.com')
         ->set('password', 'password')
         ->set('password_confirmation', 'different-password')
         ->call('register');

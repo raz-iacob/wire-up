@@ -94,7 +94,7 @@
             "npm run test:lint"
         ],
         "test:unit": "pest --parallel --coverage --exactly=100.0",
-        "test:types": "phpstan",
+        "test:types": "phpstan --memory-limit=1G",
         "test": [
             "@test:type-coverage",
             "@test:unit",

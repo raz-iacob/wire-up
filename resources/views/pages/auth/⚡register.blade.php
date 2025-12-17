@@ -33,7 +33,7 @@ return new class extends Component
         /** @var array<string, mixed> $credentials */
         $credentials = $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email:filter,dns', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', RulesPassword::defaults()],
         ]);
 
