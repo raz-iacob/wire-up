@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-final class AdminInvite extends Notification
+final class AdminInvite extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
         public string $inviterName,
         public string $token
-    ) {}
+    ) {
+        $this->afterCommit = true;
+    }
 
     /**
      * @return array<int, string>

@@ -16,8 +16,8 @@ final readonly class OnlyAdmins
     public function handle(Request $request, Closure $next): Response
     {
         return match (true) {
-            ! $request->user() => redirect('/login'),
-            ! $request->user()->admin => redirect('/'),
+            ! $request->user() => redirect(route('login')),
+            ! $request->user()->admin => redirect(route('home')),
             default => $next($request),
         };
     }

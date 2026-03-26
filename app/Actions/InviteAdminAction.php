@@ -12,11 +12,13 @@ use Illuminate\Support\Str;
 
 final readonly class InviteAdminAction
 {
+    public function __construct(private CreateUserAction $createUser) {}
+
     public function handle(User $inviter, string $name, string $email): User
     {
         return DB::transaction(function () use ($inviter, $name, $email): User {
 
-            $user = resolve(CreateUserAction::class)->handle([
+            $user = $this->createUser->handle([
                 'name' => $name,
                 'email' => $email,
                 'admin' => true,
