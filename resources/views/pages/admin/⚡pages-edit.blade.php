@@ -152,7 +152,7 @@ return new class extends Component
                     <x-forms.input-translated name="title" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Title') }}" />
                     <x-forms.url-translated name="slugs" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Web Address') }}" />
                     <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Description') }}" />
-                    <x-forms.media type="any" name="og_image" :$locale :multi-locale="count($activeLocales) > 1" :multiple="true" label="{{ __('Open Graph Image') }}" />
+                    <livewire:media-selector wire:model="og_image.{{ $locale }}" type="any" name="og_image" :$locale :multi-locale="count($activeLocales) > 1" :multiple="true" label="{{ __('Open Graph Image') }}" />
                 </div>
             </flux:fieldset>
         </div>

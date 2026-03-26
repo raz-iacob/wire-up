@@ -27,7 +27,6 @@ final readonly class UpdatePageAction
                 $page->updateSlugs($attributes['slugs']);
             }
 
-            // $page->updateBlocks($attributes['blocks']);
         });
     }
 

@@ -70,7 +70,6 @@ it('respects the older-than option', function (): void {
 });
 
 it('handles custom older-than values correctly', function (): void {
-    // Create multiple files
     $file1 = $this->tempPath.'/file1.txt';
     $file2 = $this->tempPath.'/file2.txt';
 

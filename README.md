@@ -22,7 +22,7 @@
 
 ## Built With
 
-- **[Laravel 12](https://laravel.com)** - The PHP framework for web artisans
+- **[Laravel 13](https://laravel.com)** - The PHP framework for web artisans
 - **[Livewire 4](https://livewire.laravel.com)** - Full-stack framework for Laravel
 - **[Flux UI Pro](https://fluxui.dev)** - Beautiful UI components for Livewire
 - **[Tailwind CSS v4](https://tailwindcss.com)** - Utility-first CSS framework

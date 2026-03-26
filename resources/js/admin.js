@@ -46,6 +46,184 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
     });
 });
 
+document.addEventListener("alpine:init", () => {
+    Alpine.data("mediaLibrary", ($wire) => {
+        return {
+            lastSelectedIndex: null,
+            shiftPressed: false,
+            hoverIndex: null,
+            init() {
+                window.addEventListener("keydown", (e) => {
+                    if (e.key === "Shift") this.shiftPressed = true;
+                });
+                window.addEventListener("keyup", (e) => {
+                    if (e.key === "Shift") this.shiftPressed = false;
+                });
+            },
+            async select(id, index, event) {
+                this.shiftPressed = event.shiftKey;
+
+                if (this.shiftPressed && this.lastSelectedIndex !== null) {
+                    const start = Math.min(this.lastSelectedIndex, index);
+                    const end = Math.max(this.lastSelectedIndex, index);
+
+                    const ids = [];
+                    const elements =
+                        this.$root.querySelectorAll("[data-media-id]");
+
+                    elements.forEach((el) => {
+                        const i = parseInt(el.dataset.index);
+                        if (!isNaN(i) && i >= start && i <= end) {
+                            const mId = parseInt(el.dataset.mediaId);
+                            if (!isNaN(mId)) ids.push(mId);
+                        }
+                    });
+
+                    if (ids.length > 0) {
+                        await $wire.selectMediaRange(ids);
+                    }
+
+                    this.lastSelectedIndex = index;
+                    return;
+                }
+
+                this.lastSelectedIndex = index;
+                await $wire.selectMediaById(id);
+            },
+            isInRange(index) {
+                if (
+                    !this.shiftPressed ||
+                    this.lastSelectedIndex === null ||
+                    this.hoverIndex === null
+                )
+                    return false;
+                const start = Math.min(this.lastSelectedIndex, this.hoverIndex);
+                const end = Math.max(this.lastSelectedIndex, this.hoverIndex);
+                return index >= start && index <= end;
+            },
+        };
+    });
+
+    Alpine.data("mediaSelector", ($wire, config = {}) => {
+        return {
+            cropper: null,
+            crop: {},
+            media: null,
+            listeners: [],
+            target: config.target,
+            imageId: config.imageId,
+
+            init() {
+                this.media = $wire.entangle("media");
+
+                this.listeners.push(
+                    Livewire.on("media-selected", (event) => {
+                        if (event.target !== this.target) {
+                            return;
+                        }
+
+                        this.media = event.media;
+                    }),
+                );
+
+                this.listeners.push(
+                    Livewire.on("media-updated", (event) => {
+                        if (event.for !== this.target) {
+                            return;
+                        }
+
+                        this.media = event.media;
+                    }),
+                );
+
+                this.listeners.push(
+                    Livewire.on("media-deleted", (event) => {
+                        if (event.for !== this.target) {
+                            return;
+                        }
+
+                        this.media = null;
+                    }),
+                );
+            },
+
+            destroy() {
+                this.listeners.forEach((listener) => listener());
+            },
+
+            showCropper() {
+                const image = document.getElementById(this.imageId);
+
+                if (!image || !this.media) {
+                    return;
+                }
+
+                this.cropper = new Cropper(image, {
+                    viewMode: 1,
+                    movable: false,
+                    rotatable: false,
+                    zoomable: false,
+                    scalable: false,
+                    background: false,
+                    minContainerHeight: 400,
+                    minCropBoxWidth: 100,
+                    minCropBoxHeight: 100,
+                    data: {
+                        width: this.media?.crop?.w || 0,
+                        height: this.media?.crop?.h || 0,
+                        x: this.media?.crop?.x || 0,
+                        y: this.media?.crop?.y || 0,
+                    },
+                    responsive: true,
+                    dragMode: "move",
+                    autoCropArea: 1,
+                    crop: (event) => {
+                        this.crop = {
+                            w: Math.round(event.detail.width),
+                            h: Math.round(event.detail.height),
+                            x: Math.round(event.detail.x),
+                            y: Math.round(event.detail.y),
+                        };
+                    },
+                });
+            },
+
+            hideCropper() {
+                if (!this.cropper) {
+                    return;
+                }
+
+                this.cropper.destroy();
+                this.cropper = null;
+            },
+
+            updateCrop() {
+                if (!this.media || !this.cropper) {
+                    return;
+                }
+
+                this.media = {
+                    ...this.media,
+                    url: this.cropper.getCroppedCanvas().toDataURL(),
+                    crop: this.crop,
+                };
+
+                this.hideCropper();
+            },
+
+            hidePreview() {
+                document.querySelectorAll("iframe").forEach((iframe) => {
+                    iframe.contentWindow?.postMessage("pause", "*");
+                });
+            },
+
+            removeMedia() {
+                this.media = null;
+            },
+        };
+    });
+});
+
 const analyzeFile = async (file) => {
     const base = {
         name: file.name,

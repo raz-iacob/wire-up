@@ -50,6 +50,16 @@ it('handles select media event without type specified', function (): void {
         ->assertCount('selected', 0);
 });
 
+it('handles select media event with null type', function (): void {
+    Livewire::test('media-library')
+        ->dispatch('select-media', target: 'test-target', type: null, max: 1, media: null)
+        ->assertSet('showLibrary', true)
+        ->assertSet('target', 'test-target')
+        ->assertSet('type', null)
+        ->assertSet('typeFilter', '')
+        ->assertCount('selected', 0);
+});
+
 it('selects a single media item', function (): void {
     $media = Media::factory()->create();
 
@@ -351,7 +361,6 @@ it('auto-selects uploaded files up to max', function (): void {
         ->set('files', [$file1, $file2, $file3])
         ->call('save', [[], [], []]);
 
-    // Should select up to max (2) of the uploaded files
     $selectedCount = $component->get('selected')->count();
     expect($selectedCount)->toBeLessThanOrEqual(2)
         ->and($selectedCount)->toBeGreaterThan(0);
@@ -432,4 +441,22 @@ it('downloads multiple media files as zip', function (): void {
     $response = $instance->download(resolve(DownloadMediaAction::class));
 
     expect($response)->toBeInstanceOf(StreamedResponse::class);
+});
+
+it('selects a range of media items', function (): void {
+    $media = Media::factory()->count(5)->create();
+
+    Livewire::test('media-library')
+        ->set('max', 5)
+        ->call('selectMediaRange', [$media[0]->id, $media[1]->id, $media[2]->id])
+        ->assertCount('selected', 3);
+});
+
+it('selects a range of media items respecting max', function (): void {
+    $media = Media::factory()->count(5)->create();
+
+    Livewire::test('media-library')
+        ->set('max', 2)
+        ->call('selectMediaRange', [$media[0]->id, $media[1]->id, $media[2]->id])
+        ->assertCount('selected', 2);
 });

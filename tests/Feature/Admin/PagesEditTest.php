@@ -17,7 +17,8 @@ it('can render the pages edit screen', function (): void {
         ->get(route('admin.pages-edit', $page));
 
     $response->assertOk()
-        ->assertSeeLivewire('pages::admin.pages-edit');
+        ->assertSeeLivewire('pages::admin.pages-edit')
+        ->assertSeeLivewire('media-selector');
 });
 
 it('redirects authenticated non-admin users away from pages edit', function (): void {

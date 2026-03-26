@@ -78,22 +78,18 @@ it('can handle multiple field switches', function (): void {
         use WithSorting;
     };
 
-    // Start with name asc
     $component->sort('name');
     expect($component->sortBy)->toBe('name')
         ->and($component->sortDirection)->toBe('asc');
 
-    // Toggle to name desc
     $component->sort('name');
     expect($component->sortBy)->toBe('name')
         ->and($component->sortDirection)->toBe('desc');
 
-    // Switch to email asc
     $component->sort('email');
     expect($component->sortBy)->toBe('email')
         ->and($component->sortDirection)->toBe('asc');
 
-    // Back to name asc (resets)
     $component->sort('name');
     expect($component->sortBy)->toBe('name')
         ->and($component->sortDirection)->toBe('asc');
@@ -107,17 +103,14 @@ it('preserves field when toggling direction multiple times', function (): void {
 
     $component->sort('created_at');
 
-    // First toggle
     $component->sort('created_at');
     expect($component->sortBy)->toBe('created_at')
         ->and($component->sortDirection)->toBe('desc');
 
-    // Second toggle
     $component->sort('created_at');
     expect($component->sortBy)->toBe('created_at')
         ->and($component->sortDirection)->toBe('asc');
 
-    // Third toggle
     $component->sort('created_at');
     expect($component->sortBy)->toBe('created_at')
         ->and($component->sortDirection)->toBe('desc');

@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\DB;
 
 final readonly class DeletePageAction
 {
-    /**
-     * Execute the action.
-     */
     public function handle(Page $page): void
     {
         DB::transaction(function () use ($page): void {

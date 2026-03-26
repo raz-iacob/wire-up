@@ -75,7 +75,7 @@ return new class extends Component
     public function handleSelectMedia(string $target, ?string $type = null, int $max = 1, ?array $media = null): void
     {
         $this->target = $target;
-        $this->type = MediaType::tryFrom($type);
+        $this->type = $type !== null ? MediaType::tryFrom($type) : null;
         $this->typeFilter = $this->type->value ?? '';
         $this->selected = collect($media ?? []);
         $this->showLibrary = true;
@@ -105,6 +105,50 @@ return new class extends Component
         $this->selected->push($media);
     }
 
+    public function selectMediaById(int $mediaId): void
+    {
+        $media = Media::query()->find($mediaId);
+        if ($media) {
+            $this->selectMedia($media);
+        }
+    }
+
+    /**
+     * @param array<int, int> $mediaIds
+     */
+    public function selectMediaRange(array $mediaIds): void
+    {
+        if ($mediaIds === []) {
+            return;
+        }
+
+        if ($this->max === 1) {
+            $lastId = end($mediaIds);
+            if ($lastId) {
+                $media = Media::query()->find($lastId);
+                if ($media) {
+                    $this->selectMedia($media);
+                }
+            }
+            return;
+        }
+
+        $newMedia = Media::query()->whereIn('id', $mediaIds)->get();
+
+        $count = $this->selected->count();
+        
+        foreach ($newMedia as $media) {
+            if ($count >= $this->max) {
+                break;
+            }
+
+            if (! $this->isSelected($media->id)) {
+                $this->selected->push($media);
+                $count++;
+            }
+        }
+    }
+
     public function isSelected(int $mediaId): bool
     {
         return $this->selected->contains(fn (Media $m): bool => $m->id === $mediaId);
@@ -117,10 +161,14 @@ return new class extends Component
 
     public function insertMedia(): void
     {
-        $this->dispatch('media-selected', [
-            'target' => $this->target,
-            'media' => $this->selected,
-        ]);
+        $this->dispatch(
+            'media-selected',
+            target: $this->target,
+            media: $this->selected
+                ->map(fn (Media $media): array => $this->parseMedia($media))
+                ->values()
+                ->all(),
+        );
         $this->showLibrary = false;
     }
 
@@ -356,7 +404,7 @@ return new class extends Component
 ?>
 
 <div>
-    <flux:modal wire:model.self="showLibrary" class="w-full max-w-7xl" :closable="false" :dismissible="false">
+    <flux:modal wire:model.self="showLibrary" class="w-full max-w-7xl outline-0!" :closable="false" :dismissible="false">
         <div class="grid gap-6 md:grid-cols-7">
             <div class="md:col-span-5">
                 <div class="flex flex-col md:flex-row gap-4 md:gap-6 justify-between md:items-center mb-6">
@@ -386,7 +434,9 @@ return new class extends Component
                     />
                 </flux:file-upload>
 
-                <div class="mt-6 grid content-start min-h-100 overflow-y-auto overscroll-contain p-2 select-none md:h-[calc(100vh-22rem)] grid-cols-2  md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" wire:loading.class="opacity-60 animate-pulse" wire:target="loadMore">
+                <div 
+                    x-data="mediaLibrary($wire)"
+                    class="mt-6 grid content-start min-h-100 overflow-y-auto overscroll-contain p-2 select-none md:h-[calc(100vh-22rem)] grid-cols-2  md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" wire:loading.class="opacity-60 animate-pulse" wire:target="loadMore">
                     
                     @if(!$loaded)
                         @for($i = 0; $i < 10; $i++)
@@ -395,11 +445,18 @@ return new class extends Component
                     @endif
 
                     @forelse ($medias as $media)
-                    <div class="relative">
-                        <img wire:key="media-{{ $media['id'] }}"
+                    <div class="relative cursor-pointer"
+                        wire:key="media-{{ $media['id'] }}"
+                        data-media-id="{{ $media['id'] }}"
+                        data-index="{{ $loop->index }}"
+                        @click="select({{ $media['id'] }}, {{ $loop->index }}, $event)"
+                        @mouseenter="hoverIndex = {{ $loop->index }}"
+                        @if($this->isSelected($media['id'])) data-selected @endif
+                    >
+                        <img 
                             src="{{ $media['preview'] }}" alt="{{ $media['alt_text'] }}"
-                            class="w-full aspect-square object-contain bg-black/10 dark:bg-white/5 border border-zinc-200 dark:border-white/20 cursor-pointer rounded-sm data-selected:outline-2 data-selected:outline-offset-2 data-selected:outline-sky-500 dark:data-selected:outline-sky-600 data-selected:opacity-75"
-                            wire:click="selectMedia({{ $media['id'] }})"
+                            class="w-full aspect-square object-contain bg-black/10 dark:bg-white/5 border border-zinc-200 dark:border-white/20 rounded-sm data-selected:outline-3 data-selected:outline-offset-3 data-selected:outline-sky-500 dark:data-selected:outline-sky-600 data-selected:opacity-60 data-selected:scale-95"
+                            :class="{ 'outline-4 outline-offset-2 outline-sky-400/40 dark:outline-sky-700/50 opacity-60': isInRange({{ $loop->index }}) }"
                             loading="lazy"
                             @if($this->isSelected($media['id'])) data-selected @endif
                         />

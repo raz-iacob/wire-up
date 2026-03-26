@@ -100,13 +100,11 @@ it('blocks login attempts when rate limit is exceeded', function (): void {
 
     $component = Livewire::test('pages::auth.login');
 
-    // Manually hit the rate limiter 5 times to simulate failed attempts
     $throttleKey = mb_strtolower($user->email).'|127.0.0.1';
     for ($i = 0; $i < 5; $i++) {
         RateLimiter::hit($throttleKey);
     }
 
-    // Now the login attempt should be rate limited
     $component->set('email', $user->email)
         ->set('password', 'secret')
         ->call('login');
