@@ -27,13 +27,15 @@
 - **[Flux UI Pro](https://fluxui.dev)** - Beautiful UI components for Livewire
 - **[Tailwind CSS v4](https://tailwindcss.com)** - Utility-first CSS framework
 - **[Pest 4](https://pestphp.com)** - Delightful PHP testing framework
+- **[PHPStan + PestStan](https://phpstan.org)** - Static analysis for application and Pest tests
+- **[Rector](https://getrector.com)** - Automated refactoring and code quality checks
 - **[Laravel Pint](https://laravel.com/docs/pint)** - Code style fixer
 - **[Vite](https://vitejs.dev)** - Fast build tool and dev server
 
 ## Requirements
 
 - PHP 8.4+
-- Node.js 18+
+- Node.js 22+ (see `.nvmrc`)
 - Composer 2.0+
 - MySQL/PostgreSQL/SQLite
 
@@ -59,20 +61,27 @@
 Wire-Up uses Pest v4 for testing, including browser testing capabilities:
 
 ```bash
-# Run the test suit
+# Run the full quality pipeline (type coverage, tests, lint, static analysis)
 composer test
+
+# Run just the Pest test suite
+composer test:unit
+
+# Run static analysis only
+composer test:types
 ```
 
 ## Code Style
 
-The project uses Laravel Pint for code formatting:
+The project uses Laravel Pint + Prettier for formatting:
 
 ```bash
 # Fix code style issues
 vendor/bin/pint
+npm run lint
 
 # Check for style issues without fixing
-vendor/bin/pint --test
+composer test:lint
 ```
 
 ## Deployment
