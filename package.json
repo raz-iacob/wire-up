@@ -18,7 +18,7 @@
         "prettier-plugin-organize-imports": "^4.3.0",
         "prettier-plugin-tailwindcss": "^0.7.2",
         "tailwindcss": "^4.2.2",
-        "vite": "^8.0.2"
+        "vite": "^8.0.16"
     },
     "dependencies": {
         "cropperjs": "^2.1.0",
