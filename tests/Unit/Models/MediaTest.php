@@ -101,6 +101,24 @@ it('returns image preview URL for image media type', function (): void {
     expect($media->preview)->toBe($expectedPreviewUrl);
 });
 
+it('returns a medium uncropped source URL for image crop editing', function (): void {
+    $media = Media::factory()->create([
+        'type' => MediaType::IMAGE,
+        'source' => 'photos/test-image.jpg',
+    ])->fresh();
+
+    expect($media->cropSrc)->toBe(route('image.show', ['w=1200', 'photos/test-image.jpg']));
+});
+
+it('returns a placeholder crop source for non-image media types', function (): void {
+    $media = Media::factory()->create([
+        'type' => MediaType::DOCUMENT,
+        'source' => 'files/test-file.pdf',
+    ])->fresh();
+
+    expect($media->cropSrc)->toBe(ImageService::placeholder());
+});
+
 it('returns video preview URL for video media type when thumbnail is not null', function (): void {
     $media = Media::factory()->create([
         'type' => MediaType::VIDEO,

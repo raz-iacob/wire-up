@@ -22,8 +22,20 @@ return new class extends Component
     public int $max = 30;
     public ?int $replaceIndex = null;
 
+    /**
+     * Named crop variants offered per item, e.g.
+     * ['default' => ['label' => 'Default', 'w' => 1200, 'h' => 630]].
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    public array $crops = [];
+
     public function mount(): void
     {
+        if ($this->crops === []) {
+            $this->crops = ['default' => ['label' => __('Default'), 'w' => 1200, 'h' => 800]];
+        }
+
         $this->normalizeMediaState();
     }
 
@@ -50,6 +62,9 @@ return new class extends Component
         );
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $media
+     */
     #[On('media-selected')]
     public function handleMediaSelected(string $target, array $media): void
     {
@@ -63,7 +78,7 @@ return new class extends Component
         )));
 
         if ($this->multiple) {
-            $items = $this->selectedItems;
+            $items = $this->selectedItems();
 
             if ($this->replaceIndex !== null && isset($items[$this->replaceIndex])) {
                 if (isset($selectedMedia[0])) {
@@ -94,7 +109,7 @@ return new class extends Component
             return;
         }
 
-        $items = $this->selectedItems;
+        $items = $this->selectedItems();
 
         if ($index === null || ! isset($items[$index])) {
             return;
@@ -111,7 +126,7 @@ return new class extends Component
             return;
         }
 
-        $items = $this->selectedItems;
+        $items = $this->selectedItems();
         $currentPosition = array_search($id, array_column($items, 'id'), true);
 
         if ($currentPosition === false) {
@@ -129,6 +144,27 @@ return new class extends Component
         $this->media = $items;
     }
 
+    /**
+     * @param  array<string, mixed>  $crop
+     */
+    public function setCrop(int $index, string $variant, array $crop): void
+    {
+        $items = $this->selectedItems();
+
+        if (! isset($items[$index]) || ! array_key_exists($variant, $this->crops)) {
+            return;
+        }
+
+        $existing = is_array($items[$index]['crop'] ?? null) ? $items[$index]['crop'] : [];
+        $existing[$variant] = $crop;
+        $items[$index]['crop'] = $existing;
+
+        $this->media = $this->multiple ? array_values($items) : $items[$index];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     #[Computed]
     public function selectedItems(): array
     {
@@ -158,11 +194,11 @@ return new class extends Component
      */
     private function selectionForLibrary(?int $replaceIndex = null): array
     {
-        if ($replaceIndex !== null && isset($this->selectedItems[$replaceIndex])) {
-            return [$this->selectedItems[$replaceIndex]];
+        if ($replaceIndex !== null && isset($this->selectedItems()[$replaceIndex])) {
+            return [$this->selectedItems()[$replaceIndex]];
         }
 
-        return $this->selectedItems;
+        return $this->selectedItems();
     }
 
     private function selectionLimit(?int $replaceIndex = null): int
@@ -230,6 +266,7 @@ return new class extends Component
         return [
             'id' => $item['id'],
             'preview' => $item['preview'] ?? null,
+            'crop_src' => $item['crop_src'] ?? null,
             'filename' => $item['filename'] ?? null,
             'alt_text' => $item['alt_text'] ?? null,
             'mime_type' => $item['mime_type'] ?? null,
@@ -237,8 +274,11 @@ return new class extends Component
             'icon' => $item['icon'] ?? null,
             'size' => $item['size'] ?? null,
             'duration' => $item['duration'] ?? null,
+            'width' => $item['width'] ?? null,
+            'height' => $item['height'] ?? null,
             'dimensions' => $item['dimensions'] ?? null,
             'created_at' => $item['created_at'] ?? null,
+            'crop' => $item['crop'] ?? [],
         ];
     }
 
@@ -258,7 +298,7 @@ return new class extends Component
 };
 ?>
 
-<div wire:key="{{ $this->targetKey() }}">
+<div wire:key="{{ $this->targetKey() }}" x-data="mediaCropper($wire)">
     <div class="mb-3 flex flex-col md:flex-row md:items-center md:justify-between">
         <div class="flex items-center gap-3">
             @if($label)
@@ -278,7 +318,7 @@ return new class extends Component
     </div>
 
     <flux:card class="block appearance-none rounded-lg border border-zinc-200 border-b-zinc-300/80 bg-white p-4 text-base shadow-xs disabled:border-b-zinc-200 disabled:shadow-none dark:border-white/10 dark:bg-white/10 dark:disabled:border-white/5 dark:shadow-none sm:text-sm">
-        @if($this->selectedItems === [])
+        @if($this->selectedItems() === [])
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <flux:button variant="filled" wire:click="openLibrary">{{ $this->buttonText }}</flux:button>
                 <div class="space-y-1 grow">
@@ -295,7 +335,7 @@ return new class extends Component
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div class="flex flex-wrap items-center gap-3">
                         <flux:badge size="sm">
-                            {{ trans_choice(':count item selected|:count items selected', count($this->selectedItems), ['count' => count($this->selectedItems)]) }}
+                            {{ trans_choice(':count item selected|:count items selected', count($this->selectedItems()), ['count' => count($this->selectedItems())]) }}
                         </flux:badge>
 
                         @if($multiple)
@@ -303,13 +343,13 @@ return new class extends Component
                         @endif
                     </div>
 
-                    @if($multiple && count($this->selectedItems) < $max)
+                    @if($multiple && count($this->selectedItems()) < $max)
                         <flux:button variant="ghost" wire:click="openLibrary">{{ __('Add media') }}</flux:button>
                     @endif
                 </div>
 
                 <div class="grid gap-3" @if($multiple) wire:sort="reorderMedia" @endif>
-                    @foreach($this->selectedItems as $index => $item)
+                    @foreach($this->selectedItems() as $index => $item)
                         <div
                             wire:key="{{ $this->targetKey() }}-{{ $item['id'] }}-{{ $index }}"
                             @if($multiple) wire:sort:item="{{ $item['id'] }}" @endif
@@ -365,10 +405,52 @@ return new class extends Component
                                     <flux:button variant="ghost" wire:click="removeMedia({{ $index }})">{{ __('Remove') }}</flux:button>
                                 </div>
                             </div>
+
+                            @if(($item['icon'] ?? null) === 'photo')
+                                <div class="mt-3 flex flex-wrap items-center gap-2 border-t border-zinc-200 pt-3 dark:border-white/10">
+                                    <flux:subheading class="mr-1">{{ __('Crop') }}:</flux:subheading>
+                                    @foreach($crops as $variant => $cropDef)
+                                        <flux:button
+                                            size="xs"
+                                            variant="{{ ! empty($item['crop'][$variant]) ? 'primary' : 'ghost' }}"
+                                            icon="{{ ! empty($item['crop'][$variant]) ? 'check' : 'scissors' }}"
+                                            type="button"
+                                            x-on:click="start({{ $index }}, {{ \Illuminate\Support\Js::from($variant) }}, {{ \Illuminate\Support\Js::from(['w' => $cropDef['w'] ?? null, 'h' => $cropDef['h'] ?? null]) }}, {{ \Illuminate\Support\Js::from($item) }})"
+                                        >
+                                            {{ $cropDef['label'] ?? ucfirst($variant) }}
+                                        </flux:button>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
             </div>
         @endif
     </flux:card>
+
+    <div
+        x-show="open"
+        x-cloak
+        x-on:keydown.escape.window="close()"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+    >
+        <div class="flex w-full max-w-3xl flex-col gap-4 rounded-xl bg-white p-4 shadow-xl dark:bg-zinc-800" x-on:click.outside="close()">
+            <div class="flex items-center justify-between">
+                <flux:heading size="lg">{{ __('Crop image') }}</flux:heading>
+                <flux:badge size="sm" x-text="variant"></flux:badge>
+            </div>
+
+            <div class="flex max-h-[65vh] items-center justify-center overflow-hidden rounded-lg bg-black/10 dark:bg-black/30">
+                <template x-if="open">
+                    <img x-ref="cropImage" :src="item?.crop_src" alt="" class="block max-w-full" />
+                </template>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <flux:button variant="ghost" type="button" x-on:click="close()">{{ __('Cancel') }}</flux:button>
+                <flux:button variant="primary" type="button" x-on:click="apply()">{{ __('Apply crop') }}</flux:button>
+            </div>
+        </div>
+    </div>
 </div>

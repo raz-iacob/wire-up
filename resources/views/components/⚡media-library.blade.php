@@ -80,6 +80,9 @@ return new class extends Component
         $this->selected = collect($media ?? []);
         $this->showLibrary = true;
         $this->max = $max;
+
+        $this->medias = collect();
+        $this->loadMedia();
     }
 
     public function selectMedia(Media $media, bool $deselect = true): void
@@ -389,6 +392,7 @@ return new class extends Component
         return [
             'id' => $media->id,
             'preview' => $media->preview,
+            'crop_src' => $media->cropSrc,
             'filename' => $media->filename,
             'alt_text' => $media->alt_text,
             'mime_type' => $media->mime_type,
@@ -396,6 +400,8 @@ return new class extends Component
             'icon' => $media->type->icon(),
             'size' => $media->size,
             'duration' => $media->duration,
+            'width' => $media->width,
+            'height' => $media->height,
             'dimensions' => $media->dimensions,
             'created_at' => $media->created_at->toDateTimeString(),
         ];

@@ -106,3 +106,49 @@ it('dispatches the library event when opening the selector', function (): void {
         ->call('openLibrary')
         ->assertDispatched('select-media');
 });
+
+it('defaults to a single default crop variant', function (): void {
+    Livewire::test('media-selector')
+        ->assertSet('crops.default.w', 1200)
+        ->assertSet('crops.default.h', 800);
+});
+
+it('stores a crop variant for a selected item in multiple mode', function (): void {
+    Livewire::test('media-selector', ['multiple' => true])
+        ->set('media', [mediaPayload(1), mediaPayload(2)])
+        ->call('setCrop', 1, 'default', ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 10, 'crop_y' => 20, 'w' => 1200, 'h' => 630])
+        ->assertSet('media.1.crop.default.crop_w', 1200)
+        ->assertSet('media.1.crop.default.crop_x', 10)
+        ->assertSet('media.0.crop', []);
+});
+
+it('stores a crop variant for a selected item in single mode', function (): void {
+    Livewire::test('media-selector')
+        ->set('media', mediaPayload(1))
+        ->call('setCrop', 0, 'default', ['crop_w' => 100, 'crop_h' => 100, 'crop_x' => 0, 'crop_y' => 0, 'w' => 100, 'h' => 100])
+        ->assertSet('media.crop.default.crop_w', 100);
+});
+
+it('ignores a crop for an unknown item index', function (): void {
+    Livewire::test('media-selector', ['multiple' => true])
+        ->set('media', [mediaPayload(1)])
+        ->call('setCrop', 5, 'default', ['crop_w' => 10])
+        ->assertCount('media', 1)
+        ->assertSet('media.0.crop', []);
+});
+
+it('ignores a crop for an unknown variant', function (): void {
+    Livewire::test('media-selector', ['multiple' => true])
+        ->set('media', [mediaPayload(1)])
+        ->call('setCrop', 0, 'unknown', ['crop_w' => 10])
+        ->assertSet('media.0.crop', []);
+});
+
+it('keeps crop data when reordering items', function (): void {
+    Livewire::test('media-selector', ['multiple' => true])
+        ->set('media', [mediaPayload(1), mediaPayload(2)])
+        ->call('setCrop', 0, 'default', ['crop_w' => 50, 'crop_h' => 50, 'crop_x' => 0, 'crop_y' => 0, 'w' => 50, 'h' => 50])
+        ->call('reorderMedia', 1, 1)
+        ->assertSet('media.1.id', 1)
+        ->assertSet('media.1.crop.default.crop_w', 50);
+});

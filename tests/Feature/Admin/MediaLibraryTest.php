@@ -40,6 +40,16 @@ it('handles select media event and opens library', function (): void {
         ->assertSet('max', 5);
 });
 
+it('loads media into the grid when the library opens', function (): void {
+    Media::factory()->count(3)->create();
+
+    Livewire::test('media-library')
+        ->dispatch('select-media', target: 'test-target', type: null, max: 5, media: null)
+        ->assertSet('showLibrary', true)
+        ->assertSet('loaded', true)
+        ->assertCount('medias', 3);
+});
+
 it('handles select media event without type specified', function (): void {
     Livewire::test('media-library')
         ->dispatch('select-media', target: 'test-target', type: '', max: 1, media: null)

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use App\Actions\UpdatePageAction;
 use App\Enums\PageStatus;
+use App\Models\Media;
 use App\Models\Page;
 use Carbon\CarbonImmutable;
 use Flux\Flux;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -28,7 +30,7 @@ return new class extends Component
     public array $description = [];
 
     /**
-     * @var array<string, string>
+     * @var array<string, array<int, array<string, mixed>>>
      */
     public array $og_image = [];
 
@@ -51,7 +53,7 @@ return new class extends Component
 
     public function mount(Page $page): void
     {
-        $page->load('translations');
+        $page->load('translations', 'media');
         $this->page = $page;
         $this->status = $page->computed_status;
         $this->published_at = $page->published_at;
@@ -60,6 +62,48 @@ return new class extends Component
         $this->slugs = $page->getSlugsArray();
         $this->locale = app()->getLocale();
         $this->activeLocales = resolve('localization')->getActiveLocales();
+        $this->og_image = $this->mediaForRole('og_image');
+    }
+
+    /**
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function mediaForRole(string $role): array
+    {
+        return $this->page->media
+            ->filter(fn (Media $media): bool => $media->pivot->role === $role)
+            ->groupBy(fn (Media $media): string => $media->pivot->locale)
+            ->map(fn (Collection $items): array => $items
+                ->sortBy(fn (Media $media): int => $media->pivot->position)
+                ->map(fn (Media $media): array => $this->mediaToItem($media))
+                ->values()
+                ->all()
+            )
+            ->all();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mediaToItem(Media $media): array
+    {
+        return [
+            'id' => $media->id,
+            'preview' => $media->preview,
+            'crop_src' => $media->cropSrc,
+            'filename' => $media->filename,
+            'alt_text' => $media->alt_text,
+            'mime_type' => $media->mime_type,
+            'thumbnail' => $media->thumbnail,
+            'icon' => $media->type->icon(),
+            'size' => $media->size,
+            'duration' => $media->duration,
+            'width' => $media->width,
+            'height' => $media->height,
+            'dimensions' => $media->dimensions,
+            'created_at' => $media->created_at->toDateTimeString(),
+            'crop' => $media->pivot->crop ?? [],
+        ];
     }
 
     public function update(UpdatePageAction $action): void
@@ -68,6 +112,10 @@ return new class extends Component
         $rules = [
             'status' => ['required', Rule::enum(PageStatus::class)],
             'published_at' => ['nullable', 'date'],
+            'og_image' => ['array'],
+            'og_image.*' => ['array'],
+            'og_image.*.*' => ['array'],
+            'og_image.*.*.id' => ['required', 'integer', 'exists:media,id'],
         ];
 
         foreach (array_keys($this->activeLocales) as $locale) {
@@ -87,7 +135,10 @@ return new class extends Component
 
         $validated = $this->validate($rules);
 
-        $action->handle($this->page, $validated);
+        $action->handle($this->page, [
+            ...$validated,
+            'og_image' => $this->og_image,
+        ]);
 
         Flux::toast(__('Page content has been updated.'));
     }
@@ -152,7 +203,7 @@ return new class extends Component
                     <x-forms.input-translated name="title" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Title') }}" />
                     <x-forms.url-translated name="slugs" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Web Address') }}" />
                     <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Description') }}" />
-                    <livewire:media-selector wire:model="og_image.{{ $locale }}" type="any" name="og_image" :$locale :multi-locale="count($activeLocales) > 1" :multiple="true" label="{{ __('Open Graph Image') }}" />
+                    <livewire:media-selector wire:model="og_image.{{ $locale }}" type="image" name="og_image" :$locale :multi-locale="count($activeLocales) > 1" :multiple="true" :crops="['default' => ['label' => __('Landscape'), 'w' => 1200, 'h' => 630], 'square' => ['label' => __('Square'), 'w' => 600, 'h' => 600]]" label="{{ __('Open Graph Image') }}" />
                 </div>
             </flux:fieldset>
         </div>

@@ -171,3 +171,77 @@ it('gets media caption from pivot metadata', function (): void {
 
     expect($caption)->toBe('Test Caption');
 });
+
+it('syncs media for a role storing order, crop and position', function (): void {
+    $page = Page::factory()->create();
+    $first = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $second = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $page->syncMediaForRole('og_image', 'en', [
+        ['id' => $first->id, 'crop' => ['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]],
+        ['id' => $second->id, 'crop' => []],
+    ]);
+
+    $items = $page->media()->wherePivot('role', 'og_image')->wherePivot('locale', 'en')->get();
+
+    expect($items)->toHaveCount(2)
+        ->and($items[0]->id)->toBe($first->id)
+        ->and($items[0]->pivot->position)->toBe(0)
+        ->and($items[0]->pivot->crop)->toBe(['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]])
+        ->and($items[1]->id)->toBe($second->id)
+        ->and($items[1]->pivot->position)->toBe(1)
+        ->and($items[1]->pivot->crop)->toBeNull();
+});
+
+it('replaces the existing attachments for a role and locale when syncing', function (): void {
+    $page = Page::factory()->create();
+    $old = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $new = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $page->syncMediaForRole('og_image', 'en', [['id' => $old->id]]);
+    $page->syncMediaForRole('og_image', 'en', [['id' => $new->id]]);
+
+    $items = $page->media()->wherePivot('role', 'og_image')->wherePivot('locale', 'en')->get();
+
+    expect($items)->toHaveCount(1)
+        ->and($items->first()->id)->toBe($new->id);
+});
+
+it('only syncs the targeted role and locale slot', function (): void {
+    $page = Page::factory()->create();
+    $keep = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $replace = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $page->media()->attach($keep, ['role' => 'banner', 'locale' => 'en']);
+
+    $page->syncMediaForRole('og_image', 'en', [['id' => $replace->id]]);
+
+    expect($page->media()->wherePivot('role', 'banner')->count())->toBe(1)
+        ->and($page->media()->wherePivot('role', 'og_image')->count())->toBe(1);
+});
+
+it('clears a role and locale slot when syncing with no items', function (): void {
+    $page = Page::factory()->create();
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $page->syncMediaForRole('og_image', 'en', [['id' => $media->id]]);
+    $page->syncMediaForRole('og_image', 'en', []);
+
+    expect($page->media()->wherePivot('role', 'og_image')->count())->toBe(0);
+});
+
+it('skips media items missing an id when syncing', function (): void {
+    $page = Page::factory()->create();
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $page->syncMediaForRole('og_image', 'en', [
+        ['crop' => ['default' => []]],
+        ['id' => $media->id],
+    ]);
+
+    $items = $page->media()->wherePivot('role', 'og_image')->get();
+
+    expect($items)->toHaveCount(1)
+        ->and($items->first()->id)->toBe($media->id)
+        ->and($items->first()->pivot->position)->toBe(1);
+});

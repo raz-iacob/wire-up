@@ -98,9 +98,41 @@ trait HasMedia
         return $media->pivot->metadata['caption'] ?? '';
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     */
+    public function syncMediaForRole(string $role, string $locale, array $items): void
+    {
+        $this->media()
+            ->wherePivot('role', $role)
+            ->wherePivot('locale', $locale)
+            ->detach();
+
+        foreach (array_values($items) as $position => $item) {
+            if (! isset($item['id'])) {
+                continue;
+            }
+
+            $this->media()->attach($item['id'], [
+                'role' => $role,
+                'locale' => $locale,
+                'position' => $position,
+                'crop' => $this->pivotArray($item['crop'] ?? null),
+            ]);
+        }
+    }
+
     protected static function bootHasMedia(): void
     {
         static::deleted(fn (self $model) => $model->media()->detach());
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function pivotArray(mixed $value): ?array
+    {
+        return is_array($value) && $value !== [] ? $value : null;
     }
 
     private function findImage(string $role, string $crop = 'default'): ?Media

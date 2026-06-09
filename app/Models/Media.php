@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Storage;
  * @property-read string $url
  * @property-read string $downloadUrl
  * @property-read string $dimensions
+ * @property-read string $cropSrc
  * @property-read Collection<int, Mediable> $mediables
  * @property-read Mediable $pivot
  */
@@ -131,6 +132,18 @@ final class Media extends Model
                 MediaType::IMAGE => route('image.show', ['w=350,h=200', $this->source]),
                 default => $this->thumbnail ? route('image.show', ['w=350,h=200', $this->thumbnail]) : ImageService::placeholder(),
             }
+        );
+    }
+
+    /**
+     * @return Attribute<string, null>
+     */
+    protected function cropSrc(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): string => $this->type === MediaType::IMAGE
+                ? route('image.show', ['w=1200', $this->source])
+                : ImageService::placeholder()
         );
     }
 

@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\MediaType;
 use App\Enums\PageStatus;
+use App\Models\Media;
 use App\Models\Page;
 use App\Models\User;
 use Livewire\Livewire;
@@ -162,6 +164,61 @@ it('can change page status to private', function (): void {
 
     expect($page->status)->toBe(PageStatus::PRIVATE)
         ->and($page->published_at)->toBeNull();
+});
+
+it('hydrates og_image from existing media on mount', function (): void {
+    $page = Page::factory()->create();
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $page->syncMediaForRole('og_image', 'en', [
+        ['id' => $media->id, 'crop' => ['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $og = Livewire::test('pages::admin.pages-edit', ['page' => $page])->get('og_image');
+
+    expect($og)->toHaveKey('en')
+        ->and($og['en'])->toHaveCount(1)
+        ->and($og['en'][0]['id'])->toBe($media->id)
+        ->and($og['en'][0]['crop'])->toBe(['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]);
+});
+
+it('persists selected og_image media on update', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'With OG')
+        ->set('slugs.en', 'with-og')
+        ->set('og_image.en', [
+            ['id' => $media->id, 'crop' => ['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]],
+        ])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('mediables', [
+        'mediable_id' => $page->id,
+        'mediable_type' => $page->getMorphClass(),
+        'media_id' => $media->id,
+        'role' => 'og_image',
+        'locale' => 'en',
+        'position' => 0,
+    ]);
+});
+
+it('rejects og_image referencing a missing media id', function (): void {
+    $page = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'Bad OG')
+        ->set('slugs.en', 'bad-og')
+        ->set('og_image.en', [['id' => 999999]])
+        ->call('update')
+        ->assertHasErrors(['og_image.en.0.id']);
 });
 
 it('can schedule a page for future publication', function (): void {

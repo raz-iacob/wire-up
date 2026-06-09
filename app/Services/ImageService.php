@@ -105,7 +105,7 @@ final class ImageService
      */
     public function applyOptions(array $options): self
     {
-        $this->options = $options;
+        $this->options = $this->normalizeOptions($options);
 
         $crop = $this->parseCrop($options['crop'] ?? '');
 
@@ -140,6 +140,37 @@ final class ImageService
         return response($this->image->encode($encoder)->toString(), 200)
             ->header('Content-Type', $mime)
             ->header('Cache-Control', "public, max-age={$cacheAgeSeconds}, s-maxage={$cacheAgeSeconds}, immutable");
+    }
+
+    /**
+     * @param  array<string, mixed>  $options
+     * @return array{w?: int, h?: int, crop?: string, q?: int, fm?: 'png'|'gif'|'webp'|'jpg'}
+     */
+    private function normalizeOptions(array $options): array
+    {
+        $normalized = [];
+
+        if (isset($options['w'])) {
+            $normalized['w'] = (int) $options['w'];
+        }
+
+        if (isset($options['h'])) {
+            $normalized['h'] = (int) $options['h'];
+        }
+
+        if (isset($options['crop'])) {
+            $normalized['crop'] = (string) $options['crop'];
+        }
+
+        if (isset($options['q'])) {
+            $normalized['q'] = (int) $options['q'];
+        }
+
+        if (in_array($options['fm'] ?? null, ['png', 'gif', 'webp', 'jpg'], true)) {
+            $normalized['fm'] = $options['fm'];
+        }
+
+        return $normalized;
     }
 
     private function manager(): ImageManager

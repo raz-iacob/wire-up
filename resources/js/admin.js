@@ -2,6 +2,8 @@ import.meta.glob(["../images/**/*"]);
 
 import SparkMD5 from "spark-md5";
 
+import Cropper from "cropperjs";
+
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -104,121 +106,123 @@ document.addEventListener("alpine:init", () => {
         };
     });
 
-    Alpine.data("mediaSelector", ($wire, config = {}) => {
+    // Crops a single media item for a named variant. Selection geometry is read
+    // back from the rendered DOM as ratios, so it stays accurate regardless of
+    // the resolution the editing image is displayed at, then mapped onto the
+    // media's natural pixel dimensions for the server-side ImageService.
+    Alpine.data("mediaCropper", ($wire) => {
         return {
             cropper: null,
-            crop: {},
-            media: null,
-            listeners: [],
-            target: config.target,
-            imageId: config.imageId,
+            open: false,
+            index: null,
+            variant: null,
+            target: { w: 1200, h: 800, q: 80, fm: "jpg" },
+            item: null,
 
-            init() {
-                this.media = $wire.entangle("media");
+            start(index, variant, target, item) {
+                this.index = index;
+                this.variant = variant;
+                this.target = { q: 80, fm: "jpg", ...target };
+                this.item = item;
+                this.open = true;
 
-                this.listeners.push(
-                    Livewire.on("media-selected", (event) => {
-                        if (event.target !== this.target) {
-                            return;
-                        }
-
-                        this.media = event.media;
-                    }),
-                );
-
-                this.listeners.push(
-                    Livewire.on("media-updated", (event) => {
-                        if (event.for !== this.target) {
-                            return;
-                        }
-
-                        this.media = event.media;
-                    }),
-                );
-
-                this.listeners.push(
-                    Livewire.on("media-deleted", (event) => {
-                        if (event.for !== this.target) {
-                            return;
-                        }
-
-                        this.media = null;
-                    }),
-                );
+                this.$nextTick(() => this.mount());
             },
 
-            destroy() {
-                this.listeners.forEach((listener) => listener());
-            },
+            mount() {
+                const image = this.$refs.cropImage;
 
-            showCropper() {
-                const image = document.getElementById(this.imageId);
-
-                if (!image || !this.media) {
+                if (!image) {
                     return;
                 }
 
-                this.cropper = new Cropper(image, {
-                    viewMode: 1,
-                    movable: false,
-                    rotatable: false,
-                    zoomable: false,
-                    scalable: false,
-                    background: false,
-                    minContainerHeight: 400,
-                    minCropBoxWidth: 100,
-                    minCropBoxHeight: 100,
-                    data: {
-                        width: this.media?.crop?.w || 0,
-                        height: this.media?.crop?.h || 0,
-                        x: this.media?.crop?.x || 0,
-                        y: this.media?.crop?.y || 0,
-                    },
-                    responsive: true,
-                    dragMode: "move",
-                    autoCropArea: 1,
-                    crop: (event) => {
-                        this.crop = {
-                            w: Math.round(event.detail.width),
-                            h: Math.round(event.detail.height),
-                            x: Math.round(event.detail.x),
-                            y: Math.round(event.detail.y),
-                        };
-                    },
+                this.teardown();
+
+                this.cropper = new Cropper(image);
+
+                const selection = this.cropper.getCropperSelection();
+
+                if (selection && this.target.w && this.target.h) {
+                    selection.aspectRatio = this.target.w / this.target.h;
+                }
+            },
+
+            teardown() {
+                if (this.cropper) {
+                    this.cropper.destroy();
+                    this.cropper = null;
+                }
+            },
+
+            close() {
+                this.teardown();
+                this.open = false;
+                this.index = null;
+                this.variant = null;
+                this.item = null;
+            },
+
+            apply() {
+                const selection = this.cropper?.getCropperSelection();
+                const image = this.cropper?.getCropperImage();
+
+                if (!selection || !image || this.index === null) {
+                    this.close();
+                    return;
+                }
+
+                const imageRect = image.getBoundingClientRect();
+                const selectionRect = selection.getBoundingClientRect();
+
+                if (!imageRect.width || !imageRect.height) {
+                    this.close();
+                    return;
+                }
+
+                const naturalWidth =
+                    Number(this.item?.width) || imageRect.width;
+                const naturalHeight =
+                    Number(this.item?.height) || imageRect.height;
+
+                const clamp = (value, max) =>
+                    Math.max(0, Math.min(Math.round(value), max));
+
+                const cropX = clamp(
+                    ((selectionRect.left - imageRect.left) / imageRect.width) *
+                        naturalWidth,
+                    naturalWidth,
+                );
+                const cropY = clamp(
+                    ((selectionRect.top - imageRect.top) / imageRect.height) *
+                        naturalHeight,
+                    naturalHeight,
+                );
+                const cropW = clamp(
+                    (selectionRect.width / imageRect.width) * naturalWidth,
+                    naturalWidth - cropX,
+                );
+                const cropH = clamp(
+                    (selectionRect.height / imageRect.height) * naturalHeight,
+                    naturalHeight - cropY,
+                );
+
+                if (cropW <= 0 || cropH <= 0) {
+                    this.close();
+                    return;
+                }
+
+                $wire.setCrop(this.index, this.variant, {
+                    crop_w: cropW,
+                    crop_h: cropH,
+                    crop_x: cropX,
+                    crop_y: cropY,
+                    w: this.target.w,
+                    h: this.target.h,
+                    q: this.target.q,
+                    fm: this.target.fm,
                 });
-            },
 
-            hideCropper() {
-                if (!this.cropper) {
-                    return;
-                }
-
-                this.cropper.destroy();
-                this.cropper = null;
-            },
-
-            updateCrop() {
-                if (!this.media || !this.cropper) {
-                    return;
-                }
-
-                this.media = {
-                    ...this.media,
-                    url: this.cropper.getCroppedCanvas().toDataURL(),
-                    crop: this.crop,
-                };
-
-                this.hideCropper();
-            },
-
-            hidePreview() {
-                document.querySelectorAll("iframe").forEach((iframe) => {
-                    iframe.contentWindow?.postMessage("pause", "*");
-                });
-            },
-
-            removeMedia() {
-                this.media = null;
+                this.close();
             },
         };
     });

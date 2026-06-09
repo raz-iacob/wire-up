@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Actions\UpdatePageAction;
+use App\Enums\MediaType;
 use App\Enums\PageStatus;
+use App\Models\Media;
 use App\Models\Page;
 
 it('may update a page', function (): void {
@@ -81,6 +83,41 @@ it('handles scheduled status', function (): void {
 
     expect($page->status)->toBe(PageStatus::PUBLISHED)
         ->and($page->published_at->timestamp)->toBe($futureDate->timestamp);
+});
+
+it('persists og_image media per locale with crop and order', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $first = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $second = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    resolve(UpdatePageAction::class)->handle($page, [
+        'status' => PageStatus::DRAFT,
+        'og_image' => [
+            'en' => [
+                ['id' => $first->id, 'crop' => ['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]],
+                ['id' => $second->id, 'crop' => []],
+            ],
+        ],
+    ]);
+
+    $items = $page->media()->wherePivot('role', 'og_image')->wherePivot('locale', 'en')->get();
+
+    expect($items)->toHaveCount(2)
+        ->and($items[0]->id)->toBe($first->id)
+        ->and($items[0]->pivot->position)->toBe(0)
+        ->and($items[1]->id)->toBe($second->id);
+});
+
+it('does not touch media when og_image is absent', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $page->media()->attach($media, ['role' => 'og_image', 'locale' => 'en']);
+
+    resolve(UpdatePageAction::class)->handle($page, [
+        'status' => PageStatus::PUBLISHED,
+    ]);
+
+    expect($page->media()->wherePivot('role', 'og_image')->count())->toBe(1);
 });
 
 it('handles private status', function (): void {
