@@ -4,22 +4,16 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\File;
 
+#[Description('Clean up Livewire temporary file uploads')]
+#[Signature('wireup:clean-temp {--older-than=24 : Delete files older than X hours}')]
 final class CleanTempUploadsCommand extends Command
 {
-    /**
-     * @var string
-     */
-    protected $signature = 'wireup:clean-temp {--older-than=24 : Delete files older than X hours}';
-
-    /**
-     * @var string
-     */
-    protected $description = 'Clean up Livewire temporary file uploads';
-
     public function handle(): int
     {
         $olderThanHours = (int) $this->option('older-than');

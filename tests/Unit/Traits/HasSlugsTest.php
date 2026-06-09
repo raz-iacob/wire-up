@@ -6,6 +6,7 @@ use App\Enums\PageStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Traits\HasSlugs;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -60,11 +61,9 @@ it('generates slugs from multiple attributes', function (): void {
         $table->timestamps();
     });
 
-    $model = new class extends Model
+    $model = new #[Table(name: 'posts')] class extends Model
     {
         use HasFactory, HasSlugs;
-
-        protected $table = 'posts';
 
         protected static function boot(): void
         {
@@ -104,11 +103,9 @@ it('generates slugs from enum cased attributes', function (): void {
         $table->timestamps();
     });
 
-    $model = new class extends Model
+    $model = new #[Table(name: 'posts')] class extends Model
     {
         use HasFactory, HasSlugs;
-
-        protected $table = 'posts';
 
         protected $casts = [
             'status' => PageStatus::class,
@@ -239,11 +236,9 @@ it('throws exception when slug attribute does not exist', function (): void {
         $table->timestamps();
     });
 
-    $model = new class extends Model
+    $model = new #[Table(name: 'posts')] class extends Model
     {
         use HasFactory, HasSlugs;
-
-        protected $table = 'posts';
 
         protected static function boot(): void
         {

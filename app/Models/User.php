@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -35,19 +36,15 @@ use Illuminate\Support\Str;
  * @property-read string $initials
  * @property-read string|null $photo_url
  */
+#[Hidden([
+    'password',
+    'remember_token',
+    'stripe_id',
+])]
 final class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
-
-    /**
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-        'stripe_id',
-    ];
 
     /**
      * @return array<string, string>

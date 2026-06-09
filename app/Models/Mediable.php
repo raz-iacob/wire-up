@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Carbon\CarbonImmutable;
 use Database\Factories\MediableFactory;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property-read Media $media
  * @property-read Model $mediable
  */
+#[Table(name: 'mediables', key: 'id')]
 final class Mediable extends MorphPivot
 {
     /** @use HasFactory<MediableFactory> */
@@ -36,16 +38,6 @@ final class Mediable extends MorphPivot
      * @var bool
      */
     public $incrementing = true;
-
-    /**
-     * @var string
-     */
-    protected $primaryKey = 'id';
-
-    /**
-     * @var string
-     */
-    protected $table = 'mediables';
 
     /**
      * @return BelongsTo<Media, $this>

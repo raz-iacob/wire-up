@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
 
+#[Description('Create a new action class')]
 final class MakeActionCommand extends GeneratorCommand
 {
     /**
      * @var string
      */
     protected $name = 'make:action';
-
-    /**
-     * @var string
-     */
-    protected $description = 'Create a new action class';
 
     /**
      * @var string

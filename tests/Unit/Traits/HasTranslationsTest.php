@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Locale;
 use App\Models\Page;
 use App\Traits\HasTranslations;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -29,11 +30,9 @@ it('has title as default translated attribute', function (): void {
         $table->timestamps();
     });
 
-    $model = new class extends Model
+    $model = new #[Table(name: 'posts')] class extends Model
     {
         use HasFactory, HasTranslations;
-
-        protected $table = 'posts';
 
         protected static function boot(): void
         {
