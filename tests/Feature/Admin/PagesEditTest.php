@@ -166,11 +166,22 @@ it('can change page status to private', function (): void {
         ->and($page->published_at)->toBeNull();
 });
 
+it('initializes og_image with an empty array for each active locale when there is no media', function (): void {
+    $page = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    $og = Livewire::test('pages::admin.pages-edit', ['page' => $page])->get('og_image');
+
+    expect($og)->toHaveKey('en')
+        ->and($og['en'])->toBe([]);
+});
+
 it('hydrates og_image from existing media on mount', function (): void {
     $page = Page::factory()->create();
     $media = Media::factory()->create(['type' => MediaType::IMAGE]);
     $page->syncMediaForRole('og_image', 'en', [
-        ['id' => $media->id, 'crop' => ['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]],
+        ['id' => $media->id, 'crop' => ['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]], 'metadata' => ['caption' => 'Hydrated caption']],
     ]);
 
     $this->actingAsAdmin();
@@ -180,7 +191,61 @@ it('hydrates og_image from existing media on mount', function (): void {
     expect($og)->toHaveKey('en')
         ->and($og['en'])->toHaveCount(1)
         ->and($og['en'][0]['id'])->toBe($media->id)
-        ->and($og['en'][0]['crop'])->toBe(['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]);
+        ->and($og['en'][0]['crop'])->toBe(['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]])
+        ->and($og['en'][0]['metadata'])->toBe(['caption' => 'Hydrated caption']);
+});
+
+it('persists og_image caption metadata on update', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'With caption')
+        ->set('slugs.en', 'with-caption')
+        ->set('og_image.en', [
+            ['id' => $media->id, 'metadata' => ['caption' => 'My caption', 'alt' => 'My alt']],
+        ])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $pivot = $page->fresh()->media()->wherePivot('role', 'og_image')->first()->pivot;
+
+    expect($pivot->metadata)->toBe(['caption' => 'My caption', 'alt' => 'My alt']);
+});
+
+it('persists a single (non-list) og_image item from a single-select selector', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'Single')
+        ->set('slugs.en', 'single')
+        ->set('og_image.en', ['id' => $media->id])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($page->fresh()->media()->wherePivot('role', 'og_image')->count())->toBe(1);
+});
+
+it('clears og_image when the single selection is removed (null)', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $page->syncMediaForRole('og_image', 'en', [['id' => $media->id]]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'Cleared')
+        ->set('slugs.en', 'cleared')
+        ->set('og_image.en')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($page->fresh()->media()->wherePivot('role', 'og_image')->count())->toBe(0);
 });
 
 it('persists selected og_image media on update', function (): void {

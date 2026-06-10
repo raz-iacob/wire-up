@@ -118,6 +118,7 @@ trait HasMedia
                 'locale' => $locale,
                 'position' => $position,
                 'crop' => $this->pivotArray($item['crop'] ?? null),
+                'metadata' => $this->pivotArray($item['metadata'] ?? null),
             ]);
         }
     }

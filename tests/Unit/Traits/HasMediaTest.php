@@ -193,6 +193,22 @@ it('syncs media for a role storing order, crop and position', function (): void 
         ->and($items[1]->pivot->crop)->toBeNull();
 });
 
+it('stores metadata on the pivot when syncing', function (): void {
+    $page = Page::factory()->create();
+    $first = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $second = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $page->syncMediaForRole('og_image', 'en', [
+        ['id' => $first->id, 'metadata' => ['caption' => 'A caption', 'alt' => 'An alt']],
+        ['id' => $second->id, 'metadata' => []],
+    ]);
+
+    $items = $page->media()->wherePivot('role', 'og_image')->wherePivot('locale', 'en')->get();
+
+    expect($items[0]->pivot->metadata)->toBe(['caption' => 'A caption', 'alt' => 'An alt'])
+        ->and($items[1]->pivot->metadata)->toBeNull();
+});
+
 it('replaces the existing attachments for a role and locale when syncing', function (): void {
     $page = Page::factory()->create();
     $old = Media::factory()->create(['type' => MediaType::IMAGE]);

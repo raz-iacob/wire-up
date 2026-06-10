@@ -86,6 +86,26 @@ it('removes a selected media item', function (): void {
         ->assertSet('media.0.id', 2);
 });
 
+it('opens a confirmation modal before removing an item', function (): void {
+    Livewire::test('media-selector', ['multiple' => true])
+        ->set('media', [mediaPayload(1, 'first.jpg'), mediaPayload(2, 'second.jpg')])
+        ->call('confirmRemove', 0)
+        ->assertSet('showRemoveModal', true)
+        ->assertSet('removeIndex', 0)
+        ->assertCount('media', 2);
+});
+
+it('removes the item only after confirmation', function (): void {
+    Livewire::test('media-selector', ['multiple' => true])
+        ->set('media', [mediaPayload(1, 'first.jpg'), mediaPayload(2, 'second.jpg')])
+        ->call('confirmRemove', 0)
+        ->call('removeConfirmed')
+        ->assertSet('showRemoveModal', false)
+        ->assertSet('removeIndex', null)
+        ->assertCount('media', 1)
+        ->assertSet('media.0.id', 2);
+});
+
 it('reorders selected media items', function (): void {
     Livewire::test('media-selector', [
         'multiple' => true,
@@ -151,4 +171,71 @@ it('keeps crop data when reordering items', function (): void {
         ->call('reorderMedia', 1, 1)
         ->assertSet('media.1.id', 1)
         ->assertSet('media.1.crop.default.crop_w', 50);
+});
+
+it('commits multiple crop variants in one pass and skips unknown variants', function (): void {
+    Livewire::test('media-selector', ['multiple' => true])
+        ->set('media', [mediaPayload(1)])
+        ->call('setCrops', 0, [
+            'default' => ['crop_w' => 100, 'crop_h' => 50, 'crop_x' => 0, 'crop_y' => 0, 'w' => 100, 'h' => 50],
+            'unknown' => ['crop_w' => 1],
+        ])
+        ->assertSet('media.0.crop.default.crop_w', 100)
+        ->assertSet('media.0.crop.default.crop_h', 50)
+        ->assertCount('media.0.crop', 1);
+});
+
+it('preserves existing crops when adding more media via the library', function (): void {
+    $component = Livewire::test('media-selector', ['multiple' => true, 'max' => 5]);
+    $target = $component->instance()->targetKey();
+
+    $component
+        ->set('media', [mediaPayload(1), mediaPayload(2)])
+        ->call('setCrop', 0, 'default', ['crop_w' => 100, 'crop_h' => 50, 'crop_x' => 0, 'crop_y' => 0, 'w' => 100, 'h' => 50]);
+
+    $component
+        ->dispatch('media-selected', target: $target, media: [mediaPayload(1), mediaPayload(2), mediaPayload(3)])
+        ->assertCount('media', 3)
+        ->assertSet('media.0.crop.default.crop_w', 100)
+        ->assertSet('media.2.crop', []);
+});
+
+it('opens the caption modal preloaded with existing metadata', function (): void {
+    Livewire::test('media-selector', ['multiple' => true, 'withCaption' => true])
+        ->set('media', [array_merge(mediaPayload(1), ['metadata' => ['caption' => 'Hello', 'alt' => 'An alt']])])
+        ->call('editCaption', 0)
+        ->assertSet('showCaptionModal', true)
+        ->assertSet('captionIndex', 0)
+        ->assertSet('captionText', 'Hello')
+        ->assertSet('captionAlt', 'An alt');
+});
+
+it('saves caption and alt into the item metadata', function (): void {
+    Livewire::test('media-selector', ['multiple' => true, 'withCaption' => true])
+        ->set('media', [mediaPayload(1)])
+        ->call('editCaption', 0)
+        ->set('captionText', 'A caption')
+        ->set('captionAlt', 'Some alt')
+        ->call('saveCaption')
+        ->assertSet('showCaptionModal', false)
+        ->assertSet('captionIndex', null)
+        ->assertSet('media.0.metadata.caption', 'A caption')
+        ->assertSet('media.0.metadata.alt', 'Some alt');
+});
+
+it('drops empty caption and alt values from metadata', function (): void {
+    Livewire::test('media-selector', ['multiple' => true, 'withCaption' => true])
+        ->set('media', [mediaPayload(1)])
+        ->call('editCaption', 0)
+        ->set('captionText', '')
+        ->set('captionAlt', '')
+        ->call('saveCaption')
+        ->assertSet('media.0.metadata', []);
+});
+
+it('ignores setCrops for an unknown item index', function (): void {
+    Livewire::test('media-selector', ['multiple' => true])
+        ->set('media', [mediaPayload(1)])
+        ->call('setCrops', 9, ['default' => ['crop_w' => 1]])
+        ->assertSet('media.0.crop', []);
 });

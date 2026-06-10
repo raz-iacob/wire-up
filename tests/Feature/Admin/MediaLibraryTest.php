@@ -50,6 +50,18 @@ it('loads media into the grid when the library opens', function (): void {
         ->assertCount('medias', 3);
 });
 
+it('hydrates an array media payload into models when opening the library', function (): void {
+    $media = Media::factory()->create();
+
+    $component = Livewire::test('media-library')
+        ->dispatch('select-media', target: 'og_image.en', type: null, max: 1, media: [['id' => $media->id, 'crop' => []]])
+        ->assertSet('showLibrary', true)
+        ->assertCount('selected', 1);
+
+    expect($component->get('selected')->first())->toBeInstanceOf(Media::class)
+        ->and($component->get('selected')->first()->id)->toBe($media->id);
+});
+
 it('handles select media event without type specified', function (): void {
     Livewire::test('media-library')
         ->dispatch('select-media', target: 'test-target', type: '', max: 1, media: null)

@@ -81,7 +81,7 @@
             </flux:dropdown>
         </flux:header>
 
-        <flux:main>
+        <flux:main class="min-w-0">
             {{ $slot }}
         </flux:main>
 
@@ -90,7 +90,7 @@
         @endpersist
 
         @persist('toast')
-        <flux:toast.group expanded position="top end">
+        <flux:toast.group expanded position="bottom end">
             <flux:toast />
         </flux:toast.group>
         @endpersist

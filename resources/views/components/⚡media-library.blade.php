@@ -34,6 +34,15 @@ return new class extends Component
     /** @var array<int, TemporaryUploadedFile> */
     public array $files = [];
 
+    /**
+     * Durable source of truth for the selection. Media models do not survive
+     * Livewire's dehydrate/rehydrate cycle as models, so we persist their ids
+     * and rebuild $selected on every request via hydrate().
+     *
+     * @var array<int, int>
+     */
+    public array $selectedIds = [];
+
     /** @var Collection<int, Media> */
     public Collection $selected;
 
@@ -62,6 +71,11 @@ return new class extends Component
         $this->medias = collect();
     }
 
+    public function hydrate(): void
+    {
+        $this->selected = $this->selectionFromIds($this->selectedIds);
+    }
+
     public function updated(string $propertyName): void
     {
         if (in_array($propertyName, ['search', 'typeFilter'], true)) {
@@ -70,14 +84,14 @@ return new class extends Component
         }
     }
 
-    /** @param ?array<int, Media> $media */
+    /** @param ?array<int, array<string, mixed>|Media> $media */
     #[On('select-media')]
     public function handleSelectMedia(string $target, ?string $type = null, int $max = 1, ?array $media = null): void
     {
         $this->target = $target;
         $this->type = $type !== null ? MediaType::tryFrom($type) : null;
         $this->typeFilter = $this->type->value ?? '';
-        $this->selected = collect($media ?? []);
+        $this->syncSelected($this->hydrateSelection($media ?? []));
         $this->showLibrary = true;
         $this->max = $max;
 
@@ -85,18 +99,67 @@ return new class extends Component
         $this->loadMedia();
     }
 
+    /**
+     * Rebuilds the selection as Media models from an incoming payload. Items
+     * arrive as plain arrays over the wire, so we re-fetch by id.
+     *
+     * @param  array<int, array<string, mixed>|Media>  $media
+     * @return Collection<int, Media>
+     */
+    private function hydrateSelection(array $media): Collection
+    {
+        $ids = collect($media)
+            ->map(fn (array|Media $item): ?int => $item instanceof Media ? $item->id : (isset($item['id']) ? (int) $item['id'] : null))
+            ->filter()
+            ->values()
+            ->all();
+
+        return $this->selectionFromIds($ids);
+    }
+
+    /**
+     * Loads Media models for the given ids, preserving their order.
+     *
+     * @param  array<int, int>  $ids
+     * @return Collection<int, Media>
+     */
+    private function selectionFromIds(array $ids): Collection
+    {
+        if ($ids === []) {
+            return collect();
+        }
+
+        return Media::query()
+            ->whereIn('id', $ids)
+            ->get()
+            ->sortBy(fn (Media $item): int => (int) array_search($item->id, $ids, true))
+            ->values();
+    }
+
+    /**
+     * Stores the selection as models for the current request and persists the
+     * ids so it can be rebuilt after the next round-trip.
+     *
+     * @param  Collection<int, Media>  $selected
+     */
+    private function syncSelected(Collection $selected): void
+    {
+        $this->selected = $selected->values();
+        $this->selectedIds = $selected->pluck('id')->all();
+    }
+
     public function selectMedia(Media $media, bool $deselect = true): void
     {
         if ($this->isSelected($media->id)) {
-            $this->selected = $this->selected
-                ->reject(fn ($m): bool => $m->id === $media->id && $deselect)
-                ->values();
+            if ($deselect) {
+                $this->syncSelected($this->selected->reject(fn (Media $m): bool => $m->id === $media->id));
+            }
 
             return;
         }
 
         if ($this->max === 1) {
-            $this->selected = collect([$media]);
+            $this->syncSelected(collect([$media]));
 
             return;
         }
@@ -105,7 +168,7 @@ return new class extends Component
             return;
         }
 
-        $this->selected->push($media);
+        $this->syncSelected($this->selected->push($media));
     }
 
     public function selectMediaById(int $mediaId): void
@@ -138,18 +201,19 @@ return new class extends Component
 
         $newMedia = Media::query()->whereIn('id', $mediaIds)->get();
 
-        $count = $this->selected->count();
-        
+        $selected = $this->selected;
+
         foreach ($newMedia as $media) {
-            if ($count >= $this->max) {
+            if ($selected->count() >= $this->max) {
                 break;
             }
 
-            if (! $this->isSelected($media->id)) {
-                $this->selected->push($media);
-                $count++;
+            if ($selected->doesntContain(fn (Media $m): bool => $m->id === $media->id)) {
+                $selected->push($media);
             }
         }
+
+        $this->syncSelected($selected);
     }
 
     public function isSelected(int $mediaId): bool
@@ -159,7 +223,7 @@ return new class extends Component
 
     public function clearSelection(): void
     {
-        $this->selected = collect();
+        $this->syncSelected(collect());
     }
 
     public function insertMedia(): void
@@ -196,7 +260,7 @@ return new class extends Component
             'alt_text' => $this->altText,
         ]);
 
-        $this->selected = collect([$media]);
+        $this->syncSelected(collect([$media]));
         $this->medias = collect();
         $this->loadMedia();
         $this->showEditModal = false;
@@ -211,7 +275,7 @@ return new class extends Component
     {
         if ($this->selected->count() !== 0) {
             $this->selected->each(fn (Media $item): bool => $item->delete());
-            $this->selected = collect();
+            $this->syncSelected(collect());
             $this->showDeleteModal = false;
             $this->medias = collect();
             $this->loadMedia();
@@ -391,6 +455,7 @@ return new class extends Component
     {
         return [
             'id' => $media->id,
+            'source' => $media->source,
             'preview' => $media->preview,
             'crop_src' => $media->cropSrc,
             'filename' => $media->filename,

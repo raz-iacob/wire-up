@@ -97,7 +97,7 @@ return new class extends Component
                 {{ __('Last login') }} {{ $user->last_seen_at?->format('M d, Y H:i') ?? __('Never') }}
             </flux:subheading>
         </div>
-        <div class="max-w-3xl mt-8 space-y-6 mb-10">
+        <div class="max-w-5xl mt-8 space-y-6 mb-10">
             <flux:fieldset class="pb-6">
                 <flux:legend>{{ __('Account') }}</flux:legend>
                 <flux:description>{{ __('Update the user\'s name and email associated with this account.') }}</flux:description>
