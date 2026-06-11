@@ -175,4 +175,31 @@ return [
         'large' => '1rem',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Header & footer layout variants
+    |--------------------------------------------------------------------------
+    |
+    | Selectable layout skeletons for the public site header and footer.
+    | Preview-first: these drive the admin preview only for now.
+    |
+    */
+
+    'default_header_layout' => 'simple',
+    'default_footer_layout' => 'simple',
+
+    'header_layouts' => [
+        'simple' => ['label' => 'Simple',   'description' => 'Logo left, nav right'],
+        'centered' => ['label' => 'Centered',  'description' => 'Logo centered, nav below'],
+        'split' => ['label' => 'Split',     'description' => 'Logo left, nav center, CTA right'],
+        'minimal' => ['label' => 'Minimal',   'description' => 'Logo only'],
+    ],
+
+    'footer_layouts' => [
+        'simple' => ['label' => 'Simple',   'description' => 'Copyright left, links right'],
+        'centered' => ['label' => 'Centered',  'description' => 'All content centered'],
+        'columns' => ['label' => 'Columns',   'description' => 'Logo + tagline left, link columns right'],
+        'minimal' => ['label' => 'Minimal',   'description' => 'Copyright only, centered'],
+    ],
+
 ];

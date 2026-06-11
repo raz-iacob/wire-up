@@ -36,7 +36,9 @@ it('hydrates the form with the default preset when nothing is saved', function (
     Livewire::test('pages::admin.settings-design')
         ->assertSet('theme', config('theme.default'))
         ->assertSet('colors.background', config('theme.presets.'.config('theme.default').'.colors.background'))
-        ->assertSet('radius', config('theme.default_radius'));
+        ->assertSet('radius', config('theme.default_radius'))
+        ->assertSet('header_layout', config('theme.default_header_layout'))
+        ->assertSet('footer_layout', config('theme.default_footer_layout'));
 });
 
 it('hydrates a preset palette from metadata on mount', function (): void {
@@ -124,6 +126,69 @@ it('validates fonts, sizes and radius are known keys', function (): void {
         ->set('radius', 'pill')
         ->call('update')
         ->assertHasErrors(['heading_font', 'heading_size', 'radius']);
+});
+
+it('hydrates header and footer layouts from metadata on mount', function (): void {
+    Settings::current()->update(['metadata' => ['header_layout' => 'centered', 'footer_layout' => 'columns']]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->assertSet('header_layout', 'centered')
+        ->assertSet('footer_layout', 'columns');
+});
+
+it('persists header and footer layout to metadata', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('header_layout', 'split')
+        ->set('footer_layout', 'centered')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $metadata = Settings::current()->fresh()->metadata;
+
+    expect($metadata['header_layout'])->toBe('split')
+        ->and($metadata['footer_layout'])->toBe('centered');
+});
+
+it('hydrates header transparent and sticky flags from metadata on mount', function (): void {
+    Settings::current()->update(['metadata' => ['header_transparent' => true, 'header_sticky' => true, 'footer_transparent' => true]]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->assertSet('header_transparent', true)
+        ->assertSet('header_sticky', true)
+        ->assertSet('footer_transparent', true);
+});
+
+it('persists header transparent, sticky, and footer transparent to metadata', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('header_transparent', true)
+        ->set('header_sticky', true)
+        ->set('footer_transparent', true)
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $metadata = Settings::current()->fresh()->metadata;
+
+    expect($metadata['header_transparent'])->toBeTrue()
+        ->and($metadata['header_sticky'])->toBeTrue()
+        ->and($metadata['footer_transparent'])->toBeTrue();
+});
+
+it('validates header and footer layout are known keys', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('header_layout', 'mega-header')
+        ->set('footer_layout', 'floating')
+        ->call('update')
+        ->assertHasErrors(['header_layout', 'footer_layout']);
 });
 
 it('attaches the header and footer logos on update', function (): void {
