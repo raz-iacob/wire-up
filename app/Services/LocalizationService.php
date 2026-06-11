@@ -22,7 +22,7 @@ final class LocalizationService
         private readonly Request $request,
         private readonly Translator $translator
     ) {
-        $this->currentLocale = $this->config->string('app.locale', 'en');
+        $this->currentLocale = $this->getDefaultLocale();
     }
 
     public function setLocale(): ?string
@@ -32,7 +32,7 @@ final class LocalizationService
         if (is_string($locale) && $this->isActiveLocale($locale)) {
             $this->currentLocale = $locale;
         } else {
-            $this->currentLocale = $this->config->string('app.locale', 'en');
+            $this->currentLocale = $this->getDefaultLocale();
             $locale = null;
         }
 
@@ -51,7 +51,7 @@ final class LocalizationService
 
     public function stripDefaultLocale(string $url): string
     {
-        return url(preg_replace('#^'.$this->config->string('app.locale', 'en')."(\/|$)#", '', mb_ltrim($url, '/')) ?? $url);
+        return url(preg_replace('#^'.$this->getDefaultLocale()."(\/|$)#", '', mb_ltrim($url, '/')) ?? $url);
     }
 
     public function getLocalizedURL(string $url, string $locale): string
@@ -68,7 +68,7 @@ final class LocalizationService
 
         $pathWithoutLocale = implode('/', $segments);
 
-        $newPath = $locale === $this->config->string('app.locale', 'en')
+        $newPath = $locale === $this->getDefaultLocale()
             ? $pathWithoutLocale
             : $locale.'/'.$pathWithoutLocale;
 
@@ -119,6 +119,11 @@ final class LocalizationService
     public function getCurrentLocale(): string
     {
         return $this->currentLocale;
+    }
+
+    public function getDefaultLocale(): string
+    {
+        return $this->config->string('app.locale', 'en');
     }
 
     public function getCurrentLocaleRegional(): ?string

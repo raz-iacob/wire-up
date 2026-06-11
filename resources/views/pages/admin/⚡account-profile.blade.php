@@ -149,7 +149,7 @@ return new class extends Component
 };
 ?>
 
-<x-account-layout :heading="__('Edit profile')" :subheading="__('Update your name and email address')">
+<x-account-layout :subheading="__('Update your name and email address')">
     <form wire:submit="update" class="space-y-8">
         <div class="flex flex-row items-start justify-between gap-8">
             <div class="grow">

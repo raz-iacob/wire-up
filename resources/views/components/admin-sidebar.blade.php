@@ -14,7 +14,7 @@
     <flux:spacer />
 
     <flux:sidebar.nav>
-        <flux:sidebar.item icon="cog-6-tooth" href="#">Settings</flux:sidebar.item>
+        <flux:sidebar.item icon="cog-6-tooth" :href="route('admin.settings-identity')" :current="request()->routeIs('admin.settings-*')" wire:navigate.hover>{{ __('Settings') }}</flux:sidebar.item>
         <flux:sidebar.item icon="information-circle" href="#">Help</flux:sidebar.item>
     </flux:sidebar.nav>
 

@@ -63,7 +63,7 @@ trait HasMedia
         return $media ?
             route('image.show', [
                 'options' => $this->cropString([...($media->pivot->crop[$crop] ?? []), ...$params]),
-                'path' => $media->url,
+                'path' => $media->source,
             ]) : ($fallback ? ImageService::placeholder() : null);
     }
 
