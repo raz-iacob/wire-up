@@ -4,6 +4,8 @@
     $siteSettings = \App\Models\Settings::cached();
     $siteName = $siteSettings?->title ?: config('app.name');
     $siteFavicon = $siteSettings?->faviconUrl();
+    $themeCss = $siteSettings?->themeCss();
+    $googleFonts = $siteSettings?->googleFontsUrl();
 @endphp
 
 <head>
@@ -21,6 +23,15 @@
     <meta name="apple-mobile-web-app-title" content="{{ $siteName }}" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @if ($googleFonts)
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="{{ $googleFonts }}" rel="stylesheet">
+    @endif
+    @if ($themeCss)
+    <style>{!! $themeCss !!}</style>
+    @endif
 
     @fluxAppearance
 

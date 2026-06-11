@@ -11,16 +11,29 @@ use Illuminate\Support\Facades\DB;
 final readonly class UpdateSettingsAction
 {
     /**
+     * @var array<int, string>
+     */
+    private const array MEDIA_ROLES = ['favicon', 'logo', 'logo_dark', 'logo_icon'];
+
+    /**
      * @param  array<string, mixed>  $attributes
      */
     public function handle(Settings $settings, array $attributes): void
     {
         DB::transaction(function () use ($settings, $attributes): void {
 
-            $settings->fill(Arr::only($attributes, ['title', 'description']))->save();
+            $settings->fill(Arr::only($attributes, ['title', 'description']));
 
-            if (array_key_exists('favicon', $attributes)) {
-                $this->syncMedia($settings, 'favicon', $attributes['favicon']);
+            if (array_key_exists('metadata', $attributes)) {
+                $settings->metadata = [...$settings->metadata ?? [], ...$attributes['metadata']];
+            }
+
+            $settings->save();
+
+            foreach (self::MEDIA_ROLES as $role) {
+                if (array_key_exists($role, $attributes)) {
+                    $this->syncMedia($settings, $role, $attributes[$role]);
+                }
             }
 
         });

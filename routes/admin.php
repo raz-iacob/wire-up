@@ -18,3 +18,4 @@ Route::livewire('users/{user}/edit', 'pages::admin.users-edit')->name('users-edi
 
 Route::redirect('settings', 'admin/settings/identity');
 Route::livewire('settings/identity', 'pages::admin.settings-identity')->name('settings-identity');
+Route::livewire('settings/design', 'pages::admin.settings-design')->name('settings-design');

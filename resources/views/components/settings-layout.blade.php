@@ -6,6 +6,7 @@
 
     <flux:navbar>
         <flux:navbar.item :href="route('admin.settings-identity')" wire:navigate>{{ __('Identity') }}</flux:navbar.item>
+        <flux:navbar.item :href="route('admin.settings-design')" wire:navigate>{{ __('Design') }}</flux:navbar.item>
     </flux:navbar>
 
     <div class="w-full max-w-5xl">
