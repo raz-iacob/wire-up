@@ -13,7 +13,7 @@ final readonly class UpdateSettingsAction
     /**
      * @var array<int, string>
      */
-    private const array MEDIA_ROLES = ['favicon', 'logo', 'logo_dark', 'logo_icon'];
+    private const array MEDIA_ROLES = ['favicon', 'logo_header', 'logo_footer'];
 
     /**
      * @param  array<string, mixed>  $attributes

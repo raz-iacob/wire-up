@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\MediaType;
+use App\Models\Media;
 use App\Models\Settings;
 use App\Models\User;
 use Livewire\Livewire;
@@ -28,90 +30,89 @@ it('redirects guests away from design settings', function (): void {
         ->assertRedirectToRoute('login');
 });
 
-it('shows the identity title in the preview', function (): void {
-    Settings::current()->update(['title' => ['en' => 'My Brand Co']]);
-
-    $this->actingAsAdmin();
-
-    Livewire::test('pages::admin.settings-design')->assertSee('My Brand Co');
-});
-
-it('falls back to the app name in the preview when no title is set', function (): void {
-    $this->actingAsAdmin();
-
-    Livewire::test('pages::admin.settings-design')->assertSee(config('app.name'));
-});
-
-it('hydrates the form with config defaults when no design is saved', function (): void {
+it('hydrates the form with the default preset when nothing is saved', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
         ->assertSet('theme', config('theme.default'))
-        ->assertSet('heading_font', config('theme.default_font'))
+        ->assertSet('colors.background', config('theme.presets.'.config('theme.default').'.colors.background'))
         ->assertSet('radius', config('theme.default_radius'));
 });
 
-it('hydrates the form from existing metadata on mount', function (): void {
-    Settings::current()->update(['metadata' => ['theme' => 'rose', 'body_font' => 'inter', 'radius' => 'large']]);
+it('hydrates a preset palette from metadata on mount', function (): void {
+    Settings::current()->update(['metadata' => ['theme' => 'ocean']]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
-        ->assertSet('theme', 'rose')
-        ->assertSet('body_font', 'inter')
-        ->assertSet('radius', 'large');
+        ->assertSet('theme', 'ocean')
+        ->assertSet('colors.primary_bg', config('theme.presets.ocean.colors.primary_bg'));
 });
 
-it('persists the design settings to metadata on update', function (): void {
+it('hydrates a custom palette from metadata on mount', function (): void {
+    Settings::current()->update(['metadata' => ['theme' => 'custom', 'colors' => ['primary_bg' => '#123456']]]);
+
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
-        ->set('theme', 'emerald')
-        ->set('heading_font', 'poppins')
-        ->set('body_font', 'inter')
-        ->set('heading_size', 'large')
-        ->set('body_size', 'small')
-        ->set('radius', 'none')
+        ->assertSet('theme', 'custom')
+        ->assertSet('colors.primary_bg', '#123456');
+});
+
+it('loads a preset palette when the theme changes', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('theme', 'forest')
+        ->assertSet('colors.background', config('theme.presets.forest.colors.background'));
+});
+
+it('persists a preset choice without storing the palette', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('theme', 'slate')
         ->call('update')
         ->assertHasNoErrors();
 
-    expect(Settings::current()->fresh()->metadata)->toMatchArray([
-        'theme' => 'emerald',
-        'heading_font' => 'poppins',
-        'body_font' => 'inter',
-        'heading_size' => 'large',
-        'body_size' => 'small',
-        'radius' => 'none',
-    ]);
+    $metadata = Settings::current()->fresh()->metadata;
+
+    expect($metadata)->toMatchArray(['theme' => 'slate'])
+        ->and($metadata)->not->toHaveKey('colors');
+});
+
+it('persists a custom palette to metadata', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('theme', 'custom')
+        ->set('colors.primary_bg', '#abcdef')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $metadata = Settings::current()->fresh()->metadata;
+
+    expect($metadata['theme'])->toBe('custom')
+        ->and($metadata['colors']['primary_bg'])->toBe('#abcdef');
 });
 
 it('validates the theme is a known preset or custom', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
-        ->set('theme', 'not-a-color')
+        ->set('theme', 'not-a-theme')
         ->call('update')
         ->assertHasErrors(['theme']);
 });
 
-it('requires a custom accent when the theme is custom', function (): void {
+it('validates custom colours are hex values', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
         ->set('theme', 'custom')
-        ->set('accent', '')
+        ->set('colors.background', 'not-a-colour')
         ->call('update')
-        ->assertHasErrors(['accent']);
-});
-
-it('validates the custom accent is a hex colour', function (): void {
-    $this->actingAsAdmin();
-
-    Livewire::test('pages::admin.settings-design')
-        ->set('theme', 'custom')
-        ->set('accent', 'blue')
-        ->call('update')
-        ->assertHasErrors(['accent']);
+        ->assertHasErrors(['colors.background']);
 });
 
 it('validates fonts, sizes and radius are known keys', function (): void {
@@ -125,26 +126,81 @@ it('validates fonts, sizes and radius are known keys', function (): void {
         ->assertHasErrors(['heading_font', 'heading_size', 'radius']);
 });
 
-it('emits the per-shade accent vars for a preset theme', function (): void {
+it('attaches the header and footer logos on update', function (): void {
     $settings = Settings::current();
-    $settings->update(['metadata' => ['theme' => 'sky']]);
+    $header = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $footer = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('logo_header', ['id' => $header->id])
+        ->set('logo_footer', ['id' => $footer->id])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    foreach (['logo_header' => $header, 'logo_footer' => $footer] as $role => $media) {
+        $this->assertDatabaseHas('mediables', [
+            'media_id' => $media->id,
+            'mediable_id' => $settings->id,
+            'mediable_type' => 'settings',
+            'role' => $role,
+            'locale' => resolve('localization')->getDefaultLocale(),
+        ]);
+    }
+});
+
+it('rejects a logo referencing a non-existent media id', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('logo_header', ['id' => 999999])
+        ->call('update')
+        ->assertHasErrors(['logo_header.id']);
+});
+
+it('resolves the palette for a preset theme', function (): void {
+    $settings = Settings::current();
+    $settings->update(['metadata' => ['theme' => 'ocean']]);
+
+    expect($settings->fresh()->themeColors())->toEqual(config('theme.presets.ocean.colors'));
+});
+
+it('resolves the palette for a custom theme', function (): void {
+    $settings = Settings::current();
+    $settings->update(['metadata' => ['theme' => 'custom', 'colors' => ['primary_bg' => '#0f0f0f']]]);
+
+    expect($settings->fresh()->themeColors())->toEqual(['primary_bg' => '#0f0f0f']);
+});
+
+it('resolves an empty palette when no theme is set', function (): void {
+    expect(Settings::current()->themeColors())->toBe([]);
+});
+
+it('resolves an empty palette when custom colours are malformed', function (): void {
+    $settings = Settings::current();
+    $settings->update(['metadata' => ['theme' => 'custom', 'colors' => 'not-an-array']]);
+
+    expect($settings->fresh()->themeColors())->toBe([]);
+});
+
+it('emits palette and accent css vars for a preset', function (): void {
+    $settings = Settings::current();
+    $settings->update(['metadata' => ['theme' => 'ocean']]);
 
     expect($settings->fresh()->themeCss())
-        ->toContain('--color-accent:var(--color-sky-600)')
-        ->toContain('--color-accent:var(--color-sky-500)');
+        ->toContain('--site-background:#f0f9ff')
+        ->toContain('--site-card-border:#bae6fd')
+        ->toContain('--site-card-text:#0c4a6e')
+        ->toContain('--site-header-bg:#0c4a6e')
+        ->toContain('--color-accent:#0ea5e9')
+        ->toContain('--color-accent-foreground:#ffffff');
 });
 
-it('emits the raw hex for a custom theme', function (): void {
-    $settings = Settings::current();
-    $settings->update(['metadata' => ['theme' => 'custom', 'accent' => '#ff0000']]);
-
-    expect($settings->fresh()->themeCss())->toContain('--color-accent:#ff0000');
-});
-
-it('emits radius, font and size declarations from metadata', function (): void {
+it('emits radius and font declarations from metadata', function (): void {
     $settings = Settings::current();
     $settings->update(['metadata' => [
-        'theme' => 'sky',
+        'theme' => 'slate',
         'radius' => 'large',
         'body_font' => 'inter',
         'heading_font' => 'poppins',
@@ -160,45 +216,29 @@ it('emits radius, font and size declarations from metadata', function (): void {
         ->toContain('--site-body-size:0.8125rem');
 });
 
-it('picks a dark foreground for a light custom accent', function (): void {
-    $settings = Settings::current();
-    $settings->update(['metadata' => ['theme' => 'custom', 'accent' => '#eeeeee']]);
-
-    expect($settings->fresh()->themeCss())->toContain('--color-accent-foreground:#18181b');
-});
-
-it('falls back to a white foreground for a malformed custom accent', function (): void {
-    $settings = Settings::current();
-    $settings->update(['metadata' => ['theme' => 'custom', 'accent' => '#fff']]);
-
-    expect($settings->fresh()->themeCss())->toContain('--color-accent-foreground:#ffffff');
-});
-
 it('emits no theme css when nothing is configured', function (): void {
     expect(Settings::current()->themeCss())->toBeNull();
-});
-
-it('builds no google fonts url when no fonts are set', function (): void {
-    $settings = Settings::current();
-    $settings->update(['metadata' => ['theme' => 'sky']]);
-
-    expect($settings->fresh()->googleFontsUrl())->toBeNull();
 });
 
 it('builds a google fonts url for the chosen fonts', function (): void {
     $settings = Settings::current();
     $settings->update(['metadata' => ['heading_font' => 'inter', 'body_font' => 'inter']]);
 
-    $url = $settings->fresh()->googleFontsUrl();
-
-    expect($url)
+    expect($settings->fresh()->googleFontsUrl())
         ->toBeString()
         ->toContain('family=Inter');
 });
 
-it('builds no google fonts url for system/unset fonts', function (): void {
+it('builds no google fonts url for system fonts', function (): void {
     $settings = Settings::current();
     $settings->update(['metadata' => ['heading_font' => 'system', 'body_font' => 'system']]);
+
+    expect($settings->fresh()->googleFontsUrl())->toBeNull();
+});
+
+it('builds no google fonts url when fonts are unset', function (): void {
+    $settings = Settings::current();
+    $settings->update(['metadata' => ['theme' => 'ocean']]);
 
     expect($settings->fresh()->googleFontsUrl())->toBeNull();
 });

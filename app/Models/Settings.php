@@ -28,8 +28,6 @@ final class Settings extends Model
     /** @use HasFactory<SettingsFactory> */
     use HasFactory, HasMedia, HasTranslations;
 
-    protected $guarded = [];
-
     public static function current(): self
     {
         return self::query()->firstOrCreate([]);
@@ -51,53 +49,84 @@ final class Settings extends Model
         return $favicon ? $this->image('favicon', $crop, ['fm' => 'png'], false, $favicon) : null;
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function themeColors(): array
+    {
+        $theme = (string) data_get($this->metadata, 'theme', '');
+
+        if ($theme === '') {
+            return [];
+        }
+
+        $colors = $theme === 'custom'
+            ? data_get($this->metadata, 'colors', [])
+            : config()->array("theme.presets.$theme.colors", []);
+
+        if (! is_array($colors)) {
+            return [];
+        }
+
+        $palette = [];
+        foreach ($colors as $slot => $hex) {
+            if (is_string($slot) && is_string($hex)) {
+                $palette[$slot] = $hex;
+            }
+        }
+
+        return $palette;
+    }
+
     public function themeCss(): ?string
     {
-        $meta = $this->metadata ?? [];
-
         $root = [];
         $dark = [];
 
-        $theme = is_string($meta['theme'] ?? null) ? $meta['theme'] : null;
-
-        if ($theme === 'custom' && is_string($meta['accent'] ?? null)) {
-            $hex = $meta['accent'];
-            $foreground = $this->readableForeground($hex);
-            $root[] = "--color-accent:$hex";
-            $root[] = "--color-accent-content:$hex";
-            $root[] = "--color-accent-foreground:$foreground";
-            $dark = $root;
-        } elseif ($theme !== null && $theme !== 'custom' && array_key_exists($theme, config()->array('theme.colors'))) {
-            $root[] = "--color-accent:var(--color-$theme-600)";
-            $root[] = "--color-accent-content:var(--color-$theme-600)";
-            $root[] = '--color-accent-foreground:#fff';
-            $dark[] = "--color-accent:var(--color-$theme-500)";
-            $dark[] = "--color-accent-content:var(--color-$theme-400)";
-            $dark[] = '--color-accent-foreground:#fff';
+        $colors = $this->themeColors();
+        foreach ($colors as $slot => $hex) {
+            $root[] = '--site-'.str_replace('_', '-', $slot).":$hex";
         }
 
-        if (is_string($meta['radius'] ?? null) && ($radius = config()->string("theme.radii.{$meta['radius']}", '')) !== '') {
+        if (isset($colors['primary_bg'], $colors['primary_text'])) {
+            $accent = [
+                "--color-accent:{$colors['primary_bg']}",
+                "--color-accent-content:{$colors['primary_bg']}",
+                "--color-accent-foreground:{$colors['primary_text']}",
+            ];
+            $root = [...$root, ...$accent];
+            $dark = $accent;
+        }
+
+        $radiusKey = (string) data_get($this->metadata, 'radius', '');
+        $radius = config()->string("theme.radii.$radiusKey", '');
+        if ($radius !== '') {
             foreach (['sm', 'md', 'lg', 'xl'] as $size) {
                 $root[] = "--radius-$size:$radius";
             }
         }
 
-        if (($bodyStack = $this->fontStack($meta['body_font'] ?? null)) !== null) {
+        $bodyFont = (string) data_get($this->metadata, 'body_font', '');
+        $bodyStack = config()->string("theme.fonts.$bodyFont.stack", '');
+        if ($bodyStack !== '') {
             $root[] = "--font-sans:$bodyStack";
         }
 
-        if (is_string($meta['heading_size'] ?? null) && ($hs = config()->string("theme.heading_sizes.{$meta['heading_size']}", '')) !== '') {
-            $root[] = "--site-heading-size:$hs";
+        $headingSizeKey = (string) data_get($this->metadata, 'heading_size', '');
+        $headingSize = config()->string("theme.heading_sizes.$headingSizeKey", '');
+        if ($headingSize !== '') {
+            $root[] = "--site-heading-size:$headingSize";
         }
 
-        if (is_string($meta['body_size'] ?? null) && ($bs = config()->string("theme.body_sizes.{$meta['body_size']}", '')) !== '') {
-            $root[] = "--site-body-size:$bs";
+        $bodySizeKey = (string) data_get($this->metadata, 'body_size', '');
+        $bodySize = config()->string("theme.body_sizes.$bodySizeKey", '');
+        if ($bodySize !== '') {
+            $root[] = "--site-body-size:$bodySize";
         }
 
-        $extra = '';
-        if (($headingStack = $this->fontStack($meta['heading_font'] ?? null)) !== null) {
-            $extra = "h1,h2,h3,h4,h5,h6,[data-flux-heading]{font-family:$headingStack}";
-        }
+        $headingFont = (string) data_get($this->metadata, 'heading_font', '');
+        $headingStack = config()->string("theme.fonts.$headingFont.stack", '');
+        $extra = $headingStack === '' ? '' : "h1,h2,h3,h4,h5,h6,[data-flux-heading]{font-family:$headingStack}";
 
         $css = '';
         $css .= $root === [] ? '' : ':root{'.implode(';', $root).'}';
@@ -109,12 +138,11 @@ final class Settings extends Model
 
     public function googleFontsUrl(): ?string
     {
-        $meta = $this->metadata ?? [];
-
         $families = [];
         foreach (['heading_font', 'body_font'] as $slot) {
-            $family = $this->fontGoogle($meta[$slot] ?? null);
-            if ($family !== null) {
+            $font = (string) data_get($this->metadata, $slot, '');
+            $family = config()->string("theme.fonts.$font.google", '');
+            if ($family !== '') {
                 $families[$family] = $family;
             }
         }
@@ -150,42 +178,5 @@ final class Settings extends Model
     protected function translatedAttributes(): array
     {
         return ['title', 'description'];
-    }
-
-    private function fontStack(mixed $key): ?string
-    {
-        if (! is_string($key)) {
-            return null;
-        }
-
-        $stack = config()->string("theme.fonts.$key.stack", '');
-
-        return $stack === '' ? null : $stack;
-    }
-
-    private function fontGoogle(mixed $key): ?string
-    {
-        if (! is_string($key)) {
-            return null;
-        }
-
-        $family = config("theme.fonts.$key.google");
-
-        return is_string($family) && $family !== '' ? $family : null;
-    }
-
-    private function readableForeground(string $hex): string
-    {
-        $hex = mb_ltrim($hex, '#');
-
-        if (mb_strlen($hex) !== 6) {
-            return '#ffffff';
-        }
-
-        $luminance = (0.2126 * hexdec(mb_substr($hex, 0, 2))
-            + 0.7152 * hexdec(mb_substr($hex, 2, 2))
-            + 0.0722 * hexdec(mb_substr($hex, 4, 2))) / 255;
-
-        return $luminance > 0.6 ? '#18181b' : '#ffffff';
     }
 }
