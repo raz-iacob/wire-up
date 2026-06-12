@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\PageStatus;
+use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
 use App\Models\User;
@@ -15,7 +16,7 @@ function menuItem(array $overrides = []): array
         'type' => 'page',
         'appearance' => 'link',
         'target' => '_self',
-        'label' => ['en' => 'Home'],
+        'label' => 'Home',
         'page_id' => null,
         'url' => '',
         'open' => true,
@@ -44,71 +45,100 @@ it('redirects guests away from menus settings', function (): void {
         ->assertRedirectToRoute('login');
 });
 
-it('starts with empty header and footer menus when nothing is saved', function (): void {
+it('starts with an empty menu for each active locale when nothing is saved', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->assertSet('header', [])
-        ->assertSet('footer', []);
+        ->assertSet('header', ['en' => []])
+        ->assertSet('footer', ['en' => []]);
 });
 
-it('hydrates menus from metadata on mount', function (): void {
+it('hydrates the locale menus from metadata on mount', function (): void {
     Settings::current()->update(['metadata' => [
-        'header_menu' => [['type' => 'link', 'appearance' => 'button', 'target' => '_blank', 'label' => ['en' => 'Docs'], 'url' => 'https://example.com']],
+        'header_menu' => ['en' => [['type' => 'link', 'appearance' => 'button', 'target' => '_blank', 'label' => 'Docs', 'url' => 'https://example.com']]],
     ]]);
 
     $this->actingAsAdmin();
 
-    $component = Livewire::test('pages::admin.settings-menus');
+    $header = Livewire::test('pages::admin.settings-menus')->get('header');
 
-    expect($component->get('header'))->toHaveCount(1)
-        ->and($component->get('header')[0])->toMatchArray([
+    expect($header['en'])->toHaveCount(1)
+        ->and($header['en'][0])->toMatchArray([
             'type' => 'link',
             'appearance' => 'button',
             'target' => '_blank',
+            'label' => 'Docs',
             'url' => 'https://example.com',
-        ])
-        ->and($component->get('header')[0]['label']['en'])->toBe('Docs');
+        ]);
 });
 
-it('adds a header menu item', function (): void {
+it('adds a header menu item to the current locale', function (): void {
     $this->actingAsAdmin();
 
     $header = Livewire::test('pages::admin.settings-menus')
         ->call('addItem', 'header')
         ->get('header');
 
-    expect($header)->toHaveCount(1)
-        ->and($header[0]['type'])->toBe('page');
+    expect($header['en'])->toHaveCount(1)
+        ->and($header['en'][0]['type'])->toBe('page');
 });
 
-it('removes a menu item', function (): void {
+it('keeps menus separate per language', function (): void {
+    Locale::query()->where('code', 'nl')->update(['active' => true]);
+    cache()->forget('site-locales');
+
     $this->actingAsAdmin();
 
     $header = Livewire::test('pages::admin.settings-menus')
-        ->set('header', [menuItem(['_key' => '0']), menuItem(['_key' => '1', 'label' => ['en' => 'About']])])
-        ->call('removeItem', 'header', 0)
+        ->call('addItem', 'header')
         ->get('header');
 
-    expect($header)->toHaveCount(1)
-        ->and($header[0]['label']['en'])->toBe('About');
+    expect($header['en'])->toHaveCount(1)
+        ->and($header['nl'])->toHaveCount(0);
 });
 
-it('persists header and footer menus to metadata', function (): void {
+it('confirms before removing a menu item', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('header', ['en' => [menuItem(['_key' => '0'])]])
+        ->assertSet('showRemoveModal', false)
+        ->call('confirmRemove', 'header', 0)
+        ->assertSet('showRemoveModal', true)
+        ->assertSet('removeMenu', 'header')
+        ->assertSet('removeIndex', 0);
+});
+
+it('removes a menu item from the current locale once confirmed', function (): void {
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.settings-menus')
+        ->set('header', ['en' => [menuItem(['_key' => '0']), menuItem(['_key' => '1', 'label' => 'About'])]])
+        ->call('confirmRemove', 'header', 0)
+        ->call('removeConfirmed')
+        ->assertSet('showRemoveModal', false);
+
+    $header = $component->get('header');
+
+    expect($header['en'])->toHaveCount(1)
+        ->and($header['en'][0]['label'])->toBe('About');
+});
+
+it('persists header and footer menus per locale to metadata', function (): void {
     $page = Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->set('header', [menuItem(['page_id' => $page->id])])
-        ->set('footer', [menuItem(['type' => 'link', 'label' => ['en' => 'Privacy'], 'url' => 'https://example.com/privacy'])])
+        ->set('header', ['en' => [menuItem(['page_id' => $page->id])]])
+        ->set('footer', ['en' => [menuItem(['type' => 'link', 'label' => 'Privacy', 'url' => 'https://example.com/privacy'])]])
         ->call('update')
         ->assertHasNoErrors();
 
     $metadata = Settings::current()->fresh()->metadata;
 
-    expect($metadata['header_menu'][0])->toMatchArray(['type' => 'page', 'page_id' => $page->id])
-        ->and($metadata['footer_menu'][0])->toMatchArray(['type' => 'link', 'url' => 'https://example.com/privacy']);
+    expect($metadata['header_menu']['en'][0])->toMatchArray(['type' => 'page', 'page_id' => $page->id, 'label' => 'Home'])
+        ->and($metadata['footer_menu']['en'][0])->toMatchArray(['type' => 'link', 'url' => 'https://example.com/privacy']);
 });
 
 it('strips ui-only keys when saving', function (): void {
@@ -117,11 +147,11 @@ it('strips ui-only keys when saving', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->set('header', [menuItem(['page_id' => $page->id])])
+        ->set('header', ['en' => [menuItem(['page_id' => $page->id])]])
         ->call('update')
         ->assertHasNoErrors();
 
-    expect(Settings::current()->fresh()->metadata['header_menu'][0])
+    expect(Settings::current()->fresh()->metadata['header_menu']['en'][0])
         ->not->toHaveKey('_key')
         ->not->toHaveKey('open');
 });
@@ -130,57 +160,57 @@ it('validates type, appearance and target are known values', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->set('header', [menuItem(['type' => 'bogus', 'appearance' => 'bogus', 'target' => 'bogus'])])
+        ->set('header', ['en' => [menuItem(['type' => 'bogus', 'appearance' => 'bogus', 'target' => 'bogus'])]])
         ->call('update')
-        ->assertHasErrors(['header.0.type', 'header.0.appearance', 'header.0.target']);
+        ->assertHasErrors(['header.en.0.type', 'header.en.0.appearance', 'header.en.0.target']);
 });
 
-it('requires a label in the default locale', function (): void {
+it('requires a label', function (): void {
     $page = Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->set('header', [menuItem(['page_id' => $page->id, 'label' => ['en' => '']])])
+        ->set('header', ['en' => [menuItem(['page_id' => $page->id, 'label' => ''])]])
         ->call('update')
-        ->assertHasErrors(['header.0.label.en']);
+        ->assertHasErrors(['header.en.0.label']);
 });
 
 it('requires a url when the item type is a custom link', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->set('header', [menuItem(['type' => 'link', 'url' => ''])])
+        ->set('header', ['en' => [menuItem(['type' => 'link', 'url' => ''])]])
         ->call('update')
-        ->assertHasErrors(['header.0.url']);
+        ->assertHasErrors(['header.en.0.url']);
 });
 
 it('requires a page to be selected when the item type is page', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->set('header', [menuItem(['type' => 'page', 'page_id' => null])])
+        ->set('header', ['en' => [menuItem(['type' => 'page', 'page_id' => null])]])
         ->call('update')
-        ->assertHasErrors(['header.0.page_id']);
+        ->assertHasErrors(['header.en.0.page_id']);
 });
 
 it('requires an existing page when the item type is page', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->set('header', [menuItem(['type' => 'page', 'page_id' => 999999])])
+        ->set('header', ['en' => [menuItem(['type' => 'page', 'page_id' => 999999])]])
         ->call('update')
-        ->assertHasErrors(['header.0.page_id']);
+        ->assertHasErrors(['header.en.0.page_id']);
 });
 
 it('reorders header menu items via the drag handle', function (): void {
     $this->actingAsAdmin();
 
     $header = Livewire::test('pages::admin.settings-menus')
-        ->set('header', [menuItem(['_key' => '0']), menuItem(['_key' => '1', 'label' => ['en' => 'About']])])
+        ->set('header', ['en' => [menuItem(['_key' => '0']), menuItem(['_key' => '1', 'label' => 'About'])]])
         ->call('reorderHeader', '1', 0)
         ->get('header');
 
-    expect($header[0]['_key'])->toBe('1')
-        ->and($header[1]['_key'])->toBe('0');
+    expect($header['en'][0]['_key'])->toBe('1')
+        ->and($header['en'][1]['_key'])->toBe('0');
 });

@@ -3,16 +3,15 @@
     'index',
     'item',
     'locale',
-    'multiLocale' => false,
     'pages' => [],
 ])
 
 @php
-    $base = $menu.'.'.$index;
+    $base = $menu.'.'.$locale.'.'.$index;
 @endphp
 
 <div
-    wire:key="{{ $menu }}-{{ $item['_key'] }}"
+    wire:key="{{ $menu }}-{{ $locale }}-{{ $item['_key'] }}"
     wire:sort:item="{{ $item['_key'] }}"
     x-data="{ open: @js((bool) ($item['open'] ?? false)) }"
     class="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10"
@@ -29,7 +28,7 @@
 
         <button type="button" x-on:click="open = ! open" class="min-w-0 flex-1 text-left">
             <flux:heading class="truncate text-sm!" data-test="menu-item-title">
-                {{ ($item['label'][$locale] ?? '') !== '' ? $item['label'][$locale] : __('New Item') }}
+                {{ ($item['label'] ?? '') !== '' ? $item['label'] : __('New Item') }}
             </flux:heading>
         </button>
 
@@ -38,7 +37,7 @@
             <flux:icon name="chevron-up" variant="micro" x-show="open" x-cloak />
         </flux:button>
 
-        <flux:button size="sm" variant="subtle" square icon="x-mark" :tooltip="__('Remove')" wire:click="removeItem('{{ $menu }}', {{ $index }})" />
+        <flux:button size="sm" variant="subtle" square icon="x-mark" :tooltip="__('Remove')" wire:click="confirmRemove('{{ $menu }}', {{ $index }})" />
     </div>
 
     <div class="grid gap-4 p-4 sm:grid-cols-2" x-show="open" x-cloak>
@@ -60,13 +59,11 @@
             <flux:error name="{{ $base }}.appearance" />
         </flux:field>
 
-        <x-forms.input-translated
-            name="{{ $base }}.label"
-            :locale="$locale"
-            :multi-locale="$multiLocale"
-            label="{{ __('Menu Label') }}"
-            :required="true"
-        />
+        <flux:field>
+            <flux:label>{{ __('Menu Label') }}</flux:label>
+            <flux:input wire:model="{{ $base }}.label" />
+            <flux:error name="{{ $base }}.label" />
+        </flux:field>
 
         <flux:field>
             <flux:label>{{ __('Target') }}</flux:label>

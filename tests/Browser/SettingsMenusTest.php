@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\PageStatus;
+use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
 
@@ -34,14 +35,53 @@ it('shows the page-picker placeholder for a new item instead of a phantom first 
 
     $page->assertNoJavascriptErrors()
         ->assertSee('Choose a page...')
-        ->assertScript("window.Livewire.all().find(c => c.\$wire.get('header') !== undefined).\$wire.get('header')[0].page_id === null", true);
+        ->assertScript("JSON.parse(JSON.stringify(window.Livewire.all().find(c => c.\$wire.get('header') !== undefined).\$wire.get('header'))).en[0].page_id === null", true);
+});
+
+it('stays clean when only the edit-in locale is switched, but dirties on a real change', function (): void {
+    Locale::query()->where('code', 'nl')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $this->actingAsAdmin();
+
+    $page = visit(route('admin.settings-menus'));
+    $page->wait(0.4);
+
+    $beforeunloadPrevented = "(() => { const e = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(e); return e.defaultPrevented; })()";
+    $comp = "window.Livewire.all().find(c => c.\$wire.get('header') !== undefined)";
+
+    $page->assertScript($beforeunloadPrevented, false);
+
+    $page->script("$comp.\$wire.set('locale', 'nl'); void 0");
+    $page->wait(0.6);
+    $page->assertScript($beforeunloadPrevented, false);
+
+    $page->script("$comp.\$wire.call('addItem', 'header'); void 0");
+    $page->wait(0.6);
+    $page->assertNoJavascriptErrors()
+        ->assertScript($beforeunloadPrevented, true);
+});
+
+it('opens a confirmation modal before removing a menu item', function (): void {
+    $this->actingAsAdmin();
+
+    $page = visit(route('admin.settings-menus'));
+
+    $comp = "window.Livewire.all().find(c => c.\$wire.get('header') !== undefined)";
+    $page->script("$comp.\$wire.call('addItem', 'header'); void 0");
+    $page->wait(0.4);
+    $page->script("$comp.\$wire.call('confirmRemove', 'header', 0); void 0");
+    $page->wait(0.4);
+
+    $page->assertNoJavascriptErrors()
+        ->assertSee('Remove menu item?');
 });
 
 it('reorders header items through the wire:sort handler the way a real drag does', function (): void {
-    Settings::current()->update(['metadata' => ['header_menu' => [
-        ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => ['en' => 'Alpha'], 'url' => 'https://a.test'],
-        ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => ['en' => 'Bravo'], 'url' => 'https://b.test'],
-    ]]]);
+    Settings::current()->update(['metadata' => ['header_menu' => ['en' => [
+        ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Alpha', 'url' => 'https://a.test'],
+        ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Bravo', 'url' => 'https://b.test'],
+    ]]]]);
 
     $this->actingAsAdmin();
 

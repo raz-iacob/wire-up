@@ -8,7 +8,6 @@ use App\Models\Settings;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -17,12 +16,14 @@ return new class extends Component
     public Settings $settings;
 
     /**
-     * @var array<int, array<string, mixed>>
+     * Menu items keyed by locale, e.g. ['en' => [...items], 'fr' => [...items]].
+     *
+     * @var array<string, array<int, array<string, mixed>>>
      */
     public array $header = [];
 
     /**
-     * @var array<int, array<string, mixed>>
+     * @var array<string, array<int, array<string, mixed>>>
      */
     public array $footer = [];
 
@@ -41,6 +42,12 @@ return new class extends Component
      */
     public array $pages = [];
 
+    public bool $showRemoveModal = false;
+
+    public ?string $removeMenu = null;
+
+    public ?int $removeIndex = null;
+
     public function mount(): void
     {
         $this->settings = Settings::current();
@@ -48,8 +55,13 @@ return new class extends Component
         $this->locale = app()->getLocale();
 
         $meta = $this->settings->metadata ?? [];
-        $this->header = $this->hydrateItems($meta['header_menu'] ?? []);
-        $this->footer = $this->hydrateItems($meta['footer_menu'] ?? []);
+        $header = is_array($meta['header_menu'] ?? null) ? $meta['header_menu'] : [];
+        $footer = is_array($meta['footer_menu'] ?? null) ? $meta['footer_menu'] : [];
+
+        foreach (array_keys($this->activeLocales) as $code) {
+            $this->header[$code] = $this->hydrateItems(is_array($header[$code] ?? null) ? $header[$code] : []);
+            $this->footer[$code] = $this->hydrateItems(is_array($footer[$code] ?? null) ? $footer[$code] : []);
+        }
 
         $this->pages = Page::query()
             ->published()
@@ -65,17 +77,39 @@ return new class extends Component
             return;
         }
 
-        $this->{$menu}[] = $this->defaultItem();
+        $this->{$menu}[$this->locale][] = $this->defaultItem();
+    }
+
+    public function confirmRemove(string $menu, int $index): void
+    {
+        if (! in_array($menu, ['header', 'footer'], true) || ! isset($this->{$menu}[$this->locale][$index])) {
+            return;
+        }
+
+        $this->removeMenu = $menu;
+        $this->removeIndex = $index;
+        $this->showRemoveModal = true;
+    }
+
+    public function removeConfirmed(): void
+    {
+        if ($this->removeMenu !== null && $this->removeIndex !== null) {
+            $this->removeItem($this->removeMenu, $this->removeIndex);
+        }
+
+        $this->showRemoveModal = false;
+        $this->removeMenu = null;
+        $this->removeIndex = null;
     }
 
     public function removeItem(string $menu, int $index): void
     {
-        if (! in_array($menu, ['header', 'footer'], true) || ! isset($this->{$menu}[$index])) {
+        if (! in_array($menu, ['header', 'footer'], true) || ! isset($this->{$menu}[$this->locale][$index])) {
             return;
         }
 
-        unset($this->{$menu}[$index]);
-        $this->{$menu} = array_values($this->{$menu});
+        unset($this->{$menu}[$this->locale][$index]);
+        $this->{$menu}[$this->locale] = array_values($this->{$menu}[$this->locale]);
     }
 
     public function reorderHeader(string $key, int $position): void
@@ -90,25 +124,21 @@ return new class extends Component
 
     public function update(UpdateSettingsAction $action): void
     {
-        $validated = $this->validate($this->rules());
+        $this->validate($this->rules());
+
+        $header = [];
+        $footer = [];
+
+        foreach (array_keys($this->activeLocales) as $code) {
+            $header[$code] = $this->cleanItems($this->header[$code] ?? []);
+            $footer[$code] = $this->cleanItems($this->footer[$code] ?? []);
+        }
 
         $action->handle($this->settings, [
-            'metadata' => [
-                'header_menu' => $this->cleanItems($validated['header'] ?? []),
-                'footer_menu' => $this->cleanItems($validated['footer'] ?? []),
-            ],
+            'metadata' => ['header_menu' => $header, 'footer_menu' => $footer],
         ]);
 
         Flux::toast(__('Menus have been updated.'), variant: 'success');
-    }
-
-    #[On('change-locale')]
-    public function changeLocale(): void
-    {
-        $codes = array_keys($this->activeLocales);
-        $index = array_search($this->locale, $codes, true);
-
-        $this->locale = $codes[($index + 1) % count($codes)] ?? $this->locale;
     }
 
     public function render(): View
@@ -123,21 +153,17 @@ return new class extends Component
      */
     private function rules(): array
     {
-        $default = resolve('localization')->getDefaultLocale();
         $rules = [];
 
         foreach (['header', 'footer'] as $menu) {
-            $rules[$menu] = ['array', 'max:20'];
-            $rules["$menu.*.type"] = ['required', Rule::in(['page', 'link'])];
-            $rules["$menu.*.appearance"] = ['required', Rule::in(['link', 'button'])];
-            $rules["$menu.*.target"] = ['required', Rule::in(['_self', '_blank'])];
-            $rules["$menu.*.page_id"] = ["required_if:$menu.*.type,page", 'nullable', 'integer', 'exists:pages,id'];
-            $rules["$menu.*.url"] = ["required_if:$menu.*.type,link", 'nullable', 'string', 'url', 'max:255'];
-
-            foreach (array_keys($this->activeLocales) as $code) {
-                $rules["$menu.*.label.$code"] = $code === $default
-                    ? ['required', 'string', 'max:100']
-                    : ['nullable', 'string', 'max:100'];
+            foreach (array_keys($this->activeLocales) as $locale) {
+                $rules["$menu.$locale"] = ['array', 'max:20'];
+                $rules["$menu.$locale.*.type"] = ['required', Rule::in(['page', 'link'])];
+                $rules["$menu.$locale.*.appearance"] = ['required', Rule::in(['link', 'button'])];
+                $rules["$menu.$locale.*.target"] = ['required', Rule::in(['_self', '_blank'])];
+                $rules["$menu.$locale.*.label"] = ['required', 'string', 'max:100'];
+                $rules["$menu.$locale.*.page_id"] = ["required_if:$menu.$locale.*.type,page", 'nullable', 'integer', 'exists:pages,id'];
+                $rules["$menu.$locale.*.url"] = ["required_if:$menu.$locale.*.type,link", 'nullable', 'string', 'url', 'max:255'];
             }
         }
 
@@ -162,7 +188,7 @@ return new class extends Component
                 'type' => in_array($item['type'] ?? null, ['page', 'link'], true) ? $item['type'] : 'page',
                 'appearance' => in_array($item['appearance'] ?? null, ['link', 'button'], true) ? $item['appearance'] : 'link',
                 'target' => in_array($item['target'] ?? null, ['_self', '_blank'], true) ? $item['target'] : '_self',
-                'label' => [...$this->emptyLabel(), ...$this->onlyStringLabel($item['label'] ?? [])],
+                'label' => is_string($item['label'] ?? null) ? $item['label'] : '',
                 'page_id' => isset($item['page_id']) ? (int) $item['page_id'] : null,
                 'url' => is_string($item['url'] ?? null) ? $item['url'] : '',
                 'open' => false,
@@ -182,36 +208,11 @@ return new class extends Component
             'type' => 'page',
             'appearance' => 'link',
             'target' => '_self',
-            'label' => $this->emptyLabel(),
+            'label' => '',
             'page_id' => null,
             'url' => '',
             'open' => true,
         ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function emptyLabel(): array
-    {
-        return array_fill_keys(array_keys($this->activeLocales), '');
-    }
-
-    /**
-     * @param  array<mixed>  $label
-     * @return array<string, string>
-     */
-    private function onlyStringLabel(array $label): array
-    {
-        $clean = [];
-
-        foreach ($label as $code => $value) {
-            if (is_string($code) && is_string($value)) {
-                $clean[$code] = $value;
-            }
-        }
-
-        return $clean;
     }
 
     /**
@@ -224,7 +225,7 @@ return new class extends Component
             'type' => $item['type'],
             'appearance' => $item['appearance'],
             'target' => $item['target'],
-            'label' => $item['label'] ?? [],
+            'label' => $item['label'] ?? '',
             'page_id' => ($item['type'] ?? null) === 'page' ? ($item['page_id'] ?? null) : null,
             'url' => ($item['type'] ?? null) === 'link' ? ($item['url'] ?? '') : '',
         ], array_values($items));
@@ -232,7 +233,7 @@ return new class extends Component
 
     private function reorder(string $menu, string $key, int $position): void
     {
-        $items = $this->{$menu};
+        $items = $this->{$menu}[$this->locale] ?? [];
         $current = array_search($key, array_column($items, '_key'), true);
 
         if ($current === false) {
@@ -244,20 +245,22 @@ return new class extends Component
         $items = array_values($items);
         array_splice($items, max(0, min($position, count($items))), 0, [$item]);
 
-        $this->{$menu} = $items;
+        $this->{$menu}[$this->locale] = $items;
     }
 };
 ?>
 
 @php
     $multiLocale = count($activeLocales) > 1;
+    $currentHeader = $header[$locale] ?? [];
+    $currentFooter = $footer[$locale] ?? [];
 @endphp
 
-<x-settings-layout :subheading="__('Manage your site’s navigation by customizing the header and footer menus.')">
+<x-settings-layout :subheading="__('Manage your site’s navigation by customizing the header and footer menus. Each language has its own menus.')">
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="max-w-3xl">
         <flux:tab.group>
-            <div class="flex items-center justify-between gap-6">
-                <flux:tabs variant="pills">
+            <div class="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-6">
+                <flux:tabs variant="segmented" size="sm">
                     <flux:tab name="header">{{ __('Header') }}</flux:tab>
                     <flux:tab name="footer">{{ __('Footer') }}</flux:tab>
                 </flux:tabs>
@@ -266,15 +269,15 @@ return new class extends Component
                     <div class="flex items-center gap-2">
                         <flux:text>{{ __('Edit in') }}</flux:text>
                         <flux:select wire:model.live="locale" size="sm" class="w-auto">
-                            @foreach ($activeLocales as $code => $meta)
-                                <flux:select.option value="{{ $code }}">{{ $meta['name'] ?? strtoupper($code) }}</flux:select.option>
+                            @foreach ($activeLocales as $code => $localeMeta)
+                                <flux:select.option value="{{ $code }}">{{ $localeMeta['name'] ?? strtoupper($code) }}</flux:select.option>
                             @endforeach
                         </flux:select>
                     </div>
                 @endif
             </div>
 
-            @foreach (['header' => $header, 'footer' => $footer] as $menu => $items)
+            @foreach (['header' => $currentHeader, 'footer' => $currentFooter] as $menu => $items)
                 <flux:tab.panel name="{{ $menu }}" class="space-y-4">
                     @if ($items !== [])
                         <div class="space-y-3" wire:sort="reorder{{ ucfirst($menu) }}">
@@ -284,7 +287,6 @@ return new class extends Component
                                     :index="$index"
                                     :item="$item"
                                     :locale="$locale"
-                                    :multi-locale="$multiLocale"
                                     :pages="$pages"
                                 />
                             @endforeach
@@ -306,4 +308,31 @@ return new class extends Component
             </flux:button>
         </div>
     </form>
+
+    @php
+        $removing = ($removeMenu !== null && $removeIndex !== null)
+            ? (($removeMenu === 'header' ? $header : $footer)[$locale][$removeIndex] ?? null)
+            : null;
+        $removingLabel = is_array($removing) ? ($removing['label'] ?? '') : '';
+    @endphp
+    <flux:modal wire:model.self="showRemoveModal" class="min-w-sm">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Remove menu item?') }}</flux:heading>
+                <flux:text class="mt-2">
+                    @if ($removingLabel !== '')
+                        {{ __('":name" will be removed from this menu.', ['name' => $removingLabel]) }}
+                    @else
+                        {{ __('This item will be removed from this menu.') }}
+                    @endif
+                </flux:text>
+            </div>
+            <div class="flex justify-end gap-2">
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button variant="danger" wire:click="removeConfirmed">{{ __('Remove') }}</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </x-settings-layout>

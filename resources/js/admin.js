@@ -18,7 +18,14 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
     const message =
         directive.expression || "You have unsaved changes. Leave anyway?";
 
-    const getState = () => JSON.stringify(component.ephemeral);
+    // `locale` is a view-only toggle (which language is being edited) on translated
+    // forms — it must not count toward the dirty state, or merely switching the
+    // editing language would trigger the unsaved-changes warning.
+    const getState = () => {
+        const { locale, ...rest } = component.ephemeral ?? {};
+
+        return JSON.stringify(rest);
+    };
     let initialState = getState();
 
     const isDirty = () => getState() !== initialState;
