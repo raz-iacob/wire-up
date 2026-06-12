@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Locale;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Cache;
 
 test('to array', function (): void {
     $locale = Locale::factory()->create()->refresh();
@@ -37,4 +38,12 @@ it('can filter by active status using active scope', function (): void {
 
     expect($activeLocales)->toHaveCount(1)
         ->and($inactiveLocales)->toHaveCount(61);
+});
+
+it('forgets the site-locales cache when a locale is saved', function (): void {
+    Cache::forever('site-locales', ['en' => []]);
+
+    Locale::query()->where('code', 'en')->first()?->touch();
+
+    expect(Cache::get('site-locales'))->toBeNull();
 });

@@ -19,12 +19,6 @@ it('can render the identity settings screen', function (): void {
         ->assertSee('fonts.bunny.net/css?family=inter', false);
 });
 
-it('redirects the settings index to identity', function (): void {
-    $this->actingAsAdmin()
-        ->get('/admin/settings')
-        ->assertRedirect('/admin/settings/identity');
-});
-
 it('redirects authenticated non-admin users away from identity settings', function (): void {
     $nonAdmin = User::factory()->create([
         'active' => true,
@@ -98,8 +92,7 @@ it('persists title and tagline translations on update', function (): void {
         ->set('title.en', 'New Site Title')
         ->set('description.en', 'A fresh tagline')
         ->call('update')
-        ->assertHasNoErrors()
-        ->assertRedirect(route('admin.settings-identity'));
+        ->assertHasNoErrors();
 
     $this->assertDatabaseHas('translations', [
         'translatable_id' => $settings->id,

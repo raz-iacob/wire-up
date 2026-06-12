@@ -49,10 +49,6 @@ return new class extends Component
 
         $this->locale = app()->getLocale();
         $this->activeLocales = resolve('localization')->getActiveLocales();
-
-        if (session()->pull('identity-saved', false)) {
-            Flux::toast(__('Identity has been updated.'), variant: 'success');
-        }
     }
 
     public function update(UpdateSettingsAction $action): void
@@ -75,9 +71,7 @@ return new class extends Component
             'favicon' => $this->favicon,
         ]);
 
-        session()->flash('identity-saved');
-
-        $this->redirect(route('admin.settings-identity'), navigate: true);
+        Flux::toast(__('Identity has been updated.'), variant: 'success');
     }
 
     #[On('change-locale')]

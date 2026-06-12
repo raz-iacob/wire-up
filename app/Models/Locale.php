@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read string|null $script
  * @property-read bool $rtl
  * @property-read bool $active
- * @property-read bool $active
  * @property-read bool $published
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
@@ -48,6 +47,12 @@ final class Locale extends Model
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        self::saved(fn (): mixed => cache()->forget('site-locales'));
+        self::deleted(fn (): mixed => cache()->forget('site-locales'));
     }
 
     /**

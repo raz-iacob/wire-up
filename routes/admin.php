@@ -16,7 +16,8 @@ Route::livewire('pages/{page}/edit', 'pages::admin.pages-edit')->name('pages-edi
 Route::livewire('users', 'pages::admin.users-index')->name('users-index');
 Route::livewire('users/{user}/edit', 'pages::admin.users-edit')->name('users-edit');
 
-Route::redirect('settings', 'admin/settings/identity');
+Route::redirect('settings', 'admin/settings/general');
+Route::livewire('settings/general', 'pages::admin.settings-general')->name('settings-general');
 Route::livewire('settings/identity', 'pages::admin.settings-identity')->name('settings-identity');
 Route::livewire('settings/design', 'pages::admin.settings-design')->name('settings-design');
 Route::livewire('settings/menus', 'pages::admin.settings-menus')->name('settings-menus');

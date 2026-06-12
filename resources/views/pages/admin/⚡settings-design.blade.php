@@ -262,7 +262,7 @@ return new class extends Component
 
         {{-- Live preview (right) --}}
         <div class="order-2 lg:col-span-2 lg:sticky lg:top-8">
-            <div class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
+            <div x-cloak class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 select-none">
 
                 {{-- header wrapper — sticky shadow + badge --}}
                 <div class="relative transition-shadow" :class="$wire.header_sticky ? 'shadow-md' : ''">

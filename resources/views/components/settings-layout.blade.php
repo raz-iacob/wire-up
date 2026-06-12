@@ -5,6 +5,7 @@
     </div>
 
     <flux:navbar class="pt-0">
+        <flux:navbar.item :href="route('admin.settings-general')" wire:navigate>{{ __('General') }}</flux:navbar.item>
         <flux:navbar.item :href="route('admin.settings-identity')" wire:navigate>{{ __('Identity') }}</flux:navbar.item>
         <flux:navbar.item :href="route('admin.settings-design')" wire:navigate>{{ __('Design') }}</flux:navbar.item>
         <flux:navbar.item :href="route('admin.settings-menus')" wire:navigate>{{ __('Menus') }}</flux:navbar.item>
