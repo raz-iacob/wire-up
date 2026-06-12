@@ -225,6 +225,8 @@ return new class extends Component
 
 <x-settings-layout :subheading="__('Design the look of your public site — colours, fonts, and shape.')">
     @if ($previewFontsUrl)
+        {{-- Preload every theme font so the preview mock and the font pickers render them without a flash.
+             These only style the preview (via inline font-family); the admin shell uses --font-sans (Inter). --}}
         <link id="design-preview-fonts" rel="stylesheet" href="{{ $previewFontsUrl }}" />
     @endif
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"

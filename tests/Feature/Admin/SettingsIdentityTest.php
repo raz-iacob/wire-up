@@ -15,7 +15,8 @@ it('can render the identity settings screen', function (): void {
 
     $response->assertOk()
         ->assertSeeLivewire('pages::admin.settings-identity')
-        ->assertSeeLivewire('media-selector');
+        ->assertSeeLivewire('media-selector')
+        ->assertSee('fonts.bunny.net/css?family=inter', false);
 });
 
 it('redirects the settings index to identity', function (): void {

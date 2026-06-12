@@ -22,7 +22,11 @@
         @endif
         <meta name="apple-mobile-web-app-title" content="{{ $siteName }}" />
 
-        @vite(['resources/css/app.css', 'resources/js/admin.js'])
+        @vite(['resources/css/admin.css', 'resources/js/admin.js'])
+
+        {{-- Flux's recommended UI font (matches --font-sans in admin.css); loaded on every admin page for a consistent shell. --}}
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet">
 
         @fluxAppearance
 

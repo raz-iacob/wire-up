@@ -22,7 +22,7 @@
     @endif
     <meta name="apple-mobile-web-app-title" content="{{ $siteName }}" />
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/site.css', 'resources/js/app.js'])
 
     @if ($googleFonts)
     <link rel="preconnect" href="https://fonts.googleapis.com">

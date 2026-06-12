@@ -53,6 +53,22 @@ it('updates the preview live from a deferred property change without a server ro
         ->assertScript("getComputedStyle(document.querySelector('[data-test=preview-body]')).backgroundColor", 'rgb(10, 10, 10)');
 });
 
+it('confines preview font selection to the preview and leaves the admin chrome untouched', function (): void {
+    $this->actingAsAdmin();
+
+    $page = visit(route('admin.settings-design'));
+    $page->wait(0.4);
+
+    $page->assertScript("getComputedStyle(document.body).getPropertyValue('--font-sans').includes('Lato')", false);
+
+    $page->script("window.Livewire.all().find(c => c.\$wire.get('heading_font') !== undefined).\$wire.set('heading_font', 'lato', false); void 0");
+    $page->wait(0.4);
+
+    $page->assertNoJavascriptErrors()
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=preview-body] h1')).fontFamily.includes('Lato')", true)
+        ->assertScript("getComputedStyle(document.body).getPropertyValue('--font-sans').includes('Lato')", false);
+});
+
 it('keeps exactly one header and footer variant visible when other fields change', function (): void {
     $this->actingAsAdmin();
 
