@@ -4,9 +4,10 @@
         <flux:subheading size="lg">{{ __('Manage your site configuration') }}</flux:subheading>
     </div>
 
-    <flux:navbar>
+    <flux:navbar class="pt-0">
         <flux:navbar.item :href="route('admin.settings-identity')" wire:navigate>{{ __('Identity') }}</flux:navbar.item>
         <flux:navbar.item :href="route('admin.settings-design')" wire:navigate>{{ __('Design') }}</flux:navbar.item>
+        <flux:navbar.item :href="route('admin.settings-menus')" wire:navigate>{{ __('Menus') }}</flux:navbar.item>
     </flux:navbar>
 
     <div class="w-full max-w-5xl">
