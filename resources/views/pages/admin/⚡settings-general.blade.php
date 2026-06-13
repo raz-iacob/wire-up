@@ -70,7 +70,7 @@ return new class extends Component
 };
 ?>
 
-<x-settings-layout :subheading="__('General settings for your site.')">
+<x-admin.settings-layout :subheading="__('General settings for your site.')">
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="max-w-2xl">
         <flux:pillbox
             wire:model="languages"
@@ -91,4 +91,4 @@ return new class extends Component
             </flux:button>
         </div>
     </form>
-</x-settings-layout>
+</x-admin.settings-layout>

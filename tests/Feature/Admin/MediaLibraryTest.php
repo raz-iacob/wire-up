@@ -15,7 +15,7 @@ beforeEach(function (): void {
 });
 
 it('initializes with correct default values', function (): void {
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->assertSet('showLibrary', false)
         ->assertSet('type', null)
         ->assertSet('max', 1)
@@ -32,7 +32,7 @@ it('initializes with correct default values', function (): void {
 it('handles select media event and opens library', function (): void {
     $media = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->dispatch('select-media', target: 'test-target', type: MediaType::IMAGE->value, max: 5, media: [$media])
         ->assertSet('showLibrary', true)
         ->assertSet('target', 'test-target')
@@ -43,7 +43,7 @@ it('handles select media event and opens library', function (): void {
 it('loads media into the grid when the library opens', function (): void {
     Media::factory()->count(3)->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->dispatch('select-media', target: 'test-target', type: null, max: 5, media: null)
         ->assertSet('showLibrary', true)
         ->assertSet('loaded', true)
@@ -53,7 +53,7 @@ it('loads media into the grid when the library opens', function (): void {
 it('hydrates an array media payload into models when opening the library', function (): void {
     $media = Media::factory()->create();
 
-    $component = Livewire::test('media-library')
+    $component = Livewire::test('admin.media-library')
         ->dispatch('select-media', target: 'og_image.en', type: null, max: 1, media: [['id' => $media->id, 'crop' => []]])
         ->assertSet('showLibrary', true)
         ->assertCount('selected', 1);
@@ -63,7 +63,7 @@ it('hydrates an array media payload into models when opening the library', funct
 });
 
 it('handles select media event without type specified', function (): void {
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->dispatch('select-media', target: 'test-target', type: '', max: 1, media: null)
         ->assertSet('showLibrary', true)
         ->assertSet('target', 'test-target')
@@ -73,7 +73,7 @@ it('handles select media event without type specified', function (): void {
 });
 
 it('handles select media event with null type', function (): void {
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->dispatch('select-media', target: 'test-target', type: null, max: 1, media: null)
         ->assertSet('showLibrary', true)
         ->assertSet('target', 'test-target')
@@ -85,7 +85,7 @@ it('handles select media event with null type', function (): void {
 it('selects a single media item', function (): void {
     $media = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('selectMedia', $media)
         ->assertCount('selected', 1);
 });
@@ -93,7 +93,7 @@ it('selects a single media item', function (): void {
 it('deselects media when clicking it again', function (): void {
     $media = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('selectMedia', $media)
         ->assertCount('selected', 1)
         ->call('selectMedia', $media)
@@ -104,7 +104,7 @@ it('replaces selection when max is 1', function (): void {
     $media1 = Media::factory()->create();
     $media2 = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('max', 1)
         ->call('selectMedia', $media1)
         ->assertCount('selected', 1)
@@ -117,7 +117,7 @@ it('allows multiple selections up to max', function (): void {
     $media2 = Media::factory()->create();
     $media3 = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('max', 2)
         ->call('selectMedia', $media1)
         ->assertCount('selected', 1)
@@ -130,7 +130,7 @@ it('allows multiple selections up to max', function (): void {
 it('correctly identifies selected media', function (): void {
     $media = Media::factory()->create();
 
-    $component = Livewire::test('media-library')
+    $component = Livewire::test('admin.media-library')
         ->call('selectMedia', $media);
 
     $instance = $component->instance();
@@ -141,7 +141,7 @@ it('clears all selections', function (): void {
     $media1 = Media::factory()->create();
     $media2 = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('max', 2)
         ->call('selectMedia', $media1)
         ->call('selectMedia', $media2)
@@ -153,7 +153,7 @@ it('clears all selections', function (): void {
 it('inserts media and dispatches event', function (): void {
     $media = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('target', 'test-target')
         ->call('selectMedia', $media)
         ->call('insertMedia')
@@ -164,7 +164,7 @@ it('inserts media and dispatches event', function (): void {
 it('opens edit modal when single media is selected', function (): void {
     $media = Media::factory()->create(['alt_text' => 'Original alt text']);
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('selectMedia', $media)
         ->call('edit')
         ->assertSet('showEditModal', true)
@@ -172,7 +172,7 @@ it('opens edit modal when single media is selected', function (): void {
 });
 
 it('does not open edit modal when no media is selected', function (): void {
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('edit')
         ->assertSet('showEditModal', false);
 });
@@ -181,7 +181,7 @@ it('does not open edit modal when multiple media are selected', function (): voi
     $media1 = Media::factory()->create();
     $media2 = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('max', 2)
         ->call('selectMedia', $media1)
         ->call('selectMedia', $media2)
@@ -192,7 +192,7 @@ it('does not open edit modal when multiple media are selected', function (): voi
 it('updates media alt text', function (): void {
     $media = Media::factory()->create(['alt_text' => 'Original']);
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('selectMedia', $media)
         ->call('edit')
         ->set('altText', 'Updated alt text')
@@ -203,7 +203,7 @@ it('updates media alt text', function (): void {
 });
 
 it('does not update when no media is selected', function (): void {
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('altText', 'Some text')
         ->call('update');
 
@@ -211,7 +211,7 @@ it('does not update when no media is selected', function (): void {
 });
 
 it('opens delete confirmation modal', function (): void {
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('confirmDelete')
         ->assertSet('showDeleteModal', true);
 });
@@ -220,7 +220,7 @@ it('deletes selected media items', function (): void {
     $media1 = Media::factory()->create();
     $media2 = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('max', 2)
         ->call('selectMedia', $media1)
         ->call('selectMedia', $media2)
@@ -235,7 +235,7 @@ it('deletes selected media items', function (): void {
 it('does not delete when no media is selected', function (): void {
     $media = Media::factory()->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('deleteCurrentItem');
 
     expect(Media::query()->find($media->id))->not->toBeNull();
@@ -244,7 +244,7 @@ it('does not delete when no media is selected', function (): void {
 it('loads media on initialization', function (): void {
     Media::factory()->count(5)->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('loadMedia')
         ->assertSet('loaded', true)
         ->assertCount('medias', 5);
@@ -255,7 +255,7 @@ it('filters media by type', function (): void {
     Media::factory()->create(['type' => MediaType::VIDEO]);
     Media::factory()->create(['type' => MediaType::IMAGE]);
 
-    $component = Livewire::test('media-library');
+    $component = Livewire::test('admin.media-library');
     $component->set('typeFilter', MediaType::IMAGE->value);
 
     expect($component->get('medias')->count())->toBe(2);
@@ -266,7 +266,7 @@ it('searches media by filename', function (): void {
     Media::factory()->create(['filename' => 'beach.jpg']);
     Media::factory()->create(['filename' => 'mountain.jpg']);
 
-    $component = Livewire::test('media-library');
+    $component = Livewire::test('admin.media-library');
     $component->set('search', 'sunset');
 
     expect($component->get('medias')->count())->toBe(1);
@@ -277,7 +277,7 @@ it('searches media by alt text', function (): void {
     Media::factory()->create(['alt_text' => 'Beach scene']);
     Media::factory()->create(['alt_text' => 'Sunset colors']);
 
-    $component = Livewire::test('media-library');
+    $component = Livewire::test('admin.media-library');
     $component->set('search', 'sunset');
 
     expect($component->get('medias')->count())->toBe(2);
@@ -286,7 +286,7 @@ it('searches media by alt text', function (): void {
 it('loads more media when paginating', function (): void {
     Media::factory()->count(25)->create();
 
-    $component = Livewire::test('media-library')
+    $component = Livewire::test('admin.media-library')
         ->set('perPage', 20)
         ->call('loadMedia')
         ->assertCount('medias', 20)
@@ -301,7 +301,7 @@ it('reloads media when search is updated', function (): void {
     Media::factory()->create(['filename' => 'test.jpg']);
     Media::factory()->create(['filename' => 'other.jpg']);
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('loadMedia')
         ->assertCount('medias', 2)
         ->set('search', 'test')
@@ -312,7 +312,7 @@ it('reloads media when type filter is updated', function (): void {
     Media::factory()->create(['type' => MediaType::IMAGE]);
     Media::factory()->create(['type' => MediaType::VIDEO]);
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->call('loadMedia')
         ->assertCount('medias', 2)
         ->set('typeFilter', MediaType::IMAGE->value)
@@ -322,7 +322,7 @@ it('reloads media when type filter is updated', function (): void {
 it('checks if file exists by etag', function (): void {
     $media = Media::factory()->create(['etag' => 'abc123']);
 
-    $component = Livewire::test('media-library');
+    $component = Livewire::test('admin.media-library');
     $instance = $component->instance();
     $result = $instance->checkFileExists('abc123');
 
@@ -331,7 +331,7 @@ it('checks if file exists by etag', function (): void {
 });
 
 it('returns null when file does not exist by etag', function (): void {
-    $component = Livewire::test('media-library');
+    $component = Livewire::test('admin.media-library');
     $instance = $component->instance();
     $result = $instance->checkFileExists('nonexistent');
 
@@ -341,7 +341,7 @@ it('returns null when file does not exist by etag', function (): void {
 it('uploads and saves image files', function (): void {
     $file = UploadedFile::fake()->image('photo.jpg');
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('type', MediaType::IMAGE)
         ->set('files', [$file])
         ->call('save', [
@@ -366,7 +366,7 @@ it('skips duplicate files by etag', function (): void {
 
     Media::factory()->create(['etag' => $etag]);
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('files', [$file])
         ->call('save', [[]]);
 
@@ -378,7 +378,7 @@ it('auto-selects uploaded files up to max', function (): void {
     $file2 = UploadedFile::fake()->image('photo2.jpg');
     $file3 = UploadedFile::fake()->image('photo3.jpg');
 
-    $component = Livewire::test('media-library')
+    $component = Livewire::test('admin.media-library')
         ->set('max', 2)
         ->set('files', [$file1, $file2, $file3])
         ->call('save', [[], [], []]);
@@ -400,7 +400,7 @@ it('parses media with all attributes', function (): void {
         'height' => 600,
     ]);
 
-    $component = Livewire::test('media-library')
+    $component = Livewire::test('admin.media-library')
         ->call('loadMedia');
 
     $parsed = $component->get('medias')->first();
@@ -415,7 +415,7 @@ it('parses media with all attributes', function (): void {
 });
 
 it('generates stack style string', function (): void {
-    $component = Livewire::test('media-library');
+    $component = Livewire::test('admin.media-library');
     $instance = $component->instance();
 
     $style = $instance->stackStyle(12345, 0);
@@ -426,7 +426,7 @@ it('generates stack style string', function (): void {
 });
 
 it('generates different stack styles for different indexes', function (): void {
-    $component = Livewire::test('media-library');
+    $component = Livewire::test('admin.media-library');
     $instance = $component->instance();
 
     $style1 = $instance->stackStyle(12345, 0);
@@ -439,7 +439,7 @@ it('downloads single media file', function (): void {
     $media = Media::factory()->create();
     Storage::disk(config('filesystems.media'))->put($media->source, 'test content');
 
-    $component = Livewire::test('media-library')
+    $component = Livewire::test('admin.media-library')
         ->call('selectMedia', $media);
 
     $instance = $component->instance();
@@ -454,7 +454,7 @@ it('downloads multiple media files as zip', function (): void {
     Storage::disk(config('filesystems.media'))->put($media1->source, 'test content 1');
     Storage::disk(config('filesystems.media'))->put($media2->source, 'test content 2');
 
-    $component = Livewire::test('media-library')
+    $component = Livewire::test('admin.media-library')
         ->set('max', 2)
         ->call('selectMedia', $media1)
         ->call('selectMedia', $media2);
@@ -468,7 +468,7 @@ it('downloads multiple media files as zip', function (): void {
 it('selects a range of media items', function (): void {
     $media = Media::factory()->count(5)->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('max', 5)
         ->call('selectMediaRange', [$media[0]->id, $media[1]->id, $media[2]->id])
         ->assertCount('selected', 3);
@@ -477,7 +477,7 @@ it('selects a range of media items', function (): void {
 it('selects a range of media items respecting max', function (): void {
     $media = Media::factory()->count(5)->create();
 
-    Livewire::test('media-library')
+    Livewire::test('admin.media-library')
         ->set('max', 2)
         ->call('selectMediaRange', [$media[0]->id, $media[1]->id, $media[2]->id])
         ->assertCount('selected', 2);

@@ -1,19 +1,18 @@
 @props(['title' => null, 'description' => null])
 
 @php
-    $siteSettings = \App\Models\Settings::cached();
-    $siteName = $siteSettings?->title ?: config('app.name');
-    $siteFavicon = $siteSettings?->faviconUrl();
-    $themeCss = $siteSettings?->themeCss();
-    $googleFonts = $siteSettings?->googleFontsUrl();
+    $site = \App\Services\SettingsService::current();
+    $siteName = \App\Models\Settings::cached()?->title ?: config('app.name');
+    $favicon = $site->faviconUrl();
+    $googleFonts = $site->googleFontsUrl();
 @endphp
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    @if ($siteFavicon)
-    <link rel="icon" href="{{ $siteFavicon }}" />
+    @if ($favicon)
+    <link rel="icon" href="{{ $favicon }}" />
     @else
     <link rel="icon" type="image/png" href="{{ Vite::asset('resources/images/favicon-96x96.png') }}" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="{{ Vite::asset('resources/images/favicon.svg') }}" />
@@ -29,14 +28,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="{{ $googleFonts }}" rel="stylesheet">
     @endif
-    @if ($themeCss)
-    <style>{!! $themeCss !!}</style>
-    @endif
+    <style>{!! $site->themeCss() !!}</style>
 
     @fluxAppearance
 
-    <title>{{ isset($title) ? "$title | " : '' }}{{ $siteName }}</title>
-    @if (isset($description))
+    <title>{{ $title ? "$title | " : '' }}{{ $siteName }}</title>
+    @if ($description)
     <meta name="description" content="{{ $description }}">
     @endif
 </head>

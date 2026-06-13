@@ -256,7 +256,7 @@ return new class extends Component
     $currentFooter = $footer[$locale] ?? [];
 @endphp
 
-<x-settings-layout :subheading="__('Manage your site’s navigation by customizing the header and footer menus. Each language has its own menus.')">
+<x-admin.settings-layout :subheading="__('Manage your site’s navigation by customizing the header and footer menus. Each language has its own menus.')">
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="max-w-3xl">
         <flux:tab.group>
             <div class="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-6">
@@ -335,4 +335,4 @@ return new class extends Component
             </div>
         </div>
     </flux:modal>
-</x-settings-layout>
+</x-admin.settings-layout>

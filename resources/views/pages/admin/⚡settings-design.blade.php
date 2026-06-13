@@ -223,7 +223,7 @@ return new class extends Component
         .'&display=swap';
 @endphp
 
-<x-settings-layout :subheading="__('Design the look of your public site — colours, fonts, and shape.')">
+<x-admin.settings-layout :subheading="__('Design the look of your public site — colours, fonts, and shape.')">
     @if ($previewFontsUrl)
         {{-- Preload every theme font so the preview mock and the font pickers render them without a flash.
              These only style the preview (via inline font-family); the admin shell uses --font-sans (Inter). --}}
@@ -613,14 +613,14 @@ return new class extends Component
 
             <div class="space-y-6">
                 <flux:heading size="sm">{{ __('Logos') }}</flux:heading>
-                <livewire:media-selector
+                <livewire:admin.media-selector
                     wire:model="logo_header"
                     name="logo_header"
                     type="image"
                     :crops="['default' => ['label' => __('Header logo'), 'w' => 480, 'h' => 160]]"
                     label="{{ __('Header logo') }}"
                 />
-                <livewire:media-selector
+                <livewire:admin.media-selector
                     wire:model="logo_footer"
                     name="logo_footer"
                     type="image"
@@ -636,4 +636,4 @@ return new class extends Component
             </div>
         </div>
     </form>
-</x-settings-layout>
+</x-admin.settings-layout>

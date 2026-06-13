@@ -7,6 +7,7 @@ use App\Models\Locale;
 use App\Models\Media;
 use App\Models\Settings;
 use App\Models\User;
+use App\Services\SettingsService;
 use Livewire\Livewire;
 
 it('can render the identity settings screen', function (): void {
@@ -15,7 +16,7 @@ it('can render the identity settings screen', function (): void {
 
     $response->assertOk()
         ->assertSeeLivewire('pages::admin.settings-identity')
-        ->assertSeeLivewire('media-selector')
+        ->assertSeeLivewire('admin.media-selector')
         ->assertSee('fonts.bunny.net/css?family=inter', false);
 });
 
@@ -166,7 +167,7 @@ it('builds the favicon url from the storage key so it resolves through the image
 
     $settings->syncMediaForRole('favicon', resolve('localization')->getDefaultLocale(), [['id' => $favicon->id]]);
 
-    $url = $settings->fresh()->faviconUrl();
+    $url = new SettingsService($settings->fresh())->faviconUrl();
 
     expect($url)
         ->toBeString()

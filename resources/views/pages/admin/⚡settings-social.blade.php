@@ -62,7 +62,7 @@ return new class extends Component
     $platforms = config('social.platforms');
 @endphp
 
-<x-settings-layout :subheading="__('Set the links to your social profiles — they’ll appear in your site’s footer so visitors can connect with you.')">
+<x-admin.settings-layout :subheading="__('Set the links to your social profiles — they’ll appear in your site’s footer so visitors can connect with you.')">
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="max-w-3xl">
         <div class="grid sm:grid-cols-2 gap-6">
             @foreach ($platforms as $key => $platform)
@@ -81,4 +81,4 @@ return new class extends Component
             </flux:button>
         </div>
     </form>
-</x-settings-layout>
+</x-admin.settings-layout>

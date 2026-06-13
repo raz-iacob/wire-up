@@ -129,13 +129,13 @@ return new class extends Component
 };
 ?>
 
-<x-settings-layout :subheading="__('These details not only shape your site’s identity but also enhance its visibility in search engines.')">
+<x-admin.settings-layout :subheading="__('These details not only shape your site’s identity but also enhance its visibility in search engines.')">
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-start">
         <div class="space-y-8 md:col-span-3">
             <x-forms.input-translated name="title" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Title') }}" />
             <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Tagline') }}" />
             
-            <livewire:media-selector
+            <livewire:admin.media-selector
                 wire:model="favicon"
                 name="favicon"
                 type="image"
@@ -179,4 +179,4 @@ return new class extends Component
             </div>
         </div>
     </form>
-</x-settings-layout>
+</x-admin.settings-layout>

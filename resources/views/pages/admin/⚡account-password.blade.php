@@ -39,7 +39,7 @@ return new class extends Component
 };
 ?>
 
-<x-account-layout :subheading="__('Ensure your account is using a long, random password to stay secure')">
+<x-admin.account-layout :subheading="__('Ensure your account is using a long, random password to stay secure')">
     <form method="POST" wire:submit="update" class="space-y-8">
         <flux:input
             wire:model="current_password"
@@ -68,4 +68,4 @@ return new class extends Component
 
         <flux:button variant="primary" type="submit">{{ __('Update') }}</flux:button>
     </form>
-</x-account-layout>
+</x-admin.account-layout>

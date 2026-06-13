@@ -22,13 +22,13 @@ function mediaPayload(int $id, ?string $filename = null): array
 }
 
 it('renders the attach media button when nothing is selected', function (): void {
-    Livewire::test('media-selector')
+    Livewire::test('admin.media-selector')
         ->assertSee('Attach Media')
         ->assertSee('No media selected');
 });
 
 it('stores a single selected media item in single mode', function (): void {
-    $component = Livewire::test('media-selector', [
+    $component = Livewire::test('admin.media-selector', [
         'name' => 'og_image',
         'locale' => 'en',
     ]);
@@ -42,7 +42,7 @@ it('stores a single selected media item in single mode', function (): void {
 });
 
 it('stores multiple selected media items when multiple mode is enabled', function (): void {
-    $component = Livewire::test('media-selector', [
+    $component = Livewire::test('admin.media-selector', [
         'name' => 'gallery',
         'locale' => 'en',
         'multiple' => true,
@@ -59,7 +59,7 @@ it('stores multiple selected media items when multiple mode is enabled', functio
 });
 
 it('replaces a selected media item when changing one slot in multiple mode', function (): void {
-    $component = Livewire::test('media-selector', [
+    $component = Livewire::test('admin.media-selector', [
         'name' => 'gallery',
         'locale' => 'en',
         'multiple' => true,
@@ -77,7 +77,7 @@ it('replaces a selected media item when changing one slot in multiple mode', fun
 });
 
 it('removes a selected media item', function (): void {
-    Livewire::test('media-selector', [
+    Livewire::test('admin.media-selector', [
         'multiple' => true,
     ])
         ->set('media', [mediaPayload(1, 'first.jpg'), mediaPayload(2, 'second.jpg')])
@@ -87,7 +87,7 @@ it('removes a selected media item', function (): void {
 });
 
 it('opens a confirmation modal before removing an item', function (): void {
-    Livewire::test('media-selector', ['multiple' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true])
         ->set('media', [mediaPayload(1, 'first.jpg'), mediaPayload(2, 'second.jpg')])
         ->call('confirmRemove', 0)
         ->assertSet('showRemoveModal', true)
@@ -96,7 +96,7 @@ it('opens a confirmation modal before removing an item', function (): void {
 });
 
 it('removes the item only after confirmation', function (): void {
-    Livewire::test('media-selector', ['multiple' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true])
         ->set('media', [mediaPayload(1, 'first.jpg'), mediaPayload(2, 'second.jpg')])
         ->call('confirmRemove', 0)
         ->call('removeConfirmed')
@@ -107,7 +107,7 @@ it('removes the item only after confirmation', function (): void {
 });
 
 it('reorders selected media items', function (): void {
-    Livewire::test('media-selector', [
+    Livewire::test('admin.media-selector', [
         'multiple' => true,
     ])
         ->set('media', [mediaPayload(1, 'first.jpg'), mediaPayload(2, 'second.jpg'), mediaPayload(3, 'third.jpg')])
@@ -118,7 +118,7 @@ it('reorders selected media items', function (): void {
 });
 
 it('dispatches the library event when opening the selector', function (): void {
-    Livewire::test('media-selector', [
+    Livewire::test('admin.media-selector', [
         'multiple' => true,
         'max' => 5,
     ])
@@ -128,13 +128,13 @@ it('dispatches the library event when opening the selector', function (): void {
 });
 
 it('defaults to a single default crop variant', function (): void {
-    Livewire::test('media-selector')
+    Livewire::test('admin.media-selector')
         ->assertSet('crops.default.w', 1200)
         ->assertSet('crops.default.h', 800);
 });
 
 it('stores a crop variant for a selected item in multiple mode', function (): void {
-    Livewire::test('media-selector', ['multiple' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true])
         ->set('media', [mediaPayload(1), mediaPayload(2)])
         ->call('setCrop', 1, 'default', ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 10, 'crop_y' => 20, 'w' => 1200, 'h' => 630])
         ->assertSet('media.1.crop.default.crop_w', 1200)
@@ -143,14 +143,14 @@ it('stores a crop variant for a selected item in multiple mode', function (): vo
 });
 
 it('stores a crop variant for a selected item in single mode', function (): void {
-    Livewire::test('media-selector')
+    Livewire::test('admin.media-selector')
         ->set('media', mediaPayload(1))
         ->call('setCrop', 0, 'default', ['crop_w' => 100, 'crop_h' => 100, 'crop_x' => 0, 'crop_y' => 0, 'w' => 100, 'h' => 100])
         ->assertSet('media.crop.default.crop_w', 100);
 });
 
 it('ignores a crop for an unknown item index', function (): void {
-    Livewire::test('media-selector', ['multiple' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true])
         ->set('media', [mediaPayload(1)])
         ->call('setCrop', 5, 'default', ['crop_w' => 10])
         ->assertCount('media', 1)
@@ -158,14 +158,14 @@ it('ignores a crop for an unknown item index', function (): void {
 });
 
 it('ignores a crop for an unknown variant', function (): void {
-    Livewire::test('media-selector', ['multiple' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true])
         ->set('media', [mediaPayload(1)])
         ->call('setCrop', 0, 'unknown', ['crop_w' => 10])
         ->assertSet('media.0.crop', []);
 });
 
 it('keeps crop data when reordering items', function (): void {
-    Livewire::test('media-selector', ['multiple' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true])
         ->set('media', [mediaPayload(1), mediaPayload(2)])
         ->call('setCrop', 0, 'default', ['crop_w' => 50, 'crop_h' => 50, 'crop_x' => 0, 'crop_y' => 0, 'w' => 50, 'h' => 50])
         ->call('reorderMedia', 1, 1)
@@ -174,7 +174,7 @@ it('keeps crop data when reordering items', function (): void {
 });
 
 it('commits multiple crop variants in one pass and skips unknown variants', function (): void {
-    Livewire::test('media-selector', ['multiple' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true])
         ->set('media', [mediaPayload(1)])
         ->call('setCrops', 0, [
             'default' => ['crop_w' => 100, 'crop_h' => 50, 'crop_x' => 0, 'crop_y' => 0, 'w' => 100, 'h' => 50],
@@ -186,7 +186,7 @@ it('commits multiple crop variants in one pass and skips unknown variants', func
 });
 
 it('preserves existing crops when adding more media via the library', function (): void {
-    $component = Livewire::test('media-selector', ['multiple' => true, 'max' => 5]);
+    $component = Livewire::test('admin.media-selector', ['multiple' => true, 'max' => 5]);
     $target = $component->instance()->targetKey();
 
     $component
@@ -201,7 +201,7 @@ it('preserves existing crops when adding more media via the library', function (
 });
 
 it('opens the caption modal preloaded with existing metadata', function (): void {
-    Livewire::test('media-selector', ['multiple' => true, 'withCaption' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true, 'withCaption' => true])
         ->set('media', [array_merge(mediaPayload(1), ['metadata' => ['caption' => 'Hello', 'alt' => 'An alt']])])
         ->call('editCaption', 0)
         ->assertSet('showCaptionModal', true)
@@ -211,7 +211,7 @@ it('opens the caption modal preloaded with existing metadata', function (): void
 });
 
 it('saves caption and alt into the item metadata', function (): void {
-    Livewire::test('media-selector', ['multiple' => true, 'withCaption' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true, 'withCaption' => true])
         ->set('media', [mediaPayload(1)])
         ->call('editCaption', 0)
         ->set('captionText', 'A caption')
@@ -224,7 +224,7 @@ it('saves caption and alt into the item metadata', function (): void {
 });
 
 it('drops empty caption and alt values from metadata', function (): void {
-    Livewire::test('media-selector', ['multiple' => true, 'withCaption' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true, 'withCaption' => true])
         ->set('media', [mediaPayload(1)])
         ->call('editCaption', 0)
         ->set('captionText', '')
@@ -234,7 +234,7 @@ it('drops empty caption and alt values from metadata', function (): void {
 });
 
 it('ignores setCrops for an unknown item index', function (): void {
-    Livewire::test('media-selector', ['multiple' => true])
+    Livewire::test('admin.media-selector', ['multiple' => true])
         ->set('media', [mediaPayload(1)])
         ->call('setCrops', 9, ['default' => ['crop_w' => 1]])
         ->assertSet('media.0.crop', []);

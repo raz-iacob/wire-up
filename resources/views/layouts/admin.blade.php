@@ -2,9 +2,8 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     
     @php
-        $siteSettings = \App\Models\Settings::cached();
-        $siteName = $siteSettings?->title ?: config('app.name');
-        $siteFavicon = $siteSettings?->faviconUrl();
+        $siteName = \App\Models\Settings::cached()?->title ?: config('app.name');
+        $siteFavicon = \App\Services\SettingsService::current()->faviconUrl();
     @endphp
 
     <head>
@@ -37,7 +36,7 @@
     </head>
 
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <x-admin-sidebar />
+        <x-admin.sidebar />
 
         <flux:header class="md:hidden">
             <div class="flex items-center gap-4">
@@ -100,7 +99,7 @@
         </flux:main>
 
         @persist('media-library')
-        <livewire:media-library />
+        <livewire:admin.media-library />
         @endpersist
 
         @persist('toast')

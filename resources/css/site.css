@@ -7,3 +7,12 @@
 @source '../../vendor/livewire/flux/stubs/**/*.blade.php';
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: var(--wire-heading-font);
+    }
+}

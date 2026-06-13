@@ -9,7 +9,7 @@
         <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
     </flux:sidebar.header>
 
-    <livewire:admin-sidebar-nav />
+    <livewire:admin.sidebar-nav />
 
     <flux:spacer />
 
