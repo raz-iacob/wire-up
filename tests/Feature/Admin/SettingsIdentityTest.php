@@ -115,6 +115,20 @@ it('validates that the title is required', function (): void {
         ->assertHasErrors(['title.en' => 'required']);
 });
 
+it('switches the editing locale to the one carrying a validation error', function (): void {
+    Locale::query()->where('code', 'nl')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-identity')
+        ->assertSet('locale', 'en')
+        ->set('title.en', 'Valid Title')
+        ->call('update')
+        ->assertHasErrors(['title.nl' => 'required'])
+        ->assertSet('locale', 'nl');
+});
+
 it('validates the title maximum length', function (): void {
     $this->actingAsAdmin();
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\UpdateSettingsAction;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -57,7 +58,13 @@ return new class extends Component
             $rules["description.$locale"] = ['nullable', 'string', 'max:255'];
         }
 
-        $validated = $this->validate($rules);
+        try {
+            $validated = $this->validate($rules);
+        } catch (ValidationException $e) {
+            $this->switchToErroredLocale($e);
+
+            throw $e;
+        }
 
         $action->handle([
             'title' => $validated['title'],
@@ -75,6 +82,25 @@ return new class extends Component
         $index = array_search($this->locale, $codes, true);
 
         $this->locale = $codes[($index + 1) % count($codes)] ?? $this->locale;
+    }
+
+    /**
+     * Switch the editing locale to the first one carrying a validation error so the
+     * offending (otherwise-hidden) translated field becomes visible.
+     */
+    private function switchToErroredLocale(ValidationException $e): void
+    {
+        $codes = array_keys($this->activeLocales);
+
+        foreach (array_keys($e->errors()) as $key) {
+            $locale = str($key)->afterLast('.')->value();
+
+            if (in_array($locale, $codes, true)) {
+                $this->locale = $locale;
+
+                return;
+            }
+        }
     }
 
     public function render(): View
