@@ -78,10 +78,10 @@ it('opens a confirmation modal before removing a menu item', function (): void {
 });
 
 it('reorders header items through the wire:sort handler the way a real drag does', function (): void {
-    Settings::current()->update(['metadata' => ['header_menu' => ['en' => [
+    Settings::set(['header_menu' => ['en' => [
         ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Alpha', 'url' => 'https://a.test'],
         ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Bravo', 'url' => 'https://b.test'],
-    ]]]]);
+    ]]]);
 
     $this->actingAsAdmin();
 

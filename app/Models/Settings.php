@@ -4,39 +4,62 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Traits\HasMedia;
-use App\Traits\HasTranslations;
 use Carbon\CarbonInterface;
 use Database\Factories\SettingsFactory;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
  * @property-read int $id
- * @property array<string, mixed>|null $metadata
- * @property-read Collection<int, Translation> $translations
- * @property-read string $title
- * @property-read string $description
+ * @property string $key
+ * @property mixed $value
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  */
+#[Table(name: 'settings')]
 final class Settings extends Model
 {
     /** @use HasFactory<SettingsFactory> */
-    use HasFactory, HasMedia, HasTranslations;
+    use HasFactory;
 
-    public static function current(): self
+    public const string CACHE_KEY = 'site-config';
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function cached(): array
     {
-        return self::query()->firstOrCreate([]);
+        return cache()->rememberForever(self::CACHE_KEY, fn (): array => Schema::hasTable('settings')
+            ? self::query()->get(['key', 'value'])->pluck('value', 'key')->all()
+            : []);
     }
 
-    public static function cached(): ?self
+    public static function get(string $key, mixed $default = null): mixed
     {
-        return once(fn (): ?self => Schema::hasTable('settings')
-            ? self::query()->with(['translations', 'media'])->first()
-            : null);
+        return data_get(self::cached(), $key, $default);
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     */
+    public static function set(array $values): void
+    {
+        DB::transaction(function () use ($values): void {
+            foreach ($values as $key => $value) {
+                self::query()->updateOrCreate(['key' => $key], ['value' => $value]);
+            }
+        });
+
+        self::flush();
+    }
+
+    public static function flush(): void
+    {
+        cache()->forget(self::CACHE_KEY);
+        config()->set('site', self::cached());
     }
 
     /**
@@ -46,17 +69,9 @@ final class Settings extends Model
     {
         return [
             'id' => 'integer',
-            'metadata' => 'array',
+            'value' => 'json',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    protected function translatedAttributes(): array
-    {
-        return ['title', 'description'];
     }
 }

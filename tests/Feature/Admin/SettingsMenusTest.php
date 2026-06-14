@@ -54,9 +54,9 @@ it('starts with an empty menu for each active locale when nothing is saved', fun
 });
 
 it('hydrates the locale menus from metadata on mount', function (): void {
-    Settings::current()->update(['metadata' => [
+    Settings::set([
         'header_menu' => ['en' => [['type' => 'link', 'appearance' => 'button', 'target' => '_blank', 'label' => 'Docs', 'url' => 'https://example.com']]],
-    ]]);
+    ]);
 
     $this->actingAsAdmin();
 
@@ -135,10 +135,8 @@ it('persists header and footer menus per locale to metadata', function (): void 
         ->call('update')
         ->assertHasNoErrors();
 
-    $metadata = Settings::current()->fresh()->metadata;
-
-    expect($metadata['header_menu']['en'][0])->toMatchArray(['type' => 'page', 'page_id' => $page->id, 'label' => 'Home'])
-        ->and($metadata['footer_menu']['en'][0])->toMatchArray(['type' => 'link', 'url' => 'https://example.com/privacy']);
+    expect(Settings::get('header_menu')['en'][0])->toMatchArray(['type' => 'page', 'page_id' => $page->id, 'label' => 'Home'])
+        ->and(Settings::get('footer_menu')['en'][0])->toMatchArray(['type' => 'link', 'url' => 'https://example.com/privacy']);
 });
 
 it('strips ui-only keys when saving', function (): void {
@@ -151,7 +149,7 @@ it('strips ui-only keys when saving', function (): void {
         ->call('update')
         ->assertHasNoErrors();
 
-    expect(Settings::current()->fresh()->metadata['header_menu']['en'][0])
+    expect(Settings::get('header_menu')['en'][0])
         ->not->toHaveKey('_key')
         ->not->toHaveKey('open');
 });

@@ -2,7 +2,7 @@
 
 @php
     $site = \App\Services\SettingsService::current();
-    $siteName = \App\Models\Settings::cached()?->title ?: config('app.name');
+    $siteName = $site->title() ?: config('app.name');
     $favicon = $site->faviconUrl();
     $googleFonts = $site->googleFontsUrl();
 @endphp

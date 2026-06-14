@@ -12,7 +12,8 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table): void {
             $table->id();
-            $table->json('metadata')->nullable()->comment('Non-translatable scalar settings');
+            $table->string('key')->unique();
+            $table->json('value')->nullable();
             $table->timestamps();
         });
     }

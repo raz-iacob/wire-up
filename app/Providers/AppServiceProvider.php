@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Settings;
 use App\Services\LocalizationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,12 @@ final class AppServiceProvider extends ServiceProvider
         $this->configureVite();
         $this->configureDates();
         $this->configurePasswordValidation();
+        $this->configureSettings();
+    }
+
+    private function configureSettings(): void
+    {
+        config()->set('site', Settings::cached());
     }
 
     private function configureModels(): void

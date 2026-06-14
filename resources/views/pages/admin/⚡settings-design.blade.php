@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
-use App\Models\Media;
-use App\Models\Settings;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
@@ -13,8 +11,6 @@ use Livewire\Component;
 
 return new class extends Component
 {
-    public Settings $settings;
-
     public string $theme;
 
     /**
@@ -54,9 +50,8 @@ return new class extends Component
 
     public function mount(): void
     {
-        $this->settings = Settings::current();
-        $this->settings->load('translations', 'media');
-        $meta = $this->settings->metadata ?? [];
+        /** @var array<string, mixed> $meta */
+        $meta = is_array(config('site')) ? config('site') : [];
 
         $this->theme = is_string($meta['theme'] ?? null) ? $meta['theme'] : config()->string('theme.default');
         $this->colors = $this->resolvePalette($this->theme, $meta);
@@ -71,8 +66,8 @@ return new class extends Component
         $this->footer_layout = is_string($meta['footer_layout'] ?? null) ? $meta['footer_layout'] : config()->string('theme.default_footer_layout');
         $this->footer_transparent = (bool) ($meta['footer_transparent'] ?? false);
 
-        $this->logo_header = $this->mediaForRole('logo_header');
-        $this->logo_footer = $this->mediaForRole('logo_footer');
+        $this->logo_header = is_array($meta['logo_header'] ?? null) ? $meta['logo_header'] : null;
+        $this->logo_footer = is_array($meta['logo_footer'] ?? null) ? $meta['logo_footer'] : null;
     }
 
     public function updatedTheme(string $value): void
@@ -114,8 +109,8 @@ return new class extends Component
             $metadata['colors'] = Arr::only($this->colors, array_keys(config()->array('theme.slots')));
         }
 
-        $action->handle($this->settings, [
-            'metadata' => $metadata,
+        $action->handle([
+            ...$metadata,
             'logo_header' => $this->logo_header,
             'logo_footer' => $this->logo_footer,
         ]);
@@ -166,43 +161,6 @@ return new class extends Component
 
         return $palette;
     }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    private function mediaForRole(string $role): ?array
-    {
-        $media = $this->settings->media
-            ->first(fn (Media $media): bool => $media->pivot->role === $role);
-
-        return $media ? $this->mediaToItem($media) : null;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function mediaToItem(Media $media): array
-    {
-        return [
-            'id' => $media->id,
-            'source' => $media->source,
-            'preview' => $media->preview,
-            'crop_src' => $media->cropSrc,
-            'filename' => $media->filename,
-            'alt_text' => $media->alt_text,
-            'mime_type' => $media->mime_type,
-            'thumbnail' => $media->thumbnail,
-            'icon' => $media->type->icon(),
-            'size' => $media->size,
-            'duration' => $media->duration,
-            'width' => $media->width,
-            'height' => $media->height,
-            'dimensions' => $media->dimensions,
-            'created_at' => $media->created_at->toDateTimeString(),
-            'crop' => $media->pivot->crop ?? [],
-            'metadata' => $media->pivot->metadata ?? [],
-        ];
-    }
 };
 ?>
 
@@ -210,7 +168,7 @@ return new class extends Component
     $presets = config('theme.presets');
     $fonts = config('theme.fonts');
     $fontStacks = collect($fonts)->map(fn (array $f): string => $f['stack'])->all();
-    $brand = $settings->title ?: config('app.name');
+    $brand = \App\Services\SettingsService::current()->title() ?: config('app.name');
 
     $slotsByGroup = [];
     foreach (config('theme.slots') as $slot => $def) {
@@ -349,11 +307,18 @@ return new class extends Component
                 {{-- footer --}}
                 {{-- simple: logo+nav top, copyright bar bottom --}}
                 <div data-test="footer-variant" x-show="$wire.footer_layout === 'simple'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
-                    <div class="flex items-center justify-between gap-4 px-4 py-5 text-xs">
-                        <span class="flex items-center gap-2">
-                            <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
-                            <span x-show="! $wire.logo_footer?.preview" class="text-sm font-semibold">{{ $brand }}</span>
-                        </span>
+                    <div class="flex items-start justify-between gap-4 px-4 py-5 text-xs">
+                        <div class="space-y-2">
+                            <span class="flex items-center gap-2">
+                                <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
+                                <span x-show="! $wire.logo_footer?.preview" class="text-sm font-semibold">{{ $brand }}</span>
+                            </span>
+                            <div class="flex items-center gap-2 opacity-70">
+                                @foreach (['facebook', 'x-twitter', 'instagram'] as $exIcon)
+                                    <span class="size-3.5 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
+                                @endforeach
+                            </div>
+                        </div>
                         <div class="flex items-center gap-4 opacity-80">
                             <span>{{ __('Services') }}</span>
                             <span>{{ __('About') }}</span>
@@ -377,6 +342,11 @@ return new class extends Component
                             <span>{{ __('Terms') }}</span>
                             <span>{{ __('Contact') }}</span>
                         </div>
+                        <div class="flex items-center justify-center gap-2">
+                            @foreach (['facebook', 'x-twitter', 'instagram'] as $exIcon)
+                                <span class="size-3.5 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
+                            @endforeach
+                        </div>
                     </div>
                     <div class="border-t border-current/10 px-4 py-2.5 text-center text-[0.6rem] opacity-60">
                         &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
@@ -389,6 +359,11 @@ return new class extends Component
                             <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
                             <div x-show="! $wire.logo_footer?.preview" class="font-semibold">{{ $brand }}</div>
                             <div class="opacity-60 text-[0.65rem] leading-relaxed">{{ __('Building something great.') }}</div>
+                            <div class="flex items-center gap-2 opacity-70">
+                                @foreach (['facebook', 'x-twitter', 'instagram'] as $exIcon)
+                                    <span class="size-3.5 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
+                                @endforeach
+                            </div>
                         </div>
                         <div class="space-y-1.5">
                             <div class="font-semibold border-b border-current/20 pb-1 mb-2">{{ __('Product') }}</div>

@@ -38,7 +38,7 @@ it('starts with empty links for every configured platform', function (): void {
 });
 
 it('hydrates social links from metadata on mount', function (): void {
-    Settings::current()->update(['metadata' => ['social' => ['facebook' => 'https://facebook.com/acme']]]);
+    Settings::set(['social' => ['facebook' => 'https://facebook.com/acme']]);
 
     $this->actingAsAdmin();
 
@@ -56,7 +56,7 @@ it('persists the provided social links to metadata', function (): void {
         ->call('update')
         ->assertHasNoErrors();
 
-    expect(Settings::current()->fresh()->metadata['social'])
+    expect(Settings::get('social'))
         ->toBe(['facebook' => 'https://facebook.com/acme', 'youtube' => 'https://youtube.com/@acme']);
 });
 
@@ -68,7 +68,7 @@ it('stores only the non-empty links', function (): void {
         ->call('update')
         ->assertHasNoErrors();
 
-    $social = Settings::current()->fresh()->metadata['social'];
+    $social = Settings::get('social');
 
     expect($social)->toHaveKey('facebook')
         ->and($social)->not->toHaveKey('instagram');
@@ -81,4 +81,31 @@ it('validates that a social link is a valid url', function (): void {
         ->set('links.facebook', 'not-a-url')
         ->call('update')
         ->assertHasErrors(['links.facebook']);
+});
+
+it('defaults the icon variant to solid', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-social')
+        ->assertSet('variant', 'solid');
+});
+
+it('persists the chosen icon variant', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-social')
+        ->set('variant', 'outline')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('social_icon_variant'))->toBe('outline');
+});
+
+it('validates the icon variant is a known option', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-social')
+        ->set('variant', 'bogus')
+        ->call('update')
+        ->assertHasErrors(['variant']);
 });

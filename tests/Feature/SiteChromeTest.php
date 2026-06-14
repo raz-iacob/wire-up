@@ -7,9 +7,9 @@ use App\Models\Page;
 use App\Models\Settings;
 use Livewire\Livewire;
 
-function setSiteMetadata(array $metadata): void
+function setSiteMetadata(array $settings): void
 {
-    Settings::current()->update(['metadata' => $metadata]);
+    Settings::set($settings);
 }
 
 it('renders the header and footer on a public page', function (): void {

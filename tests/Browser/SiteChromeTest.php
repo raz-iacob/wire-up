@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\Settings;
 
 it('renders the public header and footer without javascript errors', function (): void {
-    Settings::current()->update(['metadata' => [
+    Settings::set([
         'header_menu' => ['en' => [
             ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Docs', 'page_id' => null, 'url' => 'https://example.com/docs'],
             ['type' => 'link', 'appearance' => 'button', 'target' => '_self', 'label' => 'Sign up', 'page_id' => null, 'url' => 'https://example.com/signup'],
@@ -14,7 +14,7 @@ it('renders the public header and footer without javascript errors', function ()
             ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Privacy', 'page_id' => null, 'url' => 'https://example.com/privacy'],
         ]],
         'social' => ['facebook' => 'https://facebook.com/wireup', 'x' => 'https://x.com/wireup'],
-    ]]);
+    ]);
 
     $page = visit('/');
 

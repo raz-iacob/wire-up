@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Models\Media;
 use App\Models\Page;
-use App\Models\Settings;
 
 return [
     /*
@@ -19,6 +18,5 @@ return [
     'map' => [
         'page' => Page::class,
         'media' => Media::class,
-        'settings' => Settings::class,
     ],
 ];

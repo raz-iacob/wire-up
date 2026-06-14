@@ -8,17 +8,11 @@ use App\Models\Page;
 use App\Models\Settings;
 use App\Services\SettingsService;
 
-function present(?Settings $settings): SettingsService
-{
-    return new SettingsService($settings);
-}
-
 function headerMenu(array $items): SettingsService
 {
-    $settings = Settings::current();
-    $settings->update(['metadata' => ['header_menu' => ['en' => $items]]]);
+    Settings::set(['header_menu' => ['en' => $items]]);
 
-    return present($settings->fresh());
+    return new SettingsService;
 }
 
 function publishedPage(string $slug): Page
@@ -80,8 +74,8 @@ it('skips link items without a url and items without a label', function (): void
 });
 
 it('returns an empty array when no menu is saved', function (): void {
-    expect(present(Settings::current())->menu('header'))->toBeEmpty()
-        ->and(present(Settings::current())->menu('footer'))->toBeEmpty();
+    expect((new SettingsService)->menu('header'))->toBeEmpty()
+        ->and((new SettingsService)->menu('footer'))->toBeEmpty();
 });
 
 it('returns an empty array when the current default-locale menu has no items', function (): void {
@@ -118,15 +112,14 @@ it('falls back to the default locale menu when the current locale has none', fun
     Locale::query()->where('code', 'nl')->update(['active' => true]);
     cache()->forget('site-locales');
 
-    $settings = Settings::current();
-    $settings->update(['metadata' => ['header_menu' => [
+    Settings::set(['header_menu' => [
         'en' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'English', 'page_id' => null, 'url' => 'https://example.com']],
         'nl' => [],
-    ]]]);
+    ]]);
 
     app()->setLocale('nl');
 
-    $menu = present($settings->fresh())->menu('header');
+    $menu = (new SettingsService)->menu('header');
 
     expect($menu)->toHaveCount(1)
         ->and($menu[0]['label'])->toBe('English');
@@ -136,34 +129,98 @@ it('prefers the current locale menu over the default', function (): void {
     Locale::query()->where('code', 'nl')->update(['active' => true]);
     cache()->forget('site-locales');
 
-    $settings = Settings::current();
-    $settings->update(['metadata' => ['header_menu' => [
+    Settings::set(['header_menu' => [
         'en' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'English', 'page_id' => null, 'url' => 'https://example.com/en']],
         'nl' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Nederlands', 'page_id' => null, 'url' => 'https://example.com/nl']],
-    ]]]);
+    ]]);
 
     app()->setLocale('nl');
 
-    $menu = present($settings->fresh())->menu('header');
+    $menu = (new SettingsService)->menu('header');
 
     expect($menu)->toHaveCount(1)
         ->and($menu[0]['label'])->toBe('Nederlands');
 });
 
 it('returns only the social platforms that are set, in config order', function (): void {
-    $settings = Settings::current();
-    $settings->update(['metadata' => ['social' => [
+    Settings::set(['social' => [
         'x' => 'https://x.com/handle',
         'facebook' => 'https://facebook.com/page',
         'linkedin' => '',
-    ]]]);
+    ]]);
 
-    expect(present($settings->fresh())->socialLinks())->toBe([
+    expect((new SettingsService)->socialLinks())->toBe([
         'facebook' => 'https://facebook.com/page',
         'x' => 'https://x.com/handle',
     ]);
 });
 
 it('returns no social links when none are saved', function (): void {
-    expect(present(Settings::current())->socialLinks())->toBeEmpty();
+    expect((new SettingsService)->socialLinks())->toBeEmpty();
+});
+
+it('returns the saved social icon variant', function (): void {
+    Settings::set(['social_icon_variant' => 'outline']);
+
+    expect((new SettingsService)->socialIconVariant())->toBe('outline');
+});
+
+it('falls back to the default social icon variant when unset or unknown', function (): void {
+    expect((new SettingsService)->socialIconVariant())->toBe('solid');
+
+    Settings::set(['social_icon_variant' => 'bogus']);
+
+    expect((new SettingsService)->socialIconVariant())->toBe('solid');
+});
+
+it('resolves the title and tagline for the current locale', function (): void {
+    Settings::set(['title' => ['en' => 'Wire-Up'], 'description' => ['en' => 'A tagline']]);
+
+    expect((new SettingsService)->title())->toBe('Wire-Up')
+        ->and((new SettingsService)->description())->toBe('A tagline');
+});
+
+it('falls back to the fallback locale title when the current locale has none', function (): void {
+    Locale::query()->where('code', 'nl')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    Settings::set(['title' => ['en' => 'English title']]);
+    app()->setLocale('nl');
+
+    expect((new SettingsService)->title())->toBe('English title');
+});
+
+it('falls back to any non-empty title when neither the current nor fallback locale match', function (): void {
+    Settings::set(['title' => ['de' => 'Deutscher Titel']]);
+
+    expect((new SettingsService)->title())->toBe('Deutscher Titel');
+});
+
+it('returns an empty string for the title and tagline when none are saved', function (): void {
+    expect((new SettingsService)->title())->toBe('')
+        ->and((new SettingsService)->description())->toBe('');
+});
+
+it('returns an empty title when every saved locale value is blank', function (): void {
+    Settings::set(['title' => ['en' => '']]);
+
+    expect((new SettingsService)->title())->toBe('');
+});
+
+it('builds a logo url from the stored crop', function (): void {
+    Settings::set(['logo_header' => [
+        'source' => 'images/logo.jpg',
+        'crop' => ['default' => ['w' => 480, 'h' => 160, 'crop_w' => 480, 'crop_h' => 160]],
+    ]]);
+
+    expect((new SettingsService)->logoUrl('logo_header'))
+        ->toBeString()
+        ->toContain('/img/')
+        ->toContain('images/logo.jpg');
+});
+
+it('returns no logo url when the stored item has no crop', function (): void {
+    Settings::set(['logo_header' => ['source' => 'images/logo.jpg']]);
+
+    expect((new SettingsService)->logoUrl('logo_header'))->toBeNull();
 });

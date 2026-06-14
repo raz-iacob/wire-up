@@ -3,35 +3,38 @@
 declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
-use App\Models\Settings;
+use App\Services\SettingsService;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 return new class extends Component
 {
-    public Settings $settings;
-
     /**
      * @var array<string, string>
      */
     public array $links = [];
 
+    public string $variant = '';
+
     public function mount(): void
     {
-        $this->settings = Settings::current();
-
-        $meta = $this->settings->metadata ?? [];
-        $saved = is_array($meta['social'] ?? null) ? $meta['social'] : [];
+        $saved = config('site.social');
+        $saved = is_array($saved) ? $saved : [];
 
         foreach (array_keys(config()->array('social.platforms')) as $platform) {
             $this->links[$platform] = is_string($saved[$platform] ?? null) ? $saved[$platform] : '';
         }
+
+        $this->variant = SettingsService::current()->socialIconVariant();
     }
 
     public function update(UpdateSettingsAction $action): void
     {
-        $rules = [];
+        $rules = [
+            'variant' => ['required', Rule::in(array_keys(config()->array('social.icon_variants')))],
+        ];
 
         foreach (array_keys(config()->array('social.platforms')) as $platform) {
             $rules["links.$platform"] = ['nullable', 'url', 'max:255'];
@@ -44,7 +47,10 @@ return new class extends Component
             fn (mixed $url): bool => is_string($url) && $url !== '',
         );
 
-        $action->handle($this->settings, ['metadata' => ['social' => $links]]);
+        $action->handle([
+            'social' => $links,
+            'social_icon_variant' => $validated['variant'],
+        ]);
 
         Flux::toast(__('Social links have been updated.'), variant: 'success');
     }
@@ -60,6 +66,7 @@ return new class extends Component
 
 @php
     $platforms = config('social.platforms');
+    $iconVariants = config('social.icon_variants');
 @endphp
 
 <x-admin.settings-layout :subheading="__('Set the links to your social profiles — they’ll appear in your site’s footer so visitors can connect with you.')">
@@ -74,6 +81,14 @@ return new class extends Component
                 />
             @endforeach
         </div>
+
+        <flux:separator variant="subtle" class="my-8" />
+
+        <flux:radio.group wire:model="variant" variant="segmented" label="{{ __('Icon style') }}" description="{{ __('How the social icons render in your footer.') }}">
+            @foreach ($iconVariants as $value => $label)
+                <flux:radio value="{{ $value }}" label="{{ __($label) }}" />
+            @endforeach
+        </flux:radio.group>
 
         <div class="mt-10">
             <flux:button type="submit" variant="primary">

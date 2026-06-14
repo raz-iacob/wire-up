@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
-use App\Models\Media;
-use App\Models\Settings;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\On;
@@ -13,8 +11,6 @@ use Livewire\Component;
 
 return new class extends Component
 {
-    public Settings $settings;
-
     /**
      * @var array<string, string>
      */
@@ -40,12 +36,9 @@ return new class extends Component
 
     public function mount(): void
     {
-        $this->settings = Settings::current();
-        $this->settings->load('translations', 'media');
-
-        $this->title = $this->settings->translationsFor('title');
-        $this->description = $this->settings->translationsFor('description');
-        $this->favicon = $this->mediaForRole('favicon');
+        $this->title = $this->localeMap('title');
+        $this->description = $this->localeMap('description');
+        $this->favicon = is_array(config('site.favicon')) ? config('site.favicon') : null;
 
         $this->locale = app()->getLocale();
         $this->activeLocales = resolve('localization')->getActiveLocales();
@@ -66,8 +59,9 @@ return new class extends Component
 
         $validated = $this->validate($rules);
 
-        $action->handle($this->settings, [
-            ...$validated,
+        $action->handle([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? [],
             'favicon' => $this->favicon,
         ]);
 
@@ -91,40 +85,23 @@ return new class extends Component
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array<string, string>
      */
-    private function mediaForRole(string $role): ?array
+    private function localeMap(string $key): array
     {
-        $media = $this->settings->media
-            ->first(fn (Media $media): bool => $media->pivot->role === $role);
+        $value = config('site.'.$key);
+        if (! is_array($value)) {
+            return [];
+        }
 
-        return $media ? $this->mediaToItem($media) : null;
-    }
+        $map = [];
+        foreach ($value as $code => $text) {
+            if (is_string($code) && is_string($text)) {
+                $map[$code] = $text;
+            }
+        }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function mediaToItem(Media $media): array
-    {
-        return [
-            'id' => $media->id,
-            'source' => $media->source,
-            'preview' => $media->preview,
-            'crop_src' => $media->cropSrc,
-            'filename' => $media->filename,
-            'alt_text' => $media->alt_text,
-            'mime_type' => $media->mime_type,
-            'thumbnail' => $media->thumbnail,
-            'icon' => $media->type->icon(),
-            'size' => $media->size,
-            'duration' => $media->duration,
-            'width' => $media->width,
-            'height' => $media->height,
-            'dimensions' => $media->dimensions,
-            'created_at' => $media->created_at->toDateTimeString(),
-            'crop' => $media->pivot->crop ?? [],
-            'metadata' => $media->pivot->metadata ?? [],
-        ];
+        return $map;
     }
 };
 ?>

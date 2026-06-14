@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\Settings;
 use App\Services\SettingsService;
 use Livewire\Component;
 
@@ -16,6 +15,8 @@ return new class extends Component
     /** @var array<string, string> */
     public array $social = [];
 
+    public string $socialVariant;
+
     public string $brand;
 
     public string $tagline;
@@ -28,19 +29,19 @@ return new class extends Component
 
     public function mount(): void
     {
-        $settings = Settings::cached();
-        $meta = is_array($settings?->metadata) ? $settings->metadata : [];
         $service = SettingsService::current();
 
-        $this->layout = is_string($meta['footer_layout'] ?? null) ? $meta['footer_layout'] : config()->string('theme.default_footer_layout');
-        $this->transparent = (bool) ($meta['footer_transparent'] ?? false);
+        $layout = config('site.footer_layout');
+        $this->layout = is_string($layout) ? $layout : config()->string('theme.default_footer_layout');
+        $this->transparent = (bool) config('site.footer_transparent', false);
 
         $this->items = $service->menu('footer');
         $this->social = $service->socialLinks();
+        $this->socialVariant = $service->socialIconVariant();
 
-        $this->brand = $settings && $settings->title !== '' ? $settings->title : config()->string('app.name');
-        $this->tagline = $settings ? $settings->description : '';
-        $this->logo = $settings?->hasImage('logo_footer') ? $settings->image('logo_footer', 'default', [], false) : null;
+        $this->brand = $service->title() ?: config()->string('app.name');
+        $this->tagline = $service->description();
+        $this->logo = $service->logoUrl('logo_footer');
 
         $this->year = (int) now()->year;
     }
@@ -62,7 +63,7 @@ return new class extends Component
                     <x-site.brand :logo="$logo" :brand="$brand" />
                 </div>
                 <x-site.nav :items="$items" class="mt-4 justify-center" />
-                <x-site.social :links="$social" class="mt-4 justify-center" />
+                <x-site.social :links="$social" :variant="$socialVariant" class="mt-4 justify-center" />
                 <div class="mt-6 border-t border-current/10 pt-4 text-sm opacity-70">
                     &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
                 </div>
@@ -77,7 +78,7 @@ return new class extends Component
                         @if ($tagline !== '')
                             <p class="max-w-xs text-sm opacity-70">{{ $tagline }}</p>
                         @endif
-                        <x-site.social :links="$social" />
+                        <x-site.social :links="$social" :variant="$socialVariant" />
                     </div>
                     @if ($items !== [])
                         <div class="md:col-span-2">
@@ -100,16 +101,16 @@ return new class extends Component
 
         @default
             <div class="mx-auto max-w-7xl px-6">
-                <div class="flex flex-wrap items-center justify-between gap-6 py-10">
-                    <x-site.brand :logo="$logo" :brand="$brand" />
+                <div class="flex flex-wrap items-start justify-between gap-6 py-10">
+                    <div class="space-y-4">
+                        <x-site.brand :logo="$logo" :brand="$brand" />
+                        <x-site.social :links="$social" :variant="$socialVariant" />
+                    </div>
                     <x-site.nav :items="$items" />
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-4 border-t border-current/10 py-4 text-sm opacity-70">
                     <span>&copy; {{ $year }} {{ $brand }}. {{ __('All Rights Reserved') }}</span>
-                    <div class="flex items-center gap-6">
-                        <x-site.social :links="$social" />
-                        <span>{{ __('Made with Wire-Up') }}</span>
-                    </div>
+                    <span>{{ __('Made with Wire-Up') }}</span>
                 </div>
             </div>
     @endswitch

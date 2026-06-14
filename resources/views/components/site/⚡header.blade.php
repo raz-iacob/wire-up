@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\Settings;
 use App\Services\SettingsService;
 use Livewire\Component;
 
@@ -29,19 +28,19 @@ return new class extends Component
 
     public function mount(): void
     {
-        $settings = Settings::cached();
-        $meta = is_array($settings?->metadata) ? $settings->metadata : [];
+        $service = SettingsService::current();
 
-        $this->layout = is_string($meta['header_layout'] ?? null) ? $meta['header_layout'] : config()->string('theme.default_header_layout');
-        $this->transparent = (bool) ($meta['header_transparent'] ?? false);
-        $sticky = (bool) ($meta['header_sticky'] ?? false);
+        $layout = config('site.header_layout');
+        $this->layout = is_string($layout) ? $layout : config()->string('theme.default_header_layout');
+        $this->transparent = (bool) config('site.header_transparent', false);
+        $sticky = (bool) config('site.header_sticky', false);
 
-        $this->items = SettingsService::current()->menu('header');
+        $this->items = $service->menu('header');
         $this->links = array_values(array_filter($this->items, fn (array $item): bool => $item['appearance'] === 'link'));
         $this->buttons = array_values(array_filter($this->items, fn (array $item): bool => $item['appearance'] === 'button'));
 
-        $this->brand = $settings && $settings->title !== '' ? $settings->title : config()->string('app.name');
-        $this->logo = $settings?->hasImage('logo_header') ? $settings->image('logo_header', 'default', [], false) : null;
+        $this->brand = $service->title() ?: config()->string('app.name');
+        $this->logo = $service->logoUrl('logo_header');
 
         $this->position = $this->transparent ? 'absolute inset-x-0 top-0 z-40' : ($sticky ? 'sticky top-0 z-40 shadow-sm' : 'relative');
     }

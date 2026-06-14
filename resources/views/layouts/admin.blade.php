@@ -2,8 +2,9 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     
     @php
-        $siteName = \App\Models\Settings::cached()?->title ?: config('app.name');
-        $siteFavicon = \App\Services\SettingsService::current()->faviconUrl();
+        $site = \App\Services\SettingsService::current();
+        $siteName = $site->title() ?: config('app.name');
+        $siteFavicon = $site->faviconUrl();
     @endphp
 
     <head>

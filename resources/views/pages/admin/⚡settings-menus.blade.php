@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
 use App\Models\Page;
-use App\Models\Settings;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
@@ -13,8 +12,6 @@ use Livewire\Component;
 
 return new class extends Component
 {
-    public Settings $settings;
-
     /**
      * Menu items keyed by locale, e.g. ['en' => [...items], 'fr' => [...items]].
      *
@@ -50,13 +47,11 @@ return new class extends Component
 
     public function mount(): void
     {
-        $this->settings = Settings::current();
         $this->activeLocales = resolve('localization')->getActiveLocales();
         $this->locale = app()->getLocale();
 
-        $meta = $this->settings->metadata ?? [];
-        $header = is_array($meta['header_menu'] ?? null) ? $meta['header_menu'] : [];
-        $footer = is_array($meta['footer_menu'] ?? null) ? $meta['footer_menu'] : [];
+        $header = is_array(config('site.header_menu')) ? config('site.header_menu') : [];
+        $footer = is_array(config('site.footer_menu')) ? config('site.footer_menu') : [];
 
         foreach (array_keys($this->activeLocales) as $code) {
             $this->header[$code] = $this->hydrateItems(is_array($header[$code] ?? null) ? $header[$code] : []);
@@ -134,9 +129,7 @@ return new class extends Component
             $footer[$code] = $this->cleanItems($this->footer[$code] ?? []);
         }
 
-        $action->handle($this->settings, [
-            'metadata' => ['header_menu' => $header, 'footer_menu' => $footer],
-        ]);
+        $action->handle(['header_menu' => $header, 'footer_menu' => $footer]);
 
         Flux::toast(__('Menus have been updated.'), variant: 'success');
     }

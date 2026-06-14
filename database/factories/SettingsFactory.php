@@ -18,7 +18,8 @@ final class SettingsFactory extends Factory
     public function definition(): array
     {
         return [
-            'metadata' => null,
+            'key' => $this->faker->unique()->slug(2),
+            'value' => null,
         ];
     }
 }

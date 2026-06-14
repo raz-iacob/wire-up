@@ -12,15 +12,17 @@ it('renders the cropped header logo in the live preview', function (): void {
         'source' => 'images/logo-test.jpg',
     ]);
 
-    Settings::current()->media()->attach($media->id, [
-        'role' => 'logo_header',
-        'locale' => app()->getLocale(),
+    Settings::set(['logo_header' => [
+        'id' => $media->id,
+        'source' => 'images/logo-test.jpg',
+        'preview' => 'https://example.com/logo-test.jpg',
+        'icon' => 'photo',
         'crop' => ['default' => [
             'w' => 480, 'h' => 160,
             'crop_w' => 300, 'crop_h' => 100, 'crop_x' => 10, 'crop_y' => 20,
             'q' => 80, 'fm' => 'jpg',
         ]],
-    ]);
+    ]]);
 
     $this->actingAsAdmin();
 

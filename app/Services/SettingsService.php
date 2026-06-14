@@ -4,33 +4,39 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\MediaType;
-use App\Models\Media;
 use App\Models\Page;
-use App\Models\Settings;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 
-final readonly class SettingsService
+final class SettingsService
 {
-    public function __construct(private ?Settings $settings) {}
-
     public static function current(): self
     {
-        return new self(Settings::cached());
+        return new self;
+    }
+
+    public function title(): string
+    {
+        return $this->localeValue(config('site.title'));
+    }
+
+    public function description(): string
+    {
+        return $this->localeValue(config('site.description'));
+    }
+
+    public function logoUrl(string $role, string $crop = 'default'): ?string
+    {
+        $item = config('site.'.$role);
+
+        return $this->imageUrl(is_array($item) ? $item : null, $crop, [], requireCrop: true);
     }
 
     public function faviconUrl(string $crop = 'default'): ?string
     {
-        $settings = $this->settings;
-        if (! $settings instanceof Settings) {
-            return null;
-        }
+        $item = config('site.favicon');
 
-        $favicon = $settings->media->first(fn (Media $media): bool => $media->type === MediaType::IMAGE
-            && $media->pivot->role === 'favicon'
-        );
-
-        return $favicon ? $settings->image('favicon', $crop, ['fm' => 'png'], false, $favicon) : null;
+        return $this->imageUrl(is_array($item) ? $item : null, $crop, ['fm' => 'png'], requireCrop: false);
     }
 
     /**
@@ -38,14 +44,14 @@ final readonly class SettingsService
      */
     public function themeColors(): array
     {
-        $theme = (string) data_get($this->settings?->metadata, 'theme', '');
+        $theme = (string) config('site.theme', '');
 
         if ($theme === '') {
             return [];
         }
 
         $colors = $theme === 'custom'
-            ? data_get($this->settings?->metadata, 'colors', [])
+            ? config('site.colors', [])
             : config()->array("theme.presets.$theme.colors", []);
 
         if (! is_array($colors)) {
@@ -93,7 +99,7 @@ final readonly class SettingsService
             $dark = $accent;
         }
 
-        $radiusKey = (string) data_get($this->settings?->metadata, 'radius', '') ?: config()->string('theme.default_radius');
+        $radiusKey = (string) config('site.radius', '') ?: config()->string('theme.default_radius');
         $radius = config()->string("theme.radii.$radiusKey", '');
         if ($radius !== '') {
             foreach (['sm', 'md', 'lg', 'xl'] as $size) {
@@ -101,8 +107,8 @@ final readonly class SettingsService
             }
         }
 
-        $headingFontKey = (string) data_get($this->settings?->metadata, 'heading_font', '') ?: config()->string('theme.default_font');
-        $bodyFontKey = (string) data_get($this->settings?->metadata, 'body_font', '') ?: config()->string('theme.default_font');
+        $headingFontKey = (string) config('site.heading_font', '') ?: config()->string('theme.default_font');
+        $bodyFontKey = (string) config('site.body_font', '') ?: config()->string('theme.default_font');
         $headingStack = config()->string("theme.fonts.$headingFontKey.stack", '');
         $bodyStack = config()->string("theme.fonts.$bodyFontKey.stack", '');
         if ($headingStack !== '') {
@@ -113,8 +119,8 @@ final readonly class SettingsService
             $root[] = "--font-sans:$bodyStack";
         }
 
-        $headingSizeKey = (string) data_get($this->settings?->metadata, 'heading_size', '') ?: config()->string('theme.default_heading_size');
-        $bodySizeKey = (string) data_get($this->settings?->metadata, 'body_size', '') ?: config()->string('theme.default_body_size');
+        $headingSizeKey = (string) config('site.heading_size', '') ?: config()->string('theme.default_heading_size');
+        $bodySizeKey = (string) config('site.body_size', '') ?: config()->string('theme.default_body_size');
         $headingSize = config()->string("theme.heading_sizes.$headingSizeKey", '');
         $bodySize = config()->string("theme.body_sizes.$bodySizeKey", '');
         if ($headingSize !== '') {
@@ -131,7 +137,7 @@ final readonly class SettingsService
     {
         $families = [];
         foreach (['heading_font', 'body_font'] as $slot) {
-            $font = (string) data_get($this->settings?->metadata, $slot, '');
+            $font = (string) config('site.'.$slot, '');
             $family = config()->string("theme.fonts.$font.google", '');
             if ($family !== '') {
                 $families[$family] = $family;
@@ -159,7 +165,7 @@ final readonly class SettingsService
             return [];
         }
 
-        $menus = data_get($this->settings?->metadata, $location.'_menu');
+        $menus = config('site.'.$location.'_menu');
         if (! is_array($menus)) {
             return [];
         }
@@ -187,7 +193,7 @@ final readonly class SettingsService
      */
     public function socialLinks(): array
     {
-        $social = data_get($this->settings?->metadata, 'social');
+        $social = config('site.social');
         if (! is_array($social)) {
             return [];
         }
@@ -202,6 +208,96 @@ final readonly class SettingsService
         }
 
         return $links;
+    }
+
+    public function socialIconVariant(): string
+    {
+        $variant = (string) config('site.social_icon_variant', '');
+
+        return array_key_exists($variant, config()->array('social.icon_variants'))
+            ? $variant
+            : config()->string('social.default_icon_variant', 'solid');
+    }
+
+    private function localeValue(mixed $value): string
+    {
+        if (! is_array($value)) {
+            return '';
+        }
+
+        $candidates = [app()->getLocale(), config()->string('app.fallback_locale', 'en')];
+        foreach ($candidates as $locale) {
+            if (is_string($value[$locale] ?? null) && $value[$locale] !== '') {
+                return $value[$locale];
+            }
+        }
+
+        foreach ($value as $text) {
+            if (is_string($text) && $text !== '') {
+                return $text;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $item
+     * @param  array<string, mixed>  $params
+     */
+    private function imageUrl(?array $item, string $crop, array $params, bool $requireCrop): ?string
+    {
+        $source = $item['source'] ?? null;
+        if (! is_string($source) || $source === '') {
+            return null;
+        }
+
+        $crops = is_array($item['crop'] ?? null) ? $item['crop'] : [];
+        $variant = is_array($crops[$crop] ?? null) ? $crops[$crop] : null;
+
+        if ($requireCrop && $variant === null) {
+            return null;
+        }
+
+        return route('image.show', [
+            'options' => $this->cropString([...($variant ?? []), ...$params]),
+            'path' => $source,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private function cropString(array $params): string
+    {
+        $default = [
+            'crop_w' => 1200,
+            'crop_h' => 800,
+            'crop_x' => 0,
+            'crop_y' => 0,
+            'w' => 1200,
+            'h' => 800,
+            'q' => 80,
+            'fm' => 'jpg',
+        ];
+
+        $values = [...$default, ...Arr::only($params, array_keys($default))];
+
+        $crop = sprintf(
+            '%d-%d-%d-%d',
+            $values['crop_w'],
+            $values['crop_h'],
+            $values['crop_x'],
+            $values['crop_y']
+        );
+
+        return implode(',', [
+            "w={$values['w']}",
+            "h={$values['h']}",
+            "crop={$crop}",
+            "q={$values['q']}",
+            "fm={$values['fm']}",
+        ]);
     }
 
     /**
