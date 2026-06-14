@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Page;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
 
@@ -13,6 +14,37 @@ final class SettingsService
     public static function current(): self
     {
         return new self;
+    }
+
+    public function homePage(): ?Page
+    {
+        $configured = config('site.home_page_id');
+
+        if (is_numeric($configured)) {
+            $page = Page::query()
+                ->published()
+                ->with(['translations', 'slugs'])
+                ->whereKey((int) $configured)
+                ->first();
+
+            if ($page instanceof Page) {
+                return $page;
+            }
+        }
+
+        return Page::query()
+            ->published()
+            ->with(['translations', 'slugs'])
+            ->whereHas('slugs', function (Builder $query): void {
+                $query->where('slug', 'home');
+            })
+            ->orderBy('id')
+            ->first();
+    }
+
+    public function homePageId(): ?int
+    {
+        return $this->homePage()?->id;
     }
 
     public function title(): string

@@ -189,3 +189,10 @@ it('shows translations column when multiple locales are configured', function ()
 
     $response->assertSee(__('Translations'));
 });
+
+it('flags the homepage in the pages list', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->assertSee('Homepage');
+});

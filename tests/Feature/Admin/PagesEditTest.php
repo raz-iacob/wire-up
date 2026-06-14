@@ -6,6 +6,7 @@ use App\Enums\MediaType;
 use App\Enums\PageStatus;
 use App\Models\Media;
 use App\Models\Page;
+use App\Models\Settings;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -306,4 +307,28 @@ it('can schedule a page for future publication', function (): void {
 
     expect($page->status)->toBe(PageStatus::PUBLISHED)
         ->and($page->published_at->timestamp)->toBe($futureDate->timestamp);
+});
+
+it('marks the page as the homepage in the editor', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Home Landing',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    Settings::set(['home_page_id' => $page->id]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSee('Homepage')
+        ->assertSee('Served at');
+});
+
+it('does not mark a non-homepage page as the homepage', function (): void {
+    $page = Page::factory()->create(['title' => 'Some Page']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertDontSee('Homepage');
 });

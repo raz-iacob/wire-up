@@ -6,12 +6,14 @@ use App\Actions\UpdatePageAction;
 use App\Enums\PageStatus;
 use App\Models\Media;
 use App\Models\Page;
+use App\Services\SettingsService;
 use Carbon\CarbonImmutable;
 use Flux\Flux;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -179,6 +181,12 @@ return new class extends Component
         return $result;
     }
 
+    #[Computed]
+    public function isHomePage(): bool
+    {
+        return $this->page->id === SettingsService::current()->homePageId();
+    }
+
     public function render(): View
     {
         return $this->view()
@@ -191,9 +199,14 @@ return new class extends Component
 <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
     <div class="md:col-span-2 min-w-0">
         <div class="gap-4 mb-6 md:mb-0">
-            <flux:heading size="xl" class="cursor-pointer hover:underline">
-                {{ __('Edit') }} {{ $page->title }}
-            </flux:heading>
+            <div class="flex items-center gap-3">
+                <flux:heading size="xl" class="cursor-pointer hover:underline">
+                    {{ __('Edit') }} {{ $page->title }}
+                </flux:heading>
+                @if ($this->isHomePage)
+                    <flux:badge color="lime" size="sm" icon="home">{{ __('Homepage') }}</flux:badge>
+                @endif
+            </div>
             <flux:subheading size="sm">
                 {{ __('Created on') }} {{ $page->created_at?->format('M d, Y H:i') }}
             </flux:subheading>
@@ -237,7 +250,7 @@ return new class extends Component
 
                 <div class="flex flex-col gap-6 mt-6">
                     <x-forms.input-translated name="title" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Title') }}" />
-                    <x-forms.url-translated name="slugs" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Web Address') }}" />
+                    <x-forms.url-translated name="slugs" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Web Address') }}" :readonly="$this->isHomePage" :note="$this->isHomePage ? __('Served at /. Its URL redirects here.') : ''" />
                     <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Description') }}" />
                     <livewire:admin.media-selector wire:model="og_image.{{ $locale }}" type="image" name="og_image" :$locale :multi-locale="count($activeLocales) > 1" :multiple="false" :with-caption="true" :crops="['desktop' => ['label' => __('Desktop'), 'w' => 1200, 'h' => 700], 'mobile' => ['label' => __('Mobile'), 'w' => 800, 'h' => 800]]" label="{{ __('Open Graph Image') }}" />
                 </div>

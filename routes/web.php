@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\SessionController;
+use App\Http\Middleware\RedirectHomepageSlug;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
@@ -35,5 +36,6 @@ Route::get('img/{options}/{path}', [ImageController::class, 'show'])
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
     Route::livewire('{slug}', 'pages::page')
         ->where('slug', '^(?!admin).*')
+        ->middleware(RedirectHomepageSlug::class)
         ->name('page');
 });

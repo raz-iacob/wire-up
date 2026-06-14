@@ -18,8 +18,9 @@ function publishPage(string $slug, array $attributes = []): Page
 }
 
 it('can render the page screen', function (): void {
-    $response = $this->fromRoute('home')
-        ->get(route('page', ['slug' => 'home']));
+    publishPage('about');
+
+    $response = $this->get(route('page', ['slug' => 'about']));
 
     $response->assertOk()
         ->assertSeeLivewire('pages::page');

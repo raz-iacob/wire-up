@@ -224,3 +224,31 @@ it('returns no logo url when the stored item has no crop', function (): void {
 
     expect((new SettingsService)->logoUrl('logo_header'))->toBeNull();
 });
+
+it('falls back to the seeded home page when no homepage is configured', function (): void {
+    $home = (new SettingsService)->homePage();
+
+    expect($home)->not->toBeNull()
+        ->and($home->slug)->toBe('home');
+});
+
+it('uses the configured page as the homepage when set', function (): void {
+    $page = publishedPage('landing');
+    Settings::set(['home_page_id' => $page->id]);
+
+    expect((new SettingsService)->homePageId())->toBe($page->id);
+});
+
+it('falls back to the seeded home page when the configured homepage is not published', function (): void {
+    $draft = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    Settings::set(['home_page_id' => $draft->id]);
+
+    expect((new SettingsService)->homePage()->slug)->toBe('home');
+});
+
+it('returns null when no published homepage can be resolved', function (): void {
+    Page::query()->delete();
+
+    expect((new SettingsService)->homePage())->toBeNull()
+        ->and((new SettingsService)->homePageId())->toBeNull();
+});

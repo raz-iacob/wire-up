@@ -11,6 +11,7 @@ use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use App\Actions\CreatePageAction;
 use App\Actions\DeletePageAction;
+use App\Services\SettingsService;
 use Livewire\Attributes\Computed;
 use Illuminate\Contracts\View\View;
 use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -92,6 +93,12 @@ return new class extends Component
         return resolve('localization')->getActiveLocaleCodes()->count() > 1;
     }
 
+    #[Computed]
+    public function homePageId(): ?int
+    {
+        return SettingsService::current()->homePageId();
+    }
+
     public function render(): View
     {
         return $this->view()
@@ -142,8 +149,13 @@ return new class extends Component
                 @foreach ($this->pages as $row)
                 <flux:table.row wire:key="{{ $row->id }}">
                     <flux:table.cell>
-                        <a href="{{ route('admin.pages-edit', $row->id) }}" class="flex items-center gap-3">
+                        <a href="{{ route('admin.pages-edit', $row->id) }}" class="flex items-center gap-2">
                             <flux:text variant="strong" class="hover:underline">{{ $row->title }}</flux:text>
+                            @if ($row->id === $this->homePageId)
+                                <flux:tooltip content="{{ __('Homepage') }}">
+                                    <flux:icon name="home" variant="micro" class="text-zinc-400" />
+                                </flux:tooltip>
+                            @endif
                         </a>
                     </flux:table.cell>
 

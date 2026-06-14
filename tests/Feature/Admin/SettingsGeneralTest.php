@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Enums\PageStatus;
 use App\Models\Locale;
+use App\Models\Page;
+use App\Models\Settings;
 use App\Models\User;
+use App\Services\SettingsService;
 use Livewire\Livewire;
 
 it('can render the general settings screen', function (): void {
@@ -101,4 +105,38 @@ it('invalidates the site-locales cache so the active set reflects the change', f
         ->assertHasNoErrors();
 
     expect(resolve('localization')->getActiveLocaleCodes()->all())->toContain('nl');
+});
+
+it('defaults the homepage to the seeded home page on mount', function (): void {
+    $this->actingAsAdmin();
+
+    $homeId = SettingsService::current()->homePageId();
+
+    Livewire::test('pages::admin.settings-general')
+        ->assertSet('home_page_id', $homeId);
+});
+
+it('persists the chosen homepage', function (): void {
+    $page = Page::factory()->create([
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-general')
+        ->set('home_page_id', $page->id)
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('home_page_id'))->toBe($page->id);
+});
+
+it('validates the homepage references an existing page', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-general')
+        ->set('home_page_id', 999999)
+        ->call('update')
+        ->assertHasErrors(['home_page_id']);
 });
