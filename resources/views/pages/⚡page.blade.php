@@ -27,5 +27,5 @@ return new class extends Component
 ?>
 
 <div>
-    <x-site.page-article :page="$page" />
+    <x-site.page-content :page="$page" />
 </div>
