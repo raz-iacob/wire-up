@@ -147,6 +147,35 @@ it('persists header and footer layout', function (): void {
         ->and(Settings::get('footer_layout'))->toBe('centered');
 });
 
+it('persists the header logo and navigation sizes', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->assertSet('header_logo_size', config('theme.default_header_logo_size'))
+        ->assertSet('header_nav_size', config('theme.default_header_nav_size'))
+        ->assertSet('header_nav_hover', config('theme.default_header_nav_hover'))
+        ->set('header_logo_size', 'lg')
+        ->set('header_nav_size', 'sm')
+        ->set('header_nav_hover', 'underline')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('header_logo_size'))->toBe('lg')
+        ->and(Settings::get('header_nav_size'))->toBe('sm')
+        ->and(Settings::get('header_nav_hover'))->toBe('underline');
+});
+
+it('validates the header logo, navigation size and hover are known values', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('header_logo_size', 'huge')
+        ->set('header_nav_size', 'tiny')
+        ->set('header_nav_hover', 'sparkle')
+        ->call('update')
+        ->assertHasErrors(['header_logo_size', 'header_nav_size', 'header_nav_hover']);
+});
+
 it('hydrates header transparent and sticky flags from settings on mount', function (): void {
     Settings::set(['header_transparent' => true, 'header_sticky' => true, 'footer_transparent' => true]);
 

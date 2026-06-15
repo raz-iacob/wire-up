@@ -175,6 +175,22 @@ return [
         'large' => '1rem',
     ],
 
+    'default_header_logo_size' => 'md',
+    'default_header_nav_size' => 'md',
+    'default_header_nav_hover' => 'opacity',
+
+    'element_sizes' => [
+        'sm' => 'Small',
+        'md' => 'Medium',
+        'lg' => 'Large',
+    ],
+
+    'nav_hover_states' => [
+        'opacity' => 'Fade',
+        'underline' => 'Underline',
+        'scale' => 'Grow',
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Header & footer layout variants

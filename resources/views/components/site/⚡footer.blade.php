@@ -64,8 +64,8 @@ return new class extends Component
                 </div>
                 <x-site.nav :items="$items" class="mt-4 justify-center" />
                 <x-site.social :links="$social" :variant="$socialVariant" class="mt-4 justify-center" />
-                <div class="mt-6 border-t border-current/10 pt-4 text-sm opacity-70">
-                    &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
+                <div class="mt-6 border-t border-current/10 pt-4 text-[length:calc(var(--wire-body-size)*0.75)] opacity-70">
+                    &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp; <a href="https://wire-up.dev" target="_blank" rel="noopener noreferrer" class="hover:underline">{{ __('Made with Wire-Up') }}</a>
                 </div>
             </div>
             @break
@@ -86,16 +86,16 @@ return new class extends Component
                         </div>
                     @endif
                 </div>
-                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-current/10 py-4 text-sm opacity-70">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-current/10 py-4 text-[length:calc(var(--wire-body-size)*0.75)] opacity-70">
                     <span>&copy; {{ $year }} {{ $brand }}. {{ __('All Rights Reserved') }}</span>
-                    <span>{{ __('Made with Wire-Up') }}</span>
+                    <span><a href="https://wire-up.dev" target="_blank" rel="noopener noreferrer" class="hover:underline">{{ __('Made with Wire-Up') }}</a></span>
                 </div>
             </div>
             @break
 
         @case('minimal')
-            <div class="mx-auto max-w-7xl px-6 py-6 text-center text-sm opacity-70">
-                &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
+            <div class="mx-auto max-w-7xl px-6 py-6 text-center text-[length:calc(var(--wire-body-size)*0.75)] opacity-70">
+                &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp; <a href="https://wire-up.dev" target="_blank" rel="noopener noreferrer" class="hover:underline">{{ __('Made with Wire-Up') }}</a>
             </div>
             @break
 
@@ -108,9 +108,9 @@ return new class extends Component
                     </div>
                     <x-site.nav :items="$items" />
                 </div>
-                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-current/10 py-4 text-sm opacity-70">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-current/10 py-4 text-[length:calc(var(--wire-body-size)*0.75)] opacity-70">
                     <span>&copy; {{ $year }} {{ $brand }}. {{ __('All Rights Reserved') }}</span>
-                    <span>{{ __('Made with Wire-Up') }}</span>
+                    <span><a href="https://wire-up.dev" target="_blank" rel="noopener noreferrer" class="hover:underline">{{ __('Made with Wire-Up') }}</a></span>
                 </div>
             </div>
     @endswitch

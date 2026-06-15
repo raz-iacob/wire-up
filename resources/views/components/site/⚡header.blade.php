@@ -30,6 +30,12 @@ return new class extends Component
 
     public bool $showMobileMenu;
 
+    public string $logoSize;
+
+    public string $navSize;
+
+    public string $navHover;
+
     public function mount(): void
     {
         $service = SettingsService::current();
@@ -38,6 +44,13 @@ return new class extends Component
         $this->layout = is_string($layout) ? $layout : config()->string('theme.default_header_layout');
         $this->transparent = (bool) config('site.header_transparent', false);
         $sticky = (bool) config('site.header_sticky', false);
+
+        $logoSize = config('site.header_logo_size');
+        $this->logoSize = is_string($logoSize) ? $logoSize : config()->string('theme.default_header_logo_size');
+        $navSize = config('site.header_nav_size');
+        $this->navSize = is_string($navSize) ? $navSize : config()->string('theme.default_header_nav_size');
+        $navHover = config('site.header_nav_hover');
+        $this->navHover = is_string($navHover) ? $navHover : config()->string('theme.default_header_nav_hover');
 
         $this->items = $service->menu('header');
         $this->links = array_values(array_filter($this->items, fn (array $item): bool => $item['appearance'] === 'link'));
@@ -86,94 +99,40 @@ return new class extends Component
 >
     @switch($layout)
         @case('centered')
-            <div class="relative mx-auto max-w-7xl px-6 py-4 text-center">
-                <div class="absolute end-6 top-4 max-md:hidden">
-                    @if ($this->languages->count() > 1)
-                        <flux:dropdown position="bottom" align="end">
-                            <button
-                                type="button"
-                                class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70"
-                                aria-label="{{ __('Language') }}"
-                            >
-                                <flux:icon name="globe-alt" variant="micro" />
-                                <span>{{ data_get($this->languages->firstWhere('current', true), 'label') }}</span>
-                                <flux:icon name="chevron-down" variant="micro" />
-                            </button>
-
-                            <flux:navmenu>
-                                @foreach ($this->languages as $language)
-                                    <flux:navmenu.item href="{{ $language['url'] }}" :current="$language['current']">{{ $language['label'] }}</flux:navmenu.item>
-                                @endforeach
-                            </flux:navmenu>
-                        </flux:dropdown>
-                    @endif
+            <div class="relative mx-auto max-w-7xl px-6 py-8 text-center space-y-6">
+                <div class="absolute inset-e-6 top-4 max-md:hidden">
+                    <x-site.language-picker :languages="$this->languages" />
                 </div>
                 <div class="flex justify-center">
-                    <x-site.brand :logo="$logo" :brand="$brand" />
+                    <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
                 </div>
-                <x-site.nav :items="$items" class="mt-3 justify-center max-md:hidden" />
+                <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" class="mt-3 justify-center max-md:hidden" />
             </div>
             @break
 
         @case('split')
             <div class="mx-auto grid max-w-7xl grid-cols-3 items-center gap-6 px-6 py-4">
-                <x-site.brand :logo="$logo" :brand="$brand" />
-                <x-site.nav :items="$links" class="justify-center max-md:hidden" />
+                <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
+                <x-site.nav :items="$links" :size="$navSize" :hover="$navHover" class="justify-center max-md:hidden" />
                 <div class="flex items-center justify-end gap-4 max-md:hidden">
-                    <x-site.nav :items="$buttons" />
-                    @if ($this->languages->count() > 1)
-                        <flux:dropdown position="bottom" align="end">
-                            <button
-                                type="button"
-                                class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70"
-                                aria-label="{{ __('Language') }}"
-                            >
-                                <flux:icon name="globe-alt" variant="micro" />
-                                <span>{{ data_get($this->languages->firstWhere('current', true), 'label') }}</span>
-                                <flux:icon name="chevron-down" variant="micro" />
-                            </button>
-
-                            <flux:navmenu>
-                                @foreach ($this->languages as $language)
-                                    <flux:navmenu.item href="{{ $language['url'] }}" :current="$language['current']">{{ $language['label'] }}</flux:navmenu.item>
-                                @endforeach
-                            </flux:navmenu>
-                        </flux:dropdown>
-                    @endif
+                    <x-site.nav :items="$buttons" :size="$navSize" :hover="$navHover" />
+                    <x-site.language-picker :languages="$this->languages" />
                 </div>
             </div>
             @break
 
         @case('minimal')
             <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-                <x-site.brand :logo="$logo" :brand="$brand" />
+                <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
             </div>
             @break
 
         @default
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
-                <x-site.brand :logo="$logo" :brand="$brand" />
+                <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
                 <div class="flex items-center gap-6 max-md:hidden">
-                    <x-site.nav :items="$items" />
-                    @if ($this->languages->count() > 1)
-                        <flux:dropdown position="bottom" align="end">
-                            <button
-                                type="button"
-                                class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70"
-                                aria-label="{{ __('Language') }}"
-                            >
-                                <flux:icon name="globe-alt" variant="micro" />
-                                <span>{{ data_get($this->languages->firstWhere('current', true), 'label') }}</span>
-                                <flux:icon name="chevron-down" variant="micro" />
-                            </button>
-
-                            <flux:navmenu>
-                                @foreach ($this->languages as $language)
-                                    <flux:navmenu.item href="{{ $language['url'] }}" :current="$language['current']">{{ $language['label'] }}</flux:navmenu.item>
-                                @endforeach
-                            </flux:navmenu>
-                        </flux:dropdown>
-                    @endif
+                    <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" />
+                    <x-site.language-picker :languages="$this->languages" />
                 </div>
             </div>
     @endswitch
@@ -213,27 +172,9 @@ return new class extends Component
                 x-transition:leave-end="translate-x-full"
                 class="fixed inset-y-0 right-0 z-40 flex w-72 max-w-[80vw] flex-col gap-6 bg-(--wire-header-bg) px-6 pb-6 pt-20 text-(--wire-header-text) shadow-xl"
             >
-                <x-site.nav :items="$items" class="flex-col items-start gap-4" />
+                <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" class="flex-col items-start gap-4" />
 
-                @if ($this->languages->count() > 1)
-                    <flux:dropdown position="bottom" align="end">
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70"
-                            aria-label="{{ __('Language') }}"
-                        >
-                            <flux:icon name="globe-alt" variant="micro" />
-                            <span>{{ data_get($this->languages->firstWhere('current', true), 'label') }}</span>
-                            <flux:icon name="chevron-down" variant="micro" />
-                        </button>
-
-                        <flux:navmenu>
-                            @foreach ($this->languages as $language)
-                                <flux:navmenu.item href="{{ $language['url'] }}" :current="$language['current']">{{ $language['label'] }}</flux:navmenu.item>
-                            @endforeach
-                        </flux:navmenu>
-                    </flux:dropdown>
-                @endif
+                <x-site.language-picker :languages="$this->languages" align="start" />
             </div>
         </div>
     @endif

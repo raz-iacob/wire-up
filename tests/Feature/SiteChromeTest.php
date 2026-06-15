@@ -45,6 +45,22 @@ it('renders the header menu for the active locale', function (): void {
         ->assertDontSee('English item');
 });
 
+it('applies the configured logo and navigation sizes in the header', function (): void {
+    setSiteMetadata([
+        'header_logo_size' => 'lg',
+        'header_nav_size' => 'lg',
+        'header_nav_hover' => 'scale',
+        'header_menu' => ['en' => [
+            ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'About', 'page_id' => null, 'url' => 'https://example.com'],
+        ]],
+    ]);
+
+    Livewire::test('site.header')
+        ->assertSee('text-xl', false)
+        ->assertSee('text-lg', false)
+        ->assertSee('hover:scale-105', false);
+});
+
 it('shows the language switcher in the header when more than one locale is active', function (): void {
     Locale::query()->where('code', 'ro')->update(['active' => true]);
     cache()->forget('site-locales');

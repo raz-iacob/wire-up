@@ -34,6 +34,12 @@ return new class extends Component
 
     public bool $header_sticky = false;
 
+    public string $header_logo_size;
+
+    public string $header_nav_size;
+
+    public string $header_nav_hover;
+
     public string $footer_layout;
 
     public bool $footer_transparent = false;
@@ -63,6 +69,9 @@ return new class extends Component
         $this->header_layout = is_string($meta['header_layout'] ?? null) ? $meta['header_layout'] : config()->string('theme.default_header_layout');
         $this->header_transparent = (bool) ($meta['header_transparent'] ?? false);
         $this->header_sticky = (bool) ($meta['header_sticky'] ?? false);
+        $this->header_logo_size = is_string($meta['header_logo_size'] ?? null) ? $meta['header_logo_size'] : config()->string('theme.default_header_logo_size');
+        $this->header_nav_size = is_string($meta['header_nav_size'] ?? null) ? $meta['header_nav_size'] : config()->string('theme.default_header_nav_size');
+        $this->header_nav_hover = is_string($meta['header_nav_hover'] ?? null) ? $meta['header_nav_hover'] : config()->string('theme.default_header_nav_hover');
         $this->footer_layout = is_string($meta['footer_layout'] ?? null) ? $meta['footer_layout'] : config()->string('theme.default_footer_layout');
         $this->footer_transparent = (bool) ($meta['footer_transparent'] ?? false);
 
@@ -89,6 +98,9 @@ return new class extends Component
             'header_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.header_layouts')))],
             'header_transparent' => ['boolean'],
             'header_sticky' => ['boolean'],
+            'header_logo_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.element_sizes')))],
+            'header_nav_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.element_sizes')))],
+            'header_nav_hover' => ['required', 'string', Rule::in(array_keys(config()->array('theme.nav_hover_states')))],
             'footer_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.footer_layouts')))],
             'footer_transparent' => ['boolean'],
             'logo_header' => ['nullable', 'array'],
@@ -103,7 +115,7 @@ return new class extends Component
 
         $validated = $this->validate($rules);
 
-        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_size', 'body_size', 'radius', 'header_layout', 'header_transparent', 'header_sticky', 'footer_layout', 'footer_transparent']);
+        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_size', 'body_size', 'radius', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent']);
 
         if ($this->theme === 'custom') {
             $metadata['colors'] = Arr::only($this->colors, array_keys(config()->array('theme.slots')));
@@ -200,8 +212,8 @@ return new class extends Component
             },
             get headingFont() { return this.fonts[$wire.heading_font] || 'sans-serif' },
             get bodyFont() { return this.fonts[$wire.body_font] || 'sans-serif' },
-            get headingSize() { return this.headingSizes[$wire.heading_size] || '1.5rem' },
-            get bodySize() { return this.bodySizes[$wire.body_size] || '0.875rem' },
+            get headingSize() { return (parseFloat(this.headingSizes[$wire.heading_size] || '1.5rem') * 0.6).toFixed(3) + 'rem' },
+            get bodySize() { return (parseFloat(this.bodySizes[$wire.body_size] || '0.875rem') * 0.6).toFixed(3) + 'rem' },
             get radius() { return this.radii[$wire.radius] || '0.5rem' },
             get headerBg() { return $wire.header_transparent ? 'transparent' : (this.c.header_bg || '') },
             get footerBg() { return $wire.footer_transparent ? 'transparent' : (this.c.footer_bg || '') },
@@ -214,6 +226,9 @@ return new class extends Component
                 }
                 return logo.preview
             },
+            get logoPreviewClass() { return (({ sm: 'h-3', md: 'h-4', lg: 'h-6' })[$wire.header_logo_size] || 'h-4') + ' w-auto object-contain' },
+            get navPreviewSize() { return ({ sm: 'text-[9px]', md: 'text-[10px]', lg: 'text-[11px]' })[$wire.header_nav_size] || 'text-[10px]' },
+            get copyrightSize() { return (parseFloat(this.bodySize) * 0.75).toFixed(3) + 'rem' },
         }">
 
         <div class="order-2 lg:col-span-2 lg:sticky lg:top-8">
@@ -222,10 +237,10 @@ return new class extends Component
                 <div class="relative transition-shadow" :class="$wire.header_sticky ? 'shadow-md' : ''">
                     <div data-test="header-variant" x-show="$wire.header_layout === 'simple'" class="flex items-center justify-between gap-4 px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
                         <span class="flex items-center gap-2">
-                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
+                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" :class="logoPreviewClass" />
                             <span x-show="! $wire.logo_header?.preview" class="font-bold text-sm">{{ $brand }}</span>
                         </span>
-                        <div class="flex items-center gap-3 text-xs" :style="`font-family:${bodyFont}`">
+                        <div :class="navPreviewSize" class="flex items-center gap-3" :style="`font-family:${bodyFont}`">
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
                             <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Sign up') }}</span>
@@ -233,10 +248,10 @@ return new class extends Component
                     </div>
                     <div data-test="header-variant" x-show="$wire.header_layout === 'centered'" class="px-4 py-3 text-center" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
                         <div class="flex justify-center">
-                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
+                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" :class="logoPreviewClass" />
                             <span x-show="! $wire.logo_header?.preview" class="font-bold text-sm">{{ $brand }}</span>
                         </div>
-                        <div class="flex items-center justify-center gap-4 mt-2 text-xs" :style="`font-family:${bodyFont}`">
+                        <div :class="navPreviewSize" class="flex items-center justify-center gap-4 mt-2" :style="`font-family:${bodyFont}`">
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
                             <span>{{ __('Pricing') }}</span>
@@ -245,10 +260,10 @@ return new class extends Component
                     </div>
                     <div data-test="header-variant" x-show="$wire.header_layout === 'split'" class="grid grid-cols-3 items-center gap-2 px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
                         <span class="flex items-center gap-2">
-                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
+                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" :class="logoPreviewClass" />
                             <span x-show="! $wire.logo_header?.preview" class="font-bold text-sm">{{ $brand }}</span>
                         </span>
-                        <div class="flex items-center justify-center gap-4 text-xs" :style="`font-family:${bodyFont}`">
+                        <div :class="navPreviewSize" class="flex items-center justify-center gap-4" :style="`font-family:${bodyFont}`">
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
                             <span>{{ __('Pricing') }}</span>
@@ -259,7 +274,7 @@ return new class extends Component
                     </div>
                     <div data-test="header-variant" x-show="$wire.header_layout === 'minimal'" class="flex items-center justify-between px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
                         <span class="flex items-center gap-2">
-                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
+                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" :class="logoPreviewClass" />
                             <span x-show="! $wire.logo_header?.preview" class="font-bold text-sm">{{ $brand }}</span>
                         </span>
                         <div class="flex items-center gap-1.5">
@@ -271,17 +286,17 @@ return new class extends Component
                     <div x-cloak x-show="$wire.header_sticky" class="absolute top-1 right-1 rounded px-1.5 py-0.5 text-[0.55rem] font-medium bg-zinc-800/70 text-white">{{ __('Sticky') }}</div>
                 </div>
 
-                <div data-test="preview-body" class="px-4 py-10" :style="`background:${c.background}; color:${c.text}`">
+                <div data-test="preview-body" class="px-4 py-6" :style="`background:${c.background}; color:${c.text}`">
                     <div class="space-y-3 text-center">
                         <h1 class="font-bold" :style="`font-family:${headingFont}; font-size:${headingSize}`">{{ __('Build something great') }}</h1>
                         <p class="mx-auto max-w-xs" :style="`color:${c.muted}; font-family:${bodyFont}; font-size:${bodySize}`">{{ __('A clean starting point for your next project, themed to your brand.') }}</p>
                         <div class="flex items-center justify-center gap-2 pt-2" :style="`font-family:${bodyFont}`">
-                            <span class="px-3 py-1.5 text-sm font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Get started') }}</span>
-                            <span class="px-3 py-1.5 text-sm font-medium" :style="`background:${c.secondary_bg}; color:${c.secondary_text}; border-radius:${radius}`">{{ __('Learn more') }}</span>
+                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Get started') }}</span>
+                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.secondary_bg}; color:${c.secondary_text}; border-radius:${radius}`">{{ __('Learn more') }}</span>
                         </div>
                         <div class="mx-auto flex max-w-xs items-center gap-2 pt-2" :style="`font-family:${bodyFont}`">
-                            <span class="flex-1 px-3 py-1.5 text-left text-sm" :style="`background:${c.input_bg}; color:${c.input_text}; border:1px solid ${c.input_border}; border-radius:${radius}`">name@email.com</span>
-                            <span class="px-3 py-1.5 text-sm font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Subscribe') }}</span>
+                            <span class="flex-1 px-2 py-1 text-left text-[10px]" :style="`background:${c.input_bg}; color:${c.input_text}; border:1px solid ${c.input_border}; border-radius:${radius}`">name@email.com</span>
+                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Subscribe') }}</span>
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-3 pt-6">
@@ -295,15 +310,15 @@ return new class extends Component
                 </div>
 
                 <div data-test="footer-variant" x-show="$wire.footer_layout === 'simple'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
-                    <div class="flex items-start justify-between gap-4 px-4 py-5 text-xs">
+                    <div class="flex items-start justify-between gap-4 px-4 py-4 text-[10px]">
                         <div class="space-y-2">
                             <span class="flex items-center gap-2">
-                                <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
+                                <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-4 w-auto object-contain" />
                                 <span x-show="! $wire.logo_footer?.preview" class="text-sm font-semibold">{{ $brand }}</span>
                             </span>
                             <div class="flex items-center gap-2 opacity-70">
                                 @foreach (['facebook', 'x-twitter', 'instagram'] as $exIcon)
-                                    <span class="size-3.5 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
+                                    <span class="size-3 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
                                 @endforeach
                             </div>
                         </div>
@@ -313,7 +328,7 @@ return new class extends Component
                             <span>{{ __('Contact') }}</span>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 text-[0.6rem] opacity-60">
+                    <div :style="`font-size:${copyrightSize}`" class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 opacity-60">
                         <span>&copy; {{ now()->year }} {{ $brand }}, {{ __('All Rights Reserved') }}</span>
                         <span>{{ __('Made with Wire-Up') }}</span>
                     </div>
@@ -321,7 +336,7 @@ return new class extends Component
                 <div data-test="footer-variant" x-show="$wire.footer_layout === 'centered'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
                     <div class="px-4 py-5 text-center text-xs space-y-3">
                         <div class="flex justify-center">
-                            <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-6 w-auto object-contain" />
+                            <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-4 w-auto object-contain" />
                             <span x-show="! $wire.logo_footer?.preview" class="font-semibold">{{ $brand }}</span>
                         </div>
                         <div class="flex items-center justify-center gap-4 opacity-80">
@@ -331,23 +346,23 @@ return new class extends Component
                         </div>
                         <div class="flex items-center justify-center gap-2">
                             @foreach (['facebook', 'x-twitter', 'instagram'] as $exIcon)
-                                <span class="size-3.5 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
+                                <span class="size-3 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
                             @endforeach
                         </div>
                     </div>
-                    <div class="border-t border-current/10 px-4 py-2.5 text-center text-[0.6rem] opacity-60">
+                    <div :style="`font-size:${copyrightSize}`" class="border-t border-current/10 px-4 py-2.5 text-center opacity-60">
                         &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
                     </div>
                 </div>
                 <div data-test="footer-variant" x-show="$wire.footer_layout === 'columns'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
-                    <div class="grid grid-cols-3 gap-4 px-4 py-5 text-xs">
+                    <div class="grid grid-cols-3 gap-4 px-4 py-4 text-[10px]">
                         <div class="space-y-3">
-                            <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
+                            <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-4 w-auto object-contain" />
                             <div x-show="! $wire.logo_footer?.preview" class="font-semibold">{{ $brand }}</div>
                             <div class="opacity-60 text-[0.65rem] leading-relaxed">{{ __('Building something great.') }}</div>
                             <div class="flex items-center gap-2 opacity-70">
                                 @foreach (['facebook', 'x-twitter', 'instagram'] as $exIcon)
-                                    <span class="size-3.5 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
+                                    <span class="size-3 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
                                 @endforeach
                             </div>
                         </div>
@@ -364,12 +379,12 @@ return new class extends Component
                             <div class="opacity-70">{{ __('Contact') }}</div>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 text-[0.6rem] opacity-60">
+                    <div :style="`font-size:${copyrightSize}`" class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 opacity-60">
                         <span>&copy; {{ now()->year }} {{ $brand }}, {{ __('All Rights Reserved') }}</span>
                         <span>{{ __('Made with Wire-Up') }}</span>
                     </div>
                 </div>
-                <div data-test="footer-variant" x-show="$wire.footer_layout === 'minimal'" class="px-4 py-3 text-center text-[0.6rem] opacity-60" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
+                <div data-test="footer-variant" x-show="$wire.footer_layout === 'minimal'" class="px-4 py-3 text-center opacity-60" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont, fontSize: copyrightSize }">
                     &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
                 </div>
             </div>
@@ -507,6 +522,24 @@ return new class extends Component
                     <div class="grid sm:grid-cols-2 gap-4">
                         <flux:switch wire:model="header_transparent" label="{{ __('Transparent background') }}" description="{{ __('Header sits over the page content.') }}" />
                         <flux:switch wire:model="header_sticky" label="{{ __('Sticky header') }}" description="{{ __('Header stays fixed at the top on scroll.') }}" />
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <flux:select variant="listbox" wire:model="header_logo_size" label="{{ __('Logo size') }}">
+                            @foreach (config('theme.element_sizes') as $value => $label)
+                                <flux:select.option value="{{ $value }}">{{ __($label) }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select variant="listbox" wire:model="header_nav_size" label="{{ __('Navigation size') }}">
+                            @foreach (config('theme.element_sizes') as $value => $label)
+                                <flux:select.option value="{{ $value }}">{{ __($label) }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select variant="listbox" wire:model="header_nav_hover" label="{{ __('Link hover effect') }}">
+                            @foreach (config('theme.nav_hover_states') as $value => $label)
+                                <flux:select.option value="{{ $value }}">{{ __($label) }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
                     </div>
 
                     <flux:separator variant="subtle" />

@@ -16,3 +16,21 @@
         font-family: var(--wire-heading-font);
     }
 }
+
+.site-language-menu {
+    background-color: var(--wire-body-bg);
+    border-color: color-mix(in oklab, var(--wire-body-text) 15%, transparent);
+}
+
+.site-language-menu [data-flux-navmenu-item] {
+    color: var(--wire-body-text);
+}
+
+.site-language-menu [data-flux-navmenu-item]:hover,
+.site-language-menu [data-flux-navmenu-item][data-current] {
+    background-color: color-mix(
+        in oklab,
+        var(--wire-body-text) 10%,
+        transparent
+    );
+}
