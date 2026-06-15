@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Services\SettingsService;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 return new class extends Component
@@ -26,6 +28,8 @@ return new class extends Component
 
     public string $position;
 
+    public bool $showMobileMenu;
+
     public function mount(): void
     {
         $service = SettingsService::current();
@@ -43,11 +47,35 @@ return new class extends Component
         $this->logo = $service->logoUrl('logo_header');
 
         $this->position = $this->transparent ? 'absolute inset-x-0 top-0 z-40' : ($sticky ? 'sticky top-0 z-40 shadow-sm' : 'relative');
+
+        $this->showMobileMenu = $this->items !== [] || count(resolve('localization')->getActiveLocales()) > 1;
+    }
+
+    /**
+     * @return Collection<int, array{code: string, label: string, url: string, current: bool}>
+     */
+    #[Computed]
+    public function languages(): Collection
+    {
+        $localization = resolve('localization');
+        $current = $localization->getCurrentLocale();
+        $url = url()->full();
+
+        return collect($localization->getActiveLocales())
+            ->map(fn (mixed $meta, string $code): array => [
+                'code' => $code,
+                'label' => (string) (data_get($meta, 'endonym') ?: data_get($meta, 'name') ?: $code),
+                'url' => $localization->getLocalizedURL($url, $code),
+                'current' => $code === $current,
+            ])
+            ->values();
     }
 };
 ?>
 
 <header
+    x-data="{ open: false }"
+    x-on:keydown.escape.window="open = false"
     data-site-header
     data-layout="{{ $layout }}"
     @class([
@@ -58,55 +86,155 @@ return new class extends Component
 >
     @switch($layout)
         @case('centered')
-            <div class="mx-auto max-w-7xl px-6 py-4 text-center">
+            <div class="relative mx-auto max-w-7xl px-6 py-4 text-center">
+                <div class="absolute end-6 top-4 max-md:hidden">
+                    @if ($this->languages->count() > 1)
+                        <flux:dropdown position="bottom" align="end">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70"
+                                aria-label="{{ __('Language') }}"
+                            >
+                                <flux:icon name="globe-alt" variant="micro" />
+                                <span>{{ data_get($this->languages->firstWhere('current', true), 'label') }}</span>
+                                <flux:icon name="chevron-down" variant="micro" />
+                            </button>
+
+                            <flux:navmenu>
+                                @foreach ($this->languages as $language)
+                                    <flux:navmenu.item href="{{ $language['url'] }}" :current="$language['current']">{{ $language['label'] }}</flux:navmenu.item>
+                                @endforeach
+                            </flux:navmenu>
+                        </flux:dropdown>
+                    @endif
+                </div>
                 <div class="flex justify-center">
                     <x-site.brand :logo="$logo" :brand="$brand" />
                 </div>
-                <x-site.nav :items="$items" class="mt-3 justify-center" />
+                <x-site.nav :items="$items" class="mt-3 justify-center max-md:hidden" />
             </div>
             @break
 
         @case('split')
             <div class="mx-auto grid max-w-7xl grid-cols-3 items-center gap-6 px-6 py-4">
                 <x-site.brand :logo="$logo" :brand="$brand" />
-                <x-site.nav :items="$links" class="justify-center" />
-                <x-site.nav :items="$buttons" class="justify-end" />
+                <x-site.nav :items="$links" class="justify-center max-md:hidden" />
+                <div class="flex items-center justify-end gap-4 max-md:hidden">
+                    <x-site.nav :items="$buttons" />
+                    @if ($this->languages->count() > 1)
+                        <flux:dropdown position="bottom" align="end">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70"
+                                aria-label="{{ __('Language') }}"
+                            >
+                                <flux:icon name="globe-alt" variant="micro" />
+                                <span>{{ data_get($this->languages->firstWhere('current', true), 'label') }}</span>
+                                <flux:icon name="chevron-down" variant="micro" />
+                            </button>
+
+                            <flux:navmenu>
+                                @foreach ($this->languages as $language)
+                                    <flux:navmenu.item href="{{ $language['url'] }}" :current="$language['current']">{{ $language['label'] }}</flux:navmenu.item>
+                                @endforeach
+                            </flux:navmenu>
+                        </flux:dropdown>
+                    @endif
+                </div>
             </div>
             @break
 
         @case('minimal')
-            <div x-data="{ open: false }" class="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
                 <x-site.brand :logo="$logo" :brand="$brand" />
-                @if ($items !== [])
-                    <button
-                        type="button"
-                        @click="open = ! open"
-                        class="inline-flex flex-col gap-1.5 p-1"
-                        aria-label="{{ __('Toggle menu') }}"
-                        aria-expanded="false"
-                        x-bind:aria-expanded="open.toString()"
-                    >
-                        <span class="h-0.5 w-6 rounded-full bg-current"></span>
-                        <span class="h-0.5 w-5 rounded-full bg-current"></span>
-                        <span class="h-0.5 w-4 rounded-full bg-current"></span>
-                    </button>
-                    <div
-                        x-show="open"
-                        x-cloak
-                        x-transition
-                        @click.outside="open = false"
-                        class="absolute right-6 top-full z-50 mt-2 rounded-lg p-4 shadow-lg ring-1 ring-black/5 bg-(--wire-header-bg)"
-                    >
-                        <x-site.nav :items="$items" class="flex-col items-start gap-3" />
-                    </div>
-                @endif
             </div>
             @break
 
         @default
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
                 <x-site.brand :logo="$logo" :brand="$brand" />
-                <x-site.nav :items="$items" />
+                <div class="flex items-center gap-6 max-md:hidden">
+                    <x-site.nav :items="$items" />
+                    @if ($this->languages->count() > 1)
+                        <flux:dropdown position="bottom" align="end">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70"
+                                aria-label="{{ __('Language') }}"
+                            >
+                                <flux:icon name="globe-alt" variant="micro" />
+                                <span>{{ data_get($this->languages->firstWhere('current', true), 'label') }}</span>
+                                <flux:icon name="chevron-down" variant="micro" />
+                            </button>
+
+                            <flux:navmenu>
+                                @foreach ($this->languages as $language)
+                                    <flux:navmenu.item href="{{ $language['url'] }}" :current="$language['current']">{{ $language['label'] }}</flux:navmenu.item>
+                                @endforeach
+                            </flux:navmenu>
+                        </flux:dropdown>
+                    @endif
+                </div>
             </div>
     @endswitch
+
+    @if ($showMobileMenu)
+        <button
+            type="button"
+            x-on:click="open = ! open"
+            x-bind:aria-expanded="open.toString()"
+            aria-label="{{ __('Toggle menu') }}"
+            @class([
+                'absolute end-6 top-1/2 z-50 -translate-y-1/2 p-1 text-(--wire-header-text)',
+                'md:hidden' => $layout !== 'minimal',
+            ])
+        >
+            <flux:icon name="bars-3" x-show="! open" class="size-6" />
+            <flux:icon name="x-mark" x-show="open" x-cloak class="size-6" />
+        </button>
+
+        <div @class(['md:hidden' => $layout !== 'minimal'])>
+            <div
+                x-show="open"
+                x-cloak
+                x-transition.opacity
+                x-on:click="open = false"
+                class="fixed inset-0 z-40 bg-black/40"
+            ></div>
+
+            <div
+                x-show="open"
+                x-cloak
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="translate-x-full"
+                x-transition:enter-end="translate-x-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="translate-x-0"
+                x-transition:leave-end="translate-x-full"
+                class="fixed inset-y-0 right-0 z-40 flex w-72 max-w-[80vw] flex-col gap-6 bg-(--wire-header-bg) px-6 pb-6 pt-20 text-(--wire-header-text) shadow-xl"
+            >
+                <x-site.nav :items="$items" class="flex-col items-start gap-4" />
+
+                @if ($this->languages->count() > 1)
+                    <flux:dropdown position="bottom" align="end">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70"
+                            aria-label="{{ __('Language') }}"
+                        >
+                            <flux:icon name="globe-alt" variant="micro" />
+                            <span>{{ data_get($this->languages->firstWhere('current', true), 'label') }}</span>
+                            <flux:icon name="chevron-down" variant="micro" />
+                        </button>
+
+                        <flux:navmenu>
+                            @foreach ($this->languages as $language)
+                                <flux:navmenu.item href="{{ $language['url'] }}" :current="$language['current']">{{ $language['label'] }}</flux:navmenu.item>
+                            @endforeach
+                        </flux:navmenu>
+                    </flux:dropdown>
+                @endif
+            </div>
+        </div>
+    @endif
 </header>

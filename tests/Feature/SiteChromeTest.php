@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\PageStatus;
+use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
 use Livewire\Livewire;
@@ -42,6 +43,21 @@ it('renders the header menu for the active locale', function (): void {
     Livewire::test('site.header')
         ->assertSee('Nederlands item')
         ->assertDontSee('English item');
+});
+
+it('shows the language switcher in the header when more than one locale is active', function (): void {
+    Locale::query()->where('code', 'ro')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    Livewire::test('site.header')
+        ->assertSee('data-flux-dropdown', false)
+        ->assertSee('English')
+        ->assertSee('Română');
+});
+
+it('omits the language switcher when only one locale is active', function (): void {
+    Livewire::test('site.header')
+        ->assertDontSee('data-flux-dropdown', false);
 });
 
 it('renders social links only for the platforms that are set', function (): void {

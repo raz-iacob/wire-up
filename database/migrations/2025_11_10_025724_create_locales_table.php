@@ -6,6 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -102,7 +103,7 @@ return new class extends Migration
             DB::table('locales')->insert([
                 'code' => $locale['code'],
                 'name' => $locale['name'],
-                'endonym' => $locale['endonym'],
+                'endonym' => Str::ucfirst($locale['endonym']),
                 'script' => $locale['script'],
                 'rtl' => in_array($locale['script'], ['Arab', 'Hebr', 'Mong', 'Tfng', 'Thaa']),
                 'active' => $locale['code'] === 'en',
