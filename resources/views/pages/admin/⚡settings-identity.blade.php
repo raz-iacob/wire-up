@@ -58,8 +58,23 @@ return new class extends Component
             $rules["description.$locale"] = ['nullable', 'string', 'max:255'];
         }
 
+        $messages = [
+            'title.*.required' => __('Enter a title for the selected language.'),
+            'title.*.min' => __('The title must be at least :min characters.'),
+            'title.*.max' => __('The title may not exceed :max characters.'),
+            'description.*.max' => __('The tagline may not exceed :max characters.'),
+            'favicon.id.exists' => __('The selected favicon is no longer available.'),
+        ];
+
+        $attributes = [
+            'title.*' => __('title'),
+            'description.*' => __('tagline'),
+            'favicon' => __('favicon'),
+            'favicon.id' => __('favicon'),
+        ];
+
         try {
-            $validated = $this->validate($rules);
+            $validated = $this->validate($rules, $messages, $attributes);
         } catch (ValidationException $e) {
             $this->switchToErroredLocale($e);
 
@@ -84,10 +99,6 @@ return new class extends Component
         $this->locale = $codes[($index + 1) % count($codes)] ?? $this->locale;
     }
 
-    /**
-     * Switch the editing locale to the first one carrying a validation error so the
-     * offending (otherwise-hidden) translated field becomes visible.
-     */
     private function switchToErroredLocale(ValidationException $e): void
     {
         $codes = array_keys($this->activeLocales);

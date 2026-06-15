@@ -7,14 +7,13 @@ use App\Models\Page;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 return new class extends Component
 {
     /**
-     * Menu items keyed by locale, e.g. ['en' => [...items], 'fr' => [...items]].
-     *
      * @var array<string, array<int, array<string, mixed>>>
      */
     public array $header = [];
@@ -25,6 +24,9 @@ return new class extends Component
     public array $footer = [];
 
     public int $seq = 0;
+
+    #[Url(except: 'header')]
+    public string $tab = 'header';
 
     #[Url(except: 'en')]
     public string $locale;
@@ -119,7 +121,13 @@ return new class extends Component
 
     public function update(UpdateSettingsAction $action): void
     {
-        $this->validate($this->rules());
+        try {
+            $this->validate($this->rules(), $this->validationMessages(), $this->validationAttributeNames());
+        } catch (ValidationException $e) {
+            $this->revealErrors($e);
+
+            throw $e;
+        }
 
         $header = [];
         $footer = [];
@@ -132,6 +140,86 @@ return new class extends Component
         $action->handle(['header_menu' => $header, 'footer_menu' => $footer]);
 
         Flux::toast(__('Menus have been updated.'), variant: 'success');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function validationMessages(): array
+    {
+        $urlHint = __('Enter a full URL (https://…), a path (/about), or an anchor link (#contact).');
+
+        $messages = [];
+
+        foreach (['header', 'footer'] as $menu) {
+            $messages["$menu.*.*.label.required"] = __('Give this menu item a label.');
+            $messages["$menu.*.*.page_id.required_if"] = __('Choose a page for this menu item.');
+            $messages["$menu.*.*.page_id.exists"] = __('The selected page is no longer available.');
+            $messages["$menu.*.*.url.required_if"] = __('Enter a link for this menu item.');
+            $messages["$menu.*.*.url.regex"] = $urlHint;
+        }
+
+        return $messages;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function validationAttributeNames(): array
+    {
+        $attributes = [];
+
+        foreach (['header', 'footer'] as $menu) {
+            $attributes["$menu.*.*.label"] = __('label');
+            $attributes["$menu.*.*.url"] = __('link');
+            $attributes["$menu.*.*.page_id"] = __('page');
+            $attributes["$menu.*.*.type"] = __('type');
+            $attributes["$menu.*.*.appearance"] = __('appearance');
+            $attributes["$menu.*.*.target"] = __('target');
+        }
+
+        return $attributes;
+    }
+
+    private function revealErrors(ValidationException $e): void
+    {
+        $codes = array_keys($this->activeLocales);
+
+        /** @var array<string, array{menu: string, locale: string}> $erroredViews */
+        $erroredViews = [];
+        $keysToOpen = [];
+
+        foreach (array_keys($e->errors()) as $errorKey) {
+            $segments = explode('.', $errorKey);
+
+            if (count($segments) < 3) {
+                continue;
+            }
+
+            [$menu, $locale, $index] = $segments;
+
+            if (! in_array($menu, ['header', 'footer'], true) || ! in_array($locale, $codes, true)) {
+                continue;
+            }
+
+            $item = $this->{$menu}[$locale][(int) $index] ?? null;
+
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $this->{$menu}[$locale][(int) $index]['open'] = true;
+            $erroredViews[$menu.'.'.$locale] ??= ['menu' => $menu, 'locale' => $locale];
+            $keysToOpen[] = $item['_key'];
+        }
+
+        if ($erroredViews !== [] && ! isset($erroredViews[$this->tab.'.'.$this->locale])) {
+            $target = reset($erroredViews);
+            $this->tab = $target['menu'];
+            $this->locale = $target['locale'];
+        }
+
+        $this->dispatch('menu-errors-revealed', tab: $this->tab, keys: $keysToOpen);
     }
 
     public function render(): View
@@ -156,7 +244,7 @@ return new class extends Component
                 $rules["$menu.$locale.*.target"] = ['required', Rule::in(['_self', '_blank'])];
                 $rules["$menu.$locale.*.label"] = ['required', 'string', 'max:100'];
                 $rules["$menu.$locale.*.page_id"] = ["required_if:$menu.$locale.*.type,page", 'nullable', 'integer', 'exists:pages,id'];
-                $rules["$menu.$locale.*.url"] = ["required_if:$menu.$locale.*.type,link", 'nullable', 'string', 'url', 'max:255'];
+                $rules["$menu.$locale.*.url"] = ["required_if:$menu.$locale.*.type,link", 'nullable', 'string', 'max:255', 'regex:/^(https?:\/\/\S+|\/\S*|#\S+)$/'];
             }
         }
 
@@ -250,8 +338,14 @@ return new class extends Component
 @endphp
 
 <x-admin.settings-layout :subheading="__('Manage your site’s navigation by customizing the header and footer menus. Each language has its own menus.')">
-    <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="max-w-3xl">
-        <flux:tab.group>
+    <form
+        wire:submit="update"
+        wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+        class="max-w-3xl"
+        x-data
+        x-on:menu-errors-revealed.window="$nextTick(() => $el.querySelector(`[data-flux-tab][name='${$event.detail.tab}']`)?.click())"
+    >
+        <flux:tab.group wire:model="tab">
             <div class="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-6">
                 <flux:tabs variant="segmented" size="sm">
                     <flux:tab name="header">{{ __('Header') }}</flux:tab>

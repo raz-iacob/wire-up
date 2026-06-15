@@ -115,6 +115,17 @@ it('validates that the title is required', function (): void {
         ->assertHasErrors(['title.en' => 'required']);
 });
 
+it('shows a friendly title error instead of the raw field path', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-identity')
+        ->set('title.en', '')
+        ->call('update')
+        ->assertHasErrors(['title.en'])
+        ->assertSee('Enter a title for the selected language.')
+        ->assertDontSee('title.en field is required');
+});
+
 it('switches the editing locale to the one carrying a validation error', function (): void {
     Locale::query()->where('code', 'nl')->update(['active' => true]);
     cache()->forget('site-locales');

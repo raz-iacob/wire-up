@@ -34,5 +34,5 @@ it('switches to the failing locale and shows the error when a hidden locale titl
     $page->assertNoJavascriptErrors()
         ->assertScript("$comp.\$wire.get('locale')", 'nl')
         ->assertPresent('input[name="title.nl"]')
-        ->assertSee('field is required');
+        ->assertSee('Enter a title for the selected language.');
 });

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
     <x-site.head :title="isset($title) ? $title : null" :description="isset($description) ? $description : null" />
     <body
         class="antialiased font-(family-name:--wire-body-font) bg-(--wire-body-bg) text-(--wire-body-text)"

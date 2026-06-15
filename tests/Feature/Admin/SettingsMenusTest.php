@@ -183,6 +183,89 @@ it('requires a url when the item type is a custom link', function (): void {
         ->assertHasErrors(['header.en.0.url']);
 });
 
+it('accepts anchor and path links for a custom link', function (string $url): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('header', ['en' => [menuItem(['type' => 'link', 'label' => 'Contact', 'url' => $url])]])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('header_menu')['en'][0]['url'])->toBe($url);
+})->with([
+    'anchor' => '#contact',
+    'path' => '/about',
+    'path with anchor' => '/about#team',
+    'absolute url' => 'https://example.com/privacy',
+]);
+
+it('rejects a url that is not a link, path or anchor', function (string $url): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('header', ['en' => [menuItem(['type' => 'link', 'label' => 'Bad', 'url' => $url])]])
+        ->call('update')
+        ->assertHasErrors(['header.en.0.url']);
+})->with([
+    'bare word' => 'contact',
+    'spaces' => '/foo bar',
+    'unsupported scheme' => 'javascript:alert(1)',
+]);
+
+it('switches to the errored tab and locale and expands the offending item on save', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->assertSet('tab', 'header')
+        ->assertSet('locale', 'en')
+        ->set('footer.fr', [menuItem(['type' => 'link', 'label' => 'Bad', 'url' => 'nope', 'open' => false])])
+        ->call('update')
+        ->assertHasErrors(['footer.fr.0.url'])
+        ->assertSet('tab', 'footer')
+        ->assertSet('locale', 'fr')
+        ->assertSet('footer.fr.0.open', true)
+        ->assertDispatched('menu-errors-revealed');
+});
+
+it('stays on the current tab and locale when it already shows an error', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('tab', 'footer')
+        ->set('locale', 'fr')
+        ->set('footer.fr', [menuItem(['type' => 'link', 'label' => 'Bad', 'url' => 'nope'])])
+        ->set('header.en', [menuItem(['type' => 'link', 'label' => 'Also bad', 'url' => 'nope'])])
+        ->call('update')
+        ->assertHasErrors(['footer.fr.0.url', 'header.en.0.url'])
+        ->assertSet('tab', 'footer')
+        ->assertSet('locale', 'fr');
+});
+
+it('shows friendly validation messages instead of raw field paths', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('header.en', [menuItem(['type' => 'page', 'page_id' => null])])
+        ->call('update')
+        ->assertHasErrors(['header.en.0.page_id'])
+        ->assertSee('Choose a page for this menu item.')
+        ->assertDontSee('header.en.0.page_id field is required');
+});
+
+it('shows a friendly message for an invalid custom link url', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('header.en', [menuItem(['type' => 'link', 'label' => 'Bad', 'url' => 'nope'])])
+        ->call('update')
+        ->assertHasErrors(['header.en.0.url'])
+        ->assertSee('Enter a full URL');
+});
+
 it('requires a page to be selected when the item type is page', function (): void {
     $this->actingAsAdmin();
 

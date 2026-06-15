@@ -77,6 +77,33 @@ it('opens a confirmation modal before removing a menu item', function (): void {
         ->assertSee('Remove menu item?');
 });
 
+it('reveals a hidden error by switching to its tab and locale and expanding the item', function (): void {
+    Locale::query()->where('code', 'nl')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $this->actingAsAdmin();
+
+    $page = visit(route('admin.settings-menus'));
+    $page->wait(0.4);
+
+    $comp = "window.Livewire.all().find(c => c.\$wire.get('header') !== undefined)";
+
+    $page->script("
+        $comp.\$wire.set('footer.nl', [{ _key: '99', type: 'link', appearance: 'link', target: '_self', label: 'Bad', page_id: null, url: 'nope', open: false }]);
+        void 0;
+    ");
+    $page->wait(0.4);
+
+    $page->script("$comp.\$wire.call('update'); void 0");
+    $page->wait(0.6);
+
+    $page->assertNoJavascriptErrors()
+        ->assertScript("$comp.\$wire.get('tab')", 'footer')
+        ->assertScript("$comp.\$wire.get('locale')", 'nl')
+        ->assertScript("document.querySelector('[data-flux-tab-panel][name=footer]')?.offsetParent !== null", true)
+        ->assertScript("document.querySelector('[data-flux-tab-panel][name=footer] [x-show=\"open\"]')?.offsetParent !== null", true);
+});
+
 it('reorders header items through the wire:sort handler the way a real drag does', function (): void {
     Settings::set(['header_menu' => ['en' => [
         ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Alpha', 'url' => 'https://a.test'],

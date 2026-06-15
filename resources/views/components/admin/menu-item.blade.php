@@ -14,6 +14,7 @@
     wire:key="{{ $menu }}-{{ $locale }}-{{ $item['_key'] }}"
     wire:sort:item="{{ $item['_key'] }}"
     x-data="{ open: @js((bool) ($item['open'] ?? false)) }"
+    x-on:menu-errors-revealed.window="if ($event.detail.keys.includes(@js($item['_key']))) open = true"
     class="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10"
 >
     <div class="flex items-center gap-2 bg-zinc-50 dark:bg-white/5 py-1.5 pl-2 pr-1.5">
@@ -78,7 +79,7 @@
             <div class="sm:col-span-2">
                 <flux:field>
                     <flux:label>{{ __('URL') }}</flux:label>
-                    <flux:input wire:model="{{ $base }}.url" type="url" placeholder="https://example.com" />
+                    <flux:input wire:model="{{ $base }}.url" type="text" placeholder="https://example.com, /about, or #contact" />
                     <flux:error name="{{ $base }}.url" />
                 </flux:field>
             </div>
