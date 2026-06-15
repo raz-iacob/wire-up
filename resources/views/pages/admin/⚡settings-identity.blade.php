@@ -76,7 +76,7 @@ return new class extends Component
         try {
             $validated = $this->validate($rules, $messages, $attributes);
         } catch (ValidationException $e) {
-            $this->switchToErroredLocale($e);
+            $this->revealErrors($e);
 
             throw $e;
         }
@@ -99,7 +99,14 @@ return new class extends Component
         $this->locale = $codes[($index + 1) % count($codes)] ?? $this->locale;
     }
 
-    private function switchToErroredLocale(ValidationException $e): void
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Identity'))
+            ->layout('layouts::admin');
+    }
+
+    private function revealErrors(ValidationException $e): void
     {
         $codes = array_keys($this->activeLocales);
 
@@ -112,13 +119,6 @@ return new class extends Component
                 return;
             }
         }
-    }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title(__('Identity'))
-            ->layout('layouts::admin');
     }
 
     /**

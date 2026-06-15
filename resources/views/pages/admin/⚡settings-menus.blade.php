@@ -142,6 +142,13 @@ return new class extends Component
         Flux::toast(__('Menus have been updated.'), variant: 'success');
     }
 
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Menus'))
+            ->layout('layouts::admin');
+    }
+
     /**
      * @return array<string, string>
      */
@@ -190,15 +197,17 @@ return new class extends Component
         $keysToOpen = [];
 
         foreach (array_keys($e->errors()) as $errorKey) {
-            $segments = explode('.', $errorKey);
+            $segments = explode('.', (string) $errorKey);
 
             if (count($segments) < 3) {
                 continue;
             }
 
             [$menu, $locale, $index] = $segments;
-
-            if (! in_array($menu, ['header', 'footer'], true) || ! in_array($locale, $codes, true)) {
+            if (! in_array($menu, ['header', 'footer'], true)) {
+                continue;
+            }
+            if (! in_array($locale, $codes, true)) {
                 continue;
             }
 
@@ -220,13 +229,6 @@ return new class extends Component
         }
 
         $this->dispatch('menu-errors-revealed', tab: $this->tab, keys: $keysToOpen);
-    }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title(__('Menus'))
-            ->layout('layouts::admin');
     }
 
     /**

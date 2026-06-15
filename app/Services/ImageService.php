@@ -27,9 +27,9 @@ final class ImageService
      * @var array{
      *   w?: int,
      *   h?: int,
-     *   crop?: string, // 'w,h,x,y' or 'w-h-x-y'
-     *   q?: int, // quality
-     *   fm?: 'png'|'gif'|'webp'|'jpg' // format
+     *   crop?: string,
+     *   q?: int,
+     *   fm?: 'png'|'gif'|'webp'|'jpg'
      * }
      */
     private array $options = [];

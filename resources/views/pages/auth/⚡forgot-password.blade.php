@@ -14,7 +14,6 @@ return new class extends Component
 
     public function mount(): void
     {
-        //
     }
 
     public function sendPasswordResetLink(): void
@@ -44,7 +43,6 @@ return new class extends Component
     </div>
 
     <form method="POST" wire:submit="sendPasswordResetLink" class="flex flex-col gap-6">
-        {{-- Email Address --}}
         <flux:input
             wire:model="email"
             :label="__('Email Address')"

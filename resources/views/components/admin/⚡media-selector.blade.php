@@ -32,10 +32,6 @@ return new class extends Component
     public string $captionAlt = '';
 
     /**
-     * Named crop variants offered per item, e.g.
-     * ['desktop' => ['label' => 'Desktop', 'w' => 1200, 'h' => 630]].
-     * Each variant's aspect ratio is derived from its w/h.
-     *
      * @var array<string, array<string, mixed>>
      */
     public array $crops = [];
@@ -112,10 +108,6 @@ return new class extends Component
     }
 
     /**
-     * Re-applies per-placement crop and metadata from the current selection
-     * (keyed by media id) onto an incoming set, so re-opening the library to add
-     * items does not wipe data already configured for items that stay selected.
-     *
      * @param  array<int, array<string, mixed>>  $incoming
      * @return array<int, array<string, mixed>>
      */
@@ -264,8 +256,6 @@ return new class extends Component
     }
 
     /**
-     * Commits a map of variant => crop geometry for a single item in one pass.
-     *
      * @param  array<string, mixed>  $crops
      */
     public function setCrops(int $index, array $crops): void

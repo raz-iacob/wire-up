@@ -157,10 +157,6 @@ return new class extends Component
     }
 
     /**
-     * Normalizes media-field input to a list of items per locale, so single-mode
-     * selectors (one item or null) and multiple-mode selectors (a list) persist
-     * through the same code path.
-     *
      * @param  array<string, mixed>  $media
      * @return array<string, array<int, array<string, mixed>>>
      */

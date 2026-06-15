@@ -24,7 +24,6 @@ return new class extends Component
 
     public function mount(): void
     {
-        //
     }
 
     public function login(): void
@@ -91,7 +90,6 @@ return new class extends Component
     </div>
 
     <form method="POST" wire:submit="login" class="flex flex-col gap-6">
-        {{-- Email Address --}}
         <flux:input
             wire:model="email"
             :label="__('Email address')"
@@ -102,7 +100,6 @@ return new class extends Component
             placeholder="email@example.com"
         />
 
-        {{-- Password --}}
         <div class="relative">
             <flux:input
                 wire:model="password"
@@ -121,7 +118,6 @@ return new class extends Component
             @endif
         </div>
 
-        {{-- Remember Me --}}
         <flux:checkbox wire:model="remember" :label="__('Remember me')" />
 
         <div class="flex items-center justify-end">

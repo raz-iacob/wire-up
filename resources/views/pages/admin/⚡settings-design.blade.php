@@ -183,8 +183,6 @@ return new class extends Component
 
 <x-admin.settings-layout :subheading="__('Design the look of your public site — colours, fonts, and shape.')">
     @if ($previewFontsUrl)
-        {{-- Preload every theme font so the preview mock and the font pickers render them without a flash.
-             These only style the preview (via inline font-family); the admin shell uses --font-sans (Inter). --}}
         <link id="design-preview-fonts" rel="stylesheet" href="{{ $previewFontsUrl }}" />
     @endif
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
@@ -218,13 +216,10 @@ return new class extends Component
             },
         }">
 
-        {{-- Live preview (right) --}}
         <div class="order-2 lg:col-span-2 lg:sticky lg:top-8">
             <div x-cloak class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 select-none">
 
-                {{-- header wrapper — sticky shadow + badge --}}
                 <div class="relative transition-shadow" :class="$wire.header_sticky ? 'shadow-md' : ''">
-                    {{-- simple: logo left, nav right --}}
                     <div data-test="header-variant" x-show="$wire.header_layout === 'simple'" class="flex items-center justify-between gap-4 px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
                         <span class="flex items-center gap-2">
                             <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
@@ -236,7 +231,6 @@ return new class extends Component
                             <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Sign up') }}</span>
                         </div>
                     </div>
-                    {{-- centered: logo centered, nav below --}}
                     <div data-test="header-variant" x-show="$wire.header_layout === 'centered'" class="px-4 py-3 text-center" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
                         <div class="flex justify-center">
                             <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
@@ -249,7 +243,6 @@ return new class extends Component
                             <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Sign up') }}</span>
                         </div>
                     </div>
-                    {{-- split: logo left, nav center, CTA right --}}
                     <div data-test="header-variant" x-show="$wire.header_layout === 'split'" class="grid grid-cols-3 items-center gap-2 px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
                         <span class="flex items-center gap-2">
                             <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
@@ -264,7 +257,6 @@ return new class extends Component
                             <span class="px-2.5 py-1 text-xs font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Sign up') }}</span>
                         </div>
                     </div>
-                    {{-- minimal: logo only --}}
                     <div data-test="header-variant" x-show="$wire.header_layout === 'minimal'" class="flex items-center justify-between px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
                         <span class="flex items-center gap-2">
                             <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" class="h-7 w-auto object-contain" />
@@ -276,11 +268,9 @@ return new class extends Component
                             <span class="h-0.5 w-2 rounded-full" :style="`background:${c.header_text}`"></span>
                         </div>
                     </div>
-                    {{-- sticky badge --}}
                     <div x-cloak x-show="$wire.header_sticky" class="absolute top-1 right-1 rounded px-1.5 py-0.5 text-[0.55rem] font-medium bg-zinc-800/70 text-white">{{ __('Sticky') }}</div>
                 </div>
 
-                {{-- body --}}
                 <div data-test="preview-body" class="px-4 py-10" :style="`background:${c.background}; color:${c.text}`">
                     <div class="space-y-3 text-center">
                         <h1 class="font-bold" :style="`font-family:${headingFont}; font-size:${headingSize}`">{{ __('Build something great') }}</h1>
@@ -304,8 +294,6 @@ return new class extends Component
                     </div>
                 </div>
 
-                {{-- footer --}}
-                {{-- simple: logo+nav top, copyright bar bottom --}}
                 <div data-test="footer-variant" x-show="$wire.footer_layout === 'simple'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
                     <div class="flex items-start justify-between gap-4 px-4 py-5 text-xs">
                         <div class="space-y-2">
@@ -330,7 +318,6 @@ return new class extends Component
                         <span>{{ __('Made with Wire-Up') }}</span>
                     </div>
                 </div>
-                {{-- centered: logo+nav centered, copyright+badge inline --}}
                 <div data-test="footer-variant" x-show="$wire.footer_layout === 'centered'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
                     <div class="px-4 py-5 text-center text-xs space-y-3">
                         <div class="flex justify-center">
@@ -352,7 +339,6 @@ return new class extends Component
                         &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
                     </div>
                 </div>
-                {{-- columns: logo+tagline left, link columns right, bar at bottom --}}
                 <div data-test="footer-variant" x-show="$wire.footer_layout === 'columns'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
                     <div class="grid grid-cols-3 gap-4 px-4 py-5 text-xs">
                         <div class="space-y-3">
@@ -383,14 +369,12 @@ return new class extends Component
                         <span>{{ __('Made with Wire-Up') }}</span>
                     </div>
                 </div>
-                {{-- minimal: copyright + badge inline, centered --}}
                 <div data-test="footer-variant" x-show="$wire.footer_layout === 'minimal'" class="px-4 py-3 text-center text-[0.6rem] opacity-60" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
                     &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
                 </div>
             </div>
         </div>
 
-        {{-- controls (left) --}}
         <div class="order-1 lg:col-span-3 space-y-8">
             <flux:select variant="listbox" wire:model="theme" label="{{ __('Theme Colors') }}" description="{{ __('Choose from pre-designed color schemes or create your own custom palette.') }}">
                 @foreach ($presets as $key => $preset)

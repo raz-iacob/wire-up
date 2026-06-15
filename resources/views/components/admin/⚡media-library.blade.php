@@ -36,10 +36,6 @@ return new class extends Component
     public array $files = [];
 
     /**
-     * Durable source of truth for the selection. Media models do not survive
-     * Livewire's dehydrate/rehydrate cycle as models, so we persist their ids
-     * and rebuild $selected on every request via hydrate().
-     *
      * @var array<int, int>
      */
     public array $selectedIds = [];
@@ -101,9 +97,6 @@ return new class extends Component
     }
 
     /**
-     * Rebuilds the selection as Media models from an incoming payload. Items
-     * arrive as plain arrays over the wire, so we re-fetch by id.
-     *
      * @param  array<int, array<string, mixed>|Media>  $media
      * @return Collection<int, Media>
      */
@@ -119,8 +112,6 @@ return new class extends Component
     }
 
     /**
-     * Loads Media models for the given ids, preserving their order.
-     *
      * @param  array<int, int>  $ids
      * @return Collection<int, Media>
      */
@@ -138,9 +129,6 @@ return new class extends Component
     }
 
     /**
-     * Stores the selection as models for the current request and persists the
-     * ids so it can be rebuilt after the next round-trip.
-     *
      * @param  Collection<int, Media>  $selected
      */
     private function syncSelected(Collection $selected): void
