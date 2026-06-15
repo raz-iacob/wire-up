@@ -32,9 +32,14 @@ final class Settings extends Model
      */
     public static function cached(): array
     {
-        return cache()->rememberForever(self::CACHE_KEY, fn (): array => Schema::hasTable('settings')
-            ? self::query()->get(['key', 'value'])->pluck('value', 'key')->all()
-            : []);
+        if (! Schema::hasTable('settings')) {
+            return [];
+        }
+
+        return cache()->rememberForever(
+            self::CACHE_KEY,
+            fn (): array => self::query()->get(['key', 'value'])->pluck('value', 'key')->all()
+        );
     }
 
     public static function get(string $key, mixed $default = null): mixed
