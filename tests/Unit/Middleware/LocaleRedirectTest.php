@@ -52,6 +52,22 @@ it('does not redirect when no locale in path', function (): void {
         ->and($request->getPathInfo())->toBe('/login');
 });
 
+it('keeps a non-default locale even after the app locale has been switched to it', function (): void {
+    Locale::query()->where('code', 'ro')->update(['active' => true]);
+    Cache::forget('site-locales');
+
+    config()->set('app.default_locale', 'en');
+    app()->setLocale('ro');
+
+    $middleware = new LocaleRedirect;
+    $request = Request::create('/ro');
+
+    $response = $middleware->handle($request, fn (): ResponseFactory|Response => response('OK'));
+
+    expect($response->getContent())->toBe('OK')
+        ->and($request->getPathInfo())->toBe('/ro');
+});
+
 it('does not redirect for inactive locale', function (): void {
     $middleware = new LocaleRedirect;
     $request = Request::create('/fr/login');

@@ -28,7 +28,7 @@ final class LocaleRedirect
         if (count($params) > 0) {
             $locale = $params[0];
             $localization = resolve('localization');
-            if ($localization->isActiveLocale($locale) && $locale === config()->string('app.locale', 'en')) {
+            if ($localization->isActiveLocale($locale) && $locale === $localization->getDefaultLocale()) {
                 $redirection = $localization->stripDefaultLocale($request->getPathInfo());
                 resolve(SessionManager::class)->reflash();
 

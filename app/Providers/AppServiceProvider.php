@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Settings;
 use App\Services\LocalizationService;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Date;
@@ -20,6 +21,8 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton('localization', LocalizationService::class);
+
+        $this->app->make(Repository::class)->set('app.default_locale', $this->app->make(Repository::class)->string('app.locale', 'en'));
     }
 
     public function boot(): void

@@ -123,7 +123,7 @@ final class LocalizationService
 
     public function getDefaultLocale(): string
     {
-        return $this->config->string('app.locale', 'en');
+        return $this->config->string('app.default_locale', 'en');
     }
 
     public function getCurrentLocaleRegional(): ?string
