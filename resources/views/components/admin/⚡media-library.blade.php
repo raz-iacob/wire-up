@@ -7,6 +7,7 @@ use App\Actions\DownloadMediaAction;
 use App\Actions\UpdateMediaAction;
 use App\Enums\MediaType;
 use App\Models\Media;
+use enshrined\svgSanitize\Sanitizer;
 use Flux\Flux;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -330,7 +331,7 @@ return new class extends Component
             MediaType::AUDIO => $rules['files.*'][] = 'mimetypes:audio/mpeg,audio/wav,audio/ogg',
             MediaType::VIDEO => $rules['files.*'][] = 'mimetypes:video/mp4,video/quicktime,video/x-msvideo',
             MediaType::DOCUMENT => $rules['files.*'][] = 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            MediaType::IMAGE => $rules['files.*'][] = 'image',
+            MediaType::IMAGE => $rules['files.*'][] = 'image:allow_svg',
             default => null,
         };
 
@@ -406,13 +407,27 @@ return new class extends Component
             $uuid = Str::uuid()->toString();
             $extension = $file->getClientOriginalExtension();
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $isSvg = mb_strtolower($extension) === 'svg';
             $filename = $uuid.'_'.Str::slug($originalName).'.'.$extension;
             $path = 'media';
 
-            $file->storeAs($path, $filename, [
-                'disk' => config('filesystems.media'),
-                'visibility' => 'public',
-            ]);
+            if ($isSvg) {
+                $clean = (new Sanitizer)->sanitize((string) file_get_contents($file->getRealPath()));
+
+                Storage::disk(config('filesystems.media'))
+                    ->put("$path/$filename", $clean === false ? '' : $clean, 'public');
+
+                $size = $clean === false ? 0 : mb_strlen($clean, '8bit');
+                $mimeType = 'image/svg+xml';
+            } else {
+                $file->storeAs($path, $filename, [
+                    'disk' => config('filesystems.media'),
+                    'visibility' => 'public',
+                ]);
+
+                $size = $file->getSize();
+                $mimeType = $file->getMimeType();
+            }
 
             $thumbnail = null;
             $thumbData = $metadata['thumbnail'] ?? null;
@@ -431,14 +446,14 @@ return new class extends Component
             }
 
             $action->handle([
-                'type' => MediaType::fromMimeType($file->getMimeType())->value,
+                'type' => MediaType::fromMimeType($mimeType)->value,
                 'source' => "$path/$filename",
                 'etag' => $etag,
                 'filename' => $originalName.'.'.$extension,
                 'alt_text' => $originalName,
-                'mime_type' => $file->getMimeType(),
+                'mime_type' => $mimeType,
                 'thumbnail' => $thumbnail,
-                'size' => $file->getSize(),
+                'size' => $size,
                 'duration' => $metadata['duration'] ?? null,
                 'width' => $metadata['width'] ?? null,
                 'height' => $metadata['height'] ?? null,

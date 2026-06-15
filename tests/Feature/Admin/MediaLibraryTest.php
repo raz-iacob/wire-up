@@ -360,6 +360,40 @@ it('uploads and saves image files', function (): void {
     Storage::disk(config('filesystems.media'))->assertExists($media->source);
 });
 
+it('uploads svg files and strips embedded scripts', function (): void {
+    $svg = <<<'SVG'
+    <svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
+        <script>alert('xss')</script>
+        <rect width="120" height="40" onload="alert('xss')" fill="#000"/>
+    </svg>
+    SVG;
+
+    $file = UploadedFile::fake()->createWithContent('logo.svg', $svg);
+
+    Livewire::test('admin.media-library')
+        ->set('type', MediaType::IMAGE)
+        ->set('files', [$file])
+        ->call('save', [
+            ['width' => 120, 'height' => 40],
+        ])
+        ->assertSet('files', []);
+
+    $this->assertDatabaseHas('media', [
+        'type' => MediaType::IMAGE->value,
+        'mime_type' => 'image/svg+xml',
+        'filename' => 'logo.svg',
+        'width' => 120,
+        'height' => 40,
+    ]);
+
+    $media = Media::query()->latest()->first();
+    $stored = Storage::disk(config('filesystems.media'))->get($media->source);
+
+    expect($stored)->not->toContain('<script')
+        ->and($stored)->not->toContain('onload')
+        ->and($stored)->toContain('<rect');
+});
+
 it('skips duplicate files by etag', function (): void {
     $file = UploadedFile::fake()->image('photo.jpg');
     $etag = md5_file($file->getRealPath());

@@ -44,6 +44,19 @@ final class ImageService
         return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
     }
 
+    public static function svg(string $fileKey, int $cacheAgeSeconds = 30 * 86400): Response
+    {
+        $disk = Storage::disk(config('filesystems.media'));
+
+        abort_unless($disk->exists($fileKey), 404);
+
+        return response((string) $disk->get($fileKey), 200)
+            ->header('Content-Type', 'image/svg+xml')
+            ->header('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox")
+            ->header('X-Content-Type-Options', 'nosniff')
+            ->header('Cache-Control', "public, max-age={$cacheAgeSeconds}, s-maxage={$cacheAgeSeconds}, immutable");
+    }
+
     /**
      * @throws HttpResponseException
      */

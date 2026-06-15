@@ -142,6 +142,21 @@ it('stores a crop variant for a selected item in multiple mode', function (): vo
         ->assertSet('media.0.crop', []);
 });
 
+it('offers the crop control for a raster image', function (): void {
+    Livewire::test('admin.media-selector')
+        ->set('media', mediaPayload(1))
+        ->assertSeeHtml('start(0,');
+});
+
+it('hides the crop control for an svg', function (): void {
+    $svg = [...mediaPayload(1, 'logo.svg'), 'mime_type' => 'image/svg+xml'];
+
+    Livewire::test('admin.media-selector')
+        ->set('media', $svg)
+        ->assertSee('logo.svg')
+        ->assertDontSeeHtml('start(0,');
+});
+
 it('stores a crop variant for a selected item in single mode', function (): void {
     Livewire::test('admin.media-selector')
         ->set('media', mediaPayload(1))

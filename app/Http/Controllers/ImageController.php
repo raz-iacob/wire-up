@@ -17,6 +17,10 @@ final class ImageController
             $this->ratelimit($request, $path);
         }
 
+        if (str_ends_with(mb_strtolower($path), '.svg')) {
+            return ImageService::svg($path);
+        }
+
         return ImageService::make($path)
             ->applyOptionsString($options)
             ->response();

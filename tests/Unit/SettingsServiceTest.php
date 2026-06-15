@@ -225,6 +225,15 @@ it('returns no logo url when the stored item has no crop', function (): void {
     expect((new SettingsService)->logoUrl('logo_header'))->toBeNull();
 });
 
+it('builds a logo url for an svg even without a crop', function (): void {
+    Settings::set(['logo_header' => ['source' => 'media/brand-logo.svg', 'crop' => []]]);
+
+    expect((new SettingsService)->logoUrl('logo_header'))
+        ->toBeString()
+        ->toContain('/img/')
+        ->toContain('media/brand-logo.svg');
+});
+
 it('falls back to the seeded home page when no homepage is configured', function (): void {
     $home = (new SettingsService)->homePage();
 

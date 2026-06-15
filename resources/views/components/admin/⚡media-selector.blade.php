@@ -468,6 +468,8 @@ return new class extends Component
                             $primaryDef = $primaryKey !== null ? ($crops[$primaryKey] ?? []) : [];
                             $storedCrop = $primaryKey !== null ? ($item['crop'][$primaryKey] ?? null) : null;
                             $isImage = ($item['icon'] ?? null) === 'photo';
+                            $isSvg = ($item['mime_type'] ?? null) === 'image/svg+xml';
+                            $isCroppable = $isImage && ! $isSvg;
                             $hasPreview = $isImage || ! empty($item['thumbnail']);
                             $extension = strtoupper(pathinfo((string) ($item['filename'] ?? ''), PATHINFO_EXTENSION));
 
@@ -477,7 +479,7 @@ return new class extends Component
                             $nameTail = mb_strlen($filename) > 16 ? mb_substr($filename, -$tailLength) : '';
 
                             $previewSrc = $item['preview'] ?? null;
-                            if ($isImage && $storedCrop && ! empty($item['source'])) {
+                            if ($isCroppable && $storedCrop && ! empty($item['source'])) {
                                 $previewSrc = route('image.show', [
                                     'options' => sprintf(
                                         'w=%d,h=%d,crop=%d-%d-%d-%d,q=%d,fm=%s',
@@ -546,7 +548,7 @@ return new class extends Component
                                     <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('Original') }}: {{ $item['width'] }} × {{ $item['height'] }}</flux:text>
                                 @endif
 
-                                @if($isImage)
+                                @if($isCroppable)
                                     @foreach($crops as $variantKey => $cropDef)
                                         @php
                                             $variantCrop = $item['crop'][$variantKey] ?? null;
@@ -565,7 +567,7 @@ return new class extends Component
                                 @if($withCaption)
                                     <flux:button variant="filled" icon="chat-bubble-bottom-center-text" square tooltip="{{ __('Caption') }}" wire:click="editCaption({{ $index }})" />
                                 @endif
-                                @if($isImage)
+                                @if($isCroppable)
                                     <flux:button variant="filled" icon="scissors" square tooltip="{{ __('Crop') }}" x-on:click="start({{ $index }}, @js($item), @js($crops))" />
                                 @endif
                                 <flux:button variant="filled" icon="x-mark" square tooltip="{{ __('Remove') }}" wire:click="confirmRemove({{ $index }})" />

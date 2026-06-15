@@ -287,7 +287,7 @@ final class SettingsService
         $crops = is_array($item['crop'] ?? null) ? $item['crop'] : [];
         $variant = is_array($crops[$crop] ?? null) ? $crops[$crop] : null;
 
-        if ($requireCrop && $variant === null) {
+        if ($requireCrop && $variant === null && ! str_ends_with(mb_strtolower($source), '.svg')) {
             return null;
         }
 

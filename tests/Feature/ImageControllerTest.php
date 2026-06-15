@@ -30,6 +30,30 @@ it('can grab an image from storage and apply optional formatting', function (): 
         ->and($image->origin()->mediaType())->toBe('image/webp');
 });
 
+it('serves svg files verbatim with a locked-down content security policy', function (): void {
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>';
+    Storage::disk(config('filesystems.media'))->put('logo.svg', $svg);
+
+    $response = $this->get(route('image.show', [
+        'options' => 'w=350,h=200',
+        'path' => 'logo.svg',
+    ]));
+
+    $response->assertOk();
+
+    expect($response->headers->get('Content-Type'))->toBe('image/svg+xml')
+        ->and($response->getContent())->toBe($svg)
+        ->and($response->headers->get('Content-Security-Policy'))->toContain('sandbox')
+        ->and($response->headers->get('X-Content-Type-Options'))->toBe('nosniff');
+});
+
+it('returns 404 for a missing svg file', function (): void {
+    $this->get(route('image.show', [
+        'options' => 'w=350,h=200',
+        'path' => 'missing.svg',
+    ]))->assertNotFound();
+});
+
 it('limits access to the image endpoint', function (): void {
     app()->detectEnvironment(fn (): string => 'production');
 
