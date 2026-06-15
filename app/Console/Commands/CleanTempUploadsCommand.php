@@ -34,7 +34,7 @@ final class CleanTempUploadsCommand extends Command
         foreach ($files as $file) {
             $fileModifiedTime = Date::createFromTimestamp($file->getMTime());
 
-            if ($fileModifiedTime->lt($cutoffTime)) {
+            if ($fileModifiedTime->lte($cutoffTime)) {
                 $fileSize = $file->getSize();
 
                 if (File::delete($file->getPathname())) {

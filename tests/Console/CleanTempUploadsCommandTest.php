@@ -97,6 +97,20 @@ it('calculates file size correctly', function (): void {
     expect(File::exists($largeFile))->toBeFalse();
 });
 
+it('deletes a file whose modified time falls exactly on the cutoff', function (): void {
+    $now = now()->startOfSecond();
+    $this->travelTo($now);
+
+    $file = $this->tempPath.'/boundary.txt';
+    File::put($file, 'x');
+    touch($file, $now->getTimestamp());
+
+    $this->artisan(CleanTempUploadsCommand::class, ['--older-than' => 0])
+        ->assertExitCode(0);
+
+    expect(File::exists($file))->toBeFalse();
+});
+
 it('handles files with various extensions', function (): void {
     $files = [
         'image.jpg',
