@@ -23,6 +23,39 @@ function menuItem(array $overrides = []): array
     ], $overrides);
 }
 
+it('keeps the locale from the query string instead of resetting to the default', function (): void {
+    Locale::query()->where('code', 'nl')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $this->actingAsAdmin();
+
+    Livewire::withQueryParams(['locale' => 'nl'])
+        ->test('pages::admin.settings-menus')
+        ->assertSet('locale', 'nl');
+});
+
+it('falls back to the default locale when the query string locale is not active', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::withQueryParams(['locale' => 'ro'])
+        ->test('pages::admin.settings-menus')
+        ->assertSet('locale', 'en');
+});
+
+it('cycles to the next active locale on the change-locale event', function (): void {
+    Locale::query()->where('code', 'nl')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->assertSet('locale', 'en')
+        ->call('changeLocale')
+        ->assertSet('locale', 'nl')
+        ->call('changeLocale')
+        ->assertSet('locale', 'en');
+});
+
 it('can render the menus settings screen', function (): void {
     $this->actingAsAdmin()
         ->get(route('admin.settings-menus'))
@@ -212,36 +245,32 @@ it('rejects a url that is not a link, path or anchor', function (string $url): v
     'unsupported scheme' => 'javascript:alert(1)',
 ]);
 
-it('switches to the errored tab and locale and expands the offending item on save', function (): void {
+it('switches to the errored locale and expands the offending item on save', function (): void {
     Locale::query()->where('code', 'fr')->update(['active' => true]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->assertSet('tab', 'header')
         ->assertSet('locale', 'en')
         ->set('footer.fr', [menuItem(['type' => 'link', 'label' => 'Bad', 'url' => 'nope', 'open' => false])])
         ->call('update')
         ->assertHasErrors(['footer.fr.0.url'])
-        ->assertSet('tab', 'footer')
         ->assertSet('locale', 'fr')
         ->assertSet('footer.fr.0.open', true)
         ->assertDispatched('menu-errors-revealed');
 });
 
-it('stays on the current tab and locale when it already shows an error', function (): void {
+it('stays on the current locale when it already shows an error', function (): void {
     Locale::query()->where('code', 'fr')->update(['active' => true]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-menus')
-        ->set('tab', 'footer')
         ->set('locale', 'fr')
         ->set('footer.fr', [menuItem(['type' => 'link', 'label' => 'Bad', 'url' => 'nope'])])
         ->set('header.en', [menuItem(['type' => 'link', 'label' => 'Also bad', 'url' => 'nope'])])
         ->call('update')
         ->assertHasErrors(['footer.fr.0.url', 'header.en.0.url'])
-        ->assertSet('tab', 'footer')
         ->assertSet('locale', 'fr');
 });
 

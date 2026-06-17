@@ -8,6 +8,7 @@ use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -24,9 +25,6 @@ return new class extends Component
     public array $footer = [];
 
     public int $seq = 0;
-
-    #[Url(except: 'header')]
-    public string $tab = 'header';
 
     #[Url(except: 'en')]
     public string $locale;
@@ -50,7 +48,10 @@ return new class extends Component
     public function mount(): void
     {
         $this->activeLocales = resolve('localization')->getActiveLocales();
-        $this->locale = app()->getLocale();
+
+        if (! isset($this->locale) || ! array_key_exists($this->locale, $this->activeLocales)) {
+            $this->locale = app()->getLocale();
+        }
 
         $header = is_array(config('site.header_menu')) ? config('site.header_menu') : [];
         $footer = is_array(config('site.footer_menu')) ? config('site.footer_menu') : [];
@@ -117,6 +118,15 @@ return new class extends Component
     public function reorderFooter(string $key, int $position): void
     {
         $this->reorder('footer', $key, $position);
+    }
+
+    #[On('change-locale')]
+    public function changeLocale(): void
+    {
+        $codes = array_keys($this->activeLocales);
+        $index = array_search($this->locale, $codes, true);
+
+        $this->locale = $codes[($index + 1) % count($codes)] ?? $this->locale;
     }
 
     public function update(UpdateSettingsAction $action): void
@@ -192,8 +202,8 @@ return new class extends Component
     {
         $codes = array_keys($this->activeLocales);
 
-        /** @var array<string, array{menu: string, locale: string}> $erroredViews */
-        $erroredViews = [];
+        /** @var array<string, string> $erroredLocales */
+        $erroredLocales = [];
         $keysToOpen = [];
 
         foreach (array_keys($e->errors()) as $errorKey) {
@@ -218,17 +228,15 @@ return new class extends Component
             }
 
             $this->{$menu}[$locale][(int) $index]['open'] = true;
-            $erroredViews[$menu.'.'.$locale] ??= ['menu' => $menu, 'locale' => $locale];
+            $erroredLocales[$locale] ??= $locale;
             $keysToOpen[] = $item['_key'];
         }
 
-        if ($erroredViews !== [] && ! isset($erroredViews[$this->tab.'.'.$this->locale])) {
-            $target = reset($erroredViews);
-            $this->tab = $target['menu'];
-            $this->locale = $target['locale'];
+        if ($erroredLocales !== [] && ! isset($erroredLocales[$this->locale])) {
+            $this->locale = reset($erroredLocales);
         }
 
-        $this->dispatch('menu-errors-revealed', tab: $this->tab, keys: $keysToOpen);
+        $this->dispatch('menu-errors-revealed', keys: $keysToOpen);
     }
 
     /**
@@ -339,35 +347,25 @@ return new class extends Component
     $currentFooter = $footer[$locale] ?? [];
 @endphp
 
-<x-admin.settings-layout :subheading="__('Manage your site’s navigation by customizing the header and footer menus. Each language has its own menus.')">
+<x-admin.settings-layout>
     <form
         wire:submit="update"
         wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
-        class="max-w-3xl"
-        x-data
-        x-on:menu-errors-revealed.window="$nextTick(() => $el.querySelector(`[data-flux-tab][name='${$event.detail.tab}']`)?.click())"
+        class="grid md:grid-cols-5 gap-10 items-start"
     >
-        <flux:tab.group wire:model="tab">
-            <div class="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-6">
-                <flux:tabs variant="segmented" size="sm">
-                    <flux:tab name="header">{{ __('Header') }}</flux:tab>
-                    <flux:tab name="footer">{{ __('Footer') }}</flux:tab>
-                </flux:tabs>
-
-                @if ($multiLocale)
-                    <div class="flex items-center gap-2">
-                        <flux:text>{{ __('Edit in') }}</flux:text>
-                        <flux:select wire:model.live="locale" size="sm" class="w-auto">
-                            @foreach ($activeLocales as $code => $localeMeta)
-                                <flux:select.option value="{{ $code }}">{{ $localeMeta['name'] ?? strtoupper($code) }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-                    </div>
-                @endif
-            </div>
-
+        <div class="space-y-10 md:col-span-3">
             @foreach (['header' => $currentHeader, 'footer' => $currentFooter] as $menu => $items)
-                <flux:tab.panel name="{{ $menu }}" class="space-y-4">
+                <section>
+                    <div class="flex items-center gap-3 mb-2">
+                        <flux:label>{{ $menu === 'header' ? __('Header') : __('Footer') }} {{ __('menu') }}</flux:label>
+
+                        @if ($multiLocale)
+                            <flux:tooltip content="{{ __('Change language') }}">
+                                <flux:badge size="sm" class="text-xs py-0.5!" as="button" inset="top bottom" x-on:click="$wire.dispatch('change-locale')">{{ strtoupper($locale) }}</flux:badge>
+                            </flux:tooltip>
+                        @endif
+                    </div>
+
                     @if ($items !== [])
                         <div class="space-y-3" wire:sort="reorder{{ ucfirst($menu) }}">
                             @foreach ($items as $index => $item)
@@ -381,20 +379,22 @@ return new class extends Component
                             @endforeach
                         </div>
                     @else
-                        <flux:text>{{ __('No menu items yet. Add your first one below.') }}</flux:text>
+                        <div class="mt-4">
+                            <flux:text>{{ __('No menu items yet. Add your first one below.') }}</flux:text>
+                        </div>
                     @endif
 
-                    <flux:button type="button" size="sm" icon="plus" wire:click="addItem('{{ $menu }}')">
+                    <flux:button type="button" size="sm" icon="plus" class="mt-6" wire:click="addItem('{{ $menu }}')">
                         {{ __('Add') }}
                     </flux:button>
-                </flux:tab.panel>
+                </section>
             @endforeach
-        </flux:tab.group>
 
-        <div class="mt-10">
-            <flux:button type="submit" variant="primary">
-                {{ __('Update') }}
-            </flux:button>
+            <div>
+                <flux:button type="submit" variant="primary">
+                    {{ __('Update') }}
+                </flux:button>
+            </div>
         </div>
     </form>
 
@@ -425,3 +425,21 @@ return new class extends Component
         </div>
     </flux:modal>
 </x-admin.settings-layout>
+
+@section('header-content')
+    <flux:breadcrumbs class="hidden md:flex">
+        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
+            {{ __('Settings') }}
+        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>
+            {{ __('Menus') }}
+        </flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <flux:dropdown class="md:hidden">
+        <flux:navbar.item icon-trailing="chevron-down">{{ __('Menus') }}</flux:navbar.item>
+
+        <flux:navmenu>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+        </flux:navmenu>
+    </flux:dropdown>
+@endsection

@@ -77,7 +77,7 @@ it('opens a confirmation modal before removing a menu item', function (): void {
         ->assertSee('Remove menu item?');
 });
 
-it('reveals a hidden error by switching to its tab and locale and expanding the item', function (): void {
+it('reveals a hidden error by switching to its locale and expanding the item', function (): void {
     Locale::query()->where('code', 'nl')->update(['active' => true]);
     cache()->forget('site-locales');
 
@@ -98,10 +98,30 @@ it('reveals a hidden error by switching to its tab and locale and expanding the 
     $page->wait(0.6);
 
     $page->assertNoJavascriptErrors()
-        ->assertScript("$comp.\$wire.get('tab')", 'footer')
         ->assertScript("$comp.\$wire.get('locale')", 'nl')
-        ->assertScript("document.querySelector('[data-flux-tab-panel][name=footer]')?.offsetParent !== null", true)
-        ->assertScript("document.querySelector('[data-flux-tab-panel][name=footer] [x-show=\"open\"]')?.offsetParent !== null", true);
+        ->assertScript("Array.from(document.querySelectorAll('input')).some(i => i.value === 'nope' && i.offsetParent !== null)", true);
+});
+
+it('keeps the menus nav pill selected after the editing locale changes', function (): void {
+    Locale::query()->where('code', 'nl')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $this->actingAsAdmin();
+
+    $page = visit(route('admin.settings-menus'));
+    $page->wait(0.4);
+
+    $comp = "window.Livewire.all().find(c => c.\$wire.get('header') !== undefined)";
+    $menuPillSelected = "Array.from(document.querySelectorAll('[data-flux-tab][data-selected]')).some(e => e.textContent.trim() === 'Menus')";
+
+    $page->assertScript($menuPillSelected, true);
+
+    $page->script("$comp.\$wire.dispatch('change-locale'); void 0");
+    $page->wait(0.6);
+
+    $page->assertNoJavascriptErrors()
+        ->assertScript("$comp.\$wire.get('locale')", 'nl')
+        ->assertScript($menuPillSelected, true);
 });
 
 it('reorders header items through the wire:sort handler the way a real drag does', function (): void {

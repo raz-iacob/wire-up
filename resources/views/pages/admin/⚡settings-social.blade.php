@@ -69,31 +69,49 @@ return new class extends Component
     $iconVariants = config('social.icon_variants');
 @endphp
 
-<x-admin.settings-layout :subheading="__('Set the links to your social profiles — they’ll appear in your site’s footer so visitors can connect with you.')">
-    <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="max-w-3xl">
-        <div class="grid sm:grid-cols-2 gap-6">
-            @foreach ($platforms as $key => $platform)
-                <flux:input
-                    wire:model="links.{{ $key }}"
-                    type="url"
-                    label="{{ __($platform['label']) }}"
-                    placeholder="{{ $platform['placeholder'] }}"
-                />
-            @endforeach
-        </div>
+<x-admin.settings-layout>
+    <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-start">
+        <div class="space-y-10 md:col-span-3">
+            <div class="grid sm:grid-cols-2 gap-6">
+                @foreach ($platforms as $key => $platform)
+                    <flux:input
+                        wire:model="links.{{ $key }}"
+                        type="url"
+                        label="{{ __($platform['label']) }}"
+                        placeholder="{{ $platform['placeholder'] }}"
+                    />
+                @endforeach
+            </div>
 
-        <flux:separator variant="subtle" class="my-8" />
+            <flux:radio.group wire:model="variant" variant="segmented" label="{{ __('Icon style') }}" description="{{ __('How the social icons render in your footer.') }}">
+                @foreach ($iconVariants as $value => $label)
+                    <flux:radio value="{{ $value }}" label="{{ __($label) }}" />
+                @endforeach
+            </flux:radio.group>
 
-        <flux:radio.group wire:model="variant" variant="segmented" label="{{ __('Icon style') }}" description="{{ __('How the social icons render in your footer.') }}">
-            @foreach ($iconVariants as $value => $label)
-                <flux:radio value="{{ $value }}" label="{{ __($label) }}" />
-            @endforeach
-        </flux:radio.group>
-
-        <div class="mt-10">
-            <flux:button type="submit" variant="primary">
-                {{ __('Update') }}
-            </flux:button>
+            <div>
+                <flux:button type="submit" variant="primary">
+                    {{ __('Update') }}
+                </flux:button>
+            </div>
         </div>
     </form>
 </x-admin.settings-layout>
+
+@section('header-content')
+    <flux:breadcrumbs class="hidden md:flex">
+        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
+            {{ __('Settings') }}
+        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>
+            {{ __('Social') }}
+        </flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <flux:dropdown class="md:hidden">
+        <flux:navbar.item icon-trailing="chevron-down">{{ __('Social') }}</flux:navbar.item>
+
+        <flux:navmenu>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+        </flux:navmenu>
+    </flux:dropdown>
+@endsection

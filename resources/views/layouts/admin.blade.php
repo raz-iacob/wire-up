@@ -38,60 +38,97 @@
     <body class="min-h-screen bg-white dark:bg-zinc-800">
         <x-admin.sidebar />
 
-        <flux:header class="md:hidden">
-            <div class="flex items-center gap-4">
-                <flux:sidebar.toggle class="md:hidden" icon="bars-2" inset="left" />
+        <flux:header sticky class="block! bg-white lg:bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
+            <flux:navbar class="md:hidden w-full">
+                <flux:sidebar.toggle icon="bars-2" inset="left" />
+                
+                @yield('header-content')
 
-                <flux:heading>{{ $title ?? '' }}</flux:heading>
-            </div>
+                <flux:spacer />
 
-            <flux:spacer />
+                <flux:dropdown position="bottom" align="end">
+                    <flux:profile
+                        :avatar="auth()->user()->photo_url" 
+                        :initials="auth()->user()->initials" 
+                        :chevron="false"
+                    />
 
-            <flux:dropdown position="top" align="end">
-                <flux:profile :avatar="auth()->user()->photo_url" :initials="auth()->user()->initials" :chevron="false" />
+                    <flux:navmenu class="max-w-48">
 
-                <flux:menu>
-                    <flux:menu.radio.group>
-                        <div class="p-0 text-sm font-normal">
-                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar 
-                                    size="sm" 
-                                    :src="auth()->user()->photo_url" 
-                                    :name="auth()->user()->name" 
-                                    :initials="auth()->user()->initials" 
-                                />
-
-                                <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
-                                    <span class="truncate text-xs">{{ auth()->user()->email }}</span>
-                                </div>
-                            </div>
+                        <div class="px-2 py-1.5">
+                            <flux:text size="sm">{{ __('Signed in as') }}</flux:text>
+                            <flux:heading class="mt-1! truncate">{{ auth()->user()->email }}</flux:heading>
                         </div>
-                    </flux:menu.radio.group>
 
-                    <flux:menu.separator />
+                        <flux:navmenu.separator />
 
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('admin.account-profile')" icon="user" iconVariant="outline" wire:navigate>
-                            {{ __('Account') }}
-                        </flux:menu.item>
-                    </flux:menu.radio.group>
+                        <flux:navmenu.item icon="user" href="{{ route('admin.account-profile') }}" iconVariant="outline" wire:navigate>{{ __('Account') }}</flux:navmenu.item>
+                        <flux:navmenu.item icon="information-circle" href="#" iconVariant="outline">{{ __('Help') }}</flux:navmenu.item>
 
-                    <flux:menu.separator />
+                        {{-- @if (session()->has('impersonate'))
+                        <livewire:admin.components.stop-impersonating />
+                        @endif --}}
 
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
-                        @csrf
-                        <flux:menu.item
-                            as="button"
-                            type="submit"
-                            icon="arrow-right-start-on-rectangle"
-                            class="w-full"
-                        >
-                            {{ __('Log Out') }}
-                        </flux:menu.item>
-                    </form>
-                </flux:menu>
-            </flux:dropdown>
+                        <flux:navmenu.separator />
+
+                        <form method="POST" action="{{ route('logout') }}" class="w-full">
+                            @csrf
+                            <flux:navmenu.item
+                                as="button"
+                                type="submit"
+                                icon="arrow-right-start-on-rectangle"
+                                class="w-full"
+                            >
+                                {{ __('Log Out') }}
+                            </flux:navmenu.item>
+                        </form>
+                    </flux:navmenu>
+                </flux:dropdown>
+            </flux:navbar>
+
+            <flux:navbar scrollable class="hidden md:flex w-full">
+                @yield('header-content')
+                <flux:spacer />
+                <flux:dropdown position="bottom" align="end">
+                    <flux:profile 
+                        size="sm" 
+                        :name="auth()->user()->name"
+                        :avatar="auth()->user()->photo_url" 
+                        :initials="auth()->user()->initials" 
+                    />
+
+                    <flux:navmenu class="max-w-48">
+
+                        <div class="px-2 py-1.5">
+                            <flux:text size="sm">{{ __('Signed in as') }}</flux:text>
+                            <flux:heading class="mt-1! truncate">{{ auth()->user()->email }}</flux:heading>
+                        </div>
+
+                        <flux:navmenu.separator />
+
+                        <flux:navmenu.item icon="user" href="{{ route('admin.account-profile') }}" iconVariant="outline" wire:navigate>{{ __('Account') }}</flux:navmenu.item>
+                        <flux:navmenu.item icon="information-circle" href="#" iconVariant="outline">{{ __('Help') }}</flux:navmenu.item>
+
+                        {{-- @if (session()->has('impersonate'))
+                        <livewire:admin.components.stop-impersonating />
+                        @endif --}}
+
+                        <flux:navmenu.separator />
+
+                        <form method="POST" action="{{ route('logout') }}" class="w-full">
+                            @csrf
+                            <flux:navmenu.item
+                                as="button"
+                                type="submit"
+                                icon="arrow-right-start-on-rectangle"
+                                class="w-full"
+                            >
+                                {{ __('Log Out') }}
+                            </flux:navmenu.item>
+                        </form>
+                    </flux:navmenu>
+                </flux:dropdown>
+            </flux:navbar>
         </flux:header>
 
         <flux:main class="min-w-0">

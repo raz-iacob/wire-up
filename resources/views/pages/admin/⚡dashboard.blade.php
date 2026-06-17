@@ -18,9 +18,6 @@ return new class extends Component
 
 <div class="space-y-6 md:space-y-8">
     <div class="flex flex-col md:flex-row justify-between items-center">
-        <div class="flex items-center mb-6 md:mb-0">
-            <flux:heading size="xl">{{ __('Dashboard') }}</flux:heading>
-        </div>
         <div class="flex flex-col md:flex-row items-center justify-end gap-4">
             <div class="w-50">
                 <flux:date-picker mode="range" wire:model.live="datesFilter" presets="last7Days last30Days last3Months last6Months allTime" :max="now()->format('Y-m-d')" />
@@ -28,3 +25,9 @@ return new class extends Component
         </div>
     </div>
 </div>
+
+@section('header-content')
+    <flux:breadcrumbs>
+        <flux:breadcrumbs.item class="pl-3 md:pl-0">{{ __('Dashboard') }}</flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+@endsection

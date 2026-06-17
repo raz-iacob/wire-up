@@ -178,7 +178,7 @@ it('hides translations column when only one locale is active', function (): void
     $response->assertDontSee(__('Translations'));
 });
 
-it('shows translations column when multiple locales are configured', function (): void {
+it('shows languages column when multiple locales are configured', function (): void {
     Locale::query()->whereIn('code', ['en', 'de', 'fr'])->update([
         'active' => true,
     ]);
@@ -187,7 +187,7 @@ it('shows translations column when multiple locales are configured', function ()
 
     $response = Livewire::test('pages::admin.pages-index');
 
-    $response->assertSee(__('Translations'));
+    $response->assertSee(__('Languages'));
 });
 
 it('flags the homepage in the pages list', function (): void {

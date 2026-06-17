@@ -91,9 +91,9 @@ return new class extends Component
 };
 ?>
 
-<x-admin.settings-layout :subheading="__('General settings for your site.')">
+<x-admin.settings-layout>
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-start">
-        <div class="space-y-8 md:col-span-3">
+        <div class="space-y-10 md:col-span-3">
             <flux:select
                 variant="listbox"
                 searchable
@@ -128,3 +128,21 @@ return new class extends Component
         </div>
     </form>
 </x-admin.settings-layout>
+
+@section('header-content')
+    <flux:breadcrumbs class="hidden md:flex">
+        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
+            {{ __('Settings') }}
+        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>
+            {{ __('General') }}
+        </flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <flux:dropdown class="md:hidden">
+        <flux:navbar.item icon-trailing="chevron-down">{{ __('General') }}</flux:navbar.item>
+
+        <flux:navmenu>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+        </flux:navmenu>
+    </flux:dropdown>
+@endsection

@@ -156,3 +156,21 @@ return new class extends Component
         </div>
     </div>
 </form>
+
+@section('header-content')
+    <flux:breadcrumbs class="hidden md:flex">
+        <flux:breadcrumbs.item href="{{ route('admin.users-index') }}" wire:navigate>
+            {{ __('Users') }}
+        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>
+            {{ $user->name }}
+        </flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <flux:dropdown class="md:hidden">
+        <flux:navbar.item icon-trailing="chevron-down">{{ Str::limit($user->name, 22) }}</flux:navbar.item>
+
+        <flux:navmenu>
+            <flux:navmenu.item href="{{ route('admin.users-index') }}" wire:navigate>{{ __('Users') }}</flux:navmenu.item>
+        </flux:navmenu>
+    </flux:dropdown>
+@endsection

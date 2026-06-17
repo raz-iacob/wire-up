@@ -1,20 +1,17 @@
-<div class="space-y-6">
-    <div class="hidden md:block">
-        <flux:heading size="xl" level="1">{{ __('Account') }}</flux:heading>
-        <flux:subheading size="lg">{{ __('Manage your profile and account settings') }}</flux:subheading>
-    </div>
+@php
+    $current = fn (string $name): bool => app('livewire')?->isLivewireRequest()
+        ? str()->is(trim(str(route($name))->after(config('app.url'))->toString(), '/') ?: '/', app('livewire')->originalPath())
+        : request()->routeIs($name);
+@endphp
 
-    <flux:navbar class="pt-0">
-        <flux:navbar.item :href="route('admin.account-profile')" wire:navigate>{{ __('Profile') }}</flux:navbar.item>
-        <flux:navbar.item :href="route('admin.account-password')" wire:navigate>{{ __('Password') }}</flux:navbar.item>
-        <flux:navbar.item :href="route('admin.account-appearance')" wire:navigate>{{ __('Appearance') }}</flux:navbar.item>
-    </flux:navbar>
+<div class="space-y-8">
+    <flux:tabs variant="pills" scrollable>
+        <flux:tab :href="route('admin.account-profile')" :selected="$current('admin.account-profile')" wire:navigate>{{ __('Profile') }}</flux:tab>
+        <flux:tab :href="route('admin.account-password')" :selected="$current('admin.account-password')" wire:navigate>{{ __('Password') }}</flux:tab>
+        <flux:tab :href="route('admin.account-appearance')" :selected="$current('admin.account-appearance')" wire:navigate>{{ __('Appearance') }}</flux:tab>
+    </flux:tabs>
 
     <div class="w-full max-w-lg">
-        <flux:subheading>{{ $subheading ?? '' }}</flux:subheading>
-
-        <div class="mt-10">
-            {{ $slot }}
-        </div>
+        {{ $slot }}
     </div>
 </div>

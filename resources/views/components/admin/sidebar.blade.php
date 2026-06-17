@@ -9,62 +9,18 @@
         <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
     </flux:sidebar.header>
 
+    <flux:sidebar.nav>
+        <flux:sidebar.item icon="squares-2x2" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate.hover>{{ __('Dashboard') }}</flux:sidebar.item>
+        <flux:sidebar.item icon="cursor-arrow-ripple" :href="route('admin.pages-index')" :current="request()->routeIs('admin.pages-*')" wire:navigate.hover>{{ __('Pages') }}</flux:sidebar.item>
+        <flux:sidebar.item icon="users" :href="route('admin.users-index')" :current="request()->routeIs('admin.users-*')" wire:navigate.hover>{{ __('Users') }}</flux:sidebar.item>
+        <flux:sidebar.item icon="cog-6-tooth" :href="route('admin.settings-general')" :current="request()->routeIs('admin.settings-*')" wire:navigate.hover>{{ __('Settings') }}</flux:sidebar.item>
+    </flux:sidebar.nav>   
+
     <livewire:admin.sidebar-nav />
 
     <flux:spacer />
 
-    <flux:sidebar.nav>
-        <flux:sidebar.item icon="cog-6-tooth" :href="route('admin.settings-general')" :current="request()->routeIs('admin.settings-*')" wire:navigate.hover>{{ __('Settings') }}</flux:sidebar.item>
-        <flux:sidebar.item icon="information-circle" href="#">Help</flux:sidebar.item>
-    </flux:sidebar.nav>
-
-    <flux:dropdown position="top" align="start" class="max-lg:hidden">
-        <flux:sidebar.profile 
-            :name="auth()->user()->name"
-            :avatar="auth()->user()->photo_url"
-            :initials="auth()->user()->initials"
-        />
-
-        <flux:menu class="w-[220px]">
-            <flux:menu.radio.group>
-                <div class="p-0 text-sm font-normal">
-                    <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                        <flux:avatar 
-                            size="sm" 
-                            :src="auth()->user()->photo_url" 
-                            :name="auth()->user()->name" 
-                            :initials="auth()->user()->initials" 
-                        />
-
-                        <div class="grid flex-1 text-start text-sm leading-tight">
-                            <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
-                            <span class="truncate text-xs">{{ auth()->user()->email }}</span>
-                        </div>
-                    </div>
-                </div>
-            </flux:menu.radio.group>
-
-            <flux:menu.separator />
-
-            <flux:menu.radio.group>
-                <flux:menu.item :href="route('admin.account-profile')" icon="user" iconVariant="outline" wire:navigate>
-                    {{ __('Account') }}
-                </flux:menu.item>
-            </flux:menu.radio.group>
-
-            <flux:menu.separator />
-
-            <form method="POST" action="{{ route('logout') }}" class="w-full">
-                @csrf
-                <flux:menu.item
-                    as="button"
-                    type="submit"
-                    icon="arrow-right-start-on-rectangle"
-                    class="w-full"
-                >
-                    {{ __('Log Out') }}
-                </flux:menu.item>
-            </form>
-        </flux:menu>
-    </flux:dropdown>
+    <flux:text class="text-xs" variant="subtle">
+        {{ __('Made with') }} <a href="https://wire-up.dev" target="_blank">Wire-Up</a>
+    </flux:text>
 </flux:sidebar>

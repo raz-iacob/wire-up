@@ -109,28 +109,28 @@ return new class extends Component
 ?>
 <div>
     <div class="space-y-6 md:space-y-8">
-        <div class="flex flex-col md:flex-row justify-between items-center">
-            <div class="hidden md:block">
-                <flux:heading size="xl" level="1">{{ __('Pages') }}</flux:heading>
-                <flux:subheading size="lg" class="mb-6">{{ __('Manage your website pages') }}</flux:subheading>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="w-full md:w-52 sm:shrink-0">
-                    <flux:select variant="listbox" wire:model.live="status">
-                        <flux:select.option value="">{{ __('All Pages') }}</flux:select.option>
-                        @foreach(PageStatus::cases() as $status)
-                        <flux:select.option value="{{ $status->value }}">{{ $status->label() }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
-                </div>
-                <div class="w-full md:w-52 sm:shrink-0">
-                    <flux:input icon="magnifying-glass" wire:model.live="search" placeholder="{{ __('Search...') }}" clearable />
-                </div>
-                <flux:modal.trigger name="add-new">
-                    <flux:tooltip content="{{ __('Add new') }}">
-                        <flux:button square variant="primary" class="shrink-0"><flux:icon.plus variant="solid" /></flux:button>
-                    </flux:tooltip>
-                </flux:modal.trigger>
+        <div class="flex items-center gap-3">
+            <flux:modal.trigger name="add-new">
+                <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+            </flux:modal.trigger>
+
+            <flux:dropdown position="bottom" align="start">
+                <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
+
+                <flux:menu>
+                    <flux:menu.submenu heading="{{ __('Status') }}">
+                        <flux:menu.radio.group wire:model.live="status" heading="{{ __('Status') }}">
+                            <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
+                            @foreach(PageStatus::cases() as $status)
+                            <flux:menu.radio value="{{ $status->value }}">{{ $status->label() }}</flux:menu.radio>
+                            @endforeach
+                        </flux:menu.radio.group>
+                    </flux:menu.submenu>
+                </flux:menu>
+            </flux:dropdown>
+                
+            <div class="w-full md:w-52 sm:shrink-0">
+                <flux:input icon="magnifying-glass" wire:model.live="search" size="sm" placeholder="{{ __('Search...') }}" clearable />
             </div>
         </div>
 
@@ -138,7 +138,7 @@ return new class extends Component
             <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
                 <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection" wire:click="sort('title')">{{ __('Title') }}</flux:table.column>
                 @if($this->hasMultipleActiveLocales())
-                <flux:table.column class="w-1/6">{{ __('Translations') }}</flux:table.column>
+                <flux:table.column class="w-1/6">{{ __('Languages') }}</flux:table.column>
                 @endif
                 <flux:table.column class="w-1/6">{{ __('Status') }}</flux:table.column>
                 <flux:table.column class="w-1/6" sortable :sorted="$sortBy === 'updated_at'" :direction="$sortDirection" wire:click="sort('updated_at')">{{ __('Last updated') }}</flux:table.column>
@@ -149,14 +149,14 @@ return new class extends Component
                 @foreach ($this->pages as $row)
                 <flux:table.row wire:key="{{ $row->id }}">
                     <flux:table.cell>
-                        <a href="{{ route('admin.pages-edit', $row->id) }}" class="flex items-center gap-2">
-                            <flux:text variant="strong" class="hover:underline">{{ $row->title }}</flux:text>
+                        <div class="flex items-center justify-between gap-2">
+                            <a href="{{ route('admin.pages-edit', $row->id) }}" class="flex items-center gap-2">
+                                <flux:text variant="strong" class="hover:underline">{{ $row->title }}</flux:text>
+                            </a>
                             @if ($row->id === $this->homePageId)
-                                <flux:tooltip content="{{ __('Homepage') }}">
-                                    <flux:icon name="home" variant="micro" class="text-zinc-400" />
-                                </flux:tooltip>
+                            <flux:badge size="sm" class="md:mr-6">{{ __('Homepage') }}</flux:badge>
                             @endif
-                        </a>
+                        </div>
                     </flux:table.cell>
 
                     @if($this->hasMultipleActiveLocales())
@@ -175,8 +175,7 @@ return new class extends Component
 
                     <flux:table.cell>
                         <flux:dropdown class="flex justify-end">
-                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom">
-                            </flux:button>
+                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
                             <flux:menu>
                                 <flux:menu.item icon="eye" href="{{ url($row->slug) }}" target="_blank">
                                     {{ __('Preview') }}
@@ -229,3 +228,9 @@ return new class extends Component
         </div>
     </flux:modal>
 </div>
+
+@section('header-content')
+    <flux:breadcrumbs>
+        <flux:breadcrumbs.item class="pl-3 md:pl-0">{{ __('Pages') }}</flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+@endsection

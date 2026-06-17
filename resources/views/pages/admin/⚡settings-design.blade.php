@@ -193,7 +193,7 @@ return new class extends Component
         .'&display=swap';
 @endphp
 
-<x-admin.settings-layout :subheading="__('Design the look of your public site — colours, fonts, and shape.')">
+<x-admin.settings-layout>
     @if ($previewFontsUrl)
         <link id="design-preview-fonts" rel="stylesheet" href="{{ $previewFontsUrl }}" />
     @endif
@@ -232,6 +232,7 @@ return new class extends Component
         }">
 
         <div class="order-2 lg:col-span-2 lg:sticky lg:top-8">
+            <flux:text class="mb-6">{{ __('Design the look of your public site — colours, fonts, and shape.') }}</flux:text>
             <div x-cloak class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 select-none">
 
                 <div class="relative transition-shadow" :class="$wire.header_sticky ? 'shadow-md' : ''">
@@ -629,3 +630,21 @@ return new class extends Component
         </div>
     </form>
 </x-admin.settings-layout>
+
+@section('header-content')
+    <flux:breadcrumbs class="hidden md:flex">
+        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
+            {{ __('Settings') }}
+        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>
+            {{ __('Design') }}
+        </flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <flux:dropdown class="md:hidden">
+        <flux:navbar.item icon-trailing="chevron-down">{{ __('Design') }}</flux:navbar.item>
+
+        <flux:navmenu>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+        </flux:navmenu>
+    </flux:dropdown>
+@endsection

@@ -149,7 +149,7 @@ return new class extends Component
 };
 ?>
 
-<x-admin.account-layout :subheading="__('Update your name and email address')">
+<x-admin.account-layout>
     <form wire:submit="update" class="space-y-8">
         <div class="flex flex-row items-start justify-between gap-8">
             <div class="grow">
@@ -231,4 +231,22 @@ return new class extends Component
             </form>
         </flux:modal>
     </section>
-</x-admin.settings-layout>
+</x-admin.account-layout>
+
+@section('header-content')
+    <flux:breadcrumbs class="hidden md:flex">
+        <flux:breadcrumbs.item href="{{ route('admin.account-profile') }}" wire:navigate>
+            {{ __('Account') }}
+        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>
+            {{ __('Profile') }}
+        </flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <flux:dropdown class="md:hidden">
+        <flux:navbar.item icon-trailing="chevron-down">{{ __('Profile') }}</flux:navbar.item>
+
+        <flux:navmenu>
+            <flux:navmenu.item href="{{ route('admin.account-profile') }}" wire:navigate>{{ __('Account') }}</flux:navmenu.item>
+        </flux:navmenu>
+    </flux:dropdown>
+@endsection

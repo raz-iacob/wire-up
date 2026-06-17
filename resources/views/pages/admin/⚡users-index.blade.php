@@ -73,27 +73,27 @@ return new class extends Component
 ?>
 <div>
     <div class="space-y-6 md:space-y-8">
-        <div class="flex flex-col md:flex-row justify-between items-center">
-            <div class="hidden md:block">
-                <flux:heading size="xl" level="1">{{ __('Users') }}</flux:heading>
-                <flux:subheading size="lg" class="mb-6">{{ __('Manage your users and their permissions') }}</flux:subheading>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="w-full md:w-52 sm:shrink-0">
-                    <flux:select variant="listbox" wire:model.live="status">
-                        <flux:select.option value="">{{ __('All Users') }}</flux:select.option>
-                        <flux:select.option value="active">{{ __('Active') }}</flux:select.option>
-                        <flux:select.option value="disabled">{{ __('Disabled') }}</flux:select.option>
-                    </flux:select>
-                </div>
-                <div class="w-full md:w-52 sm:shrink-0">
-                    <flux:input icon="magnifying-glass" wire:model.live="search" placeholder="{{ __('Search...') }}" clearable />
-                </div>
-                <flux:modal.trigger name="add-new">
-                    <flux:tooltip content="{{ __('Add new') }}">
-                        <flux:button square variant="primary" class="shrink-0"><flux:icon.plus variant="solid" /></flux:button>
-                    </flux:tooltip>
-                </flux:modal.trigger>
+        <div class="flex items-center gap-3">
+            <flux:modal.trigger name="add-new">
+                <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+            </flux:modal.trigger>
+
+            <flux:dropdown position="bottom" align="start">
+                <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
+
+                <flux:menu>
+                    <flux:menu.submenu heading="{{ __('Status') }}">
+                        <flux:menu.radio.group wire:model.live="status" heading="{{ __('Status') }}">
+                            <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
+                            <flux:menu.radio value="active">{{ __('Active') }}</flux:menu.radio>
+                            <flux:menu.radio value="disabled">{{ __('Disabled') }}</flux:menu.radio>
+                        </flux:menu.radio.group>
+                    </flux:menu.submenu>
+                </flux:menu>
+            </flux:dropdown>
+
+            <div class="w-full md:w-52 sm:shrink-0">
+                <flux:input icon="magnifying-glass" wire:model.live="search" size="sm" placeholder="{{ __('Search...') }}" clearable />
             </div>
         </div>
 
@@ -133,8 +133,7 @@ return new class extends Component
 
                     <flux:table.cell>
                         <flux:dropdown class="flex justify-end">
-                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom">
-                            </flux:button>
+                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
                             <flux:menu>
                                 <flux:menu.item icon="pencil" href="{{ route('admin.users-edit', $row->id) }}" >
                                     {{ __('Edit') }}
@@ -171,3 +170,9 @@ return new class extends Component
         </form>
     </flux:modal>
 </div>
+
+@section('header-content')
+    <flux:breadcrumbs>
+        <flux:breadcrumbs.item class="pl-3 md:pl-0">{{ __('Users') }}</flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+@endsection

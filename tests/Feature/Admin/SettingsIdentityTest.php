@@ -56,6 +56,17 @@ it('populates the form with existing values on mount', function (): void {
         ->assertSet('description.en', 'We build things');
 });
 
+it('keeps the locale from the query string instead of resetting to the default', function (): void {
+    Locale::query()->where('code', 'nl')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $this->actingAsAdmin();
+
+    Livewire::withQueryParams(['locale' => 'nl'])
+        ->test('pages::admin.settings-identity')
+        ->assertSet('locale', 'nl');
+});
+
 it('cycles to the next active locale on the change-locale event', function (): void {
     Locale::query()->where('code', 'nl')->update(['active' => true]);
     cache()->forget('site-locales');

@@ -41,8 +41,11 @@ return new class extends Component
         $this->description = $this->localeMap('description');
         $this->favicon = is_array(config('site.favicon')) ? config('site.favicon') : null;
 
-        $this->locale = app()->getLocale();
         $this->activeLocales = resolve('localization')->getActiveLocales();
+
+        if (! isset($this->locale) || ! array_key_exists($this->locale, $this->activeLocales)) {
+            $this->locale = app()->getLocale();
+        }
     }
 
     public function update(UpdateSettingsAction $action): void
@@ -143,7 +146,7 @@ return new class extends Component
 };
 ?>
 
-<x-admin.settings-layout :subheading="__('These details not only shape your site’s identity but also enhance its visibility in search engines.')">
+<x-admin.settings-layout>
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-start">
         <div class="space-y-8 md:col-span-3">
             <x-forms.input-translated name="title" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Title') }}" />
@@ -157,7 +160,7 @@ return new class extends Component
                 label="{{ __('Favicon') }}"
             />
 
-            <div class="flex items-center gap-4">
+            <div>
                 <flux:button type="submit" variant="primary">
                     {{ __('Update') }}
                 </flux:button>
@@ -194,3 +197,21 @@ return new class extends Component
         </div>
     </form>
 </x-admin.settings-layout>
+
+@section('header-content')
+    <flux:breadcrumbs class="hidden md:flex">
+        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
+            {{ __('Settings') }}
+        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>
+            {{ __('Identity') }}
+        </flux:breadcrumbs.item>
+    </flux:breadcrumbs>
+    <flux:dropdown class="md:hidden">
+        <flux:navbar.item icon-trailing="chevron-down">{{ __('Identity') }}</flux:navbar.item>
+
+        <flux:navmenu>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+        </flux:navmenu>
+    </flux:dropdown>
+@endsection
