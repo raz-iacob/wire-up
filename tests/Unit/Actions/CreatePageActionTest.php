@@ -22,3 +22,9 @@ it('may create a page', function (): void {
         ->and($page->published_at)->toBeNull()
         ->and($page->slug)->toBe('test-page');
 });
+
+it('publishes a new page in the default locale by default', function (): void {
+    $page = new CreatePageAction()->handle(['title' => 'Localized Page']);
+
+    expect($page->refresh()->published_locales)->toBe([resolve('localization')->getDefaultLocale()]);
+});

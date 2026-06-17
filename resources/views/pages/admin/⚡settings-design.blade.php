@@ -198,7 +198,7 @@ return new class extends Component
         <link id="design-preview-fonts" rel="stylesheet" href="{{ $previewFontsUrl }}" />
     @endif
     <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
-        class="grid lg:grid-cols-5 gap-10 items-start"
+        class="grid md:grid-cols-5 gap-10 items-start"
         x-data="{
             fonts: @js($fontStacks),
             headingSizes: @js(config('theme.heading_sizes')),
@@ -231,7 +231,7 @@ return new class extends Component
             get copyrightSize() { return (parseFloat(this.bodySize) * 0.75).toFixed(3) + 'rem' },
         }">
 
-        <div class="order-2 lg:col-span-2 lg:sticky lg:top-8">
+        <div class="order-2 md:col-span-2 md:sticky md:top-4">
             <flux:text class="mb-6">{{ __('Design the look of your public site — colours, fonts, and shape.') }}</flux:text>
             <div x-cloak class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 select-none">
 
@@ -391,7 +391,7 @@ return new class extends Component
             </div>
         </div>
 
-        <div class="order-1 lg:col-span-3 space-y-8">
+        <div class="order-1 md:col-span-3 space-y-8">
             <flux:select variant="listbox" wire:model="theme" label="{{ __('Theme Colors') }}" description="{{ __('Choose from pre-designed color schemes or create your own custom palette.') }}">
                 @foreach ($presets as $key => $preset)
                     <flux:select.option value="{{ $key }}">

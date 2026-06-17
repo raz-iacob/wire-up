@@ -86,8 +86,8 @@ return new class extends Component
 };
 ?>
 
-<form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-3 gap-6 items-stretch">
-    <div class="md:col-span-2">
+<form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-stretch">
+    <div class="md:col-span-3">
         <div class="gap-4 mb-6 md:mb-0">
             <flux:heading size="xl" class="cursor-pointer hover:underline">
                 {{ __('Edit') }} {{ $user->name }}
@@ -143,7 +143,7 @@ return new class extends Component
             </flux:fieldset>
         </div>
     </div>
-    <div class="mb-10 md:mb-0">
+    <div class="mb-10 md:mb-0 md:col-span-2">
         <div class="flex flex-col-reverse md:flex-col items-center md:items-end md:justify-end gap-4 md:sticky md:top-8 pt-2">
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary" icon="check">

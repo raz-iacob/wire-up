@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use App\Enums\PageStatus;
+use App\Models\Locale;
 use App\Models\Page;
 
 function publishPage(string $slug, array $attributes = []): Page
 {
     $page = Page::factory()->create([
+        'metadata' => ['published_locales' => ['en']],
         'status' => PageStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         ...$attributes,
@@ -52,4 +54,32 @@ it('returns 404 for a scheduled page whose publish date is in the future', funct
     publishPage('coming-soon', ['published_at' => now()->addWeek()]);
 
     $this->get(route('page', 'coming-soon'))->assertNotFound();
+});
+
+it('returns 404 for a page that is not published in the current locale', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    publishPage('hidden', ['metadata' => ['published_locales' => ['fr']]]);
+
+    $this->get(route('page', 'hidden'))->assertNotFound();
+});
+
+it('renders a page that is published in the current locale', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    publishPage('visible', ['title' => 'Visible', 'metadata' => ['published_locales' => ['en']]]);
+
+    $this->get(route('page', 'visible'))
+        ->assertOk()
+        ->assertSee('Visible');
+});
+
+it('does not gate by locale when the site has a single language', function (): void {
+    publishPage('single', ['title' => 'Single', 'metadata' => ['published_locales' => ['fr']]]);
+
+    $this->get(route('page', 'single'))
+        ->assertOk()
+        ->assertSee('Single');
 });

@@ -9,6 +9,7 @@ use App\Models\Settings;
 function publishHomeCandidate(string $slug, array $attributes = []): Page
 {
     $page = Page::factory()->create([
+        'metadata' => ['published_locales' => ['en']],
         'status' => PageStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         ...$attributes,
@@ -34,12 +35,10 @@ it('renders the configured homepage at the site root', function (): void {
         ->assertSee('Our landing.');
 });
 
-it('falls back to a generic homepage when none can be resolved', function (): void {
+it('returns 404 at the site root when no homepage can be resolved', function (): void {
     Page::query()->delete();
 
-    $this->get(route('home'))
-        ->assertOk()
-        ->assertSee('doesn’t have a homepage yet', false);
+    $this->get(route('home'))->assertNotFound();
 });
 
 it('redirects the homepage slug to the site root with a 301', function (): void {

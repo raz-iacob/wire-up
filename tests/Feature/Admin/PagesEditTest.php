@@ -309,6 +309,72 @@ it('can schedule a page for future publication', function (): void {
         ->and($page->published_at->timestamp)->toBe($futureDate->timestamp);
 });
 
+it('hydrates published locales from metadata on mount', function (): void {
+    $page = Page::factory()->create([
+        'metadata' => ['published_locales' => ['en']],
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('publishedLocales', ['en']);
+});
+
+it('defaults published locales to empty for a page without metadata', function (): void {
+    $page = Page::factory()->create(['metadata' => null]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('publishedLocales', []);
+});
+
+it('persists published locales to page metadata on update', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'Localized')
+        ->set('slugs.en', 'localized')
+        ->set('publishedLocales', ['en'])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($page->fresh()->published_locales)->toBe(['en']);
+});
+
+it('preserves existing metadata when updating published locales', function (): void {
+    $page = Page::factory()->create([
+        'status' => PageStatus::DRAFT,
+        'metadata' => ['layout' => 'wide'],
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'Wide')
+        ->set('slugs.en', 'wide')
+        ->set('publishedLocales', ['en'])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($page->fresh()->metadata)->toBe(['layout' => 'wide', 'published_locales' => ['en']]);
+});
+
+it('rejects published locales that are not active site locales', function (): void {
+    $page = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'Bad locale')
+        ->set('slugs.en', 'bad-locale')
+        ->set('publishedLocales', ['zz'])
+        ->call('update')
+        ->assertHasErrors(['publishedLocales.0']);
+});
+
 it('marks the page as the homepage in the editor', function (): void {
     $page = Page::factory()->create([
         'title' => 'Home Landing',

@@ -32,7 +32,7 @@ return new class extends Migration
         $description = 'Welcome to our website!';
 
         $pageId = DB::table('pages')->insertGetId([
-            'metadata' => json_encode(['layout' => 'default']),
+            'metadata' => json_encode(['layout' => 'default', 'published_locales' => ['en']]),
             'status' => PageStatus::PUBLISHED,
             'published_at' => now(),
             'created_at' => now(),

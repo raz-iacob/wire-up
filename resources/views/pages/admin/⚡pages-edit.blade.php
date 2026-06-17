@@ -11,6 +11,7 @@ use Carbon\CarbonImmutable;
 use Flux\Flux;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -43,6 +44,11 @@ return new class extends Component
 
     public PageStatus $status;
 
+    /**
+     * @var array<int, string>
+     */
+    public array $publishedLocales = [];
+
     public ?CarbonImmutable $published_at = null;
 
     #[Url(except: 'en')]
@@ -58,6 +64,7 @@ return new class extends Component
         $page->load('translations', 'media');
         $this->page = $page;
         $this->status = $page->computed_status;
+        $this->publishedLocales = $page->published_locales;
         $this->published_at = $page->published_at;
         $this->title = $page->translationsFor('title');
         $this->description = $page->translationsFor('description');
@@ -118,10 +125,12 @@ return new class extends Component
     {
         $this->og_image = $this->normalizeMediaInput($this->og_image);
 
-        /** @var array<string, array<int, string>> */
+        /** @var array<string, array<int, mixed>> */
         $rules = [
             'status' => ['required', Rule::enum(PageStatus::class)],
             'published_at' => ['nullable', 'date'],
+            'publishedLocales' => ['array'],
+            'publishedLocales.*' => ['string', Rule::in(array_keys($this->activeLocales))],
             'og_image' => ['array'],
             'og_image.*' => ['array'],
             'og_image.*.*' => ['array'],
@@ -146,11 +155,23 @@ return new class extends Component
             ];
         }
 
-        $validated = $this->validate($rules);
+        $messages = [
+            'publishedLocales.*.in' => __('Choose a language that is enabled in your site settings.'),
+        ];
+
+        $attributes = [
+            'publishedLocales.*' => __('language'),
+        ];
+
+        $validated = $this->validate($rules, $messages, $attributes);
 
         $action->handle($this->page, [
-            ...$validated,
+            ...Arr::except($validated, ['publishedLocales']),
             'og_image' => $this->og_image,
+            'metadata' => [
+                ...($this->page->metadata ?? []),
+                'published_locales' => array_values($validated['publishedLocales'] ?? []),
+            ],
         ]);
 
         Flux::toast(__('Page content has been updated.'), variant: 'success');
@@ -192,8 +213,8 @@ return new class extends Component
 };
 ?>
 
-<form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-    <div class="md:col-span-2 min-w-0">
+<form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid grid-cols-1 md:grid-cols-5 gap-10 items-stretch">
+    <div class="md:col-span-3 min-w-0">
         <div class="gap-4 mb-6 md:mb-0">
             <div class="flex items-center gap-3">
                 <flux:heading size="xl" class="cursor-pointer hover:underline">
@@ -207,7 +228,7 @@ return new class extends Component
                 {{ __('Created on') }} {{ $page->created_at?->format('M d, Y H:i') }}
             </flux:subheading>
         </div>
-        <div class="max-w-5xl mt-8 space-y-6 mb-10">
+        <div class="mt-8 space-y-6 mb-10 md:col-span-2">
             
             <flux:fieldset class="pb-6">
                 <flux:legend>{{ __('Content') }}</flux:legend>
@@ -216,28 +237,6 @@ return new class extends Component
                 
             </flux:fieldset>
             
-            <flux:separator />
-
-            <flux:fieldset class="pb-6">
-                <flux:legend>{{ __('Visibility') }}</flux:legend>
-                <flux:description>{{ __('Control when and how this page becomes visible to visitors.') }}</flux:description>
-
-                <div class="grid md:grid-cols-2 gap-6 mt-6">
-                    <div>
-                        <flux:select variant="listbox" placeholder="Choose status" label="{{ __('Status') }}" wire:model="status">
-                            @foreach(PageStatus::cases() as $status)
-                                <flux:select.option value="{{ $status->value }}">
-                                    {{ $status->label() }}
-                                </flux:select.option>
-                            @endforeach
-                        </flux:select>
-                    </div>
-                    <div x-cloak x-show="$wire.status === '{{ PageStatus::SCHEDULED->value }}'">
-                        <flux:date-picker wire:model="published_at" label="{{ __('Publish on') }}" />
-                    </div>
-                </div>
-            </flux:fieldset>
-
             <flux:separator />
 
             <flux:fieldset class="pb-6">
@@ -253,17 +252,66 @@ return new class extends Component
             </flux:fieldset>
         </div>
     </div>
-    <div class="mb-10 md:mb-0">
-        <div class="flex flex-col-reverse md:flex-col items-center md:items-end md:justify-end gap-4 md:sticky md:top-8 pt-2">
-            <div class="flex items-center gap-4">
+    <div class="mb-10 md:mb-0 md:col-span-2">
+        <flux:card class="flex flex-col gap-6 md:sticky md:top-24">
+
+            <div class="flex flex-col gap-6">
+                <flux:select variant="listbox" placeholder="{{ __('Choose status') }}" label="{{ __('Status') }}" wire:model="status">
+                    @foreach(PageStatus::cases() as $status)
+                        <flux:select.option value="{{ $status->value }}">
+                            {{ $status->label() }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                <div x-cloak x-show="$wire.status === '{{ PageStatus::SCHEDULED->value }}'">
+                    <flux:date-picker wire:model="published_at" label="{{ __('Publish on') }}" />
+                </div>
+            </div>
+
+            @if (count($activeLocales) > 1)
+                <flux:separator />
+
+                <flux:accordion>
+                    <flux:accordion.item>
+                        <flux:accordion.heading>
+                            <div class="flex items-center justify-between">
+                                {{ __('Languages') }}
+                                <flux:text>{{ count($publishedLocales) }} {{ __('Live') }}</flux:text>
+                            </div>
+                        </flux:accordion.heading>
+
+                        <flux:accordion.content class="mt-3 max-h-40 overflow-y-auto">
+                            <flux:checkbox.group wire:model.live="publishedLocales">
+                                @foreach ($activeLocales as $code => $meta)
+                                    <flux:checkbox
+                                        label="{{ $meta['name'] ?? $code }}"
+                                        value="{{ $code }}"
+                                        :disabled="count($publishedLocales) === 1 && in_array($code, $publishedLocales, true)"
+                                        wire:key="locale-{{ $code }}" />
+                                @endforeach
+                            </flux:checkbox.group>
+                            <flux:description class="mt-3">{{ __('This page is only visible in the languages selected here.') }}</flux:description>
+                        </flux:accordion.content>
+                    </flux:accordion.item>
+                </flux:accordion>
+            @endif
+
+            <flux:separator />
+
+            <div class="grid grid-cols-2 gap-4">
                 <flux:button type="submit" variant="primary" icon="check">
-                    {{ __('Save') }}
+                    {{ __('Update') }}
                 </flux:button>
                 <flux:button wire:navigate href="{{ route('admin.pages-index') }}" icon="arrow-left">
                     {{ __('Back') }}
                 </flux:button>
             </div>
-        </div>
+
+            <flux:text size="sm">
+                {{ __('Last edited') }} {{ $page->updated_at?->diffForHumans() ?? __('Never') }}
+            </flux:text>
+        </flux:card>
     </div>
 </form>
 

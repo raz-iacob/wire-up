@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property-read int $id
  * @property-read array<string, mixed>|null $metadata
+ * @property-read array<int, string> $published_locales
  * @property-read PageStatus $status
  * @property-read CarbonImmutable|null $published_at
  * @property-read CarbonInterface $created_at
@@ -60,6 +61,19 @@ final class Page extends Model
     }
 
     /**
+     * @return Attribute<array<int, string>, never>
+     */
+    protected function publishedLocales(): Attribute
+    {
+        return Attribute::get(function (): array {
+            /** @var array<int, string> $locales */
+            $locales = $this->metadata['published_locales'] ?? [];
+
+            return $locales;
+        });
+    }
+
+    /**
      * @return Attribute<PageStatus, null>
      */
     protected function computedStatus(): Attribute
@@ -82,5 +96,18 @@ final class Page extends Model
         $query->where('status', PageStatus::PUBLISHED)
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now());
+    }
+
+    /**
+     * @param  Builder<Page>  $query
+     */
+    #[Scope]
+    protected function publishedInLocale(Builder $query, ?string $locale = null): void
+    {
+        $query->published();
+
+        if (count(resolve('localization')->getActiveLocales()) > 1) {
+            $query->whereJsonContains('metadata->published_locales', $locale ?? app()->getLocale());
+        }
     }
 }

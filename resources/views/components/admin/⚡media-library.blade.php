@@ -510,7 +510,7 @@ return new class extends Component
 
                 <div 
                     x-data="mediaLibrary($wire)"
-                    class="mt-6 grid content-start min-h-100 overflow-y-auto overscroll-contain p-2 select-none md:h-[calc(100vh-22rem)] grid-cols-2  md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" wire:loading.class="opacity-60 animate-pulse" wire:target="loadMore">
+                    class="mt-6 grid content-start min-h-100 overflow-y-auto overscroll-contain p-2 select-none md:h-[calc(100vh-22rem)] grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" wire:loading.class="opacity-60 animate-pulse" wire:target="loadMore">
                     
                     @if(!$loaded)
                         @for($i = 0; $i < 10; $i++)

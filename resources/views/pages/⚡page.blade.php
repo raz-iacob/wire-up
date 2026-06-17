@@ -12,7 +12,7 @@ return new class extends Component
 
     public function mount(string $slug): void
     {
-        $this->page = Page::query()->forSlug($slug)->published()->firstOrFail();
+        $this->page = Page::query()->forSlug($slug)->publishedInLocale()->firstOrFail();
     }
 
     public function render(): View
