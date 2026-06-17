@@ -34,7 +34,7 @@
 
 ## Requirements
 
-- PHP 8.4+
+- PHP 8.5+
 - Node.js 22+ (see `.nvmrc`)
 - Composer 2.0+
 - MySQL/PostgreSQL/SQLite
