@@ -190,6 +190,24 @@ it('shows languages column when multiple locales are configured', function (): v
     $response->assertSee(__('Languages'));
 });
 
+it('lists the active locales as badges in the languages column', function (): void {
+    Locale::query()->whereIn('code', ['en', 'de', 'fr'])->update([
+        'active' => true,
+    ]);
+
+    Page::factory()->create([
+        'title' => 'Localized Page',
+        'metadata' => ['published_locales' => ['en']],
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->assertSee('English')
+        ->assertSee('German')
+        ->assertSee('French');
+});
+
 it('flags the homepage in the pages list', function (): void {
     $this->actingAsAdmin();
 

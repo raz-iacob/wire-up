@@ -138,7 +138,7 @@ return new class extends Component
             <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
                 <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection" wire:click="sort('title')">{{ __('Title') }}</flux:table.column>
                 @if($this->hasMultipleActiveLocales())
-                <flux:table.column class="w-1/6">{{ __('Languages') }}</flux:table.column>
+                <flux:table.column class="w-1/5">{{ __('Languages') }}</flux:table.column>
                 @endif
                 <flux:table.column class="w-1/6">{{ __('Status') }}</flux:table.column>
                 <flux:table.column class="w-1/6" sortable :sorted="$sortBy === 'updated_at'" :direction="$sortDirection" wire:click="sort('updated_at')">{{ __('Last updated') }}</flux:table.column>
@@ -160,7 +160,9 @@ return new class extends Component
                     </flux:table.cell>
 
                     @if($this->hasMultipleActiveLocales())
-                    <flux:table.cell class="whitespace-nowrap"></flux:table.cell>
+                    <flux:table.cell class="whitespace-nowrap">
+                        <x-admin.language-codes :active="$row->published_locales" />
+                    </flux:table.cell>
                     @endif
 
                     <flux:table.cell>
