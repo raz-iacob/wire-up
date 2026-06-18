@@ -14,6 +14,7 @@ use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
@@ -46,9 +47,11 @@ return new class extends Component
     public array $slugs = [];
 
     /**
-     * @var array<int|string, array{id: string, type: string, content: array<string, mixed>}>
+     * @var array<int|string, array{id: string, type: string, position: int, content: array<string, mixed>}>
      */
     public array $blocks = [];
+
+    public ?string $selectedBlock = null;
 
     public PageStatus $status;
 
@@ -247,6 +250,66 @@ return new class extends Component
         }
     }
 
+    public function addBlock(string $type): void
+    {
+        $blockType = BlockType::tryFrom($type);
+
+        if ($blockType === null) {
+            return;
+        }
+
+        $id = 'new-'.Str::uuid()->toString();
+
+        $this->blocks[$id] = [
+            'id' => $id,
+            'type' => $blockType->value,
+            'position' => count($this->blocks),
+            'content' => $blockType->defaultContent(),
+        ];
+    }
+
+    public function reorderBlocks(string $id, int $position): void
+    {
+        $ids = array_map(strval(...), array_keys($this->blocks));
+
+        $from = array_search($id, $ids, true);
+
+        if ($from === false) {
+            return;
+        }
+
+        array_splice($ids, $from, 1);
+        array_splice($ids, $position, 0, [$id]);
+
+        $this->blocks = collect($ids)
+            ->mapWithKeys(fn (string $blockId, int $index): array => [
+                $blockId => [...$this->blocks[$blockId], 'position' => $index],
+            ])
+            ->all();
+    }
+
+    public function confirmRemoveBlock(string $id): void
+    {
+        $this->selectedBlock = $id;
+
+        Flux::modal('remove-block')->show();
+    }
+
+    public function removeBlock(): void
+    {
+        $this->blocks = collect($this->blocks)
+            ->reject(fn (array $block): bool => (string) $block['id'] === $this->selectedBlock)
+            ->values()
+            ->mapWithKeys(fn (array $block, int $index): array => [
+                $block['id'] => [...$block, 'position' => $index],
+            ])
+            ->all();
+
+        $this->selectedBlock = null;
+
+        Flux::modal('remove-block')->close();
+    }
+
     #[Computed]
     public function isHomePage(): bool
     {
@@ -278,7 +341,66 @@ return new class extends Component
                 <flux:description>{{ __('Build and customize this page using flexible content blocks.') }}</flux:description>
 
                 <div class="mt-6">
-                    <livewire:admin.content-editor wire:model="blocks" :locale="$locale" :multi-locale="count($activeLocales) > 1" />
+                    <div wire:sort="reorderBlocks" class="flex flex-col gap-3 mb-6">
+                        @foreach ($blocks as $index => $block)
+                            @php($blockType = \App\Enums\BlockType::from($block['type']))
+                            <flux:card
+                                size="sm"
+                                class="p-0! overflow-hidden"
+                                wire:key="block-{{ $block['id'] }}"
+                                wire:sort:item="{{ $block['id'] }}"
+                                x-data="{ open: {{ str_starts_with((string) $block['id'], 'new-') ? 'true' : 'false' }} }">
+                                <div class="flex items-center justify-between gap-3 bg-zinc-100 dark:bg-white/10 px-3 py-2">
+                                    <div wire:sort:handle class="cursor-grab text-zinc-400" title="{{ __('Drag to reorder') }}">
+                                        <flux:icon name="bars-3" variant="mini" />
+                                    </div>
+
+                                    <button type="button" class="flex items-center gap-2 grow min-w-0 text-left" x-on:click="open = !open">
+                                        <flux:heading class="truncate" x-text="window.blockTitle($wire.blocks[@js((string) $index)], $wire.locale, @js($blockType->label()))">{{ $blockType->editorTitle($block['content'], $locale) }}</flux:heading>
+                                    </button>
+
+                                    <div wire:sort:ignore class="flex items-center gap-1 shrink-0">
+                                        <flux:button size="sm" variant="subtle" square x-on:click="open = !open" :tooltip="__('Toggle')">
+                                            <flux:icon name="chevron-down" variant="mini" x-show="!open" />
+                                            <flux:icon name="chevron-up" variant="mini" x-show="open" x-cloak />
+                                        </flux:button>
+                                        <flux:button size="sm" icon="x-mark" variant="subtle" square :tooltip="__('Remove')" wire:click="confirmRemoveBlock('{{ $block['id'] }}')" />
+                                    </div>
+                                </div>
+
+                                <div class="p-4" x-show="open" x-collapse x-cloak>
+                                    @includeIf($blockType->adminView(), ['block' => $block, 'locale' => $locale, 'multiLocale' => count($activeLocales) > 1, 'index' => $index])
+                                </div>
+                            </flux:card>
+                        @endforeach
+                    </div>
+
+                    <flux:dropdown position="bottom" align="start">
+                        <flux:button icon="plus" variant="filled">{{ __('Add block') }}</flux:button>
+                        <flux:menu>
+                            @foreach (\App\Enums\BlockType::cases() as $blockType)
+                                <flux:menu.item :icon="$blockType->icon()" wire:click="addBlock('{{ $blockType->value }}')">
+                                    {{ $blockType->label() }}
+                                </flux:menu.item>
+                            @endforeach
+                        </flux:menu>
+                    </flux:dropdown>
+
+                    <flux:modal name="remove-block" class="min-w-[22rem]">
+                        <div class="space-y-6">
+                            <div>
+                                <flux:heading size="lg">{{ __('Remove block') }}</flux:heading>
+                                <flux:text class="mt-2">{{ __('Are you sure you want to remove this block? This cannot be undone.') }}</flux:text>
+                            </div>
+                            <div class="flex gap-2">
+                                <flux:spacer />
+                                <flux:modal.close>
+                                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                                </flux:modal.close>
+                                <flux:button variant="danger" wire:click="removeBlock">{{ __('Remove') }}</flux:button>
+                            </div>
+                        </div>
+                    </flux:modal>
                 </div>
             </flux:fieldset>
 
@@ -363,6 +485,43 @@ return new class extends Component
         </flux:card>
     </div>
 </form>
+
+@script
+<script>
+    window.blockTitle = function (block, locale, fallback) {
+        if (! block) {
+            return fallback;
+        }
+
+        const content = block.content || {};
+        let raw = '';
+
+        if (block.type === 'hero') {
+            raw = (content.heading || {})[locale] || '';
+        } else if (block.type === 'text-image') {
+            raw = (content.body || {})[locale] || '';
+        } else {
+            return fallback;
+        }
+
+        const div = document.createElement('div');
+        div.innerHTML = raw;
+        const text = (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
+
+        if (! text) {
+            return fallback;
+        }
+
+        if (block.type === 'text-image') {
+            const words = text.split(' ');
+
+            return words.length > 8 ? words.slice(0, 8).join(' ') + '…' : text;
+        }
+
+        return text.length > 50 ? text.slice(0, 50) + '…' : text;
+    };
+</script>
+@endscript
 
 @section('header-content')
     <flux:breadcrumbs class="hidden md:flex">

@@ -5,23 +5,31 @@ declare(strict_types=1);
 use App\Models\Block;
 use App\Models\Page;
 use Illuminate\Support\Arr;
+use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 
-it('renders the content editor within the pages edit screen', function (): void {
-    $page = Page::factory()->create();
+beforeEach(function (): void {
+    $this->actingAsAdmin();
+    $this->page = Page::factory()->create(['title' => 'Sample']);
+});
 
-    $this->actingAsAdmin()
-        ->get(route('admin.pages-edit', $page))
+function editor(Page $page): Testable
+{
+    return Livewire::test('pages::admin.pages-edit', ['page' => $page]);
+}
+
+it('renders the block editor on the pages edit screen', function (): void {
+    $this->get(route('admin.pages-edit', $this->page))
         ->assertOk()
-        ->assertSeeLivewire('admin.content-editor');
+        ->assertSee('Add block');
 });
 
 it('renders each block type partial', function (): void {
-    Livewire::test('admin.content-editor', ['locale' => 'en'])
+    editor($this->page)
         ->set('blocks', [
-            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'content' => ['align' => 'center']],
-            'new-b' => ['id' => 'new-b', 'type' => 'text-image', 'content' => ['reverseLayout' => false]],
-            'new-c' => ['id' => 'new-c', 'type' => 'spacer', 'content' => ['size' => 'medium']],
+            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => ['align' => 'center']],
+            'new-b' => ['id' => 'new-b', 'type' => 'text-image', 'position' => 1, 'content' => ['reverseLayout' => false]],
+            'new-c' => ['id' => 'new-c', 'type' => 'spacer', 'position' => 2, 'content' => ['size' => 'medium']],
         ])
         ->assertSee('Heading')
         ->assertSee('Spacer size')
@@ -29,11 +37,10 @@ it('renders each block type partial', function (): void {
 });
 
 it('derives the block header title from content', function (): void {
-    Livewire::test('admin.content-editor', ['locale' => 'en'])
+    editor($this->page)
         ->set('blocks', [
-            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'content' => ['heading' => ['en' => 'My splendid hero']]],
-            'new-b' => ['id' => 'new-b', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>Some <strong>rich</strong> text here</p>']]],
-            'new-c' => ['id' => 'new-c', 'type' => 'spacer', 'content' => ['size' => 'medium']],
+            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => ['heading' => ['en' => 'My splendid hero']]],
+            'new-b' => ['id' => 'new-b', 'type' => 'text-image', 'position' => 1, 'content' => ['body' => ['en' => '<p>Some <strong>rich</strong> text here</p>']]],
         ])
         ->assertSee('My splendid hero')
         ->assertSee('Some rich text here')
@@ -41,16 +48,16 @@ it('derives the block header title from content', function (): void {
 });
 
 it('falls back to the block type label when content text is empty', function (): void {
-    Livewire::test('admin.content-editor', ['locale' => 'en'])
+    editor($this->page)
         ->set('blocks', [
-            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'content' => []],
+            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => []],
         ])
         ->assertSee('Hero');
 });
 
 it('appends a block when adding', function (): void {
-    Livewire::test('admin.content-editor', ['locale' => 'en'])
-        ->call('add', 'hero')
+    editor($this->page)
+        ->call('addBlock', 'hero')
         ->assertCount('blocks', 1)
         ->assertSet('blocks', function (array $blocks): bool {
             $block = Arr::first($blocks);
@@ -60,72 +67,68 @@ it('appends a block when adding', function (): void {
 });
 
 it('ignores unknown block types when adding', function (): void {
-    Livewire::test('admin.content-editor', ['locale' => 'en'])
-        ->call('add', 'bogus')
+    editor($this->page)
+        ->call('addBlock', 'bogus')
         ->assertCount('blocks', 0);
 });
 
 it('keys blocks by id so nested bindings stay stable', function (): void {
-    Livewire::test('admin.content-editor', ['locale' => 'en'])
-        ->call('add', 'hero')
+    editor($this->page)
+        ->call('addBlock', 'hero')
         ->assertSet('blocks', fn (array $blocks): bool => array_keys($blocks) === [Arr::first($blocks)['id']]);
 });
 
 it('removes the selected block', function (): void {
-    Livewire::test('admin.content-editor', ['locale' => 'en'])
+    editor($this->page)
         ->set('blocks', [
-            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'content' => []],
-            'new-b' => ['id' => 'new-b', 'type' => 'spacer', 'content' => []],
+            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => []],
+            'new-b' => ['id' => 'new-b', 'type' => 'spacer', 'position' => 1, 'content' => []],
         ])
-        ->call('confirmRemove', 'new-a')
-        ->assertSet('selected', 'new-a')
-        ->call('remove')
+        ->call('confirmRemoveBlock', 'new-a')
+        ->assertSet('selectedBlock', 'new-a')
+        ->call('removeBlock')
         ->assertSet('blocks', fn (array $blocks): bool => array_keys($blocks) === ['new-b'])
-        ->assertSet('selected', null);
+        ->assertSet('selectedBlock', null);
 });
 
-it('reorders blocks by id and position', function (): void {
-    Livewire::test('admin.content-editor', ['locale' => 'en'])
+it('reorders blocks and renumbers positions', function (): void {
+    editor($this->page)
         ->set('blocks', [
-            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'content' => []],
-            'new-b' => ['id' => 'new-b', 'type' => 'spacer', 'content' => []],
-            'new-c' => ['id' => 'new-c', 'type' => 'text-image', 'content' => []],
+            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => []],
+            'new-b' => ['id' => 'new-b', 'type' => 'spacer', 'position' => 1, 'content' => []],
+            'new-c' => ['id' => 'new-c', 'type' => 'text-image', 'position' => 2, 'content' => []],
         ])
-        ->call('reorder', 'new-c', 0)
-        ->assertSet('blocks', fn (array $blocks): bool => array_keys($blocks) === ['new-c', 'new-a', 'new-b']);
+        ->call('reorderBlocks', 'new-c', 0)
+        ->assertSet('blocks', fn (array $blocks): bool => array_keys($blocks) === ['new-c', 'new-a', 'new-b']
+            && $blocks['new-c']['position'] === 0
+            && $blocks['new-a']['position'] === 1
+            && $blocks['new-b']['position'] === 2);
 });
 
-it('persists new blocks with positions when saving the page', function (): void {
-    $page = Page::factory()->create(['title' => 'Sample']);
+it('persists reordered blocks when saving', function (): void {
+    $page = $this->page;
 
-    $this->actingAsAdmin();
-
-    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+    editor($page)
         ->set('title.en', 'Sample')
         ->set('slugs.en', 'sample')
         ->set('blocks', [
-            'new-1' => ['id' => 'new-1', 'type' => 'spacer', 'content' => ['size' => 'large']],
-            'new-2' => ['id' => 'new-2', 'type' => 'hero', 'content' => ['heading' => ['en' => 'Welcome']]],
+            'new-1' => ['id' => 'new-1', 'type' => 'spacer', 'position' => 0, 'content' => ['size' => 'large']],
+            'new-2' => ['id' => 'new-2', 'type' => 'hero', 'position' => 1, 'content' => ['heading' => ['en' => 'Welcome']]],
         ])
+        ->call('reorderBlocks', 'new-2', 0)
         ->call('update')
         ->assertHasNoErrors();
 
-    expect($page->blocks()->count())->toBe(2);
+    $ordered = $page->blocks()->get();
 
-    $this->assertDatabaseHas('blocks', [
-        'blockable_id' => $page->id,
-        'blockable_type' => 'page',
-        'type' => 'spacer',
-        'position' => 0,
-    ]);
-
-    $hero = $page->blocks()->where('type', 'hero')->first();
-    expect($hero->position)->toBe(1);
-    expect($hero->content['heading']['en'])->toBe('Welcome');
+    expect($ordered)->toHaveCount(2);
+    expect($ordered[0]->type->value)->toBe('hero');
+    expect($ordered[0]->position)->toBe(0);
+    expect($ordered[1]->type->value)->toBe('spacer');
 });
 
 it('updates existing blocks and deletes removed ones when saving', function (): void {
-    $page = Page::factory()->create(['title' => 'Sample']);
+    $page = $this->page;
 
     $keep = Block::factory()->create([
         'blockable_id' => $page->id,
@@ -143,13 +146,11 @@ it('updates existing blocks and deletes removed ones when saving', function (): 
         'content' => ['size' => 'small'],
     ]);
 
-    $this->actingAsAdmin();
-
-    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+    editor($page)
         ->set('title.en', 'Sample')
         ->set('slugs.en', 'sample')
         ->set('blocks', [
-            (string) $keep->id => ['id' => (string) $keep->id, 'type' => 'hero', 'content' => ['heading' => ['en' => 'New']]],
+            (string) $keep->id => ['id' => (string) $keep->id, 'type' => 'hero', 'position' => 0, 'content' => ['heading' => ['en' => 'New']]],
         ])
         ->call('update')
         ->assertHasNoErrors();

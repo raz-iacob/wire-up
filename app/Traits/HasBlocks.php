@@ -19,7 +19,7 @@ trait HasBlocks
     }
 
     /**
-     * @return array<int|string, array{id: string, type: string, content: array<string, mixed>}>
+     * @return array<int|string, array{id: string, type: string, position: int, content: array<string, mixed>}>
      */
     public function getBlocksArray(): array
     {
@@ -28,6 +28,7 @@ trait HasBlocks
                 (string) $block->id => [
                     'id' => (string) $block->id,
                     'type' => $block->type->value,
+                    'position' => $block->position,
                     'content' => $block->content ?? [],
                 ],
             ])
@@ -35,7 +36,7 @@ trait HasBlocks
     }
 
     /**
-     * @param  array<int|string, array{id?: string, type: string, content?: array<string, mixed>}>  $blocks
+     * @param  array<int|string, array{id?: string, type: string, position?: int, content?: array<string, mixed>}>  $blocks
      */
     public function updateBlocks(array $blocks): void
     {

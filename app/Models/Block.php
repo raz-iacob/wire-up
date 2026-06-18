@@ -51,4 +51,64 @@ final class Block extends Model
     {
         return $this->morphTo();
     }
+
+    public function text(string $field, ?string $locale = null): string
+    {
+        $locale ??= app()->getLocale();
+
+        return (string) (
+            data_get($this->content, "{$field}.{$locale}", data_get($this->content, $field.'.'.config()->string('app.default_locale', 'en'), ''))
+        );
+    }
+
+    /**
+     * @param  array<string, int|string>  $params
+     */
+    public function imageUrl(string $field = 'image', array $params = []): ?string
+    {
+        $image = data_get($this->content, $field);
+
+        if (! is_array($image) || empty($image['source'])) {
+            return null;
+        }
+
+        /** @var array<string, int> $crop */
+        $crop = is_array($image['crop']['default'] ?? null) ? $image['crop']['default'] : [];
+
+        $options = [
+            'w' => $params['w'] ?? 1200,
+            'q' => $params['q'] ?? 80,
+            'fm' => $params['fm'] ?? 'jpg',
+        ];
+
+        if (isset($params['h'])) {
+            $options['h'] = $params['h'];
+        }
+
+        $optionParts = [];
+
+        foreach ($options as $key => $value) {
+            $optionParts[] = "{$key}={$value}";
+        }
+
+        if (($crop['crop_w'] ?? 0) > 0 && ($crop['crop_h'] ?? 0) > 0) {
+            $optionParts[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
+        }
+
+        return route('image.show', [
+            'options' => implode(',', $optionParts),
+            'path' => $image['source'],
+        ]);
+    }
+
+    public function imageAlt(string $field = 'image'): string
+    {
+        $image = data_get($this->content, $field);
+
+        if (! is_array($image)) {
+            return '';
+        }
+
+        return (string) (data_get($image, 'metadata.alt', $image['alt_text'] ?? ''));
+    }
 }

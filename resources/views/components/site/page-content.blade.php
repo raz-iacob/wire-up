@@ -1,6 +1,7 @@
 @props(['page'])
 
-<article class="mx-auto w-full px-6">
-
-    Page content blocks render here once the block builder lands.
+<article class="w-full">
+    @foreach ($page->blocks as $block)
+        @includeIf($block->type->frontendView(), ['block' => $block])
+    @endforeach
 </article>

@@ -48,6 +48,20 @@ enum BlockType: string
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $content
+     */
+    public function editorTitle(array $content, string $locale): string
+    {
+        $text = match ($this) {
+            self::HERO => str(strip_tags((string) data_get($content, "heading.{$locale}")))->squish()->limit(50)->value(),
+            self::TEXT_IMAGE => str(strip_tags((string) data_get($content, "body.{$locale}")))->squish()->words(8, '…')->value(),
+            default => '',
+        };
+
+        return $text !== '' ? $text : $this->label();
+    }
+
     public function adminView(): string
     {
         return "components.admin.blocks.{$this->value}";
