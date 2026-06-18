@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\UpdatePageAction;
+use App\Enums\BlockType;
 use App\Enums\PageStatus;
 use App\Models\Media;
 use App\Models\Page;
@@ -142,7 +143,7 @@ return new class extends Component
             'publishedLocales' => ['array'],
             'publishedLocales.*' => ['string', Rule::in(array_keys($this->activeLocales))],
             'blocks' => ['array'],
-            'blocks.*.type' => ['required', 'string', Rule::in(['hero', 'text-image', 'spacer'])],
+            'blocks.*.type' => ['required', 'string', Rule::in(BlockType::values())],
             'blocks.*.content' => ['array'],
             'og_image' => ['array'],
             'og_image.*' => ['array'],

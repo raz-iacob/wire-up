@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\BlockType;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
@@ -24,30 +25,11 @@ return new class extends Component
 
     public ?string $selected = null;
 
-    /**
-     * @var array<string, array{label: string, icon: string, content: array<string, mixed>}>
-     */
-    public array $types = [
-        'hero' => [
-            'label' => 'Hero',
-            'icon' => 'photo',
-            'content' => ['align' => 'center'],
-        ],
-        'text-image' => [
-            'label' => 'Text + Image',
-            'icon' => 'view-columns',
-            'content' => ['reverseLayout' => false],
-        ],
-        'spacer' => [
-            'label' => 'Spacer',
-            'icon' => 'arrows-up-down',
-            'content' => ['size' => 'medium'],
-        ],
-    ];
-
     public function add(string $type): void
     {
-        if (! isset($this->types[$type])) {
+        $blockType = BlockType::tryFrom($type);
+
+        if ($blockType === null) {
             return;
         }
 
@@ -55,8 +37,8 @@ return new class extends Component
 
         $this->blocks[$id] = [
             'id' => $id,
-            'type' => $type,
-            'content' => $this->types[$type]['content'],
+            'type' => $blockType->value,
+            'content' => $blockType->defaultContent(),
         ];
     }
 
@@ -107,10 +89,11 @@ return new class extends Component
     <div wire:sort="reorder" class="flex flex-col gap-3 mb-6">
         @foreach ($blocks as $index => $block)
             @php
-                $blockLabel = __($types[$block['type']]['label'] ?? $block['type']);
-                $initialTitle = match ($block['type']) {
-                    'hero' => str(strip_tags($block['content']['heading'][$locale] ?? ''))->squish()->limit(50)->value() ?: $blockLabel,
-                    'text-image' => str(strip_tags($block['content']['body'][$locale] ?? ''))->squish()->words(8, '…')->value() ?: $blockLabel,
+                $blockType = \App\Enums\BlockType::from($block['type']);
+                $blockLabel = $blockType->label();
+                $initialTitle = match ($blockType) {
+                    \App\Enums\BlockType::HERO => str(strip_tags($block['content']['heading'][$locale] ?? ''))->squish()->limit(50)->value() ?: $blockLabel,
+                    \App\Enums\BlockType::TEXT_IMAGE => str(strip_tags($block['content']['body'][$locale] ?? ''))->squish()->words(8, '…')->value() ?: $blockLabel,
                     default => $blockLabel,
                 };
             @endphp
@@ -139,7 +122,7 @@ return new class extends Component
                 </div>
 
                 <div class="p-4" x-show="open" x-collapse>
-                    @includeIf("components.admin.blocks.{$block['type']}", ['block' => $block, 'locale' => $locale, 'multiLocale' => $multiLocale, 'index' => $index])
+                    @includeIf($blockType->adminView(), ['block' => $block, 'locale' => $locale, 'multiLocale' => $multiLocale, 'index' => $index])
                 </div>
             </flux:card>
         @endforeach
@@ -148,9 +131,9 @@ return new class extends Component
     <flux:dropdown position="bottom" align="start" class="mt-3">
         <flux:button icon="plus" variant="filled">{{ __('Add block') }}</flux:button>
         <flux:menu>
-            @foreach ($types as $type => $definition)
-                <flux:menu.item :icon="$definition['icon']" wire:click="add('{{ $type }}')">
-                    {{ __($definition['label']) }}
+            @foreach (\App\Enums\BlockType::cases() as $blockType)
+                <flux:menu.item :icon="$blockType->icon()" wire:click="add('{{ $blockType->value }}')">
+                    {{ $blockType->label() }}
                 </flux:menu.item>
             @endforeach
         </flux:menu>

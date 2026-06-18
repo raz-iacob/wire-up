@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\BlockType;
 use Carbon\CarbonInterface;
 use Database\Factories\BlockFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @property-read int $id
- * @property-read string $type
+ * @property-read BlockType $type
  * @property-read int $position
  * @property-read array<string, mixed>|null $content
  * @property-read int $blockable_id
@@ -33,7 +34,7 @@ final class Block extends Model
     {
         return [
             'id' => 'integer',
-            'type' => 'string',
+            'type' => BlockType::class,
             'position' => 'integer',
             'content' => 'array',
             'blockable_id' => 'integer',

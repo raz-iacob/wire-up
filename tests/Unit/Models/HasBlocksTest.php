@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\BlockType;
 use App\Models\Block;
 use App\Models\Page;
 use Illuminate\Support\Arr;
@@ -28,10 +29,10 @@ it('creates blocks and assigns positions from array order', function (): void {
     $blocks = $page->blocks()->get();
 
     expect($blocks)->toHaveCount(2);
-    expect($blocks[0]->type)->toBe('hero');
+    expect($blocks[0]->type)->toBe(BlockType::HERO);
     expect($blocks[0]->position)->toBe(0);
     expect($blocks[0]->content)->toBe(['heading' => ['en' => 'Hi']]);
-    expect($blocks[1]->type)->toBe('spacer');
+    expect($blocks[1]->type)->toBe(BlockType::SPACER);
     expect($blocks[1]->position)->toBe(1);
 });
 

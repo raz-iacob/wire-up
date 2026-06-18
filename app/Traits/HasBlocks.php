@@ -27,7 +27,7 @@ trait HasBlocks
             ->mapWithKeys(fn (Block $block): array => [
                 (string) $block->id => [
                     'id' => (string) $block->id,
-                    'type' => $block->type,
+                    'type' => $block->type->value,
                     'content' => $block->content ?? [],
                 ],
             ])

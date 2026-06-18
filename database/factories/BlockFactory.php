@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\BlockType;
 use App\Models\Block;
 use App\Models\Page;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,9 +22,9 @@ final class BlockFactory extends Factory
         return [
             'blockable_id' => fn () => Page::factory()->create()->id,
             'blockable_type' => 'page',
-            'type' => 'spacer',
+            'type' => BlockType::SPACER,
             'position' => 0,
-            'content' => ['size' => 'medium'],
+            'content' => BlockType::SPACER->defaultContent(),
         ];
     }
 }
