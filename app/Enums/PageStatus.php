@@ -26,8 +26,18 @@ enum PageStatus: string
         return match ($this) {
             self::DRAFT => 'zinc',
             self::PUBLISHED => 'green',
-            self::PRIVATE => 'orange',
-            self::SCHEDULED => 'blue',
+            self::PRIVATE => 'red',
+            self::SCHEDULED => 'orange',
+        };
+    }
+
+    public function textColor(): string
+    {
+        return match ($this) {
+            self::DRAFT => 'text-zinc-500 dark:text-zinc-400',
+            self::PUBLISHED => 'text-green-600 dark:text-green-400',
+            self::PRIVATE => 'text-red-500 dark:text-red-400',
+            self::SCHEDULED => 'text-orange-500 dark:text-orange-400',
         };
     }
 }

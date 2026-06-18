@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\MediaType;
 use App\Enums\PageStatus;
+use App\Models\Locale;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Settings;
@@ -63,18 +64,6 @@ it('populates form with page data on mount', function (): void {
         ->assertSet('page.id', $page->id);
 });
 
-it('displays page creation information', function (): void {
-    $page = Page::factory()->create([
-        'created_at' => now()->subWeeks(2),
-    ]);
-
-    $this->actingAsAdmin();
-
-    $response = Livewire::test('pages::admin.pages-edit', ['page' => $page]);
-
-    $response->assertSee($page->created_at->format('M d, Y H:i'));
-});
-
 it('can update page basic information', function (): void {
     $page = Page::factory()->create([
         'status' => PageStatus::DRAFT,
@@ -111,6 +100,102 @@ it('validates required fields', function (): void {
         ->set('title.en', '')
         ->call('update')
         ->assertHasErrors(['title.en' => 'required']);
+});
+
+it('cycles to the next active locale on change-locale', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $page = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('locale', 'en')
+        ->call('changeLocale')
+        ->assertSet('locale', 'fr')
+        ->call('changeLocale')
+        ->assertSet('locale', 'en');
+});
+
+it('does not require title or slug for languages that are not live', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('publishedLocales', ['en'])
+        ->set('title.en', 'English title')
+        ->set('slugs.en', 'english-title')
+        ->call('update')
+        ->assertHasNoErrors();
+});
+
+it('requires title and slug for live languages', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('publishedLocales', ['en', 'fr'])
+        ->set('title.en', 'English title')
+        ->set('slugs.en', 'english-title')
+        ->set('title.fr', '')
+        ->set('slugs.fr', '')
+        ->call('update')
+        ->assertHasErrors(['title.fr', 'slugs.fr']);
+});
+
+it('switches to the locale that has a validation error on save', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('locale', 'en')
+        ->set('publishedLocales', ['en', 'fr'])
+        ->set('title.en', 'English title')
+        ->set('slugs.en', 'english-title')
+        ->call('update')
+        ->assertHasErrors(['title.fr'])
+        ->assertSet('locale', 'fr');
+});
+
+it('requires a scheduled date when status is scheduled', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('status', PageStatus::SCHEDULED)
+        ->set('published_at')
+        ->set('title.en', 'Scheduled')
+        ->set('slugs.en', 'scheduled')
+        ->call('update')
+        ->assertHasErrors(['published_at' => 'required']);
+});
+
+it('rejects a scheduled date that is not in the future', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('status', PageStatus::SCHEDULED)
+        ->set('published_at', now()->subDay())
+        ->set('title.en', 'Scheduled')
+        ->set('slugs.en', 'scheduled')
+        ->call('update')
+        ->assertHasErrors(['published_at' => 'after']);
 });
 
 it('validates slug uniqueness', function (): void {

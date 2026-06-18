@@ -14,6 +14,13 @@ it('returns correct labels for all statuses', function (): void {
 it('returns correct colors for all statuses', function (): void {
     expect(PageStatus::DRAFT->color())->toBe('zinc')
         ->and(PageStatus::PUBLISHED->color())->toBe('green')
-        ->and(PageStatus::PRIVATE->color())->toBe('orange')
-        ->and(PageStatus::SCHEDULED->color())->toBe('blue');
+        ->and(PageStatus::PRIVATE->color())->toBe('red')
+        ->and(PageStatus::SCHEDULED->color())->toBe('orange');
+});
+
+it('returns a text color class for all statuses', function (): void {
+    expect(PageStatus::DRAFT->textColor())->toContain('text-zinc')
+        ->and(PageStatus::PUBLISHED->textColor())->toContain('text-green')
+        ->and(PageStatus::PRIVATE->textColor())->toContain('text-red')
+        ->and(PageStatus::SCHEDULED->textColor())->toContain('text-orange');
 });

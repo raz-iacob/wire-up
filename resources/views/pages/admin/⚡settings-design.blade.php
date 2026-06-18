@@ -623,7 +623,7 @@ return new class extends Component
             </div>
 
             <div class="flex items-center gap-4">
-                <flux:button type="submit" variant="primary">
+                <flux:button type="submit" variant="primary" icon="check">
                     {{ __('Update') }}
                 </flux:button>
             </div>

@@ -14,7 +14,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -128,7 +130,9 @@ return new class extends Component
         /** @var array<string, array<int, mixed>> */
         $rules = [
             'status' => ['required', Rule::enum(PageStatus::class)],
-            'published_at' => ['nullable', 'date'],
+            'published_at' => $this->status === PageStatus::SCHEDULED
+                ? ['required', 'date', 'after:now']
+                : ['nullable', 'date'],
             'publishedLocales' => ['array'],
             'publishedLocales.*' => ['string', Rule::in(array_keys($this->activeLocales))],
             'og_image' => ['array'],
@@ -141,29 +145,39 @@ return new class extends Component
         ];
 
         foreach (array_keys($this->activeLocales) as $locale) {
-            $rules["title.$locale"] = ['required', 'string', 'min:3'];
+            $isLive = in_array($locale, $this->publishedLocales, true);
+
+            $slugUnique = Rule::unique('slugs', 'slug')->where('locale', $locale)
+                ->where(function (Builder $query): void {
+                    $query->whereNot(function (Builder $q): void {
+                        $q->where('sluggable_id', $this->page->id)
+                            ->where('sluggable_type', 'page');
+                    });
+                });
+
+            $rules["title.$locale"] = $isLive ? ['required', 'string', 'min:3'] : ['nullable', 'string'];
             $rules["description.$locale"] = ['nullable', 'string', 'max:160'];
-            $rules["slugs.$locale"] = [
-                'required', 'string', 'min:3',
-                Rule::unique('slugs', 'slug')->where('locale', $locale)
-                    ->where(function (Builder $query): void {
-                        $query->whereNot(function (Builder $q): void {
-                            $q->where('sluggable_id', $this->page->id)
-                                ->where('sluggable_type', 'page');
-                        });
-                    }),
-            ];
+            $rules["slugs.$locale"] = $isLive ? ['required', 'string', 'min:3', $slugUnique] : ['nullable', 'string', $slugUnique];
         }
 
         $messages = [
             'publishedLocales.*.in' => __('Choose a language that is enabled in your site settings.'),
+            'published_at.required' => __('Choose a date to schedule this page.'),
+            'published_at.after' => __('The scheduled date must be in the future.'),
         ];
 
         $attributes = [
             'publishedLocales.*' => __('language'),
+            'published_at' => __('scheduled date'),
         ];
 
-        $validated = $this->validate($rules, $messages, $attributes);
+        try {
+            $validated = $this->validate($rules, $messages, $attributes);
+        } catch (ValidationException $e) {
+            $this->revealErrors($e);
+
+            throw $e;
+        }
 
         $action->handle($this->page, [
             ...Arr::except($validated, ['publishedLocales']),
@@ -198,6 +212,30 @@ return new class extends Component
         return $result;
     }
 
+    #[On('change-locale')]
+    public function changeLocale(): void
+    {
+        $codes = array_keys($this->activeLocales);
+        $index = array_search($this->locale, $codes, true);
+
+        $this->locale = $codes[($index + 1) % count($codes)] ?? $this->locale;
+    }
+
+    private function revealErrors(ValidationException $e): void
+    {
+        $codes = array_keys($this->activeLocales);
+
+        foreach (array_keys($e->errors()) as $key) {
+            $locale = str($key)->afterLast('.')->value();
+
+            if (in_array($locale, $codes, true)) {
+                $this->locale = $locale;
+
+                return;
+            }
+        }
+    }
+
     #[Computed]
     public function isHomePage(): bool
     {
@@ -215,26 +253,18 @@ return new class extends Component
 
 <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid grid-cols-1 md:grid-cols-5 gap-10 items-stretch">
     <div class="md:col-span-3 min-w-0">
-        <div class="gap-4 mb-6 md:mb-0">
-            <div class="flex items-center gap-3">
-                <flux:heading size="xl" class="cursor-pointer hover:underline">
-                    {{ __('Edit') }} {{ $page->title }}
-                </flux:heading>
-                @if ($this->isHomePage)
-                    <flux:badge color="lime" size="sm" icon="home">{{ __('Homepage') }}</flux:badge>
-                @endif
-            </div>
-            <flux:subheading size="sm">
-                {{ __('Created on') }} {{ $page->created_at?->format('M d, Y H:i') }}
-            </flux:subheading>
-        </div>
-        <div class="mt-8 space-y-6 mb-10 md:col-span-2">
+        <div class="space-y-6 mb-10 md:col-span-2">
             
             <flux:fieldset class="pb-6">
-                <flux:legend>{{ __('Content') }}</flux:legend>
+                <div class="flex items-center justify-between">
+                    <flux:legend>{{ __('Content') }}</flux:legend>
+                    @if ($this->isHomePage)
+                    <div>
+                        <flux:badge color="sky" size="sm" icon="home">{{ __('Homepage') }}</flux:badge>
+                    </div>
+                    @endif
+                </div>
                 <flux:description>{{ __('Build and customize this page using flexible content blocks.') }}</flux:description>
-
-                
             </flux:fieldset>
             
             <flux:separator />
@@ -255,24 +285,31 @@ return new class extends Component
     <div class="mb-10 md:mb-0 md:col-span-2">
         <flux:card class="flex flex-col gap-6 md:sticky md:top-24">
 
-            <div class="flex flex-col gap-6">
-                <flux:select variant="listbox" placeholder="{{ __('Choose status') }}" label="{{ __('Status') }}" wire:model="status">
-                    @foreach(PageStatus::cases() as $status)
-                        <flux:select.option value="{{ $status->value }}">
-                            {{ $status->label() }}
-                        </flux:select.option>
-                    @endforeach
-                </flux:select>
+            <flux:accordion>
+                <flux:accordion.item>
+                    <flux:accordion.heading>
+                        <div class="flex items-center justify-between">
+                            {{ __('Status') }}
+                            <flux:text class="{{ $status->textColor() }}">{{ $status->label() }}</flux:text>
+                        </div>
+                    </flux:accordion.heading>
 
-                <div x-cloak x-show="$wire.status === '{{ PageStatus::SCHEDULED->value }}'">
-                    <flux:date-picker wire:model="published_at" label="{{ __('Publish on') }}" />
-                </div>
-            </div>
+                    <flux:accordion.content class="mt-3 flex flex-col gap-6">
+                        <flux:select variant="listbox" placeholder="{{ __('Choose status') }}" wire:model.live="status">
+                            @foreach (PageStatus::cases() as $statusOption)
+                                <flux:select.option value="{{ $statusOption->value }}">
+                                    {{ $statusOption->label() }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
 
-            @if (count($activeLocales) > 1)
-                <flux:separator />
+                        <div x-cloak x-show="$wire.status === '{{ PageStatus::SCHEDULED->value }}'">
+                            <flux:date-picker wire:model="published_at" label="{{ __('Publish on') }}" selectable-header />
+                        </div>
+                    </flux:accordion.content>
+                </flux:accordion.item>
 
-                <flux:accordion>
+                @if (count($activeLocales) > 1)
                     <flux:accordion.item>
                         <flux:accordion.heading>
                             <div class="flex items-center justify-between">
@@ -291,11 +328,10 @@ return new class extends Component
                                         wire:key="locale-{{ $code }}" />
                                 @endforeach
                             </flux:checkbox.group>
-                            <flux:description class="mt-3">{{ __('This page is only visible in the languages selected here.') }}</flux:description>
                         </flux:accordion.content>
                     </flux:accordion.item>
-                </flux:accordion>
-            @endif
+                @endif
+            </flux:accordion>
 
             <flux:separator />
 

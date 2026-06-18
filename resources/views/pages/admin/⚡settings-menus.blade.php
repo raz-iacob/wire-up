@@ -391,7 +391,7 @@ return new class extends Component
             @endforeach
 
             <div>
-                <flux:button type="submit" variant="primary">
+                <flux:button type="submit" variant="primary" icon="check">
                     {{ __('Update') }}
                 </flux:button>
             </div>

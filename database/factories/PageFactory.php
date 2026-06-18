@@ -19,7 +19,7 @@ final class PageFactory extends Factory
     public function definition(): array
     {
         return [
-            'metadata' => null,
+            'metadata' => ['published_locales' => [config()->string('app.default_locale', 'en')]],
             'status' => PageStatus::DRAFT,
             'published_at' => null,
         ];

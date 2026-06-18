@@ -62,19 +62,17 @@ it('populates form with user data on mount', function (): void {
         ->assertSet('user.id', $user->id);
 });
 
-it('displays user creation and last login information', function (): void {
+it('displays user last login information', function (): void {
     $user = User::factory()->create([
         'name' => 'Test User',
         'last_seen_at' => now()->subDays(3),
-        'created_at' => now()->subWeeks(2),
     ]);
 
     $this->actingAsAdmin();
 
     $response = Livewire::test('pages::admin.users-edit', ['user' => $user]);
 
-    $response->assertSee($user->created_at->format('M d, Y H:i'))
-        ->assertSee($user->last_seen_at->format('M d, Y H:i'));
+    $response->assertSee($user->last_seen_at->diffForHumans());
 });
 
 it('shows never for users who have not logged in', function (): void {
