@@ -19,12 +19,16 @@ final readonly class UpdatePageAction
         DB::transaction(function () use ($page, $attributes): void {
 
             $page->update([
-                ...Arr::except($attributes, ['slugs', 'status', 'og_image']),
+                ...Arr::except($attributes, ['slugs', 'status', 'og_image', 'blocks']),
                 ...$this->handlePublication($attributes),
             ]);
 
             if (isset($attributes['slugs'])) {
                 $page->updateSlugs($attributes['slugs']);
+            }
+
+            if (isset($attributes['blocks'])) {
+                $page->updateBlocks($attributes['blocks']);
             }
 
             if (isset($attributes['og_image'])) {

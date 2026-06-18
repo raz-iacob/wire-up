@@ -44,6 +44,11 @@ return new class extends Component
      */
     public array $slugs = [];
 
+    /**
+     * @var array<int|string, array{id: string, type: string, content: array<string, mixed>}>
+     */
+    public array $blocks = [];
+
     public PageStatus $status;
 
     /**
@@ -63,8 +68,9 @@ return new class extends Component
 
     public function mount(Page $page): void
     {
-        $page->load('translations', 'media');
+        $page->load('translations', 'media', 'blocks');
         $this->page = $page;
+        $this->blocks = $page->getBlocksArray();
         $this->status = $page->computed_status;
         $this->publishedLocales = $page->published_locales;
         $this->published_at = $page->published_at;
@@ -135,6 +141,9 @@ return new class extends Component
                 : ['nullable', 'date'],
             'publishedLocales' => ['array'],
             'publishedLocales.*' => ['string', Rule::in(array_keys($this->activeLocales))],
+            'blocks' => ['array'],
+            'blocks.*.type' => ['required', 'string', Rule::in(['hero', 'text-image', 'spacer'])],
+            'blocks.*.content' => ['array'],
             'og_image' => ['array'],
             'og_image.*' => ['array'],
             'og_image.*.*' => ['array'],
@@ -180,7 +189,8 @@ return new class extends Component
         }
 
         $action->handle($this->page, [
-            ...Arr::except($validated, ['publishedLocales']),
+            ...Arr::except($validated, ['publishedLocales', 'blocks']),
+            'blocks' => $this->blocks,
             'og_image' => $this->og_image,
             'metadata' => [
                 ...($this->page->metadata ?? []),
@@ -265,8 +275,12 @@ return new class extends Component
                     @endif
                 </div>
                 <flux:description>{{ __('Build and customize this page using flexible content blocks.') }}</flux:description>
+
+                <div class="mt-6">
+                    <livewire:admin.content-editor wire:model="blocks" :locale="$locale" :multi-locale="count($activeLocales) > 1" />
+                </div>
             </flux:fieldset>
-            
+
             <flux:separator />
 
             <flux:fieldset class="pb-6">
@@ -332,8 +346,6 @@ return new class extends Component
                     </flux:accordion.item>
                 @endif
             </flux:accordion>
-
-            <flux:separator />
 
             <div class="grid grid-cols-2 gap-4">
                 <flux:button type="submit" variant="primary" icon="check">

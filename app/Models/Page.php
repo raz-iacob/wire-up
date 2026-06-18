@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\PageStatus;
+use App\Traits\HasBlocks;
 use App\Traits\HasMedia;
 use App\Traits\HasSlugs;
 use App\Traits\HasTranslations;
@@ -31,11 +32,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read string $description
  * @property-read Collection<int, Slug> $slugs
  * @property-read string $slug
+ * @property-read Collection<int, Block> $blocks
  */
 final class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
-    use HasFactory, HasMedia, HasSlugs, HasTranslations;
+    use HasBlocks, HasFactory, HasMedia, HasSlugs, HasTranslations;
 
     /**
      * @return array<string, string>

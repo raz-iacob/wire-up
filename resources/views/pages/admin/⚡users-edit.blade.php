@@ -150,8 +150,6 @@ return new class extends Component
                 </flux:accordion.item>
             </flux:accordion>
 
-            <flux:separator />
-
             <div class="grid grid-cols-2 gap-4">
                 <flux:button type="submit" variant="primary" icon="check">
                     {{ __('Update') }}
