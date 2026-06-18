@@ -14,6 +14,7 @@ use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -52,6 +53,10 @@ return new class extends Component
     public array $blocks = [];
 
     public ?string $selectedBlock = null;
+
+    public bool $showPreview = false;
+
+    public ?string $previewToken = null;
 
     public PageStatus $status;
 
@@ -310,6 +315,26 @@ return new class extends Component
         Flux::modal('remove-block')->close();
     }
 
+    public function preview(): void
+    {
+        $this->previewToken = (string) Str::uuid();
+
+        Cache::put($this->previewCacheKey($this->previewToken), [
+            'page_id' => $this->page->id,
+            'locale' => $this->locale,
+            'title' => $this->title[$this->locale] ?? '',
+            'description' => $this->description[$this->locale] ?? '',
+            'blocks' => array_values($this->blocks),
+        ], now()->addMinutes(30));
+
+        $this->showPreview = true;
+    }
+
+    private function previewCacheKey(string $token): string
+    {
+        return "page-preview:{$this->page->id}:".auth()->id().":{$token}";
+    }
+
     #[Computed]
     public function isHomePage(): bool
     {
@@ -325,6 +350,7 @@ return new class extends Component
 };
 ?>
 
+<div>
 <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid grid-cols-1 md:grid-cols-5 gap-10 items-stretch">
     <div class="md:col-span-3 min-w-0">
         <div class="space-y-6 mb-10 md:col-span-2">
@@ -470,6 +496,10 @@ return new class extends Component
                 @endif
             </flux:accordion>
 
+            <flux:button wire:click="preview" icon="eye" variant="filled" class="w-full">
+                {{ __('Preview') }}
+            </flux:button>
+
             <div class="grid grid-cols-2 gap-4">
                 <flux:button type="submit" variant="primary" icon="check">
                     {{ __('Update') }}
@@ -485,6 +515,36 @@ return new class extends Component
         </flux:card>
     </div>
 </form>
+
+@if ($showPreview)
+    <div
+        class="fixed inset-0 z-50 flex flex-col bg-zinc-100 dark:bg-zinc-900"
+        x-data="{ device: 'desktop', widths: { desktop: '100%', tablet: '768px', mobile: '375px' } }">
+        <div class="flex items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 py-2">
+            <flux:button size="sm" variant="subtle" icon="x-mark" wire:click="$set('showPreview', false)">
+                {{ __('Close') }}
+            </flux:button>
+
+            <div class="flex items-center gap-1">
+                <flux:button size="sm" variant="subtle" icon="computer-desktop" x-on:click="device = 'desktop'" x-bind:data-active="device === 'desktop'" class="data-[active=true]:text-accent" :tooltip="__('Desktop')" />
+                <flux:button size="sm" variant="subtle" icon="device-tablet" x-on:click="device = 'tablet'" x-bind:data-active="device === 'tablet'" class="data-[active=true]:text-accent" :tooltip="__('Tablet')" />
+                <flux:button size="sm" variant="subtle" icon="device-phone-mobile" x-on:click="device = 'mobile'" x-bind:data-active="device === 'mobile'" class="data-[active=true]:text-accent" :tooltip="__('Mobile')" />
+            </div>
+
+            <flux:text size="sm" class="hidden sm:block">{{ __('Preview') }}</flux:text>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4">
+            <div class="mx-auto h-full transition-[width] duration-200" x-bind:style="'width: ' + widths[device]">
+                <iframe
+                    src="{{ route('admin.pages-preview', ['page' => $page, 'token' => $previewToken]) }}"
+                    class="w-full h-full rounded-lg border border-zinc-200 dark:border-white/10 bg-white shadow-sm"
+                    title="{{ __('Page preview') }}"></iframe>
+            </div>
+        </div>
+    </div>
+@endif
+</div>
 
 @script
 <script>
