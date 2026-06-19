@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 use App\Enums\BlockType;
 
-it('exposes a label, icon and default content for every case', function (BlockType $type): void {
+it('exposes a label, icon, description and default content for every case', function (BlockType $type): void {
     expect($type->label())->toBeString()->not->toBeEmpty();
     expect($type->icon())->toBeString()->not->toBeEmpty();
+    expect($type->description())->toBeString()->not->toBeEmpty();
     expect($type->defaultContent())->toBeArray();
 })->with(BlockType::cases());
 

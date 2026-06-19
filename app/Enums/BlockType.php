@@ -36,6 +36,15 @@ enum BlockType: string
         };
     }
 
+    public function description(): string
+    {
+        return match ($this) {
+            self::HERO => __('Full-width banner with a heading, subheading and background image.'),
+            self::TEXT_IMAGE => __('A block of text alongside an image.'),
+            self::SPACER => __('Adjustable vertical spacing between blocks.'),
+        };
+    }
+
     /**
      * @return array<string, mixed>
      */

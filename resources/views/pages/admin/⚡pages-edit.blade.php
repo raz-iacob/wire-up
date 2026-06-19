@@ -54,6 +54,8 @@ return new class extends Component
 
     public ?string $selectedBlock = null;
 
+    public ?int $insertPosition = null;
+
     public bool $showPreview = false;
 
     public ?string $previewToken = null;
@@ -255,6 +257,13 @@ return new class extends Component
         }
     }
 
+    public function openBlockPicker(?int $position = null): void
+    {
+        $this->insertPosition = $position;
+
+        Flux::modal('block-picker')->show();
+    }
+
     public function addBlock(string $type): void
     {
         $blockType = BlockType::tryFrom($type);
@@ -265,12 +274,25 @@ return new class extends Component
 
         $id = 'new-'.Str::uuid()->toString();
 
-        $this->blocks[$id] = [
+        $blocks = array_values($this->blocks);
+        $position = $this->insertPosition ?? count($blocks);
+
+        array_splice($blocks, $position, 0, [[
             'id' => $id,
             'type' => $blockType->value,
-            'position' => count($this->blocks),
+            'position' => $position,
             'content' => $blockType->defaultContent(),
-        ];
+        ]]);
+
+        $this->blocks = collect($blocks)
+            ->mapWithKeys(fn (array $block, int $index): array => [
+                $block['id'] => [...$block, 'position' => $index],
+            ])
+            ->all();
+
+        $this->insertPosition = null;
+
+        Flux::modal('block-picker')->close();
     }
 
     public function reorderBlocks(string $id, int $position): void
@@ -375,7 +397,8 @@ return new class extends Component
                                 class="p-0! overflow-hidden"
                                 wire:key="block-{{ $block['id'] }}"
                                 wire:sort:item="{{ $block['id'] }}"
-                                x-data="{ open: {{ str_starts_with((string) $block['id'], 'new-') ? 'true' : 'false' }} }">
+                                x-data="{ open: {{ str_starts_with((string) $block['id'], 'new-') ? 'true' : 'false' }} }"
+                                x-on:blocks-toggle-all.window="open = $event.detail">
                                 <div class="flex items-center justify-between gap-3 bg-zinc-100 dark:bg-white/10 px-3 py-2">
                                     <div wire:sort:handle class="cursor-grab text-zinc-400" title="{{ __('Drag to reorder') }}">
                                         <flux:icon name="bars-3" variant="mini" />
@@ -390,7 +413,19 @@ return new class extends Component
                                             <flux:icon name="chevron-down" variant="mini" x-show="!open" />
                                             <flux:icon name="chevron-up" variant="mini" x-show="open" x-cloak />
                                         </flux:button>
-                                        <flux:button size="sm" icon="x-mark" variant="subtle" square :tooltip="__('Remove')" wire:click="confirmRemoveBlock('{{ $block['id'] }}')" />
+
+                                        <flux:dropdown position="bottom" align="end">
+                                            <flux:button size="sm" icon="ellipsis-horizontal" variant="subtle" square :tooltip="__('Options')" />
+                                            <flux:menu>
+                                                <flux:menu.item icon="arrows-pointing-out" x-show="!open" x-on:click="$dispatch('blocks-toggle-all', true)">{{ __('Expand all') }}</flux:menu.item>
+                                                <flux:menu.item icon="arrows-pointing-in" x-show="open" x-on:click="$dispatch('blocks-toggle-all', false)">{{ __('Collapse all') }}</flux:menu.item>
+                                                <flux:menu.separator />
+                                                <flux:menu.item icon="arrow-up" wire:click="openBlockPicker({{ $loop->index }})">{{ __('Add above') }}</flux:menu.item>
+                                                <flux:menu.item icon="arrow-down" wire:click="openBlockPicker({{ $loop->index + 1 }})">{{ __('Add below') }}</flux:menu.item>
+                                                <flux:menu.separator />
+                                                <flux:menu.item icon="trash" variant="danger" wire:click="confirmRemoveBlock('{{ $block['id'] }}')">{{ __('Delete') }}</flux:menu.item>
+                                            </flux:menu>
+                                        </flux:dropdown>
                                     </div>
                                 </div>
 
@@ -401,16 +436,25 @@ return new class extends Component
                         @endforeach
                     </div>
 
-                    <flux:dropdown position="bottom" align="start">
-                        <flux:button icon="plus" variant="filled">{{ __('Add block') }}</flux:button>
-                        <flux:menu>
-                            @foreach (\App\Enums\BlockType::cases() as $blockType)
-                                <flux:menu.item :icon="$blockType->icon()" wire:click="addBlock('{{ $blockType->value }}')">
-                                    {{ $blockType->label() }}
-                                </flux:menu.item>
-                            @endforeach
-                        </flux:menu>
-                    </flux:dropdown>
+                    <flux:button icon="plus" variant="filled" wire:click="openBlockPicker">{{ __('Add block') }}</flux:button>
+
+                    <flux:modal name="block-picker" class="w-full md:max-w-5xl">
+                        <div class="space-y-6">
+                            <div>
+                                <flux:heading size="lg">{{ __('Add a block') }}</flux:heading>
+                                <flux:text class="mt-2">{{ __('Choose a block to add to your page.') }}</flux:text>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                                @foreach (\App\Enums\BlockType::cases() as $pickerType)
+                                    <button type="button" wire:click="addBlock('{{ $pickerType->value }}')" class="flex flex-col gap-2 rounded-lg border border-zinc-200 dark:border-white/10 p-4 text-left transition hover:border-zinc-300 hover:bg-zinc-50 dark:hover:border-white/20 dark:hover:bg-white/5">
+                                        <flux:icon name="{{ $pickerType->icon() }}" class="size-6 text-zinc-400" />
+                                        <flux:heading size="sm">{{ $pickerType->label() }}</flux:heading>
+                                        <flux:text size="sm">{{ $pickerType->description() }}</flux:text>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    </flux:modal>
 
                     <flux:modal name="remove-block" class="min-w-[22rem]">
                         <div class="space-y-6">

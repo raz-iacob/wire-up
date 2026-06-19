@@ -72,6 +72,34 @@ it('ignores unknown block types when adding', function (): void {
         ->assertCount('blocks', 0);
 });
 
+it('inserts a block at the chosen position and renumbers', function (): void {
+    $component = editor($this->page)
+        ->set('blocks', [
+            'new-a' => ['id' => 'new-a', 'type' => 'spacer', 'position' => 0, 'content' => []],
+            'new-b' => ['id' => 'new-b', 'type' => 'spacer', 'position' => 1, 'content' => []],
+        ])
+        ->call('openBlockPicker', 1)
+        ->assertSet('insertPosition', 1)
+        ->call('addBlock', 'hero')
+        ->assertSet('insertPosition', null);
+
+    $blocks = array_values($component->get('blocks'));
+
+    expect($blocks)->toHaveCount(3);
+    expect($blocks[0]['id'])->toBe('new-a');
+    expect($blocks[1]['type'])->toBe('hero');
+    expect($blocks[1]['position'])->toBe(1);
+    expect($blocks[2]['id'])->toBe('new-b');
+    expect($blocks[2]['position'])->toBe(2);
+});
+
+it('shows the block picker options with descriptions', function (): void {
+    $this->get(route('admin.pages-edit', $this->page))
+        ->assertOk()
+        ->assertSee('Add a block')
+        ->assertSee('Full-width banner with a heading, subheading and background image.');
+});
+
 it('keys blocks by id so nested bindings stay stable', function (): void {
     editor($this->page)
         ->call('addBlock', 'hero')
