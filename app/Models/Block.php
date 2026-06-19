@@ -111,4 +111,31 @@ final class Block extends Model
 
         return (string) (data_get($image, 'metadata.alt', $image['alt_text'] ?? ''));
     }
+
+    public function ctaUrl(string $field): ?string
+    {
+        $link = data_get($this->content, "{$field}.link");
+
+        if (! is_array($link)) {
+            return null;
+        }
+
+        $value = mb_trim((string) ($link['value'] ?? ''));
+
+        if ($value === '') {
+            return null;
+        }
+
+        return match ($link['type'] ?? 'url') {
+            'anchor' => '#'.mb_ltrim($value, '#'),
+            'page' => Page::query()->whereKey($value)->first()?->getUrl(),
+            default => $value,
+        };
+    }
+
+    public function ctaOpensNewTab(string $field): bool
+    {
+        return ($this->content[$field]['link']['type'] ?? null) === 'url'
+            && (bool) ($this->content[$field]['link']['newTab'] ?? false);
+    }
 }

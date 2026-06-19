@@ -54,6 +54,11 @@ final class Page extends Model
         ];
     }
 
+    public function getUrl(?string $locale = null): string
+    {
+        return route('page', $this->getSlug($locale));
+    }
+
     /**
      * @return array<int, string>
      */

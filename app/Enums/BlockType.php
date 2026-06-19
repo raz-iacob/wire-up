@@ -30,10 +30,15 @@ enum BlockType: string
     public function icon(): string
     {
         return match ($this) {
-            self::HERO => 'photo',
+            self::HERO => 'gallery-thumbnails',
             self::TEXT_IMAGE => 'view-columns',
             self::SPACER => 'arrows-up-down',
         };
+    }
+
+    public function hasAnchor(): bool
+    {
+        return $this !== self::SPACER;
     }
 
     public function description(): string
@@ -50,8 +55,30 @@ enum BlockType: string
      */
     public function defaultContent(): array
     {
+        $cta = [
+            'enabled' => false,
+            'text' => [],
+            'link' => ['type' => 'url', 'value' => '', 'newTab' => false],
+            'bg' => null,
+            'textColor' => null,
+        ];
+
         return match ($this) {
-            self::HERO => ['align' => 'center'],
+            self::HERO => [
+                'align' => 'center',
+                'verticalAlign' => 'center',
+                'width' => 'full',
+                'height' => 'auto',
+                'headingColor' => null,
+                'subheadingColor' => null,
+                'background' => [
+                    'type' => 'image',
+                    'image' => null,
+                    'gradient' => ['start' => null, 'end' => null, 'direction' => 'to-b'],
+                ],
+                'ctaPrimary' => $cta,
+                'ctaSecondary' => $cta,
+            ],
             self::TEXT_IMAGE => ['reverseLayout' => false],
             self::SPACER => ['size' => 'medium'],
         };

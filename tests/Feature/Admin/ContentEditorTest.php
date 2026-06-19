@@ -188,3 +188,77 @@ it('updates existing blocks and deletes removed ones when saving', function (): 
 
     $this->assertDatabaseMissing('blocks', ['id' => $drop->id]);
 });
+
+it('seeds a full default content structure for a hero block', function (): void {
+    editor($this->page)
+        ->call('addBlock', 'hero')
+        ->assertSet('blocks', function (array $blocks): bool {
+            $content = Arr::first($blocks)['content'];
+
+            return $content['background']['type'] === 'image'
+                && $content['width'] === 'full'
+                && $content['height'] === 'auto'
+                && $content['verticalAlign'] === 'center'
+                && $content['ctaPrimary']['enabled'] === false;
+        });
+});
+
+it('backfills missing default content for existing hero blocks', function (): void {
+    $page = $this->page;
+
+    $block = Block::factory()->create([
+        'blockable_id' => $page->id,
+        'blockable_type' => 'page',
+        'type' => 'hero',
+        'position' => 0,
+        'content' => ['heading' => ['en' => 'Legacy']],
+    ]);
+
+    editor($page)->assertSet('blocks', function (array $blocks) use ($block): bool {
+        $content = $blocks[(string) $block->id]['content'];
+
+        return $content['background']['type'] === 'image'
+            && $content['width'] === 'full'
+            && $content['heading']['en'] === 'Legacy';
+    });
+});
+
+it('clears a cta link value when its link type changes', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => [
+                'ctaPrimary' => ['enabled' => true, 'link' => ['type' => 'anchor', 'value' => '#contact']],
+            ]],
+        ])
+        ->set('blocks.new-a.content.ctaPrimary.link.type', 'page')
+        ->assertSet('blocks.new-a.content.ctaPrimary.link.value', '');
+});
+
+it('slugifies and de-duplicates block anchors on save', function (): void {
+    $page = $this->page;
+
+    editor($page)
+        ->set('title.en', 'Sample')
+        ->set('slugs.en', 'sample')
+        ->set('blocks', [
+            'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => ['anchor' => 'Contact Us!']],
+            'new-b' => ['id' => 'new-b', 'type' => 'text-image', 'position' => 1, 'content' => ['anchor' => 'Contact Us!']],
+            'new-c' => ['id' => 'new-c', 'type' => 'spacer', 'position' => 2, 'content' => ['size' => 'medium']],
+        ])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $blocks = $page->blocks()->get();
+
+    expect($blocks[0]->content['anchor'])->toBe('contact-us')
+        ->and($blocks[1]->content['anchor'])->toBe('contact-us-2')
+        ->and($blocks[2]->content)->not->toHaveKey('anchor');
+});
+
+it('does not add an anchor field to spacer blocks', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-a' => ['id' => 'new-a', 'type' => 'spacer', 'position' => 0, 'content' => ['size' => 'medium']],
+        ])
+        ->assertDontSee('Link directly to this block');
+});

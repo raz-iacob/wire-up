@@ -207,22 +207,31 @@ it('returns an empty title when every saved locale value is blank', function ():
     expect((new SettingsService)->title())->toBe('');
 });
 
-it('builds a logo url from the stored crop', function (): void {
+it('builds a logo url that caps height without constraining width', function (): void {
     Settings::set(['logo_header' => [
         'source' => 'images/logo.jpg',
-        'crop' => ['default' => ['w' => 480, 'h' => 160, 'crop_w' => 480, 'crop_h' => 160]],
+        'crop' => ['default' => ['crop_w' => 600, 'crop_h' => 600, 'crop_x' => 10, 'crop_y' => 20]],
     ]]);
 
     expect((new SettingsService)->logoUrl('logo_header'))
         ->toBeString()
         ->toContain('/img/')
-        ->toContain('images/logo.jpg');
+        ->toContain('images/logo.jpg')
+        ->toContain('h=320')
+        ->toContain('crop=600-600-10-20')
+        ->not->toContain('w=');
 });
 
-it('returns no logo url when the stored item has no crop', function (): void {
+it('builds a logo url without a crop when none is stored', function (): void {
     Settings::set(['logo_header' => ['source' => 'images/logo.jpg']]);
 
-    expect((new SettingsService)->logoUrl('logo_header'))->toBeNull();
+    expect((new SettingsService)->logoUrl('logo_header'))
+        ->toBeString()
+        ->toContain('/img/')
+        ->toContain('images/logo.jpg')
+        ->toContain('h=320')
+        ->not->toContain('crop=')
+        ->not->toContain('w=');
 });
 
 it('builds a logo url for an svg even without a crop', function (): void {
@@ -260,4 +269,29 @@ it('returns null when no published homepage can be resolved', function (): void 
 
     expect((new SettingsService)->homePage())->toBeNull()
         ->and((new SettingsService)->homePageId())->toBeNull();
+});
+
+it('resolves a theme slot color from the active preset', function (): void {
+    config()->set('site.theme', 'midnight');
+
+    expect((new SettingsService)->color('header_bg'))->toBe('#0a0a0a');
+});
+
+it('resolves a custom theme slot color', function (): void {
+    config()->set('site.theme', 'custom');
+    config()->set('site.colors', ['header_bg' => '#123456']);
+
+    expect((new SettingsService)->color('header_bg'))->toBe('#123456');
+});
+
+it('falls back to the default preset color when no theme is set', function (): void {
+    config()->set('site.theme', '');
+
+    expect((new SettingsService)->color('header_bg'))->toBe('#ffffff');
+});
+
+it('returns null for an unknown color slot', function (): void {
+    config()->set('site.theme', '');
+
+    expect((new SettingsService)->color('not_a_slot'))->toBeNull();
 });

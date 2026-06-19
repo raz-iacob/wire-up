@@ -85,8 +85,30 @@ it('handles parseCrop when given invalid input', function (string $input): void 
     'invalid string',
     '-2,0,0,0',
     '100,200,300',
-    '100,192000,0,0',
+    '0,100,0,0',
 ]);
+
+it('accepts crop dimensions larger than the output cap', function (): void {
+    $service = ImageService::make('test-image.jpg');
+
+    $crop = $service->parseCrop('5059-3372-255-56');
+
+    expect($crop)->toEqual([
+        'width' => 5059,
+        'height' => 3372,
+        'offset_x' => 255,
+        'offset_y' => 56,
+    ]);
+});
+
+it('clamps an oversized crop to the image bounds without distortion', function (): void {
+    $service = ImageService::make('test-image.jpg')
+        ->applyOptions(['crop' => '5059-3372-255-56']);
+
+    $response = $service->response();
+
+    expect($response->getStatusCode())->toBe(200);
+});
 
 it('returns jpeg for unknown format in response', function (): void {
     $service = ImageService::make('test-image.jpg')->applyOptions(['fm' => 'foo']);

@@ -57,11 +57,39 @@ final class SettingsService
         return $this->localeValue(config('site.description'));
     }
 
-    public function logoUrl(string $role, string $crop = 'default'): ?string
+    public function logoUrl(string $role, string $crop = 'default', int $maxHeight = 320): ?string
     {
         $item = config('site.'.$role);
 
-        return $this->imageUrl(is_array($item) ? $item : null, $crop, [], requireCrop: true);
+        if (! is_array($item)) {
+            return null;
+        }
+
+        $source = $item['source'] ?? null;
+
+        if (! is_string($source) || $source === '') {
+            return null;
+        }
+
+        $crops = is_array($item['crop'] ?? null) ? $item['crop'] : [];
+        $variant = is_array($crops[$crop] ?? null) ? $crops[$crop] : null;
+
+        $options = ["h={$maxHeight}", 'q=80', 'fm=png'];
+
+        if ($variant !== null && ($variant['crop_w'] ?? 0) > 0 && ($variant['crop_h'] ?? 0) > 0) {
+            $options[] = sprintf(
+                'crop=%d-%d-%d-%d',
+                $variant['crop_w'],
+                $variant['crop_h'],
+                $variant['crop_x'] ?? 0,
+                $variant['crop_y'] ?? 0,
+            );
+        }
+
+        return route('image.show', [
+            'options' => implode(',', $options),
+            'path' => $source,
+        ]);
     }
 
     public function faviconUrl(string $crop = 'default'): ?string
@@ -69,6 +97,15 @@ final class SettingsService
         $item = config('site.favicon');
 
         return $this->imageUrl(is_array($item) ? $item : null, $crop, ['fm' => 'png'], requireCrop: false);
+    }
+
+    public function color(string $slot): ?string
+    {
+        $palette = $this->themeColors() ?: config()->array('theme.presets.default.colors');
+
+        $value = $palette[$slot] ?? null;
+
+        return is_string($value) ? $value : null;
     }
 
     /**
@@ -292,8 +329,31 @@ final class SettingsService
         }
 
         return route('image.show', [
-            'options' => $this->cropString([...($variant ?? []), ...$params]),
+            'options' => $variant !== null
+                ? $this->cropString([...$variant, ...$params])
+                : $this->scaleString($params),
             'path' => $source,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private function scaleString(array $params): string
+    {
+        $values = [
+            'w' => 1200,
+            'h' => 800,
+            'q' => 80,
+            'fm' => 'jpg',
+            ...Arr::only($params, ['w', 'h', 'q', 'fm']),
+        ];
+
+        return implode(',', [
+            "w={$values['w']}",
+            "h={$values['h']}",
+            "q={$values['q']}",
+            "fm={$values['fm']}",
         ]);
     }
 

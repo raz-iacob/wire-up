@@ -610,14 +610,14 @@ return new class extends Component
                     wire:model="logo_header"
                     name="logo_header"
                     type="image"
-                    :crops="['default' => ['label' => __('Header logo'), 'w' => 480, 'h' => 160]]"
+                    :crops="['default' => ['label' => __('Header logo')]]"
                     label="{{ __('Header logo') }}"
                 />
                 <livewire:admin.media-selector
                     wire:model="logo_footer"
                     name="logo_footer"
                     type="image"
-                    :crops="['default' => ['label' => __('Footer logo'), 'w' => 480, 'h' => 160]]"
+                    :crops="['default' => ['label' => __('Footer logo')]]"
                     label="{{ __('Footer logo') }}"
                 />
             </div>

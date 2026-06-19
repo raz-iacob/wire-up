@@ -2,6 +2,13 @@
 
 <article class="w-full">
     @foreach ($page->blocks as $block)
-        @includeIf($block->type->frontendView(), ['block' => $block])
+        @php($anchor = $block->type->hasAnchor() ? trim((string) ($block->content['anchor'] ?? '')) : '')
+        @if ($anchor !== '')
+            <div id="{{ $anchor }}" class="scroll-mt-24">
+                @includeIf($block->type->frontendView(), ['block' => $block])
+            </div>
+        @else
+            @includeIf($block->type->frontendView(), ['block' => $block])
+        @endif
     @endforeach
 </article>

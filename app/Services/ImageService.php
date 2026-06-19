@@ -101,7 +101,7 @@ final class ImageService
 
         [$width, $height, $offsetX, $offsetY] = array_map(intval(...), array_slice($parts, 0, 4));
 
-        if ($width <= 0 || $height <= 0 || $offsetX < 0 || $offsetY < 0 || $width > 1920 || $height > 1920) {
+        if ($width <= 0 || $height <= 0 || $offsetX < 0 || $offsetY < 0) {
             return null;
         }
 
@@ -123,7 +123,18 @@ final class ImageService
         $crop = $this->parseCrop($options['crop'] ?? '');
 
         if ($crop !== null && $crop !== []) {
-            $this->image->crop(...$crop);
+            $imageWidth = $this->image->width();
+            $imageHeight = $this->image->height();
+
+            $width = min($crop['width'], $imageWidth);
+            $height = min($crop['height'], $imageHeight);
+
+            $this->image->crop(
+                width: $width,
+                height: $height,
+                offset_x: min($crop['offset_x'], max(0, $imageWidth - $width)),
+                offset_y: min($crop['offset_y'], max(0, $imageHeight - $height)),
+            );
         }
 
         if (Arr::hasAny($options, ['w', 'h'])) {

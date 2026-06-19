@@ -81,7 +81,7 @@ return new class extends Component
     {
         $page->load('translations', 'media', 'blocks');
         $this->page = $page;
-        $this->blocks = $page->getBlocksArray();
+        $this->blocks = $this->withBlockDefaults($page->getBlocksArray());
         $this->status = $page->computed_status;
         $this->publishedLocales = $page->published_locales;
         $this->published_at = $page->published_at;
@@ -143,6 +143,7 @@ return new class extends Component
     public function update(UpdatePageAction $action): void
     {
         $this->og_image = $this->normalizeMediaInput($this->og_image);
+        $this->normalizeBlockAnchors();
 
         /** @var array<string, array<int, mixed>> */
         $rules = [
@@ -231,6 +232,62 @@ return new class extends Component
         }
 
         return $result;
+    }
+
+    public function updated(string $name): void
+    {
+        if (preg_match('/^blocks\.[^.]+\.content\.(ctaPrimary|ctaSecondary)\.link\.type$/', $name) === 1) {
+            $path = Str::after($name, 'blocks.');
+            data_set($this->blocks, Str::beforeLast($path, '.type').'.value', '');
+        }
+    }
+
+    /**
+     * @param  array<int|string, array{id: string, type: string, position: int, content: array<string, mixed>}>  $blocks
+     * @return array<int|string, array{id: string, type: string, position: int, content: array<string, mixed>}>
+     */
+    private function withBlockDefaults(array $blocks): array
+    {
+        return collect($blocks)
+            ->map(function (array $block): array {
+                $type = BlockType::tryFrom($block['type']);
+
+                if ($type !== null) {
+                    $block['content'] = array_replace_recursive($type->defaultContent(), $block['content']);
+                }
+
+                return $block;
+            })
+            ->all();
+    }
+
+    private function normalizeBlockAnchors(): void
+    {
+        $seen = [];
+
+        foreach ($this->blocks as $id => $block) {
+            if (! BlockType::from($block['type'])->hasAnchor()) {
+                continue;
+            }
+
+            $anchor = Str::slug((string) data_get($block, 'content.anchor', ''));
+
+            if ($anchor !== '' && in_array($anchor, $seen, true)) {
+                $suffix = 2;
+
+                while (in_array("{$anchor}-{$suffix}", $seen, true)) {
+                    $suffix++;
+                }
+
+                $anchor = "{$anchor}-{$suffix}";
+            }
+
+            if ($anchor !== '') {
+                $seen[] = $anchor;
+            }
+
+            $this->blocks[$id]['content']['anchor'] = $anchor;
+        }
     }
 
     #[On('change-locale')]
@@ -363,6 +420,20 @@ return new class extends Component
         return $this->page->id === SettingsService::current()->homePageId();
     }
 
+    /**
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function pageLinkOptions(): array
+    {
+        return Page::query()
+            ->with('translations')
+            ->get()
+            ->sortBy(fn (Page $page): string => $page->title)
+            ->mapWithKeys(fn (Page $page): array => [$page->id => $page->title])
+            ->all();
+    }
+
     public function render(): View
     {
         return $this->view()
@@ -430,7 +501,18 @@ return new class extends Component
                                 </div>
 
                                 <div class="p-4" x-show="open" x-collapse x-cloak>
-                                    @includeIf($blockType->adminView(), ['block' => $block, 'locale' => $locale, 'multiLocale' => count($activeLocales) > 1, 'index' => $index])
+                                    @includeIf($blockType->adminView(), ['block' => $block, 'locale' => $locale, 'multiLocale' => count($activeLocales) > 1, 'index' => $index, 'pageOptions' => $this->pageLinkOptions])
+
+                                    @if ($blockType->hasAnchor())
+                                        <div class="mt-6">
+                                            <flux:input
+                                                wire:model.lazy="blocks.{{ $index }}.content.anchor"
+                                                label="{{ __('Anchor') }}"
+                                                description="{{ __('Link directly to this block with #your-anchor.') }}"
+                                                icon="hashtag"
+                                                placeholder="contact" />
+                                        </div>
+                                    @endif
                                 </div>
                             </flux:card>
                         @endforeach
@@ -484,7 +566,7 @@ return new class extends Component
                     <x-forms.input-translated name="title" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Title') }}" />
                     <x-forms.url-translated name="slugs" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Web Address') }}" :readonly="$this->isHomePage" :note="$this->isHomePage ? __('Served at /. Its URL redirects here.') : ''" />
                     <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Description') }}" />
-                    <livewire:admin.media-selector wire:model="og_image.{{ $locale }}" type="image" name="og_image" :$locale :multi-locale="count($activeLocales) > 1" :multiple="false" :with-caption="true" :crops="['desktop' => ['label' => __('Desktop'), 'w' => 1200, 'h' => 700], 'mobile' => ['label' => __('Mobile'), 'w' => 800, 'h' => 800]]" label="{{ __('Open Graph Image') }}" />
+                    <livewire:admin.media-selector wire:model="og_image.{{ $locale }}" type="image" name="og_image" :crops="['desktop' => ['label' => __('Desktop'), 'w' => 1200, 'h' => 700], 'mobile' => ['label' => __('Mobile'), 'w' => 800, 'h' => 800]]" label="{{ __('Open Graph Image') }}" />
                 </div>
             </flux:fieldset>
         </div>
