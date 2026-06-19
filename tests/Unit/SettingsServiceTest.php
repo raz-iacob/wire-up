@@ -222,6 +222,36 @@ it('builds a logo url that caps height without constraining width', function ():
         ->not->toContain('w=');
 });
 
+it('returns no logo url when the stored item has no source', function (): void {
+    Settings::set(['logo_header' => ['id' => 7]]);
+
+    expect((new SettingsService)->logoUrl('logo_header'))->toBeNull();
+});
+
+it('builds a favicon url without a crop when none is stored', function (): void {
+    Settings::set(['favicon' => ['source' => 'images/favicon.png']]);
+
+    expect((new SettingsService)->faviconUrl())
+        ->toBeString()
+        ->toContain('images/favicon.png')
+        ->toContain('fm=png')
+        ->not->toContain('crop=');
+});
+
+it('builds a favicon url applying a stored crop', function (): void {
+    Settings::set(['favicon' => [
+        'source' => 'images/favicon.png',
+        'crop' => ['default' => ['crop_w' => 256, 'crop_h' => 256, 'crop_x' => 4, 'crop_y' => 8]],
+    ]]);
+
+    expect((new SettingsService)->faviconUrl())
+        ->toBeString()
+        ->toContain('/img/')
+        ->toContain('images/favicon.png')
+        ->toContain('crop=256-256-4-8')
+        ->toContain('fm=png');
+});
+
 it('builds a logo url without a crop when none is stored', function (): void {
     Settings::set(['logo_header' => ['source' => 'images/logo.jpg']]);
 

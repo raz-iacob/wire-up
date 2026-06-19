@@ -96,7 +96,7 @@ final class SettingsService
     {
         $item = config('site.favicon');
 
-        return $this->imageUrl(is_array($item) ? $item : null, $crop, ['fm' => 'png'], requireCrop: false);
+        return $this->imageUrl(is_array($item) ? $item : null, $crop, ['fm' => 'png']);
     }
 
     public function color(string $slot): ?string
@@ -314,7 +314,7 @@ final class SettingsService
      * @param  array<string, mixed>|null  $item
      * @param  array<string, mixed>  $params
      */
-    private function imageUrl(?array $item, string $crop, array $params, bool $requireCrop): ?string
+    private function imageUrl(?array $item, string $crop, array $params): ?string
     {
         $source = $item['source'] ?? null;
         if (! is_string($source) || $source === '') {
@@ -323,10 +323,6 @@ final class SettingsService
 
         $crops = is_array($item['crop'] ?? null) ? $item['crop'] : [];
         $variant = is_array($crops[$crop] ?? null) ? $crops[$crop] : null;
-
-        if ($requireCrop && $variant === null && ! str_ends_with(mb_strtolower($source), '.svg')) {
-            return null;
-        }
 
         return route('image.show', [
             'options' => $variant !== null
