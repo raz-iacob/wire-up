@@ -24,7 +24,14 @@ it('lists all backed values', function (): void {
 
 it('derives an editor title from content, stripping html', function (): void {
     expect(BlockType::HERO->editorTitle(['heading' => ['en' => 'My hero']], 'en'))->toBe('My hero');
-    expect(BlockType::TEXT_IMAGE->editorTitle(['body' => ['en' => '<p>Rich <strong>copy</strong> here</p>']], 'en'))->toBe('Rich copy here');
+    expect(BlockType::TEXT_IMAGE->editorTitle(['heading' => ['en' => '<p>Rich <strong>copy</strong> here</p>']], 'en'))->toBe('Rich copy here');
+});
+
+it('derives the text + image title from the heading, ignoring the body', function (): void {
+    $content = ['heading' => ['en' => 'The heading wins'], 'body' => ['en' => '<p>Body copy</p>']];
+
+    expect(BlockType::TEXT_IMAGE->editorTitle($content, 'en'))->toBe('The heading wins');
+    expect(BlockType::TEXT_IMAGE->editorTitle(['body' => ['en' => '<p>Body only</p>']], 'en'))->toBe('Text + Image');
 });
 
 it('falls back to the label when content text is empty', function (): void {
@@ -32,8 +39,8 @@ it('falls back to the label when content text is empty', function (): void {
     expect(BlockType::SPACER->editorTitle(['size' => 'large'], 'en'))->toBe('Spacer');
 });
 
-it('truncates the text + image title to the first words', function (): void {
-    $content = ['body' => ['en' => '<p>one two three four five six seven eight nine ten</p>']];
+it('truncates the text + image title at fifty characters', function (): void {
+    $content = ['heading' => ['en' => '<p>'.str_repeat('a', 60).'</p>']];
 
-    expect(BlockType::TEXT_IMAGE->editorTitle($content, 'en'))->toBe('one two three four five six seven eight…');
+    expect(BlockType::TEXT_IMAGE->editorTitle($content, 'en'))->toBe(str_repeat('a', 50).'...');
 });

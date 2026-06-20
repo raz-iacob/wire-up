@@ -31,7 +31,7 @@ enum BlockType: string
     {
         return match ($this) {
             self::HERO => 'gallery-thumbnails',
-            self::TEXT_IMAGE => 'view-columns',
+            self::TEXT_IMAGE => 'layout-list',
             self::SPACER => 'arrows-up-down',
         };
     }
@@ -79,7 +79,12 @@ enum BlockType: string
                 'ctaPrimary' => $cta,
                 'ctaSecondary' => $cta,
             ],
-            self::TEXT_IMAGE => ['reverseLayout' => false],
+            self::TEXT_IMAGE => [
+                'reverseLayout' => false,
+                'hasBackground' => false,
+                'ctaPrimary' => $cta,
+                'ctaSecondary' => $cta,
+            ],
             self::SPACER => ['size' => 'medium'],
         };
     }
@@ -91,7 +96,7 @@ enum BlockType: string
     {
         $text = match ($this) {
             self::HERO => str(strip_tags((string) data_get($content, "heading.{$locale}")))->squish()->limit(50)->value(),
-            self::TEXT_IMAGE => str(strip_tags((string) data_get($content, "body.{$locale}")))->squish()->words(8, '…')->value(),
+            self::TEXT_IMAGE => str(strip_tags((string) data_get($content, "heading.{$locale}")))->squish()->limit(50)->value(),
             default => '',
         };
 

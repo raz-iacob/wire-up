@@ -83,13 +83,13 @@ return new class extends Component
         $this->page = $page;
         $this->blocks = $this->withBlockDefaults($page->getBlocksArray());
         $this->status = $page->computed_status;
-        $this->publishedLocales = $page->published_locales;
         $this->published_at = $page->published_at;
         $this->title = $page->translationsFor('title');
         $this->description = $page->translationsFor('description');
         $this->slugs = $page->getSlugsArray();
         $this->locale = app()->getLocale();
         $this->activeLocales = resolve('localization')->getActiveLocales();
+        $this->publishedLocales = array_values(array_intersect($page->published_locales, array_keys($this->activeLocales)));
         $this->og_image = $this->mediaForRole('og_image');
 
         foreach (array_keys($this->activeLocales) as $locale) {
@@ -196,6 +196,8 @@ return new class extends Component
             $validated = $this->validate($rules, $messages, $attributes);
         } catch (ValidationException $e) {
             $this->revealErrors($e);
+
+            Flux::toast(__('Please review the highlighted fields before saving.'), variant: 'danger');
 
             throw $e;
         }
@@ -680,15 +682,12 @@ return new class extends Component
         }
 
         const content = block.content || {};
-        let raw = '';
 
-        if (block.type === 'hero') {
-            raw = (content.heading || {})[locale] || '';
-        } else if (block.type === 'text-image') {
-            raw = (content.body || {})[locale] || '';
-        } else {
+        if (block.type !== 'hero' && block.type !== 'text-image') {
             return fallback;
         }
+
+        const raw = (content.heading || {})[locale] || '';
 
         const div = document.createElement('div');
         div.innerHTML = raw;
@@ -696,12 +695,6 @@ return new class extends Component
 
         if (! text) {
             return fallback;
-        }
-
-        if (block.type === 'text-image') {
-            const words = text.split(' ');
-
-            return words.length > 8 ? words.slice(0, 8).join(' ') + '…' : text;
         }
 
         return text.length > 50 ? text.slice(0, 50) + '…' : text;

@@ -8,7 +8,7 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.input-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
+    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline" />
     <x-forms.texteditor-translated name="{{ $c }}.subheading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" toolbar="bold italic underline | link ~ undo redo" />
 
     <div class="grid gap-4 sm:grid-cols-2">

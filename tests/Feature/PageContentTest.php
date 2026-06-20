@@ -125,7 +125,7 @@ it('sizes hero heading and subheading relative to the theme typography', functio
         ->assertSee('calc(var(--wire-body-size, 0.875rem) * 1.25)', false);
 });
 
-it('applies separate heading and subheading colors and renders an h2', function (): void {
+it('applies separate heading and subheading colors', function (): void {
     publishPageWithBlocks('two-color-hero', [
         ['id' => 'new-1', 'type' => 'hero', 'content' => [
             'heading' => ['en' => 'Coloured heading'],
@@ -137,11 +137,23 @@ it('applies separate heading and subheading colors and renders an h2', function 
 
     $this->get(route('page', 'two-color-hero'))
         ->assertOk()
-        ->assertSee('<h2', false)
         ->assertSee('color:#ff0000', false)
         ->assertSee('color:#00ff00', false)
         ->assertSee('Coloured heading')
         ->assertSee('Coloured sub');
+});
+
+it('renders a rich hero heading without nesting paragraphs in a heading tag', function (): void {
+    publishPageWithBlocks('rich-hero-heading', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => [
+            'heading' => ['en' => '<p>Bold <strong>statement</strong></p>'],
+        ]],
+    ]);
+
+    $this->get(route('page', 'rich-hero-heading'))
+        ->assertOk()
+        ->assertSee('<strong>statement</strong>', false)
+        ->assertDontSee('<h2', false);
 });
 
 it('renders hero CTA buttons with resolved links', function (): void {
@@ -240,6 +252,55 @@ it('wraps a block with an anchor id target', function (): void {
     $this->get(route('page', 'anchored'))
         ->assertOk()
         ->assertSee('id="contact"', false);
+});
+
+it('renders a rich text-image heading and resolves its CTA links', function (): void {
+    $target = publishPageWithBlocks('ti-cta-target', [
+        ['id' => 'new-1', 'type' => 'spacer', 'content' => ['size' => 'small']],
+    ]);
+
+    publishPageWithBlocks('text-image-cta', [
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => [
+            'heading' => ['en' => '<p>Hormones <u>off</u>?</p>'],
+            'body' => ['en' => '<p>Let us fix it</p>'],
+            'ctaPrimary' => ['enabled' => true, 'text' => ['en' => 'Free Consultation'], 'link' => ['type' => 'anchor', 'value' => 'book']],
+            'ctaSecondary' => ['enabled' => true, 'text' => ['en' => 'Learn More'], 'link' => ['type' => 'page', 'value' => (string) $target->id]],
+        ]],
+    ]);
+
+    $this->get(route('page', 'text-image-cta'))
+        ->assertOk()
+        ->assertSee('<u>off</u>', false)
+        ->assertSee('font-size:var(--wire-heading-size, 1.5rem)', false)
+        ->assertSee('Free Consultation')
+        ->assertSee('href="#book"', false)
+        ->assertSee('Learn More')
+        ->assertSee($target->getUrl(), false);
+});
+
+it('paints a text-image background band only when enabled', function (): void {
+    publishPageWithBlocks('ti-bg', [
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => [
+            'body' => ['en' => '<p>Banded</p>'],
+            'hasBackground' => true,
+        ]],
+    ]);
+
+    publishPageWithBlocks('ti-no-bg', [
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => [
+            'body' => ['en' => '<p>Plain</p>'],
+            'hasBackground' => false,
+        ]],
+    ]);
+
+    $this->get(route('page', 'ti-bg'))
+        ->assertOk()
+        ->assertSee('background-color:var(--wire-card-bg)', false)
+        ->assertSee('color:var(--wire-card-text)', false);
+
+    $this->get(route('page', 'ti-no-bg'))
+        ->assertOk()
+        ->assertDontSee('var(--wire-card-bg)', false);
 });
 
 it('renders a page with no blocks without error', function (): void {

@@ -304,7 +304,7 @@ return new class extends Component
                         @for ($i = 0; $i < 3; $i++)
                             <div class="space-y-1.5 p-3 text-left" :style="`background:${c.card_bg}; border:1px solid ${c.card_border}; border-radius:${radius}`">
                                 <div class="text-[0.65rem] font-semibold" :style="`color:${c.card_text}; font-family:${headingFont}`">{{ __('Card title') }}</div>
-                                <div class="text-[0.6rem] leading-snug" :style="`color:${c.muted}; font-family:${bodyFont}`">{{ __('A short supporting line of text.') }}</div>
+                                <div class="text-[0.6rem] leading-snug" :style="`color:${c.card_text}; font-family:${bodyFont}`">{{ __('A short supporting line of text.') }}</div>
                             </div>
                         @endfor
                     </div>

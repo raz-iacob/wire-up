@@ -40,10 +40,10 @@ it('derives the block header title from content', function (): void {
     editor($this->page)
         ->set('blocks', [
             'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => ['heading' => ['en' => 'My splendid hero']]],
-            'new-b' => ['id' => 'new-b', 'type' => 'text-image', 'position' => 1, 'content' => ['body' => ['en' => '<p>Some <strong>rich</strong> text here</p>']]],
+            'new-b' => ['id' => 'new-b', 'type' => 'text-image', 'position' => 1, 'content' => ['heading' => ['en' => '<p>Some <strong>rich</strong> heading here</p>'], 'body' => ['en' => '<p>Body copy</p>']]],
         ])
         ->assertSee('My splendid hero')
-        ->assertSee('Some rich text here')
+        ->assertSee('Some rich heading here')
         ->assertDontSee('<strong>', false);
 });
 
@@ -53,6 +53,15 @@ it('falls back to the block type label when content text is empty', function ():
             'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => []],
         ])
         ->assertSee('Hero');
+});
+
+it('derives the text-image header title from the heading, not the body', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-a' => ['id' => 'new-a', 'type' => 'text-image', 'position' => 0, 'content' => ['body' => ['en' => '<p>Body only copy</p>']]],
+        ])
+        ->assertSee('Text + Image')
+        ->assertDontSee('Body only copy');
 });
 
 it('appends a block when adding', function (): void {
@@ -223,6 +232,40 @@ it('backfills missing default content for existing hero blocks', function (): vo
     });
 });
 
+it('seeds a full default content structure for a text-image block', function (): void {
+    editor($this->page)
+        ->call('addBlock', 'text-image')
+        ->assertSet('blocks', function (array $blocks): bool {
+            $content = Arr::first($blocks)['content'];
+
+            return $content['reverseLayout'] === false
+                && $content['hasBackground'] === false
+                && $content['ctaPrimary']['enabled'] === false
+                && $content['ctaSecondary']['enabled'] === false;
+        });
+});
+
+it('backfills missing default content for existing text-image blocks', function (): void {
+    $page = $this->page;
+
+    $block = Block::factory()->create([
+        'blockable_id' => $page->id,
+        'blockable_type' => 'page',
+        'type' => 'text-image',
+        'position' => 0,
+        'content' => ['body' => ['en' => '<p>Legacy</p>'], 'reverseLayout' => true],
+    ]);
+
+    editor($page)->assertSet('blocks', function (array $blocks) use ($block): bool {
+        $content = $blocks[(string) $block->id]['content'];
+
+        return $content['hasBackground'] === false
+            && $content['ctaPrimary']['enabled'] === false
+            && $content['reverseLayout'] === true
+            && $content['body']['en'] === '<p>Legacy</p>';
+    });
+});
+
 it('clears a cta link value when its link type changes', function (): void {
     editor($this->page)
         ->set('blocks', [
@@ -232,6 +275,17 @@ it('clears a cta link value when its link type changes', function (): void {
         ])
         ->set('blocks.new-a.content.ctaPrimary.link.type', 'page')
         ->assertSet('blocks.new-a.content.ctaPrimary.link.value', '');
+});
+
+it('clears a text-image cta link value when its link type changes', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-a' => ['id' => 'new-a', 'type' => 'text-image', 'position' => 0, 'content' => [
+                'ctaSecondary' => ['enabled' => true, 'link' => ['type' => 'anchor', 'value' => '#contact']],
+            ]],
+        ])
+        ->set('blocks.new-a.content.ctaSecondary.link.type', 'url')
+        ->assertSet('blocks.new-a.content.ctaSecondary.link.value', '');
 });
 
 it('slugifies and de-duplicates block anchors on save', function (): void {
@@ -253,6 +307,16 @@ it('slugifies and de-duplicates block anchors on save', function (): void {
     expect($blocks[0]->content['anchor'])->toBe('contact-us')
         ->and($blocks[1]->content['anchor'])->toBe('contact-us-2')
         ->and($blocks[2]->content)->not->toHaveKey('anchor');
+});
+
+it('drops published locales that are no longer active when loading', function (): void {
+    $active = array_keys(resolve('localization')->getActiveLocales());
+
+    $page = Page::factory()->create([
+        'metadata' => ['published_locales' => [...$active, 'zz']],
+    ]);
+
+    editor($page)->assertSet('publishedLocales', $active);
 });
 
 it('does not add an anchor field to spacer blocks', function (): void {

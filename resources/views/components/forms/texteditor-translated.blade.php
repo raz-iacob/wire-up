@@ -11,6 +11,23 @@
         </flux:tooltip>
         @endif
     </div>
-    <flux:editor wire:model.lazy="{{ $name }}.{{ $locale }}" :required="$required" :toolbar="$toolbar" class="**:data-[slot=content]:min-h-[100px]!" />
+
+    <div x-data="editorSource">
+        <flux:editor wire:model.lazy="{{ $name }}.{{ $locale }}" :required="$required" class="**:data-[slot=content]:min-h-[100px]!">
+            <flux:editor.toolbar :items="$toolbar . ' | source'" />
+            <flux:editor.content />
+            <textarea
+                x-ref="source"
+                x-cloak
+                data-editor-source
+                spellcheck="false"
+                x-on:change="syncSource($el)"
+                style="display:none"
+                rows="8"
+                class="block w-full resize-y border-0 bg-transparent p-3 font-mono text-xs leading-relaxed text-zinc-700 focus:outline-none focus:ring-0 dark:text-zinc-300"
+            ></textarea>
+        </flux:editor>
+    </div>
+
     <flux:error name="{{ $name }}.{{ $locale }}" />
 </flux:field>

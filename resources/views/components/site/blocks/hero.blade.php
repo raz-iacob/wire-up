@@ -86,7 +86,7 @@
         'justify-end' => $valign === 'bottom',
     ])>
         @if ($heading)
-            <h2 class="max-w-3xl font-bold tracking-tight" style="{{ $headingStyle }}">{{ $heading }}</h2>
+            <div class="max-w-3xl font-bold tracking-tight [&>p]:m-0 [&_a]:underline" style="{{ $headingStyle }}">{!! $heading !!}</div>
         @endif
 
         @if ($subheading)
