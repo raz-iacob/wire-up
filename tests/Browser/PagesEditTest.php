@@ -54,6 +54,35 @@ it('derives the text-image block header title from the heading, not the body', f
         );
 });
 
+it('derives the location block header title from the heading', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Location Page',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'location-page']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'heading' => ['en' => '<p>Find <strong>us</strong></p>'],
+            'map' => '123 Main St, Springfield',
+        ]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+
+    $browser->assertNoJavascriptErrors()
+        ->assertScript(
+            "window.blockTitle({ type: 'location', content: { heading: { en: '<p>Find <strong>us</strong></p>' } } }, 'en', 'fallback')",
+            'Find us',
+        )
+        ->assertScript(
+            "window.blockTitle({ type: 'location', content: { map: 'Berlin' } }, 'en', 'Location')",
+            'Location',
+        );
+});
+
 it('toggles a raw HTML source view on rich text editors and round-trips edits', function (): void {
     $page = Page::factory()->create([
         'title' => 'Source Page',

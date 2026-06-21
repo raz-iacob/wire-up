@@ -8,6 +8,7 @@ enum BlockType: string
 {
     case HERO = 'hero';
     case TEXT_IMAGE = 'text-image';
+    case LOCATION = 'location';
     case SPACER = 'spacer';
 
     /**
@@ -23,6 +24,7 @@ enum BlockType: string
         return match ($this) {
             self::HERO => __('Hero'),
             self::TEXT_IMAGE => __('Text + Image'),
+            self::LOCATION => __('Location'),
             self::SPACER => __('Spacer'),
         };
     }
@@ -32,6 +34,7 @@ enum BlockType: string
         return match ($this) {
             self::HERO => 'gallery-thumbnails',
             self::TEXT_IMAGE => 'layout-list',
+            self::LOCATION => 'map',
             self::SPACER => 'arrows-up-down',
         };
     }
@@ -46,6 +49,7 @@ enum BlockType: string
         return match ($this) {
             self::HERO => __('Full-width banner with a heading, subheading and background image.'),
             self::TEXT_IMAGE => __('A block of text alongside an image.'),
+            self::LOCATION => __('An embedded map alongside address and contact details.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
         };
     }
@@ -85,6 +89,19 @@ enum BlockType: string
                 'ctaPrimary' => $cta,
                 'ctaSecondary' => $cta,
             ],
+            self::LOCATION => [
+                'map' => '',
+                'phone' => '',
+                'email' => '',
+                'reverseLayout' => false,
+                'hasBackground' => false,
+                'directions' => [
+                    'enabled' => false,
+                    'text' => [],
+                    'bg' => null,
+                    'textColor' => null,
+                ],
+            ],
             self::SPACER => ['size' => 'medium'],
         };
     }
@@ -94,11 +111,7 @@ enum BlockType: string
      */
     public function editorTitle(array $content, string $locale): string
     {
-        $text = match ($this) {
-            self::HERO => str(strip_tags((string) data_get($content, "heading.{$locale}")))->squish()->limit(50)->value(),
-            self::TEXT_IMAGE => str(strip_tags((string) data_get($content, "heading.{$locale}")))->squish()->limit(50)->value(),
-            default => '',
-        };
+        $text = str(strip_tags((string) data_get($content, "heading.{$locale}")))->squish()->limit(50)->value();
 
         return $text !== '' ? $text : $this->label();
     }

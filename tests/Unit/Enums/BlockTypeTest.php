@@ -16,10 +16,32 @@ it('derives admin and frontend view paths from the value', function (): void {
     expect(BlockType::HERO->frontendView())->toBe('components.site.blocks.hero');
     expect(BlockType::TEXT_IMAGE->adminView())->toBe('components.admin.blocks.text-image');
     expect(BlockType::TEXT_IMAGE->frontendView())->toBe('components.site.blocks.text-image');
+    expect(BlockType::LOCATION->adminView())->toBe('components.admin.blocks.location');
+    expect(BlockType::LOCATION->frontendView())->toBe('components.site.blocks.location');
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'spacer']);
+});
+
+it('seeds the location default content shape', function (): void {
+    $content = BlockType::LOCATION->defaultContent();
+
+    expect($content)->toMatchArray([
+        'map' => '',
+        'phone' => '',
+        'email' => '',
+        'reverseLayout' => false,
+        'hasBackground' => false,
+    ]);
+    expect($content['directions']['enabled'])->toBeFalse();
+    expect($content['directions']['bg'])->toBeNull();
+    expect($content['directions']['textColor'])->toBeNull();
+});
+
+it('derives the location title from the heading, falling back to the label', function (): void {
+    expect(BlockType::LOCATION->editorTitle(['heading' => ['en' => '<p>Find us</p>']], 'en'))->toBe('Find us');
+    expect(BlockType::LOCATION->editorTitle([], 'en'))->toBe('Location');
 });
 
 it('derives an editor title from content, stripping html', function (): void {

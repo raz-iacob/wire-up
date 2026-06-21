@@ -245,6 +245,31 @@ it('seeds a full default content structure for a text-image block', function ():
         });
 });
 
+it('seeds a full default content structure for a location block', function (): void {
+    editor($this->page)
+        ->call('addBlock', 'location')
+        ->assertSet('blocks', function (array $blocks): bool {
+            $content = Arr::first($blocks)['content'];
+
+            return $content['map'] === ''
+                && $content['phone'] === ''
+                && $content['email'] === ''
+                && $content['reverseLayout'] === false
+                && $content['hasBackground'] === false
+                && $content['directions']['enabled'] === false;
+        });
+});
+
+it('renders the location block editor fields', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-loc' => ['id' => 'new-loc', 'type' => 'location', 'position' => 0, 'content' => ['map' => '']],
+        ])
+        ->assertSee('Map address or embed URL')
+        ->assertSee('Opening hours')
+        ->assertSee('Display map on the right');
+});
+
 it('backfills missing default content for existing text-image blocks', function (): void {
     $page = $this->page;
 

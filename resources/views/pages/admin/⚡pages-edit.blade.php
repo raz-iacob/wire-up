@@ -682,11 +682,6 @@ return new class extends Component
         }
 
         const content = block.content || {};
-
-        if (block.type !== 'hero' && block.type !== 'text-image') {
-            return fallback;
-        }
-
         const raw = (content.heading || {})[locale] || '';
 
         const div = document.createElement('div');

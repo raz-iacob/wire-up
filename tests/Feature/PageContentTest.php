@@ -303,6 +303,86 @@ it('paints a text-image background band only when enabled', function (): void {
         ->assertDontSee('var(--wire-card-bg)', false);
 });
 
+it('renders a location block with an embedded map and contact details', function (): void {
+    publishPageWithBlocks('loc', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'heading' => ['en' => '<p>Find us</p>'],
+            'map' => '123 Main St, Springfield',
+            'name' => ['en' => 'Acme HQ'],
+            'address' => ['en' => "123 Main St\nSpringfield"],
+            'hours' => ['en' => '<ul><li><strong>Mon</strong> 9–5</li></ul>'],
+            'phone' => '+1 555 123 4567',
+            'email' => 'hello@example.com',
+        ]],
+    ]);
+
+    $this->get(route('page', 'loc'))
+        ->assertOk()
+        ->assertSee('Find us')
+        ->assertSee('Acme HQ')
+        ->assertSee('q='.urlencode('123 Main St, Springfield'), false)
+        ->assertSee('output=embed', false)
+        ->assertSee('href="tel:+15551234567"', false)
+        ->assertSee('href="mailto:hello@example.com"', false)
+        ->assertSee('whitespace-pre-line', false)
+        ->assertSee('whitespace-pre-wrap', false)
+        ->assertSee('<ul><li><strong>Mon</strong> 9–5</li></ul>', false);
+});
+
+it('toggles the location map side and background band', function (): void {
+    publishPageWithBlocks('loc-map-left', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'map' => 'Berlin',
+            'reverseLayout' => false,
+            'hasBackground' => true,
+        ]],
+    ]);
+
+    publishPageWithBlocks('loc-map-right', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'map' => 'Berlin',
+            'reverseLayout' => true,
+            'hasBackground' => false,
+        ]],
+    ]);
+
+    $this->get(route('page', 'loc-map-left'))
+        ->assertOk()
+        ->assertDontSee('md:order-last', false)
+        ->assertSee('background-color:var(--wire-card-bg)', false);
+
+    $this->get(route('page', 'loc-map-right'))
+        ->assertOk()
+        ->assertSee('md:order-last', false)
+        ->assertDontSee('var(--wire-card-bg)', false);
+});
+
+it('shows the location directions button only when enabled, labelled and linkable', function (): void {
+    publishPageWithBlocks('loc-dir', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'map' => '123 Main St, Springfield',
+            'directions' => ['enabled' => true, 'text' => ['en' => 'Get directions']],
+        ]],
+    ]);
+
+    publishPageWithBlocks('loc-no-dir', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'map' => '123 Main St, Springfield',
+            'directions' => ['enabled' => false, 'text' => ['en' => 'Get directions']],
+        ]],
+    ]);
+
+    $this->get(route('page', 'loc-dir'))
+        ->assertOk()
+        ->assertSee('Get directions')
+        ->assertSee('maps/search/?api=1', false)
+        ->assertSee('query='.urlencode('123 Main St, Springfield'), false);
+
+    $this->get(route('page', 'loc-no-dir'))
+        ->assertOk()
+        ->assertDontSee('Get directions');
+});
+
 it('renders a page with no blocks without error', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
