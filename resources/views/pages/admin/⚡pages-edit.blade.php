@@ -20,6 +20,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -258,6 +259,16 @@ return new class extends Component
                     $block['content'] = array_replace_recursive($type->defaultContent(), $block['content']);
                 }
 
+                if (is_array($block['content']['items'] ?? null)) {
+                    $block['content']['items'] = array_map(function (array $item): array {
+                        if (empty($item['id'])) {
+                            $item['id'] = (string) Str::uuid();
+                        }
+
+                        return $item;
+                    }, $block['content']['items']);
+                }
+
                 return $block;
             })
             ->all();
@@ -352,6 +363,52 @@ return new class extends Component
         $this->insertPosition = null;
 
         Flux::modal('block-picker')->close();
+    }
+
+    public function addAccordionItem(string $id): void
+    {
+        if (! isset($this->blocks[$id])) {
+            return;
+        }
+
+        $this->blocks[$id]['content']['items'][] = ['id' => (string) Str::uuid(), 'title' => [], 'body' => []];
+    }
+
+    public function removeAccordionItem(string $id, int $index): void
+    {
+        if (! isset($this->blocks[$id]['content']['items'][$index])) {
+            return;
+        }
+
+        unset($this->blocks[$id]['content']['items'][$index]);
+
+        $this->blocks[$id]['content']['items'] = array_values($this->blocks[$id]['content']['items']);
+    }
+
+    #[Renderless]
+    public function reorderAccordionItems(string $itemId, int $position): void
+    {
+        foreach ($this->blocks as $blockId => $block) {
+            $items = $block['content']['items'] ?? null;
+
+            if (! is_array($items)) {
+                continue;
+            }
+
+            $from = collect($items)->search(fn (array $item): bool => ($item['id'] ?? null) === $itemId);
+
+            if ($from === false) {
+                continue;
+            }
+
+            $moved = $items[$from];
+            array_splice($items, $from, 1);
+            array_splice($items, $position, 0, [$moved]);
+
+            $this->blocks[$blockId]['content']['items'] = array_values($items);
+
+            return;
+        }
     }
 
     public function reorderBlocks(string $id, int $position): void

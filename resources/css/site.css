@@ -9,6 +9,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+    body {
+        font-size: var(--wire-body-size, 1rem);
+    }
+
     h1,
     h2,
     h3,
@@ -33,4 +37,64 @@
         var(--wire-body-text) 10%,
         transparent
     );
+}
+
+.site-accordion button[data-flux-accordion-heading] {
+    color: inherit;
+    font-size: 1.125rem;
+    font-weight: 600;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+}
+
+.site-accordion [data-flux-accordion-content] > div {
+    color: inherit;
+    font-size: inherit;
+    opacity: 0.9;
+}
+
+.site-accordion [data-flux-accordion-item] {
+    border-color: color-mix(in oklab, currentColor 18%, transparent);
+}
+
+/* Replace Flux's built-in chevrons with a themed indicator we fully control
+   (Flux colours its open-state icon with a layered !important we cannot beat
+   from here, so we draw our own with currentColor instead). */
+.site-accordion button[data-flux-accordion-heading] > svg {
+    display: none;
+}
+
+.site-accordion button[data-flux-accordion-heading]::after {
+    content: "";
+    flex: none;
+    margin-inline-start: 1.5rem;
+    opacity: 0.6;
+}
+
+.site-accordion[data-icon="chevron"]
+    button[data-flux-accordion-heading]::after {
+    width: 0.55em;
+    height: 0.55em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-0.15em) rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.site-accordion[data-icon="chevron"]
+    button[data-flux-accordion-heading][data-open]::after {
+    transform: translateY(0.1em) rotate(-135deg);
+}
+
+.site-accordion[data-icon="plus-minus"]
+    button[data-flux-accordion-heading]::after {
+    content: "+";
+    font-size: 2.25rem;
+    font-weight: 200;
+    line-height: 1;
+}
+
+.site-accordion[data-icon="plus-minus"]
+    button[data-flux-accordion-heading][data-open]::after {
+    content: "−";
 }

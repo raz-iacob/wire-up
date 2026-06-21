@@ -154,10 +154,10 @@ return [
     ],
 
     'body_sizes' => [
-        'small' => '0.8125rem',
-        'default' => '0.875rem',
-        'large' => '1rem',
-        'xl' => '1.125rem',
+        'small' => '0.875rem',
+        'default' => '1rem',
+        'large' => '1.125rem',
+        'xl' => '1.25rem',
     ],
 
     /*

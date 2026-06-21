@@ -30,8 +30,6 @@
     @endif
     <style>{!! $site->themeCss() !!}</style>
 
-    @fluxAppearance
-
     <title>{{ $title ? "$title | " : '' }}{{ $siteName }}</title>
     @if ($description)
     <meta name="description" content="{{ $description }}">

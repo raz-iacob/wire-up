@@ -18,10 +18,26 @@ it('derives admin and frontend view paths from the value', function (): void {
     expect(BlockType::TEXT_IMAGE->frontendView())->toBe('components.site.blocks.text-image');
     expect(BlockType::LOCATION->adminView())->toBe('components.admin.blocks.location');
     expect(BlockType::LOCATION->frontendView())->toBe('components.site.blocks.location');
+    expect(BlockType::ACCORDION->adminView())->toBe('components.admin.blocks.accordion');
+    expect(BlockType::ACCORDION->frontendView())->toBe('components.site.blocks.accordion');
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'spacer']);
+});
+
+it('seeds the accordion default content shape', function (): void {
+    $content = BlockType::ACCORDION->defaultContent();
+
+    expect($content)->toMatchArray([
+        'icon' => 'chevron',
+        'exclusive' => true,
+        'hasBackground' => false,
+    ]);
+    expect($content['items'])->toHaveCount(1);
+    expect($content['items'][0]['title'])->toBe([]);
+    expect($content['items'][0]['body'])->toBe([]);
+    expect($content['items'][0]['id'])->toBeString()->not->toBeEmpty();
 });
 
 it('seeds the location default content shape', function (): void {

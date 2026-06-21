@@ -383,6 +383,58 @@ it('shows the location directions button only when enabled, labelled and linkabl
         ->assertDontSee('Get directions');
 });
 
+it('renders an accordion block with its items', function (): void {
+    publishPageWithBlocks('acc', [
+        ['id' => 'new-1', 'type' => 'accordion', 'content' => [
+            'heading' => ['en' => '<p>Our Services</p>'],
+            'items' => [
+                ['title' => ['en' => 'PC Service and Support'], 'body' => ['en' => '<ul><li>Repairs</li></ul>']],
+                ['title' => ['en' => 'Custom PC Builds'], 'body' => ['en' => '<p>Tailored rigs</p>']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'acc'))
+        ->assertOk()
+        ->assertSee('Our Services')
+        ->assertSee('PC Service and Support')
+        ->assertSee('Custom PC Builds')
+        ->assertSee('<ul><li>Repairs</li></ul>', false)
+        ->assertSee('site-accordion', false)
+        ->assertSee('data-icon="chevron"', false);
+});
+
+it('drops accordion items that have no title and no body', function (): void {
+    publishPageWithBlocks('acc-empty', [
+        ['id' => 'new-1', 'type' => 'accordion', 'content' => [
+            'items' => [
+                ['title' => ['en' => 'Real one'], 'body' => []],
+                ['title' => [], 'body' => []],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'acc-empty'))
+        ->assertOk()
+        ->assertSee('Real one')
+        ->assertSee('data-flux-accordion-item', false);
+});
+
+it('switches the accordion indicator and background band', function (): void {
+    publishPageWithBlocks('acc-pm', [
+        ['id' => 'new-1', 'type' => 'accordion', 'content' => [
+            'icon' => 'plus-minus',
+            'hasBackground' => true,
+            'items' => [['title' => ['en' => 'One'], 'body' => ['en' => '<p>x</p>']]],
+        ]],
+    ]);
+
+    $this->get(route('page', 'acc-pm'))
+        ->assertOk()
+        ->assertSee('data-icon="plus-minus"', false)
+        ->assertSee('background-color:var(--wire-card-bg)', false);
+});
+
 it('renders a page with no blocks without error', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],

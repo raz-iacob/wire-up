@@ -278,7 +278,7 @@ it('emits radius and font declarations from settings', function (): void {
         ->toContain('--wire-heading-font:"Poppins", sans-serif')
         ->toContain('--wire-body-font:"Inter", sans-serif')
         ->toContain('--wire-heading-size:1.875rem')
-        ->toContain('--wire-body-size:0.8125rem');
+        ->toContain('--wire-body-size:0.875rem');
 });
 
 it('always emits the default palette when nothing is configured', function (): void {

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use Illuminate\Support\Str;
+
 enum BlockType: string
 {
     case HERO = 'hero';
     case TEXT_IMAGE = 'text-image';
     case LOCATION = 'location';
+    case ACCORDION = 'accordion';
     case SPACER = 'spacer';
 
     /**
@@ -25,6 +28,7 @@ enum BlockType: string
             self::HERO => __('Hero'),
             self::TEXT_IMAGE => __('Text + Image'),
             self::LOCATION => __('Location'),
+            self::ACCORDION => __('Accordion'),
             self::SPACER => __('Spacer'),
         };
     }
@@ -35,6 +39,7 @@ enum BlockType: string
             self::HERO => 'gallery-thumbnails',
             self::TEXT_IMAGE => 'layout-list',
             self::LOCATION => 'map',
+            self::ACCORDION => 'list-collapse',
             self::SPACER => 'arrows-up-down',
         };
     }
@@ -50,6 +55,7 @@ enum BlockType: string
             self::HERO => __('Full-width banner with a heading, subheading and background image.'),
             self::TEXT_IMAGE => __('A block of text alongside an image.'),
             self::LOCATION => __('An embedded map alongside address and contact details.'),
+            self::ACCORDION => __('Collapsible sections of content, great for services or FAQs.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
         };
     }
@@ -100,6 +106,14 @@ enum BlockType: string
                     'text' => [],
                     'bg' => null,
                     'textColor' => null,
+                ],
+            ],
+            self::ACCORDION => [
+                'icon' => 'chevron',
+                'exclusive' => true,
+                'hasBackground' => false,
+                'items' => [
+                    ['id' => (string) Str::uuid(), 'title' => [], 'body' => []],
                 ],
             ],
             self::SPACER => ['size' => 'medium'],

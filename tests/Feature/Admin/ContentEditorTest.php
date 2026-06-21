@@ -270,6 +270,81 @@ it('renders the location block editor fields', function (): void {
         ->assertSee('Display map on the right');
 });
 
+it('seeds a full default content structure for an accordion block', function (): void {
+    editor($this->page)
+        ->call('addBlock', 'accordion')
+        ->assertSet('blocks', function (array $blocks): bool {
+            $content = Arr::first($blocks)['content'];
+
+            return $content['icon'] === 'chevron'
+                && $content['exclusive'] === true
+                && $content['hasBackground'] === false
+                && count($content['items']) === 1;
+        });
+});
+
+it('adds and removes accordion items', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-acc' => ['id' => 'new-acc', 'type' => 'accordion', 'position' => 0, 'content' => ['items' => [['title' => [], 'body' => []]]]],
+        ])
+        ->call('addAccordionItem', 'new-acc')
+        ->assertSet('blocks.new-acc.content.items', fn (array $items): bool => count($items) === 2)
+        ->call('addAccordionItem', 'new-acc')
+        ->assertSet('blocks.new-acc.content.items', fn (array $items): bool => count($items) === 3)
+        ->call('removeAccordionItem', 'new-acc', 1)
+        ->assertSet('blocks.new-acc.content.items', fn (array $items): bool => count($items) === 2 && array_keys($items) === [0, 1]);
+});
+
+it('reorders accordion items by id', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-acc' => ['id' => 'new-acc', 'type' => 'accordion', 'position' => 0, 'content' => ['items' => [
+                ['id' => 'a', 'title' => ['en' => 'A'], 'body' => []],
+                ['id' => 'b', 'title' => ['en' => 'B'], 'body' => []],
+                ['id' => 'c', 'title' => ['en' => 'C'], 'body' => []],
+            ]]],
+        ])
+        ->call('reorderAccordionItems', 'c', 0)
+        ->assertSet('blocks.new-acc.content.items', fn (array $items): bool => array_column($items, 'id') === ['c', 'a', 'b'])
+        ->call('reorderAccordionItems', 'c', 2)
+        ->assertSet('blocks.new-acc.content.items', fn (array $items): bool => array_column($items, 'id') === ['a', 'b', 'c']);
+});
+
+it('backfills ids onto accordion items that lack them', function (): void {
+    $page = $this->page;
+
+    Block::factory()->create([
+        'blockable_id' => $page->id,
+        'blockable_type' => 'page',
+        'type' => 'accordion',
+        'position' => 0,
+        'content' => ['items' => [
+            ['title' => ['en' => 'A'], 'body' => []],
+            ['title' => ['en' => 'B'], 'body' => []],
+        ]],
+    ]);
+
+    editor($page)->assertSet('blocks', function (array $blocks): bool {
+        $items = Arr::first($blocks)['content']['items'];
+
+        return count($items) === 2
+            && is_string($items[0]['id'] ?? null) && $items[0]['id'] !== ''
+            && is_string($items[1]['id'] ?? null) && $items[1]['id'] !== ''
+            && $items[0]['id'] !== $items[1]['id'];
+    });
+});
+
+it('renders the accordion block editor fields', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-acc' => ['id' => 'new-acc', 'type' => 'accordion', 'position' => 0, 'content' => ['items' => [['title' => [], 'body' => []]]]],
+        ])
+        ->assertSee('Add item')
+        ->assertSee('Indicator')
+        ->assertSee('Only one item open at a time');
+});
+
 it('backfills missing default content for existing text-image blocks', function (): void {
     $page = $this->page;
 

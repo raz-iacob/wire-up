@@ -122,3 +122,35 @@ it('toggles a raw HTML source view on rich text editors and round-trips edits', 
 
     $browser->assertNoJavascriptErrors();
 });
+
+it('renders and toggles collapsible accordion items in the editor', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Accordion Editor',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'accordion-editor']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'accordion', 'content' => [
+            'items' => [
+                ['id' => 'one', 'title' => ['en' => 'First item'], 'body' => ['en' => '<p>Body one</p>']],
+                ['id' => 'two', 'title' => ['en' => 'Second item'], 'body' => ['en' => '<p>Body two</p>']],
+            ],
+        ]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->assertNoJavascriptErrors();
+
+    $browser->script("window.dispatchEvent(new CustomEvent('blocks-toggle-all', { detail: true })); void 0");
+    $browser->wait(0.4);
+
+    $browser->assertSee('First item')
+        ->assertSee('Second item')
+        ->click('First item')
+        ->wait(0.4)
+        ->assertSee('Body one')
+        ->assertNoJavascriptErrors();
+});

@@ -54,7 +54,7 @@
                 </div>
             @endif
 
-            <div class="flex flex-col gap-5" style="font-size:var(--wire-body-size, 0.875rem)">
+            <div class="flex flex-col gap-5">
                 @if ($name !== '')
                     <p class="text-lg font-semibold">{{ $name }}</p>
                 @endif
