@@ -319,6 +319,89 @@ it('reloads media when type filter is updated', function (): void {
         ->assertCount('medias', 1);
 });
 
+it('accepts multiple allowed types and constrains the grid', function (): void {
+    Media::factory()->create(['type' => MediaType::IMAGE]);
+    Media::factory()->create(['type' => MediaType::VIDEO]);
+    Media::factory()->create(['type' => MediaType::AUDIO]);
+    Media::factory()->create(['type' => MediaType::DOCUMENT]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'gallery', type: 'image,video', max: 10, media: null)
+        ->assertSet('type', null)
+        ->assertSet('allowedTypes', ['image', 'video'])
+        ->assertSet('typeFilter', '')
+        ->assertCount('medias', 2);
+});
+
+it('narrows multi-type results with the type filter', function (): void {
+    Media::factory()->create(['type' => MediaType::IMAGE]);
+    Media::factory()->create(['type' => MediaType::VIDEO]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'gallery', type: 'image,video', max: 10, media: null)
+        ->assertCount('medias', 2)
+        ->set('typeFilter', MediaType::VIDEO->value)
+        ->assertCount('medias', 1);
+});
+
+it('locks a single allowed type', function (): void {
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'og', type: MediaType::IMAGE->value, max: 1, media: null)
+        ->assertSet('type', MediaType::IMAGE)
+        ->assertSet('allowedTypes', ['image'])
+        ->assertSet('typeFilter', 'image');
+});
+
+it('accepts an image upload under multiple allowed types', function (): void {
+    $image = UploadedFile::fake()->image('photo.jpg');
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'gallery', type: 'image,video', max: 10, media: null)
+        ->set('files', [$image])
+        ->call('save', [['width' => 800, 'height' => 600]]);
+
+    $this->assertDatabaseHas('media', [
+        'type' => MediaType::IMAGE->value,
+        'mime_type' => 'image/jpeg',
+    ]);
+});
+
+it('rejects uploads outside the allowed types', function (): void {
+    $audio = UploadedFile::fake()->create('song.mp3', 100, 'audio/mpeg');
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'gallery', type: 'image,video', max: 10, media: null)
+        ->set('files', [$audio])
+        ->call('save', [[]]);
+
+    expect(Media::query()->count())->toBe(0);
+});
+
+it('allows large video uploads when video is permitted', function (): void {
+    $video = UploadedFile::fake()->create('clip.mp4', 50000, 'video/mp4');
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'gallery', type: 'image,video', max: 10, media: null)
+        ->set('files', [$video])
+        ->call('save', [[]]);
+
+    $this->assertDatabaseHas('media', [
+        'type' => MediaType::VIDEO->value,
+        'mime_type' => 'video/mp4',
+    ]);
+});
+
+it('rejects videos beyond the 300MB cap', function (): void {
+    $video = UploadedFile::fake()->create('huge.mp4', 320000, 'video/mp4');
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'gallery', type: 'image,video', max: 10, media: null)
+        ->set('files', [$video])
+        ->call('save', [[]]);
+
+    expect(Media::query()->count())->toBe(0);
+});
+
 it('checks if file exists by etag', function (): void {
     $media = Media::factory()->create(['etag' => 'abc123']);
 

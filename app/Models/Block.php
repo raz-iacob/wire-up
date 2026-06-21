@@ -10,6 +10,7 @@ use Database\Factories\BlockFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property-read int $id
@@ -109,7 +110,55 @@ final class Block extends Model
             return '';
         }
 
+        $caption = (string) data_get($image, 'metadata.caption', '');
+
+        if ($caption !== '') {
+            return $caption;
+        }
+
         return (string) (data_get($image, 'metadata.alt', $image['alt_text'] ?? ''));
+    }
+
+    public function isVideo(string $field): bool
+    {
+        return str_starts_with((string) data_get($this->content, "{$field}.mime_type"), 'video/');
+    }
+
+    /**
+     * @param  array<string, int|string>  $params
+     */
+    public function posterUrl(string $field, array $params = []): ?string
+    {
+        if (! $this->isVideo($field)) {
+            return $this->imageUrl($field, $params);
+        }
+
+        $thumbnail = data_get($this->content, "{$field}.thumbnail");
+
+        if (! is_string($thumbnail) || $thumbnail === '') {
+            return null;
+        }
+
+        $options = sprintf(
+            'w=%d,h=%d,q=%d,fm=%s',
+            $params['w'] ?? 1200,
+            $params['h'] ?? 800,
+            $params['q'] ?? 80,
+            $params['fm'] ?? 'jpg',
+        );
+
+        return route('image.show', ['options' => $options, 'path' => $thumbnail]);
+    }
+
+    public function fileUrl(string $field): ?string
+    {
+        $source = data_get($this->content, "{$field}.source");
+
+        if (! is_string($source) || $source === '') {
+            return null;
+        }
+
+        return Storage::disk(config()->string('filesystems.media'))->url($source);
     }
 
     public function ctaUrl(string $field): ?string

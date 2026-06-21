@@ -81,6 +81,31 @@ it('ignores unknown block types when adding', function (): void {
         ->assertCount('blocks', 0);
 });
 
+it('seeds gallery defaults when adding', function (): void {
+    editor($this->page)
+        ->call('addBlock', 'gallery')
+        ->assertCount('blocks', 1)
+        ->assertSet('blocks', function (array $blocks): bool {
+            $block = Arr::first($blocks);
+
+            return $block['type'] === 'gallery'
+                && $block['content']['media'] === []
+                && $block['content']['columns'] === 3
+                && $block['content']['lightbox'] === true
+                && $block['content']['hasBackground'] === false;
+        });
+});
+
+it('renders the gallery block partial', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-g' => ['id' => 'new-g', 'type' => 'gallery', 'position' => 0, 'content' => ['media' => [], 'columns' => 3, 'lightbox' => true, 'hasBackground' => false]],
+        ])
+        ->assertSee('Images &amp; videos', false)
+        ->assertSee('Columns')
+        ->assertSee('Open media in a lightbox on click');
+});
+
 it('inserts a block at the chosen position and renumbers', function (): void {
     $component = editor($this->page)
         ->set('blocks', [

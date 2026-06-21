@@ -23,7 +23,23 @@ it('derives admin and frontend view paths from the value', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'spacer']);
+});
+
+it('seeds the gallery default content shape', function (): void {
+    $content = BlockType::GALLERY->defaultContent();
+
+    expect($content)->toMatchArray([
+        'media' => [],
+        'columns' => 3,
+        'lightbox' => true,
+        'hasBackground' => false,
+    ]);
+});
+
+it('derives the gallery title from the heading, falling back to the label', function (): void {
+    expect(BlockType::GALLERY->editorTitle(['heading' => ['en' => '<p>Our work</p>']], 'en'))->toBe('Our work');
+    expect(BlockType::GALLERY->editorTitle([], 'en'))->toBe('Gallery');
 });
 
 it('seeds the accordion default content shape', function (): void {

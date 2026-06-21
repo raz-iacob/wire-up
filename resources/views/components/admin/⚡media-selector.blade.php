@@ -26,11 +26,6 @@ return new class extends Component
     public bool $showRemoveModal = false;
     public ?int $removeIndex = null;
 
-    public bool $showCaptionModal = false;
-    public ?int $captionIndex = null;
-    public string $captionText = '';
-    public string $captionAlt = '';
-
     /**
      * @var array<string, array<string, mixed>>
      */
@@ -157,7 +152,7 @@ return new class extends Component
         $this->removeIndex = null;
     }
 
-    public function editCaption(int $index): void
+    public function setCaption(int $index, string $caption): void
     {
         $items = $this->selectedItems();
 
@@ -166,32 +161,17 @@ return new class extends Component
         }
 
         $metadata = is_array($items[$index]['metadata'] ?? null) ? $items[$index]['metadata'] : [];
+        $caption = mb_trim($caption);
 
-        $this->captionIndex = $index;
-        $this->captionText = is_string($metadata['caption'] ?? null) ? $metadata['caption'] : '';
-        $this->captionAlt = is_string($metadata['alt'] ?? null) ? $metadata['alt'] : '';
-        $this->showCaptionModal = true;
-    }
-
-    public function saveCaption(): void
-    {
-        $items = $this->selectedItems();
-
-        if ($this->captionIndex === null || ! isset($items[$this->captionIndex])) {
-            $this->showCaptionModal = false;
-
-            return;
+        if ($caption === '') {
+            unset($metadata['caption']);
+        } else {
+            $metadata['caption'] = $caption;
         }
 
-        $metadata = is_array($items[$this->captionIndex]['metadata'] ?? null) ? $items[$this->captionIndex]['metadata'] : [];
-        $metadata['caption'] = $this->captionText;
-        $metadata['alt'] = $this->captionAlt;
-        $items[$this->captionIndex]['metadata'] = array_filter($metadata, fn (mixed $value): bool => $value !== '' && $value !== null);
+        $items[$index]['metadata'] = $metadata;
 
-        $this->media = $this->multiple ? array_values($items) : $items[$this->captionIndex];
-
-        $this->showCaptionModal = false;
-        $this->captionIndex = null;
+        $this->media = $this->multiple ? array_values($items) : $items[$index];
     }
 
     public function removeMedia(?int $index = null): void
@@ -550,13 +530,21 @@ return new class extends Component
                                         @endif
                                     @endforeach
                                 @endif
+
+                                @if($withCaption)
+                                    <div class="pt-2">
+                                        <flux:input
+                                            size="sm"
+                                            wire:key="{{ $this->targetKey() }}-caption-{{ $item['id'] }}"
+                                            value="{{ data_get($item, 'metadata.caption', '') }}"
+                                            x-on:blur="$wire.setCaption({{ $index }}, $event.target.value)"
+                                            placeholder="{{ __('Add a caption') }}" />
+                                    </div>
+                                @endif
                             </div>
 
                             <flux:button.group class="md:shrink-0">
                                 <flux:button variant="filled" icon="arrows-right-left" square tooltip="{{ __('Change') }}" wire:click="openLibrary({{ $index }})" />
-                                @if($withCaption)
-                                    <flux:button variant="filled" icon="chat-bubble-bottom-center-text" square tooltip="{{ __('Caption') }}" wire:click="editCaption({{ $index }})" />
-                                @endif
                                 @if($isCroppable)
                                     <flux:button variant="filled" icon="scissors" square tooltip="{{ __('Crop') }}" x-on:click="start({{ $index }}, @js($item), @js($crops))" />
                                 @endif
@@ -592,25 +580,6 @@ return new class extends Component
                     <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
                 </flux:modal.close>
                 <flux:button variant="danger" wire:click="removeConfirmed">{{ __('Remove') }}</flux:button>
-            </div>
-        </div>
-    </flux:modal>
-
-    <flux:modal wire:model.self="showCaptionModal" class="md:w-96">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ __('Caption & alt text') }}</flux:heading>
-                <flux:text class="mt-2">{{ __('Set how this image is described and captioned where it appears.') }}</flux:text>
-            </div>
-
-            <flux:textarea wire:model="captionText" label="{{ __('Caption') }}" rows="3" />
-            <flux:input wire:model="captionAlt" label="{{ __('Alt text') }}" />
-
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
-                </flux:modal.close>
-                <flux:button type="button" variant="primary" wire:click="saveCaption">{{ __('Save') }}</flux:button>
             </div>
         </div>
     </flux:modal>

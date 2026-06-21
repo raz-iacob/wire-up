@@ -215,37 +215,40 @@ it('preserves existing crops when adding more media via the library', function (
         ->assertSet('media.2.crop', []);
 });
 
-it('opens the caption modal preloaded with existing metadata', function (): void {
-    Livewire::test('admin.media-selector', ['multiple' => true, 'withCaption' => true])
-        ->set('media', [array_merge(mediaPayload(1), ['metadata' => ['caption' => 'Hello', 'alt' => 'An alt']])])
-        ->call('editCaption', 0)
-        ->assertSet('showCaptionModal', true)
-        ->assertSet('captionIndex', 0)
-        ->assertSet('captionText', 'Hello')
-        ->assertSet('captionAlt', 'An alt');
-});
-
-it('saves caption and alt into the item metadata', function (): void {
+it('shows an inline caption input only when captions are enabled', function (): void {
     Livewire::test('admin.media-selector', ['multiple' => true, 'withCaption' => true])
         ->set('media', [mediaPayload(1)])
-        ->call('editCaption', 0)
-        ->set('captionText', 'A caption')
-        ->set('captionAlt', 'Some alt')
-        ->call('saveCaption')
-        ->assertSet('showCaptionModal', false)
-        ->assertSet('captionIndex', null)
-        ->assertSet('media.0.metadata.caption', 'A caption')
-        ->assertSet('media.0.metadata.alt', 'Some alt');
+        ->assertSee('Add a caption');
+
+    Livewire::test('admin.media-selector', ['multiple' => true])
+        ->set('media', [mediaPayload(1)])
+        ->assertDontSee('Add a caption');
 });
 
-it('drops empty caption and alt values from metadata', function (): void {
+it('stores an inline caption into the item metadata', function (): void {
     Livewire::test('admin.media-selector', ['multiple' => true, 'withCaption' => true])
         ->set('media', [mediaPayload(1)])
-        ->call('editCaption', 0)
-        ->set('captionText', '')
-        ->set('captionAlt', '')
-        ->call('saveCaption')
+        ->call('setCaption', 0, 'A caption')
+        ->assertSet('media.0.metadata.caption', 'A caption');
+});
+
+it('clears the caption when blanked', function (): void {
+    Livewire::test('admin.media-selector', ['multiple' => true, 'withCaption' => true])
+        ->set('media', [array_merge(mediaPayload(1), ['metadata' => ['caption' => 'Old']])])
+        ->call('setCaption', 0, '   ')
         ->assertSet('media.0.metadata', []);
+});
+
+it('keeps the inline caption when more media is added', function (): void {
+    $component = Livewire::test('admin.media-selector', ['multiple' => true, 'max' => 5, 'withCaption' => true]);
+    $target = $component->instance()->targetKey();
+
+    $component
+        ->set('media', [mediaPayload(1)])
+        ->call('setCaption', 0, 'Keep me')
+        ->dispatch('media-selected', target: $target, media: [mediaPayload(1), mediaPayload(2)])
+        ->assertCount('media', 2)
+        ->assertSet('media.0.metadata.caption', 'Keep me');
 });
 
 it('ignores setCrops for an unknown item index', function (): void {

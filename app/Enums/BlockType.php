@@ -12,6 +12,7 @@ enum BlockType: string
     case TEXT_IMAGE = 'text-image';
     case LOCATION = 'location';
     case ACCORDION = 'accordion';
+    case GALLERY = 'gallery';
     case SPACER = 'spacer';
 
     /**
@@ -29,6 +30,7 @@ enum BlockType: string
             self::TEXT_IMAGE => __('Text + Image'),
             self::LOCATION => __('Location'),
             self::ACCORDION => __('Accordion'),
+            self::GALLERY => __('Gallery'),
             self::SPACER => __('Spacer'),
         };
     }
@@ -40,6 +42,7 @@ enum BlockType: string
             self::TEXT_IMAGE => 'layout-list',
             self::LOCATION => 'map',
             self::ACCORDION => 'list-collapse',
+            self::GALLERY => 'images',
             self::SPACER => 'arrows-up-down',
         };
     }
@@ -56,6 +59,7 @@ enum BlockType: string
             self::TEXT_IMAGE => __('A block of text alongside an image.'),
             self::LOCATION => __('An embedded map alongside address and contact details.'),
             self::ACCORDION => __('Collapsible sections of content, great for services or FAQs.'),
+            self::GALLERY => __('A responsive grid of images and videos with an optional lightbox.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
         };
     }
@@ -115,6 +119,12 @@ enum BlockType: string
                 'items' => [
                     ['id' => (string) Str::uuid(), 'title' => [], 'body' => []],
                 ],
+            ],
+            self::GALLERY => [
+                'media' => [],
+                'columns' => 3,
+                'lightbox' => true,
+                'hasBackground' => false,
             ],
             self::SPACER => ['size' => 'medium'],
         };

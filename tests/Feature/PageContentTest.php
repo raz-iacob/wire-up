@@ -435,6 +435,63 @@ it('switches the accordion indicator and background band', function (): void {
         ->assertSee('background-color:var(--wire-card-bg)', false);
 });
 
+it('renders a gallery grid with heading, captions and a lightbox', function (): void {
+    publishPageWithBlocks('gallery-grid', [
+        ['id' => 'new-1', 'type' => 'gallery', 'content' => [
+            'heading' => ['en' => 'Our work'],
+            'columns' => 4,
+            'lightbox' => true,
+            'media' => [
+                ['id' => 1, 'source' => 'media/photo-a.jpg', 'mime_type' => 'image/jpeg', 'metadata' => ['caption' => 'First shot']],
+                ['id' => 2, 'source' => 'media/clip.mp4', 'mime_type' => 'video/mp4', 'thumbnail' => 'media/clip-thumb.jpg', 'metadata' => ['caption' => 'A clip']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'gallery-grid'))
+        ->assertOk()
+        ->assertSee('Our work')
+        ->assertSee('lg:grid-cols-4', false)
+        ->assertSee('media/photo-a.jpg', false)
+        ->assertSee('alt="First shot"', false)
+        ->assertSee('First shot')
+        ->assertSee('media/clip-thumb.jpg', false)
+        ->assertSee('A clip')
+        ->assertSee('bg-black/90', false);
+});
+
+it('plays a gallery video inline when the lightbox is disabled', function (): void {
+    publishPageWithBlocks('gallery-inline', [
+        ['id' => 'new-1', 'type' => 'gallery', 'content' => [
+            'lightbox' => false,
+            'media' => [
+                ['id' => 1, 'source' => 'media/clip.mp4', 'mime_type' => 'video/mp4', 'thumbnail' => 'media/clip-thumb.jpg'],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'gallery-inline'))
+        ->assertOk()
+        ->assertSee('<video', false)
+        ->assertSee('media/clip.mp4', false)
+        ->assertDontSee('bg-black/90', false);
+});
+
+it('applies the gallery background band when enabled', function (): void {
+    publishPageWithBlocks('gallery-bg', [
+        ['id' => 'new-1', 'type' => 'gallery', 'content' => [
+            'hasBackground' => true,
+            'media' => [
+                ['id' => 1, 'source' => 'media/photo-a.jpg', 'mime_type' => 'image/jpeg'],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'gallery-bg'))
+        ->assertOk()
+        ->assertSee('background-color:var(--wire-card-bg)', false);
+});
+
 it('renders a page with no blocks without error', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],

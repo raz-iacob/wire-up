@@ -28,6 +28,11 @@ return new class extends Component
 
     public ?MediaType $type = null;
 
+    /**
+     * @var array<int, string>
+     */
+    public array $allowedTypes = [];
+
     public string $target;
 
     public int $max = 1;
@@ -85,8 +90,14 @@ return new class extends Component
     #[On('select-media')]
     public function handleSelectMedia(string $target, ?string $type = null, int $max = 1, ?array $media = null): void
     {
+        $types = collect(explode(',', (string) $type))
+            ->map(fn (string $value): ?MediaType => MediaType::tryFrom(mb_trim($value)))
+            ->filter()
+            ->values();
+
         $this->target = $target;
-        $this->type = $type !== null ? MediaType::tryFrom($type) : null;
+        $this->allowedTypes = $types->map(fn (MediaType $mediaType): string => $mediaType->value)->all();
+        $this->type = $types->count() === 1 ? $types->first() : null;
         $this->typeFilter = $this->type->value ?? '';
         $this->syncSelected($this->hydrateSelection($media ?? []));
         $this->showLibrary = true;
@@ -280,6 +291,7 @@ return new class extends Component
     {
         $base = Media::query()
             ->latest()
+            ->when($this->allowedTypes !== [], fn ($q) => $q->whereIn('type', $this->allowedTypes))
             ->when($this->typeFilter, fn ($q, $t) => $q->where('type', $t))
             ->when($this->search, fn ($q, $s) => $q->whereAny(['filename', 'alt_text'], 'like', "%{$s}%")
             );
@@ -313,15 +325,35 @@ return new class extends Component
     /** @param array<int, array<string, mixed>> $metadata */
     public function save(array $metadata, CreateMediaAction $action): void
     {
-        $rules = ['files.*' => ['max:10240']];
+        $allowsVideo = $this->type === MediaType::VIDEO || in_array(MediaType::VIDEO->value, $this->allowedTypes, true);
+        $maxKilobytes = $allowsVideo ? 307200 : 10240;
 
-        match ($this->type) {
-            MediaType::AUDIO => $rules['files.*'][] = 'mimetypes:audio/mpeg,audio/wav,audio/ogg',
-            MediaType::VIDEO => $rules['files.*'][] = 'mimetypes:video/mp4,video/quicktime,video/x-msvideo',
-            MediaType::DOCUMENT => $rules['files.*'][] = 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            MediaType::IMAGE => $rules['files.*'][] = 'image:allow_svg',
-            default => null,
-        };
+        $rules = ['files.*' => ['max:'.$maxKilobytes]];
+
+        if ($this->type instanceof MediaType) {
+            match ($this->type) {
+                MediaType::AUDIO => $rules['files.*'][] = 'mimetypes:audio/mpeg,audio/wav,audio/ogg',
+                MediaType::VIDEO => $rules['files.*'][] = 'mimetypes:video/mp4,video/quicktime,video/x-msvideo',
+                MediaType::DOCUMENT => $rules['files.*'][] = 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                MediaType::IMAGE => $rules['files.*'][] = 'image:allow_svg',
+            };
+        } elseif ($this->allowedTypes !== []) {
+            $mimeTypes = [
+                MediaType::IMAGE->value => 'image/jpeg,image/png,image/gif,image/webp,image/svg+xml',
+                MediaType::VIDEO->value => 'video/mp4,video/quicktime,video/x-msvideo',
+                MediaType::AUDIO->value => 'audio/mpeg,audio/wav,audio/ogg',
+                MediaType::DOCUMENT->value => 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ];
+
+            $allowed = collect($this->allowedTypes)
+                ->map(fn (string $value): ?string => $mimeTypes[$value] ?? null)
+                ->filter()
+                ->implode(',');
+
+            if ($allowed !== '') {
+                $rules['files.*'][] = 'mimetypes:'.$allowed;
+            }
+        }
 
         $validatedFiles = [];
 
@@ -487,8 +519,8 @@ return new class extends Component
                         <div class="w-full md:w-52 sm:shrink-0">
                             <flux:select variant="listbox" wire:model.live="typeFilter" :disabled="$type !== null" placeholder="{{ __('Filter by type') }}">
                                 <flux:select.option value="">{{ __('All Media') }}</flux:select.option>
-                                @foreach(MediaType::cases() as $type)
-                                <flux:select.option value="{{ $type->value }}">{{ $type->label(true) }}</flux:select.option>
+                                @foreach(($allowedTypes !== [] ? array_map([MediaType::class, 'from'], $allowedTypes) : MediaType::cases()) as $typeOption)
+                                <flux:select.option value="{{ $typeOption->value }}">{{ $typeOption->label(true) }}</flux:select.option>
                                 @endforeach
                             </flux:select>
                         </div>
@@ -498,10 +530,11 @@ return new class extends Component
                     </div>
                 </div>
                 
+                @php($acceptsVideo = $type === MediaType::VIDEO || in_array(MediaType::VIDEO->value, $allowedTypes, true))
                 <flux:file-upload multiple>
                     <flux:file-upload.dropzone
                         heading="{{ __('Drop files or click to browse') }}"
-                        text="{{ __('JPG, PNG, GIF up to 10MB') }}"
+                        text="{{ $acceptsVideo ? __('Images up to 10MB, videos up to 300MB') : __('JPG, PNG, GIF up to 10MB') }}"
                         with-progress
                         inline
                         class="justify-center"
