@@ -13,7 +13,7 @@
     </div>
 
     <div x-data="editorSource">
-        <flux:editor wire:model.lazy="{{ $name }}.{{ $locale }}" :required="$required" class="**:data-[slot=content]:min-h-[100px]!">
+        <flux:editor wire:model.lazy="{{ $name }}.{{ $locale }}" :required="$required" class="**:data-[slot=content]:min-h-25!">
             <flux:editor.toolbar :items="$toolbar . ' | source'" />
             <flux:editor.content />
             <textarea

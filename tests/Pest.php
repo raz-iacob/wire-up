@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
+use Pest\Browser\Playwright\Playwright;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -21,6 +22,10 @@ pest()->extend(TestCase::class)
         $this->freezeTime();
     })
     ->in('Browser', 'Console', 'Feature', 'Unit');
+
+pest()->beforeEach(function (): void {
+    Playwright::setTimeout(15_000);
+})->in('Browser');
 
 expect()->extend('toBeOne', fn () => $this->toBe(1));
 
