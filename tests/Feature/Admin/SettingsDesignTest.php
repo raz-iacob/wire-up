@@ -273,6 +273,7 @@ it('emits radius and font declarations from settings', function (): void {
     ]);
 
     expect((new SettingsService)->themeCss())
+        ->toContain('--wire-radius:1rem')
         ->toContain('--radius-lg:1rem')
         ->toContain('--font-sans:"Inter", sans-serif')
         ->toContain('--wire-heading-font:"Poppins", sans-serif')

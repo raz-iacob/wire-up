@@ -151,7 +151,7 @@ return new class extends Component
         <div class="space-y-8 md:col-span-3">
             <x-forms.input-translated name="title" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Title') }}" />
             <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Tagline') }}" />
-            
+
             <livewire:admin.media-selector
                 wire:model="favicon"
                 name="favicon"

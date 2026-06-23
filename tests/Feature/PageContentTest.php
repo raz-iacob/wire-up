@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\BlockType;
 use App\Enums\PageStatus;
 use App\Models\Page;
 
@@ -38,6 +39,122 @@ it('renders all block types on the public page', function (): void {
         ->assertSee('Glad to have you')
         ->assertSee('<strong>rich</strong>', false)
         ->assertSee('aria-hidden="true"', false);
+});
+
+it('renders the contact form block with its present fields and submit label', function (): void {
+    publishPageWithBlocks('contact', [
+        ['id' => 'new-1', 'type' => 'contact-form', 'content' => array_replace_recursive(
+            BlockType::CONTACT_FORM->defaultContent(),
+            [
+                'heading' => ['en' => '<p>Get in touch</p>'],
+                'submitText' => ['en' => 'Send it over'],
+                'fieldOrder' => ['name', 'email', 'phone', 'message'],
+            ],
+        )],
+    ]);
+
+    $this->get(route('page', 'contact'))
+        ->assertOk()
+        ->assertSee('Get in touch')
+        ->assertSee('Name')
+        ->assertSee('Email')
+        ->assertSee('Phone')
+        ->assertSee('Message')
+        ->assertDontSee('Subject')
+        ->assertSee('Send it over')
+        ->assertSee('bg-(--wire-input-bg)', false)
+        ->assertSee('Leave this field empty');
+});
+
+it('hides a blank label when a placeholder is set and keeps an accessible name', function (): void {
+    publishPageWithBlocks('contact-nolabel', [
+        ['id' => 'new-1', 'type' => 'contact-form', 'content' => array_replace_recursive(
+            BlockType::CONTACT_FORM->defaultContent(),
+            [
+                'fieldOrder' => ['name'],
+                'fields' => ['name' => ['label' => [], 'placeholder' => ['en' => 'Your name']]],
+            ],
+        )],
+    ]);
+
+    $this->get(route('page', 'contact-nolabel'))
+        ->assertOk()
+        ->assertSee('placeholder="Your name"', false)
+        ->assertSee('aria-label="Your name"', false)
+        ->assertDontSee('<label for="cf-name"', false);
+});
+
+it('falls back to the default label when both label and placeholder are blank', function (): void {
+    publishPageWithBlocks('contact-deflabel', [
+        ['id' => 'new-1', 'type' => 'contact-form', 'content' => array_replace_recursive(
+            BlockType::CONTACT_FORM->defaultContent(),
+            ['fieldOrder' => ['name']],
+        )],
+    ]);
+
+    $this->get(route('page', 'contact-deflabel'))
+        ->assertOk()
+        ->assertSee('<label for="cf-name"', false)
+        ->assertSee('Name');
+});
+
+it('renders custom field labels and placeholders and respects the field order', function (): void {
+    publishPageWithBlocks('contact-labels', [
+        ['id' => 'new-1', 'type' => 'contact-form', 'content' => array_replace_recursive(
+            BlockType::CONTACT_FORM->defaultContent(),
+            [
+                'fieldOrder' => ['message', 'email', 'name'],
+                'fields' => [
+                    'name' => ['label' => ['en' => 'Your name'], 'placeholder' => ['en' => 'Jane Doe']],
+                ],
+            ],
+        )],
+    ]);
+
+    $this->get(route('page', 'contact-labels'))
+        ->assertOk()
+        ->assertSee('Your name')
+        ->assertSee('Jane Doe', false)
+        ->assertSeeInOrder(['Message', 'Email', 'Your name']);
+});
+
+it('arranges fields across the two columns by their per-field column choice in split layout', function (): void {
+    publishPageWithBlocks('contact-split', [
+        ['id' => 'new-1', 'type' => 'contact-form', 'content' => array_replace_recursive(
+            BlockType::CONTACT_FORM->defaultContent(),
+            [
+                'layout' => 'split',
+                'fields' => [
+                    'name' => ['column' => 'left'],
+                    'email' => ['column' => 'right'],
+                    'message' => ['column' => 'left'],
+                ],
+            ],
+        )],
+    ]);
+
+    $this->get(route('page', 'contact-split'))
+        ->assertOk()
+        ->assertSee('md:items-start', false)
+        ->assertSeeInOrder(['Name', 'Message', 'Email']);
+});
+
+it('can place a custom field ahead of the built-in fields', function (): void {
+    publishPageWithBlocks('contact-mix', [
+        ['id' => 'new-1', 'type' => 'contact-form', 'content' => array_replace_recursive(
+            BlockType::CONTACT_FORM->defaultContent(),
+            [
+                'fieldOrder' => ['ref', 'name', 'email', 'message'],
+                'customFields' => [
+                    ['id' => 'ref', 'label' => ['en' => 'Reference code'], 'type' => 'text', 'required' => false, 'options' => ''],
+                ],
+            ],
+        )],
+    ]);
+
+    $this->get(route('page', 'contact-mix'))
+        ->assertOk()
+        ->assertSeeInOrder(['Reference code', 'Name', 'Email', 'Message']);
 });
 
 it('renders block text in the current locale', function (): void {

@@ -56,7 +56,7 @@
             <div class="grid {{ $gridClass }} gap-4">
                 @foreach ($items as $i => $item)
                     <figure class="m-0">
-                        <div class="relative aspect-square overflow-hidden rounded-lg bg-black/5 dark:bg-white/10">
+                        <div class="relative aspect-square overflow-hidden rounded-[calc(var(--wire-radius)*1.5)] bg-black/5 dark:bg-white/10">
                             @if ($lightbox || ! $item['isVideo'])
                                 <{{ $lightbox ? 'button' : 'div' }} class="size-full {{ $lightbox ? 'group cursor-zoom-in' : '' }}" @if ($lightbox) type="button" x-on:click="show({{ $i }})" @endif>
                                     @if ($item['poster'])
@@ -107,10 +107,10 @@
 
             <div class="flex max-h-[90vh] w-full max-w-5xl flex-col items-center justify-center gap-3">
                 <template x-if="current.isVideo">
-                    <video class="max-h-[80vh] w-auto rounded-lg" controls autoplay :src="current.full"></video>
+                    <video class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)]" controls autoplay :src="current.full"></video>
                 </template>
                 <template x-if="!current.isVideo">
-                    <img class="max-h-[80vh] w-auto rounded-lg object-contain" :src="current.full" :alt="current.alt" />
+                    <img class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)] object-contain" :src="current.full" :alt="current.alt" />
                 </template>
                 <p class="text-center text-sm text-white/80" x-show="current.caption" x-text="current.caption"></p>
             </div>

@@ -23,10 +23,13 @@ return new class extends Component
 
     public ?int $home_page_id = null;
 
+    public string $contact_email = '';
+
     public function mount(): void
     {
         $this->languages = Locale::query()->active()->orderBy('name')->pluck('code')->all();
         $this->home_page_id = SettingsService::current()->homePageId();
+        $this->contact_email = is_string(config('site.contact_email')) ? config()->string('site.contact_email') : '';
     }
 
     /**
@@ -59,6 +62,11 @@ return new class extends Component
             'languages' => ['required', 'array', 'min:1'],
             'languages.*' => ['string', Rule::exists('locales', 'code')],
             'home_page_id' => ['required', 'integer', Rule::exists('pages', 'id')],
+            'contact_email' => ['nullable', 'email', 'max:255'],
+        ], [
+            'contact_email.email' => __('Enter a valid email address for form submissions.'),
+        ], [
+            'contact_email' => __('form submissions email'),
         ]);
 
         $codes = array_values(array_unique($validated['languages']));
@@ -77,7 +85,10 @@ return new class extends Component
 
         $this->languages = $codes;
 
-        $action->handle(['home_page_id' => $validated['home_page_id']]);
+        $action->handle([
+            'home_page_id' => $validated['home_page_id'],
+            'contact_email' => $validated['contact_email'] ?? '',
+        ]);
 
         Flux::toast(__('Settings have been updated.'), variant: 'success');
     }
@@ -119,6 +130,14 @@ return new class extends Component
                     <flux:pillbox.option :value="$localeOption->code" :label="$localeOption->endonym ? $localeOption->name.' ('.$localeOption->endonym.')' : $localeOption->name" />
                 @endforeach
             </flux:pillbox>
+
+            <flux:input
+                wire:model="contact_email"
+                type="email"
+                :label="__('Form submissions email')"
+                :placeholder="__('you@example.com')"
+                :description="__('Where form submissions are emailed when a form has no recipient of its own.')"
+            />
 
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary" icon="check">

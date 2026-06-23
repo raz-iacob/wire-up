@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\BlockType;
 use App\Models\Block;
 use App\Models\Page;
 use Illuminate\Support\Arr;
@@ -34,6 +35,95 @@ it('renders each block type partial', function (): void {
         ->assertSee('Heading')
         ->assertSee('Spacer size')
         ->assertSee('Display image on the right');
+});
+
+it('renders the contact form block editor', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'cf' => ['id' => 'cf', 'type' => 'contact-form', 'position' => 0, 'content' => BlockType::CONTACT_FORM->defaultContent()],
+        ])
+        ->assertSee('Layout')
+        ->assertSee('Fields')
+        ->assertSee('Add field')
+        ->assertDontSee('Custom fields')
+        ->assertSee('Send submissions to');
+});
+
+it('reorders the contact fields', function (): void {
+    $component = editor($this->page)
+        ->set('blocks', [
+            'cf' => ['id' => 'cf', 'type' => 'contact-form', 'position' => 0, 'content' => BlockType::CONTACT_FORM->defaultContent()],
+        ]);
+
+    $component->call('reorderContactFields', 'cf::name', 2);
+
+    expect($component->get('blocks')['cf']['content']['fieldOrder'])
+        ->toBe(['email', 'message', 'name']);
+});
+
+it('adds a missing built-in field through the picker', function (): void {
+    $component = editor($this->page)
+        ->set('blocks', [
+            'cf' => ['id' => 'cf', 'type' => 'contact-form', 'position' => 0, 'content' => BlockType::CONTACT_FORM->defaultContent()],
+        ]);
+
+    expect($component->get('blocks')['cf']['content']['fieldOrder'])->not->toContain('phone');
+
+    $component->call('addContactBuiltin', 'cf', 'phone');
+
+    expect($component->get('blocks')['cf']['content']['fieldOrder'])->toBe(['name', 'email', 'message', 'phone']);
+
+    $component->call('addContactBuiltin', 'cf', 'phone');
+    expect($component->get('blocks')['cf']['content']['fieldOrder'])->toHaveCount(4);
+});
+
+it('removes a built-in field from the order', function (): void {
+    $component = editor($this->page)
+        ->set('blocks', [
+            'cf' => ['id' => 'cf', 'type' => 'contact-form', 'position' => 0, 'content' => BlockType::CONTACT_FORM->defaultContent()],
+        ]);
+
+    $component->call('removeContactField', 'cf', 'email');
+
+    expect($component->get('blocks')['cf']['content']['fieldOrder'])->toBe(['name', 'message']);
+});
+
+it('adds a custom field to both the list and the field order, then removes it', function (): void {
+    $component = editor($this->page)
+        ->set('blocks', [
+            'cf' => ['id' => 'cf', 'type' => 'contact-form', 'position' => 0, 'content' => BlockType::CONTACT_FORM->defaultContent()],
+        ])
+        ->call('addContactField', 'cf');
+
+    $custom = $component->get('blocks')['cf']['content']['customFields'];
+    expect($custom)->toHaveCount(1)
+        ->and($custom[0]['type'])->toBe('text')
+        ->and($custom[0]['column'])->toBe('left');
+
+    $fieldId = $custom[0]['id'];
+    expect($component->get('blocks')['cf']['content']['fieldOrder'])
+        ->toHaveCount(4)
+        ->toContain($fieldId);
+
+    $component->call('removeContactField', 'cf', $fieldId);
+
+    $content = $component->get('blocks')['cf']['content'];
+    expect($content['customFields'])->toBeEmpty();
+    expect($content['fieldOrder'])->not->toContain($fieldId);
+});
+
+it('interleaves custom fields with built-in fields in a single order', function (): void {
+    $component = editor($this->page)
+        ->set('blocks', [
+            'cf' => ['id' => 'cf', 'type' => 'contact-form', 'position' => 0, 'content' => BlockType::CONTACT_FORM->defaultContent()],
+        ])
+        ->call('addContactField', 'cf');
+
+    $fieldId = $component->get('blocks')['cf']['content']['customFields'][0]['id'];
+
+    $component->call('reorderContactFields', 'cf::'.$fieldId, 0);
+
+    expect($component->get('blocks')['cf']['content']['fieldOrder'][0])->toBe($fieldId);
 });
 
 it('derives the block header title from content', function (): void {

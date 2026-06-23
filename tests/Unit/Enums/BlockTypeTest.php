@@ -23,7 +23,34 @@ it('derives admin and frontend view paths from the value', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'contact-form', 'spacer']);
+});
+
+it('seeds the contact form default content shape', function (): void {
+    $content = BlockType::CONTACT_FORM->defaultContent();
+
+    expect($content)->toMatchArray([
+        'formName' => '',
+        'layout' => 'stacked',
+        'hasBackground' => false,
+        'heading' => [],
+        'description' => [],
+        'submitText' => [],
+        'successMessage' => [],
+        'recipient' => '',
+        'fieldOrder' => ['name', 'email', 'message'],
+        'customFields' => [],
+    ]);
+    expect($content['fields']['name'])->toBe(['required' => true, 'label' => [], 'placeholder' => [], 'column' => 'left']);
+    expect($content['fields']['email'])->toBe(['required' => true, 'label' => [], 'placeholder' => [], 'column' => 'left']);
+    expect($content['fields']['message'])->toBe(['required' => true, 'label' => [], 'placeholder' => [], 'column' => 'right']);
+    expect($content['fields']['phone'])->toBe(['required' => false, 'label' => [], 'placeholder' => [], 'column' => 'left']);
+    expect($content['fields']['subject'])->toBe(['required' => false, 'label' => [], 'placeholder' => [], 'column' => 'left']);
+});
+
+it('derives the contact form title from the heading, falling back to the label', function (): void {
+    expect(BlockType::CONTACT_FORM->editorTitle(['heading' => ['en' => '<p>Get in touch</p>']], 'en'))->toBe('Get in touch');
+    expect(BlockType::CONTACT_FORM->editorTitle([], 'en'))->toBe('Contact Form');
 });
 
 it('seeds the gallery default content shape', function (): void {

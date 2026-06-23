@@ -57,6 +57,13 @@ final class SettingsService
         return $this->localeValue(config('site.description'));
     }
 
+    public function contactEmail(): string
+    {
+        $email = config('site.contact_email');
+
+        return is_string($email) ? $email : '';
+    }
+
     public function logoUrl(string $role, string $crop = 'default', int $maxHeight = 320): ?string
     {
         $item = config('site.'.$role);
@@ -171,6 +178,8 @@ final class SettingsService
         $radiusKey = (string) config('site.radius', '') ?: config()->string('theme.default_radius');
         $radius = config()->string("theme.radii.$radiusKey", '');
         if ($radius !== '') {
+            $root[] = "--wire-radius:$radius";
+
             foreach (['sm', 'md', 'lg', 'xl'] as $size) {
                 $root[] = "--radius-$size:$radius";
             }

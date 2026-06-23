@@ -49,7 +49,7 @@
                         loading="lazy"
                         referrerpolicy="no-referrer-when-downgrade"
                         allowfullscreen
-                        class="aspect-video w-full rounded-lg border-0"
+                        class="aspect-video w-full rounded-[calc(var(--wire-radius)*1.5)] border-0"
                     ></iframe>
                 </div>
             @endif
@@ -84,7 +84,7 @@
                             href="{{ $directions['url'] }}"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="inline-flex items-center justify-center rounded-md px-6 py-3 text-base font-medium transition hover:opacity-90"
+                            class="inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
                             style="background-color:{{ $directions['bg'] }};color:{{ $directions['fg'] }}"
                         >{{ $directions['text'] }}</a>
                     </div>

@@ -243,6 +243,7 @@ return new class extends Component
             $path = Str::after($name, 'blocks.');
             data_set($this->blocks, Str::beforeLast($path, '.type').'.value', '');
         }
+
     }
 
     /**
@@ -409,6 +410,91 @@ return new class extends Component
 
             return;
         }
+    }
+
+    public function addContactBuiltin(string $id, string $key): void
+    {
+        if (! isset($this->blocks[$id]) || ! in_array($key, ['name', 'email', 'phone', 'subject', 'message'], true)) {
+            return;
+        }
+
+        $order = $this->blocks[$id]['content']['fieldOrder'] ?? [];
+
+        if (in_array($key, $order, true)) {
+            return;
+        }
+
+        $order[] = $key;
+        $this->blocks[$id]['content']['fieldOrder'] = $order;
+
+        if (! isset($this->blocks[$id]['content']['fields'][$key])) {
+            $this->blocks[$id]['content']['fields'][$key] = ['required' => false, 'label' => [], 'placeholder' => [], 'column' => 'left'];
+        }
+    }
+
+    public function addContactField(string $id): void
+    {
+        if (! isset($this->blocks[$id])) {
+            return;
+        }
+
+        $fieldId = (string) Str::uuid();
+
+        $this->blocks[$id]['content']['customFields'][] = [
+            'id' => $fieldId,
+            'label' => [],
+            'type' => 'text',
+            'required' => false,
+            'options' => '',
+            'column' => 'left',
+        ];
+
+        $this->blocks[$id]['content']['fieldOrder'][] = $fieldId;
+    }
+
+    public function removeContactField(string $id, string $token): void
+    {
+        if (! isset($this->blocks[$id])) {
+            return;
+        }
+
+        $this->blocks[$id]['content']['fieldOrder'] = array_values(array_filter(
+            $this->blocks[$id]['content']['fieldOrder'] ?? [],
+            fn (string $orderToken): bool => $orderToken !== $token,
+        ));
+
+        $this->blocks[$id]['content']['customFields'] = array_values(array_filter(
+            $this->blocks[$id]['content']['customFields'] ?? [],
+            fn (array $field): bool => ($field['id'] ?? null) !== $token,
+        ));
+    }
+
+    #[Renderless]
+    public function reorderContactFields(string $itemId, int $position): void
+    {
+        $parts = explode('::', $itemId, 2);
+
+        if (count($parts) !== 2) {
+            return;
+        }
+
+        [$blockId, $token] = $parts;
+        $order = $this->blocks[$blockId]['content']['fieldOrder'] ?? null;
+
+        if (! is_array($order)) {
+            return;
+        }
+
+        $from = array_search($token, $order, true);
+
+        if ($from === false) {
+            return;
+        }
+
+        array_splice($order, $from, 1);
+        array_splice($order, $position, 0, [$token]);
+
+        $this->blocks[$blockId]['content']['fieldOrder'] = array_values($order);
     }
 
     public function reorderBlocks(string $id, int $position): void

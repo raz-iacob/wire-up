@@ -23,6 +23,18 @@ function publishedPage(string $slug): Page
     return $page->load('slugs');
 }
 
+it('returns the configured contact email', function (): void {
+    Settings::set(['contact_email' => 'owner@example.com']);
+
+    expect((new SettingsService)->contactEmail())->toBe('owner@example.com');
+});
+
+it('returns an empty string when no contact email is configured', function (): void {
+    config()->set('site.contact_email');
+
+    expect((new SettingsService)->contactEmail())->toBe('');
+});
+
 it('resolves a page item to its localized url', function (): void {
     $page = publishedPage('about');
 

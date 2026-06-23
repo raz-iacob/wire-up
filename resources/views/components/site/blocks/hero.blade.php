@@ -104,7 +104,7 @@
                     <a
                         href="{{ $cta['url'] }}"
                         @if ($cta['newTab']) target="_blank" rel="noopener noreferrer" @endif
-                        class="inline-flex items-center justify-center rounded-md px-6 py-3 text-base font-medium transition hover:opacity-90"
+                        class="inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
                         style="background-color:{{ $cta['bg'] }};color:{{ $cta['fg'] }}"
                     >{{ $cta['text'] }}</a>
                 @endforeach

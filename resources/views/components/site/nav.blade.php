@@ -8,7 +8,7 @@
                 @if ($item['target'] === '_blank') target="_blank" rel="noopener noreferrer" @endif
                 @class([
                     'font-medium transition',
-                    'rounded-md px-4 py-2 bg-(--wire-primary-bg) text-(--wire-primary-text)' => $item['appearance'] === 'button',
+                    'rounded-(--wire-radius) px-4 py-2 bg-(--wire-primary-bg) text-(--wire-primary-text)' => $item['appearance'] === 'button',
                     'text-sm' => $size === 'sm',
                     'text-base' => $size === 'md',
                     'text-lg' => $size === 'lg',

@@ -107,6 +107,36 @@ it('invalidates the site-locales cache so the active set reflects the change', f
     expect(resolve('localization')->getActiveLocaleCodes()->all())->toContain('nl');
 });
 
+it('hydrates the form submissions email on mount', function (): void {
+    Settings::set(['contact_email' => 'owner@example.com']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-general')
+        ->assertSet('contact_email', 'owner@example.com');
+});
+
+it('persists the form submissions email on update', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-general')
+        ->set('contact_email', 'hello@example.com')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('contact_email'))->toBe('hello@example.com');
+});
+
+it('validates that the form submissions email is a valid email address', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-general')
+        ->set('contact_email', 'not-an-email')
+        ->call('update')
+        ->assertHasErrors(['contact_email'])
+        ->assertSee('Enter a valid email address for form submissions.');
+});
+
 it('defaults the homepage to the seeded home page on mount', function (): void {
     $this->actingAsAdmin();
 
