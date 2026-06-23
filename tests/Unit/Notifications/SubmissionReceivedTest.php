@@ -14,7 +14,7 @@ it('sends over the mail channel', function (): void {
 });
 
 it('builds a tabular mail with the named form, fields and message', function (): void {
-    $submission = Submission::factory()->make([
+    $submission = Submission::factory()->create([
         'form_name' => 'Massage enquiry',
         'name' => 'Ada Lovelace',
         'email' => 'ada@example.com',
@@ -54,7 +54,7 @@ it('builds a tabular mail with the named form, fields and message', function ():
 });
 
 it('falls back to a generic subject and omits reply-to without a form name or email', function (): void {
-    $submission = Submission::factory()->make([
+    $submission = Submission::factory()->create([
         'form_name' => null,
         'name' => 'No Email',
         'email' => null,
@@ -72,7 +72,7 @@ it('falls back to a generic subject and omits reply-to without a form name or em
 });
 
 it('renders the markdown mail to html without errors', function (): void {
-    $submission = Submission::factory()->make([
+    $submission = Submission::factory()->create([
         'form_name' => 'Massage enquiry',
         'name' => 'Ada Lovelace',
         'email' => 'ada@example.com',

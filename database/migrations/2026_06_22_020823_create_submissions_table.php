@@ -24,6 +24,8 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->string('ip')->nullable();
             $table->string('locale')->nullable();
+            $table->string('country', 2)->nullable();
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
     }

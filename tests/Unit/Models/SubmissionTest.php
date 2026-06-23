@@ -34,3 +34,23 @@ it('allows null page and block references', function (): void {
     expect($submission->page)->toBeNull();
     expect($submission->block)->toBeNull();
 });
+
+it('reports its read state from read_at', function (): void {
+    expect(Submission::factory()->create()->isRead())->toBeFalse();
+    expect(Submission::factory()->read()->create()->isRead())->toBeTrue();
+});
+
+it('resolves the country name from the ISO code', function (): void {
+    expect(Submission::factory()->create(['country' => 'GB'])->countryName())->toBe('United Kingdom');
+});
+
+it('returns a null country name when no code is stored', function (): void {
+    expect(Submission::factory()->create(['country' => null])->countryName())->toBeNull();
+});
+
+it('scopes to unread submissions', function (): void {
+    Submission::factory()->create();
+    Submission::factory()->read()->create();
+
+    expect(Submission::query()->unread()->count())->toBe(1);
+});

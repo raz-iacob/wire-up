@@ -19,10 +19,12 @@
 </x-mail::panel>
 @endif
 
-@if ($replyTo)
-<x-mail::button :url="'mailto:'.$replyTo">
-{{ __('Reply') }}
+<x-mail::button :url="$viewUrl">
+{{ __('View message') }}
 </x-mail::button>
+
+@if ($replyTo)
+{{ __('Or reply directly to :email', ['email' => $replyTo]) }}
 @endif
 
 @if ($submittedAt)

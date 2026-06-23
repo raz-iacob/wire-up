@@ -6,9 +6,11 @@ namespace App\Models;
 
 use Carbon\CarbonInterface;
 use Database\Factories\SubmissionFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Locale;
 
 /**
  * @property-read int $id
@@ -24,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read array<string, mixed>|null $metadata
  * @property-read string|null $ip
  * @property-read string|null $locale
+ * @property-read string|null $country
+ * @property-read CarbonInterface|null $read_at
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  */
@@ -42,9 +46,24 @@ final class Submission extends Model
             'page_id' => 'integer',
             'block_id' => 'integer',
             'metadata' => 'array',
+            'read_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    public function isRead(): bool
+    {
+        return $this->read_at !== null;
+    }
+
+    public function countryName(): ?string
+    {
+        if ($this->country === null || $this->country === '') {
+            return null;
+        }
+
+        return Locale::getDisplayRegion('-'.$this->country, app()->getLocale());
     }
 
     /**
@@ -61,5 +80,13 @@ final class Submission extends Model
     public function block(): BelongsTo
     {
         return $this->belongsTo(Block::class);
+    }
+
+    /**
+     * @param  Builder<$this>  $query
+     */
+    protected function scopeUnread(Builder $query): void
+    {
+        $query->whereNull('read_at');
     }
 }

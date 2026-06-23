@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Actions\CreateSubmissionAction;
 use App\Models\Block;
-use App\Models\Submission;
-use App\Notifications\SubmissionReceived;
 use App\Services\SettingsService;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -62,7 +60,7 @@ return new class extends Component
         $this->initCustomDefaults();
     }
 
-    public function submit(): void
+    public function submit(CreateSubmissionAction $action): void
     {
         if ($this->website !== '' || now()->timestamp - $this->startedAt < self::MIN_SECONDS) {
             $this->addError('form', __('Sorry, your message could not be sent. Please try again.'));
@@ -82,7 +80,7 @@ return new class extends Component
 
         $this->validate($this->validationRules(), [], $this->validationAttributes());
 
-        $submission = Submission::query()->create([
+        $action->handle([
             'page_id' => $this->pageId,
             'block_id' => $this->blockId,
             'type' => 'contact',
@@ -95,13 +93,8 @@ return new class extends Component
             'metadata' => $this->customMetadata(),
             'ip' => request()->ip(),
             'locale' => app()->getLocale(),
-        ]);
-
-        $recipients = $this->recipients();
-
-        if ($recipients !== []) {
-            Notification::route('mail', $recipients)->notify(new SubmissionReceived($submission));
-        }
+            'country' => request()->header('CF-IPCOUNTRY'),
+        ], $this->recipients());
 
         $this->reset(['name', 'email', 'phone', 'subject', 'message', 'custom', 'website']);
         $this->initCustomDefaults();

@@ -39,6 +39,7 @@ final class SubmissionReceived extends Notification implements ShouldQueue
                 'message' => is_string($this->submission->message) ? $this->submission->message : '',
                 'submittedAt' => $this->submission->created_at,
                 'replyTo' => $email !== '' ? $email : null,
+                'viewUrl' => route('admin.inbox-show', $this->submission),
             ]);
 
         if ($email !== '') {

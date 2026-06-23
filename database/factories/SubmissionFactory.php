@@ -32,6 +32,13 @@ final class SubmissionFactory extends Factory
             'metadata' => [],
             'ip' => $this->faker->ipv4(),
             'locale' => 'en',
+            'country' => $this->faker->countryCode(),
+            'read_at' => null,
         ];
+    }
+
+    public function read(): self
+    {
+        return $this->state(fn (): array => ['read_at' => now()]);
     }
 }
