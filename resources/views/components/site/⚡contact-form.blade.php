@@ -473,7 +473,7 @@ return new class extends Component
 
 <div>
     @if ($this->heading !== '')
-        <div class="mb-4 tracking-tight [&>p]:m-0 [&_a]:underline" style="font-size:var(--wire-heading-size, 1.5rem)">{!! $this->heading !!}</div>
+        <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $this->heading !!}</div>
     @endif
 
     @if (strip_tags($this->intro) !== '')

@@ -21,9 +21,6 @@
     $headingColor = ($content['headingColor'] ?? null) ?: null;
     $subheadingColor = ($content['subheadingColor'] ?? null) ?: null;
 
-    $headingStyle = 'font-size:calc(var(--wire-heading-size, 1.5rem) * 1.5)'.($headingColor ? ";color:{$headingColor}" : '');
-    $subheadingStyle = 'font-size:calc(var(--wire-body-size, 0.875rem) * 1.25)'.($subheadingColor ? ";color:{$subheadingColor}" : '');
-
     $styles = ['color:var(--wire-header-text)'];
 
     if ($type === 'color') {
@@ -55,7 +52,7 @@
 <section
     @class([
         'relative w-full overflow-hidden' => true,
-        'mx-auto max-w-7xl my-12 md:my-16' => $isContainer,
+        'mx-auto max-w-(--wire-container) my-12 md:my-16' => $isContainer,
         'flex min-h-[70vh]' => $height === 'large',
         'flex min-h-svh' => $height === 'screen',
     ])
@@ -74,7 +71,7 @@
     @endif
 
     <div @class([
-        'z-10 mx-auto flex w-full max-w-7xl flex-col gap-5 px-6 py-20',
+        'z-10 mx-auto flex w-full max-w-(--wire-container) flex-col gap-5 px-6 py-20',
         'md:py-28' => ! $isCover,
         'absolute inset-0' => $overlayContent,
         'relative' => ! $overlayContent,
@@ -86,11 +83,11 @@
         'justify-end' => $valign === 'bottom',
     ])>
         @if ($heading)
-            <div class="max-w-3xl font-bold tracking-tight [&>p]:m-0 [&_a]:underline" style="{{ $headingStyle }}">{!! $heading !!}</div>
+            <div class="max-w-3xl font-bold tracking-tight [&>p]:m-0 [&_a]:underline text-[length:calc(var(--wire-heading-size)*1.5)]" @if ($headingColor) style="color:{{ $headingColor }}" @endif>{!! $heading !!}</div>
         @endif
 
         @if ($subheading)
-            <div class="max-w-2xl opacity-90 [&_a]:underline" style="{{ $subheadingStyle }}">{!! $subheading !!}</div>
+            <div class="max-w-2xl opacity-90 [&_a]:underline text-[length:calc(var(--wire-body-size)*1.25)]" @if ($subheadingColor) style="color:{{ $subheadingColor }}" @endif>{!! $subheading !!}</div>
         @endif
 
         @if ($ctas->isNotEmpty())

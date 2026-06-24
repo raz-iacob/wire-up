@@ -10,10 +10,12 @@
 @endphp
 
 <section
-    class="w-full py-18"
-    @if ($hasBg) style="background-color:var(--wire-card-bg);color:var(--wire-card-text)" @endif
+    @class([
+        'w-full py-18',
+        'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+    ])
 >
-    <div class="mx-auto max-w-7xl px-6">
+    <div class="mx-auto max-w-(--wire-container) px-6">
         <livewire:site.contact-form
             :config="$config"
             :block-id="$block->id"

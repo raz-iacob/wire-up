@@ -29,8 +29,10 @@
 @endphp
 
 <section
-    class="w-full py-18"
-    @if ($hasBg) style="background-color:var(--wire-card-bg);color:var(--wire-card-text)" @endif
+    @class([
+        'w-full py-18',
+        'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+    ])
     @if ($lightbox)
         x-data="{
             open: false,
@@ -47,9 +49,9 @@
         x-on:keydown.arrow-right.window="open && next()"
     @endif
 >
-    <div class="mx-auto max-w-7xl px-6">
+    <div class="mx-auto max-w-(--wire-container) px-6">
         @if ($heading)
-            <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:underline" style="font-size:var(--wire-heading-size, 1.5rem)">{!! $heading !!}</div>
+            <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
         @endif
 
         @if ($items->isNotEmpty())
