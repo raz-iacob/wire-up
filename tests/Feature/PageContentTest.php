@@ -609,6 +609,143 @@ it('applies the gallery background band when enabled', function (): void {
         ->assertSee('background-color:var(--wire-card-bg)', false);
 });
 
+it('renders a testimonials grid with quotes, authors, roles and star ratings', function (): void {
+    publishPageWithBlocks('tst-grid', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'heading' => ['en' => '<p>What clients say</p>'],
+            'intro' => ['en' => '<p>Real words from real people</p>'],
+            'layout' => 'grid',
+            'columns' => 2,
+            'items' => [
+                ['id' => 'a', 'quote' => ['en' => '<p>Absolutely <strong>brilliant</strong></p>'], 'author' => ['en' => 'Jane Doe'], 'role' => ['en' => 'CEO, Acme'], 'rating' => 5, 'avatar' => ['source' => 'media/jane.jpg', 'crop' => [], 'alt_text' => 'Jane']],
+                ['id' => 'b', 'quote' => ['en' => '<p>Solid service</p>'], 'author' => ['en' => 'John Roe'], 'role' => [], 'rating' => 0, 'avatar' => null],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'tst-grid'))
+        ->assertOk()
+        ->assertSee('What clients say')
+        ->assertSee('Real words from real people')
+        ->assertSee('<strong>brilliant</strong>', false)
+        ->assertSee('Jane Doe')
+        ->assertSee('CEO, Acme')
+        ->assertSee('John Roe')
+        ->assertSee('media/jane.jpg', false)
+        ->assertSee('alt="Jane"', false)
+        ->assertSee('sm:grid-cols-2', false)
+        ->assertSee('color-mix(in_srgb,var(--wire-card-bg)_20%,transparent)', false)
+        ->assertSee('text-(--wire-primary-bg)', false)
+        ->assertSee('text-center', false);
+});
+
+it('renders the testimonials carousel with navigation and responsive slides', function (): void {
+    publishPageWithBlocks('tst-carousel', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'layout' => 'carousel',
+            'items' => [
+                ['id' => 'a', 'quote' => ['en' => '<p>One</p>'], 'author' => ['en' => 'Anna']],
+                ['id' => 'b', 'quote' => ['en' => '<p>Two</p>'], 'author' => ['en' => 'Bo']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'tst-carousel'))
+        ->assertOk()
+        ->assertSee('snap-mandatory', false)
+        ->assertSee('lg:basis-1/3', false)
+        ->assertSee('x-ref="track"', false)
+        ->assertSee('scroll(1)', false);
+});
+
+it('renders the testimonials single featured layout with a large quote and accent stars', function (): void {
+    publishPageWithBlocks('tst-single', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'layout' => 'single',
+            'items' => [
+                ['id' => 'a', 'quote' => ['en' => '<p>Just one</p>'], 'author' => ['en' => 'Solo'], 'role' => ['en' => 'Founder'], 'rating' => 5],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'tst-single'))
+        ->assertOk()
+        ->assertSee('max-w-3xl', false)
+        ->assertSee('<blockquote', false)
+        ->assertSee('text-2xl', false)
+        ->assertSee('Just one', false)
+        ->assertSee('Solo')
+        ->assertSee('Founder')
+        ->assertSee('text-(--wire-primary-bg)', false)
+        ->assertDontSee('x-ref="track"', false);
+});
+
+it('renders the testimonials split layout with a heading column and side cards', function (): void {
+    publishPageWithBlocks('tst-split', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'layout' => 'split',
+            'heading' => ['en' => '<p>Customer feedback</p>'],
+            'intro' => ['en' => '<p>What people think</p>'],
+            'items' => [
+                ['id' => 'a', 'quote' => ['en' => '<p>Loved it</p>'], 'author' => ['en' => 'Emily Johnson'], 'role' => ['en' => 'Sales Manager']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'tst-split'))
+        ->assertOk()
+        ->assertSee('lg:grid-cols-2', false)
+        ->assertSee('lg:sticky', false)
+        ->assertSee('Customer feedback')
+        ->assertSee('What people think')
+        ->assertSee('Emily Johnson')
+        ->assertSee('Sales Manager')
+        ->assertSee('Loved it', false)
+        ->assertSee('border-(--wire-card-border)', false);
+});
+
+it('renders the testimonials spotlight layout with centered cards and a highlighted first card', function (): void {
+    publishPageWithBlocks('tst-spotlight', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'layout' => 'spotlight',
+            'columns' => 3,
+            'items' => [
+                ['id' => 'a', 'quote' => ['en' => '<p>First</p>'], 'author' => ['en' => 'Ethan Miller'], 'role' => ['en' => 'Product Designer'], 'rating' => 5, 'avatar' => ['source' => 'media/ethan.jpg', 'crop' => [], 'alt_text' => 'Ethan']],
+                ['id' => 'b', 'quote' => ['en' => '<p>Second</p>'], 'author' => ['en' => 'Emily Johnson'], 'role' => ['en' => 'Design Lead'], 'rating' => 5],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'tst-spotlight'))
+        ->assertOk()
+        ->assertSee('text-center', false)
+        ->assertSee('lg:grid-cols-3', false)
+        ->assertSee('size-20', false)
+        ->assertSee('border border-(--wire-primary-bg)', false)
+        ->assertSee('Ethan Miller')
+        ->assertSee('Product Designer')
+        ->assertSee('media/ethan.jpg', false);
+});
+
+it('drops testimonials with no quote and no author and adapts the card fill on a background band', function (): void {
+    publishPageWithBlocks('tst-empty', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'hasBackground' => true,
+            'items' => [
+                ['id' => 'a', 'quote' => ['en' => '<p>Kept</p>'], 'author' => ['en' => 'Real']],
+                ['id' => 'b', 'quote' => [], 'author' => []],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'tst-empty'))
+        ->assertOk()
+        ->assertSee('Kept', false)
+        ->assertSee('Real')
+        ->assertSee('background-color:var(--wire-card-bg)', false)
+        ->assertSee('color-mix(in_srgb,var(--wire-body-bg)_20%,transparent)', false);
+});
+
 it('renders a page with no blocks without error', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],

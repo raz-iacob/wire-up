@@ -23,7 +23,7 @@ it('derives admin and frontend view paths from the value', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'contact-form', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'testimonials', 'contact-form', 'spacer']);
 });
 
 it('seeds the contact form default content shape', function (): void {
@@ -51,6 +51,30 @@ it('seeds the contact form default content shape', function (): void {
 it('derives the contact form title from the heading, falling back to the label', function (): void {
     expect(BlockType::CONTACT_FORM->editorTitle(['heading' => ['en' => '<p>Get in touch</p>']], 'en'))->toBe('Get in touch');
     expect(BlockType::CONTACT_FORM->editorTitle([], 'en'))->toBe('Contact Form');
+});
+
+it('seeds the testimonials default content shape', function (): void {
+    $content = BlockType::TESTIMONIALS->defaultContent();
+
+    expect($content)->toMatchArray([
+        'layout' => 'grid',
+        'columns' => 3,
+        'hasBackground' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+    expect($content['items'])->toHaveCount(1);
+    expect($content['items'][0]['quote'])->toBe([]);
+    expect($content['items'][0]['author'])->toBe([]);
+    expect($content['items'][0]['role'])->toBe([]);
+    expect($content['items'][0]['avatar'])->toBeNull();
+    expect($content['items'][0]['rating'])->toBe(0);
+    expect($content['items'][0]['id'])->toBeString()->not->toBeEmpty();
+});
+
+it('derives the testimonials title from the heading, falling back to the label', function (): void {
+    expect(BlockType::TESTIMONIALS->editorTitle(['heading' => ['en' => '<p>What clients say</p>']], 'en'))->toBe('What clients say');
+    expect(BlockType::TESTIMONIALS->editorTitle([], 'en'))->toBe('Testimonials');
 });
 
 it('seeds the gallery default content shape', function (): void {

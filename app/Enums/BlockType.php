@@ -13,6 +13,7 @@ enum BlockType: string
     case LOCATION = 'location';
     case ACCORDION = 'accordion';
     case GALLERY = 'gallery';
+    case TESTIMONIALS = 'testimonials';
     case CONTACT_FORM = 'contact-form';
     case SPACER = 'spacer';
 
@@ -32,6 +33,7 @@ enum BlockType: string
             self::LOCATION => __('Location'),
             self::ACCORDION => __('Accordion'),
             self::GALLERY => __('Gallery'),
+            self::TESTIMONIALS => __('Testimonials'),
             self::CONTACT_FORM => __('Contact Form'),
             self::SPACER => __('Spacer'),
         };
@@ -45,6 +47,7 @@ enum BlockType: string
             self::LOCATION => 'map',
             self::ACCORDION => 'list-collapse',
             self::GALLERY => 'images',
+            self::TESTIMONIALS => 'chat-bubble-left-right',
             self::CONTACT_FORM => 'mail',
             self::SPACER => 'arrows-up-down',
         };
@@ -63,6 +66,7 @@ enum BlockType: string
             self::LOCATION => __('An embedded map alongside address and contact details.'),
             self::ACCORDION => __('Collapsible sections of content, great for services or FAQs.'),
             self::GALLERY => __('A responsive grid of images and videos with an optional lightbox.'),
+            self::TESTIMONIALS => __('Customer quotes shown in a grid, carousel or single column.'),
             self::CONTACT_FORM => __('A contact form that emails you and stores each submission.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
         };
@@ -129,6 +133,16 @@ enum BlockType: string
                 'columns' => 3,
                 'lightbox' => true,
                 'hasBackground' => false,
+            ],
+            self::TESTIMONIALS => [
+                'layout' => 'grid',
+                'columns' => 3,
+                'hasBackground' => false,
+                'heading' => [],
+                'intro' => [],
+                'items' => [
+                    ['id' => (string) Str::uuid(), 'quote' => [], 'author' => [], 'role' => [], 'avatar' => null, 'rating' => 0],
+                ],
             ],
             self::CONTACT_FORM => [
                 'formName' => '',

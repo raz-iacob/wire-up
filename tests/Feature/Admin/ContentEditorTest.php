@@ -460,6 +460,82 @@ it('renders the accordion block editor fields', function (): void {
         ->assertSee('Only one item open at a time');
 });
 
+it('seeds a full default content structure for a testimonials block', function (): void {
+    editor($this->page)
+        ->call('addBlock', 'testimonials')
+        ->assertCount('blocks', 1)
+        ->assertSet('blocks', function (array $blocks): bool {
+            $content = Arr::first($blocks)['content'];
+
+            return $content['layout'] === 'grid'
+                && $content['columns'] === 3
+                && $content['hasBackground'] === false
+                && $content['intro'] === []
+                && count($content['items']) === 1
+                && $content['items'][0]['rating'] === 0
+                && $content['items'][0]['avatar'] === null;
+        });
+});
+
+it('renders the testimonials block editor fields', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-t' => ['id' => 'new-t', 'type' => 'testimonials', 'position' => 0, 'content' => BlockType::TESTIMONIALS->defaultContent()],
+        ])
+        ->assertSee('Add testimonial')
+        ->assertSee('Role / company')
+        ->assertSee('Rating')
+        ->assertSee('Layout')
+        ->assertSee('Split')
+        ->assertSee('Spotlight');
+});
+
+it('adds and removes testimonial items', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-t' => ['id' => 'new-t', 'type' => 'testimonials', 'position' => 0, 'content' => ['items' => [['quote' => [], 'author' => []]]]],
+        ])
+        ->call('addTestimonialItem', 'new-t')
+        ->assertSet('blocks.new-t.content.items', fn (array $items): bool => count($items) === 2)
+        ->call('addTestimonialItem', 'new-t')
+        ->assertSet('blocks.new-t.content.items', fn (array $items): bool => count($items) === 3)
+        ->call('removeTestimonialItem', 'new-t', 1)
+        ->assertSet('blocks.new-t.content.items', fn (array $items): bool => count($items) === 2 && array_keys($items) === [0, 1]);
+});
+
+it('reorders testimonial items by id', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-t' => ['id' => 'new-t', 'type' => 'testimonials', 'position' => 0, 'content' => ['items' => [
+                ['id' => 'a', 'author' => ['en' => 'A'], 'quote' => []],
+                ['id' => 'b', 'author' => ['en' => 'B'], 'quote' => []],
+                ['id' => 'c', 'author' => ['en' => 'C'], 'quote' => []],
+            ]]],
+        ])
+        ->call('reorderTestimonialItems', 'c', 0)
+        ->assertSet('blocks.new-t.content.items', fn (array $items): bool => array_column($items, 'id') === ['c', 'a', 'b'])
+        ->call('reorderTestimonialItems', 'c', 2)
+        ->assertSet('blocks.new-t.content.items', fn (array $items): bool => array_column($items, 'id') === ['a', 'b', 'c']);
+});
+
+it('seeds the new testimonial item with the full field shape', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-t' => ['id' => 'new-t', 'type' => 'testimonials', 'position' => 0, 'content' => ['items' => []]],
+        ])
+        ->call('addTestimonialItem', 'new-t')
+        ->assertSet('blocks.new-t.content.items', function (array $items): bool {
+            $item = $items[0];
+
+            return is_string($item['id']) && $item['id'] !== ''
+                && $item['quote'] === []
+                && $item['author'] === []
+                && $item['role'] === []
+                && $item['avatar'] === null
+                && $item['rating'] === 0;
+        });
+});
+
 it('backfills missing default content for existing text-image blocks', function (): void {
     $page = $this->page;
 
