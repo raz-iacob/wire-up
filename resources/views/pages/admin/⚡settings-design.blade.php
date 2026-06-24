@@ -28,6 +28,8 @@ return new class extends Component
 
     public string $radius;
 
+    public string $container;
+
     public string $header_layout;
 
     public bool $header_transparent = false;
@@ -66,6 +68,7 @@ return new class extends Component
         $this->heading_size = $meta['heading_size'] ?? config()->string('theme.default_heading_size');
         $this->body_size = $meta['body_size'] ?? config()->string('theme.default_body_size');
         $this->radius = $meta['radius'] ?? config()->string('theme.default_radius');
+        $this->container = is_string($meta['container'] ?? null) ? $meta['container'] : config()->string('theme.default_container');
         $this->header_layout = is_string($meta['header_layout'] ?? null) ? $meta['header_layout'] : config()->string('theme.default_header_layout');
         $this->header_transparent = (bool) ($meta['header_transparent'] ?? false);
         $this->header_sticky = (bool) ($meta['header_sticky'] ?? false);
@@ -79,13 +82,6 @@ return new class extends Component
         $this->logo_footer = is_array($meta['logo_footer'] ?? null) ? $meta['logo_footer'] : null;
     }
 
-    public function updatedTheme(string $value): void
-    {
-        if ($value !== 'custom') {
-            $this->colors = $this->presetColors($value);
-        }
-    }
-
     public function update(UpdateSettingsAction $action): void
     {
         $rules = [
@@ -95,6 +91,7 @@ return new class extends Component
             'heading_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.heading_sizes')))],
             'body_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.body_sizes')))],
             'radius' => ['required', 'string', Rule::in(array_keys(config()->array('theme.radii')))],
+            'container' => ['required', 'string', Rule::in(array_keys(config()->array('theme.containers')))],
             'header_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.header_layouts')))],
             'header_transparent' => ['boolean'],
             'header_sticky' => ['boolean'],
@@ -115,7 +112,7 @@ return new class extends Component
 
         $validated = $this->validate($rules);
 
-        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_size', 'body_size', 'radius', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent']);
+        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_size', 'body_size', 'radius', 'container', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent']);
 
         if ($this->theme === 'custom') {
             $metadata['colors'] = Arr::only($this->colors, array_keys(config()->array('theme.slots')));
@@ -143,11 +140,11 @@ return new class extends Component
      */
     private function resolvePalette(string $theme, array $meta): array
     {
-        if ($theme === 'custom' && is_array($meta['colors'] ?? null)) {
+        if (is_array($meta['colors'] ?? null) && $this->onlyStringColors($meta['colors']) !== []) {
             return $this->onlyStringColors($meta['colors']);
         }
 
-        return $this->presetColors($theme);
+        return $this->presetColors($theme === 'custom' ? config()->string('theme.default') : $theme);
     }
 
     /**
@@ -459,6 +456,11 @@ return new class extends Component
                 </flux:select>
                 <flux:select variant="listbox" wire:model="radius" label="{{ __('Corner radius') }}">
                     @foreach (array_keys(config('theme.radii')) as $key)
+                        <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:select variant="listbox" wire:model="container" label="{{ __('Content width') }}">
+                    @foreach (array_keys(config('theme.containers')) as $key)
                         <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>
                     @endforeach
                 </flux:select>

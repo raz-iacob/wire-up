@@ -175,6 +175,14 @@ return [
         'large' => '1rem',
     ],
 
+    'default_container' => 'medium',
+
+    'containers' => [
+        'small' => '64rem',
+        'medium' => '72rem',
+        'large' => '80rem',
+    ],
+
     'default_header_logo_size' => 'md',
     'default_header_nav_size' => 'md',
     'default_header_nav_hover' => 'opacity',

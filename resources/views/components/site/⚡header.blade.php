@@ -99,7 +99,7 @@ return new class extends Component
 >
     @switch($layout)
         @case('centered')
-            <div class="relative mx-auto max-w-7xl px-6 py-8 text-center space-y-6">
+            <div class="relative mx-auto max-w-(--wire-container) px-6 py-8 text-center space-y-6">
                 <div class="absolute inset-e-6 top-4 max-md:hidden">
                     <x-site.language-picker :languages="$this->languages" />
                 </div>
@@ -111,7 +111,7 @@ return new class extends Component
             @break
 
         @case('split')
-            <div class="mx-auto grid max-w-7xl grid-cols-3 items-center gap-6 px-6 py-4">
+            <div class="mx-auto grid max-w-(--wire-container) grid-cols-3 items-center gap-6 px-6 py-4">
                 <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
                 <x-site.nav :items="$links" :size="$navSize" :hover="$navHover" class="justify-center max-md:hidden" />
                 <div class="flex items-center justify-end gap-4 max-md:hidden">
@@ -122,13 +122,13 @@ return new class extends Component
             @break
 
         @case('minimal')
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <div class="mx-auto flex max-w-(--wire-container) items-center justify-between px-6 py-4">
                 <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
             </div>
             @break
 
         @default
-            <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
+            <div class="mx-auto flex max-w-(--wire-container) items-center justify-between gap-6 px-6 py-4">
                 <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
                 <div class="flex items-center gap-6 max-md:hidden">
                     <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" />

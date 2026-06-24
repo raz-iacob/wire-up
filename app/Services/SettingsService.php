@@ -197,6 +197,12 @@ final class SettingsService
             $root[] = "--font-sans:$bodyStack";
         }
 
+        $containerKey = (string) config('site.container', '') ?: config()->string('theme.default_container');
+        $container = config()->string("theme.containers.$containerKey", '');
+        if ($container !== '') {
+            $root[] = "--wire-container:$container";
+        }
+
         $headingSizeKey = (string) config('site.heading_size', '') ?: config()->string('theme.default_heading_size');
         $bodySizeKey = (string) config('site.body_size', '') ?: config()->string('theme.default_body_size');
         $headingSize = config()->string("theme.heading_sizes.$headingSizeKey", '');

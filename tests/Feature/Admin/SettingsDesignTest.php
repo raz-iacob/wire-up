@@ -37,6 +37,7 @@ it('hydrates the form with the default preset when nothing is saved', function (
         ->assertSet('theme', config('theme.default'))
         ->assertSet('colors.background', config('theme.presets.'.config('theme.default').'.colors.background'))
         ->assertSet('radius', config('theme.default_radius'))
+        ->assertSet('container', config('theme.default_container'))
         ->assertSet('header_layout', config('theme.default_header_layout'))
         ->assertSet('footer_layout', config('theme.default_footer_layout'));
 });
@@ -61,12 +62,34 @@ it('hydrates a custom palette from settings on mount', function (): void {
         ->assertSet('colors.primary_bg', '#123456');
 });
 
-it('loads a preset palette when the theme changes', function (): void {
+it('keeps the custom palette when switching to a preset and back', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
+        ->set('theme', 'custom')
+        ->set('colors.primary_bg', '#abcdef')
         ->set('theme', 'forest')
-        ->assertSet('colors.background', config('theme.presets.forest.colors.background'));
+        ->set('theme', 'custom')
+        ->assertSet('colors.primary_bg', '#abcdef');
+});
+
+it('restores a saved custom palette on mount even while a preset is active', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('theme', 'custom')
+        ->set('colors.primary_bg', '#abcdef')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('theme', 'slate')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    Livewire::test('pages::admin.settings-design')
+        ->assertSet('theme', 'slate')
+        ->assertSet('colors.primary_bg', '#abcdef');
 });
 
 it('persists a preset choice without storing the palette', function (): void {
@@ -113,15 +136,16 @@ it('validates custom colours are hex values', function (): void {
         ->assertHasErrors(['colors.background']);
 });
 
-it('validates fonts, sizes and radius are known keys', function (): void {
+it('validates fonts, sizes, radius and container are known keys', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
         ->set('heading_font', 'comic-sans')
         ->set('heading_size', 'gigantic')
         ->set('radius', 'pill')
+        ->set('container', 'humongous')
         ->call('update')
-        ->assertHasErrors(['heading_font', 'heading_size', 'radius']);
+        ->assertHasErrors(['heading_font', 'heading_size', 'radius', 'container']);
 });
 
 it('hydrates header and footer layouts from settings on mount', function (): void {
@@ -280,6 +304,23 @@ it('emits radius and font declarations from settings', function (): void {
         ->toContain('--wire-body-font:"Inter", sans-serif')
         ->toContain('--wire-heading-size:1.875rem')
         ->toContain('--wire-body-size:0.875rem');
+});
+
+it('persists the content width and emits the container token', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('container', 'small')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('container'))->toBe('small');
+
+    expect((new SettingsService)->themeCss())->toContain('--wire-container:64rem');
+});
+
+it('emits the default container token when nothing is configured', function (): void {
+    expect((new SettingsService)->themeCss())->toContain('--wire-container:72rem');
 });
 
 it('always emits the default palette when nothing is configured', function (): void {
