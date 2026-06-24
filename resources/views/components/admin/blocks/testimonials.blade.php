@@ -7,8 +7,8 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline" />
-    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Intro text') }}" toolbar="bold italic | link" />
+    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline | align" />
+    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" toolbar="bold italic | align | link" />
 
     <div class="flex flex-col gap-2">
         <flux:label>{{ __('Testimonials') }}</flux:label>
@@ -42,7 +42,7 @@
                     </div>
 
                     <div class="flex flex-col gap-4 p-4" x-show="open" x-collapse x-cloak>
-                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.quote" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Quote') }}" toolbar="bold italic | link" />
+                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.quote" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Quote') }}" toolbar="bold italic | align | link" />
 
                         <div class="grid md:grid-cols-2 gap-4">
                             <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.author" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Author') }}" />
@@ -75,20 +75,29 @@
         </div>
     </div>
 
-    <flux:select wire:model.live="{{ $c }}.layout" variant="listbox" label="{{ __('Layout') }}">
-        <flux:select.option value="grid">{{ __('Grid') }}</flux:select.option>
-        <flux:select.option value="carousel">{{ __('Carousel') }}</flux:select.option>
-        <flux:select.option value="single">{{ __('Single (featured)') }}</flux:select.option>
-        <flux:select.option value="split">{{ __('Split') }}</flux:select.option>
-        <flux:select.option value="spotlight">{{ __('Spotlight') }}</flux:select.option>
-    </flux:select>
+    <div class="grid md:grid-cols-2 gap-4">
+        <flux:select wire:model.live="{{ $c }}.layout" variant="listbox" label="{{ __('Layout') }}">
+            <flux:select.option value="grid">{{ __('Grid') }}</flux:select.option>
+            <flux:select.option value="carousel">{{ __('Carousel') }}</flux:select.option>
+            <flux:select.option value="single">{{ __('Single (featured)') }}</flux:select.option>
+            <flux:select.option value="split">{{ __('Split') }}</flux:select.option>
+        </flux:select>
 
-    <div x-show="['grid', 'spotlight'].includes({{ $b }}?.layout)" x-cloak>
-        <flux:radio.group wire:model.live="{{ $c }}.columns" variant="segmented" label="{{ __('Columns') }}">
-            <flux:radio value="2" label="{{ __('Two') }}" />
-            <flux:radio value="3" label="{{ __('Three') }}" />
-        </flux:radio.group>
+        <div x-show="{{ $b }}?.layout === 'grid'" x-cloak>
+            <flux:radio.group wire:model.live="{{ $c }}.columns" variant="segmented" label="{{ __('Columns') }}">
+                <flux:radio value="2" label="{{ __('Two') }}" />
+                <flux:radio value="3" label="{{ __('Three') }}" />
+            </flux:radio.group>
+        </div>
     </div>
 
-    <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />
+    <div class="flex flex-col gap-4">
+        <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />
+        <flux:switch wire:model.live="{{ $c }}.amberStars" label="{{ __('Use gold star ratings') }}" align="left" />
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+        <flux:color-picker wire:model="{{ $c }}.cardBg" clearable label="{{ __('Card background') }}" placeholder="{{ __('Theme') }}" />
+        <flux:color-picker wire:model="{{ $c }}.cardText" clearable label="{{ __('Card text') }}" placeholder="{{ __('Theme') }}" />
+    </div>
 </div>

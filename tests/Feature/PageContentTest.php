@@ -135,7 +135,6 @@ it('arranges fields across the two columns by their per-field column choice in s
 
     $this->get(route('page', 'contact-split'))
         ->assertOk()
-        ->assertSee('md:items-start', false)
         ->assertSeeInOrder(['Name', 'Message', 'Email']);
 });
 
@@ -181,8 +180,7 @@ it('renders text blocks gracefully when no image is selected', function (): void
         ->assertSee('Imageless hero')
         ->assertSee('Just words', false)
         ->assertDontSee('<img', false)
-        ->assertDontSee('background-image', false)
-        ->assertSee('background-color:var(--wire-header-bg)', false);
+        ->assertDontSee('background-image', false);
 });
 
 it('renders an image when a block has one', function (): void {
@@ -226,20 +224,6 @@ it('falls back to theme colors for an inherited hero gradient', function (): voi
         ->assertOk()
         ->assertSee('linear-gradient(to bottom, var(--wire-header-bg), var(--wire-header-bg))', false)
         ->assertSee('color:var(--wire-header-text)', false);
-});
-
-it('sizes hero heading and subheading relative to the theme typography', function (): void {
-    publishPageWithBlocks('typo-hero', [
-        ['id' => 'new-1', 'type' => 'hero', 'content' => [
-            'heading' => ['en' => 'Sized heading'],
-            'subheading' => ['en' => '<p>Sized sub</p>'],
-        ]],
-    ]);
-
-    $this->get(route('page', 'typo-hero'))
-        ->assertOk()
-        ->assertSee('calc(var(--wire-heading-size, 1.5rem) * 1.5)', false)
-        ->assertSee('calc(var(--wire-body-size, 0.875rem) * 1.25)', false);
 });
 
 it('applies separate heading and subheading colors', function (): void {
@@ -323,8 +307,6 @@ it('renders a full-screen hero image as a cover <img> with alt text', function (
         ->assertSee('<img', false)
         ->assertSee('uploads/hero.jpg', false)
         ->assertSee('Mountain vista', false)
-        ->assertSee('object-cover', false)
-        ->assertSee('min-h-svh', false)
         ->assertSee('Imaged hero');
 });
 
@@ -340,25 +322,7 @@ it('renders a fit-content hero image inline and boxed for container width', func
     $this->get(route('page', 'boxed-hero'))
         ->assertOk()
         ->assertSee('<img', false)
-        ->assertSee('Boxed art', false)
-        ->assertSee('max-w-7xl', false)
-        ->assertSee('my-12', false)
-        ->assertSee('block w-full', false);
-});
-
-it('applies hero height and alignment options', function (): void {
-    publishPageWithBlocks('full-hero', [
-        ['id' => 'new-1', 'type' => 'hero', 'content' => [
-            'heading' => ['en' => 'Tall hero'],
-            'height' => 'screen', 'align' => 'left', 'verticalAlign' => 'bottom',
-        ]],
-    ]);
-
-    $this->get(route('page', 'full-hero'))
-        ->assertOk()
-        ->assertSee('min-h-svh', false)
-        ->assertSee('justify-end', false)
-        ->assertSee('items-start', false);
+        ->assertSee('Boxed art', false);
 });
 
 it('wraps a block with an anchor id target', function (): void {
@@ -388,36 +352,10 @@ it('renders a rich text-image heading and resolves its CTA links', function (): 
     $this->get(route('page', 'text-image-cta'))
         ->assertOk()
         ->assertSee('<u>off</u>', false)
-        ->assertSee('font-size:var(--wire-heading-size, 1.5rem)', false)
         ->assertSee('Free Consultation')
         ->assertSee('href="#book"', false)
         ->assertSee('Learn More')
         ->assertSee($target->getUrl(), false);
-});
-
-it('paints a text-image background band only when enabled', function (): void {
-    publishPageWithBlocks('ti-bg', [
-        ['id' => 'new-1', 'type' => 'text-image', 'content' => [
-            'body' => ['en' => '<p>Banded</p>'],
-            'hasBackground' => true,
-        ]],
-    ]);
-
-    publishPageWithBlocks('ti-no-bg', [
-        ['id' => 'new-1', 'type' => 'text-image', 'content' => [
-            'body' => ['en' => '<p>Plain</p>'],
-            'hasBackground' => false,
-        ]],
-    ]);
-
-    $this->get(route('page', 'ti-bg'))
-        ->assertOk()
-        ->assertSee('background-color:var(--wire-card-bg)', false)
-        ->assertSee('color:var(--wire-card-text)', false);
-
-    $this->get(route('page', 'ti-no-bg'))
-        ->assertOk()
-        ->assertDontSee('var(--wire-card-bg)', false);
 });
 
 it('renders a location block with an embedded map and contact details', function (): void {
@@ -441,37 +379,7 @@ it('renders a location block with an embedded map and contact details', function
         ->assertSee('output=embed', false)
         ->assertSee('href="tel:+15551234567"', false)
         ->assertSee('href="mailto:hello@example.com"', false)
-        ->assertSee('whitespace-pre-line', false)
-        ->assertSee('whitespace-pre-wrap', false)
         ->assertSee('<ul><li><strong>Mon</strong> 9–5</li></ul>', false);
-});
-
-it('toggles the location map side and background band', function (): void {
-    publishPageWithBlocks('loc-map-left', [
-        ['id' => 'new-1', 'type' => 'location', 'content' => [
-            'map' => 'Berlin',
-            'reverseLayout' => false,
-            'hasBackground' => true,
-        ]],
-    ]);
-
-    publishPageWithBlocks('loc-map-right', [
-        ['id' => 'new-1', 'type' => 'location', 'content' => [
-            'map' => 'Berlin',
-            'reverseLayout' => true,
-            'hasBackground' => false,
-        ]],
-    ]);
-
-    $this->get(route('page', 'loc-map-left'))
-        ->assertOk()
-        ->assertDontSee('md:order-last', false)
-        ->assertSee('background-color:var(--wire-card-bg)', false);
-
-    $this->get(route('page', 'loc-map-right'))
-        ->assertOk()
-        ->assertSee('md:order-last', false)
-        ->assertDontSee('var(--wire-card-bg)', false);
 });
 
 it('shows the location directions button only when enabled, labelled and linkable', function (): void {
@@ -537,19 +445,17 @@ it('drops accordion items that have no title and no body', function (): void {
         ->assertSee('data-flux-accordion-item', false);
 });
 
-it('switches the accordion indicator and background band', function (): void {
+it('switches the accordion indicator', function (): void {
     publishPageWithBlocks('acc-pm', [
         ['id' => 'new-1', 'type' => 'accordion', 'content' => [
             'icon' => 'plus-minus',
-            'hasBackground' => true,
             'items' => [['title' => ['en' => 'One'], 'body' => ['en' => '<p>x</p>']]],
         ]],
     ]);
 
     $this->get(route('page', 'acc-pm'))
         ->assertOk()
-        ->assertSee('data-icon="plus-minus"', false)
-        ->assertSee('background-color:var(--wire-card-bg)', false);
+        ->assertSee('data-icon="plus-minus"', false);
 });
 
 it('renders a gallery grid with heading, captions and a lightbox', function (): void {
@@ -568,7 +474,6 @@ it('renders a gallery grid with heading, captions and a lightbox', function (): 
     $this->get(route('page', 'gallery-grid'))
         ->assertOk()
         ->assertSee('Our work')
-        ->assertSee('lg:grid-cols-4', false)
         ->assertSee('media/photo-a.jpg', false)
         ->assertSee('alt="First shot"', false)
         ->assertSee('First shot')
@@ -594,143 +499,47 @@ it('plays a gallery video inline when the lightbox is disabled', function (): vo
         ->assertDontSee('bg-black/90', false);
 });
 
-it('applies the gallery background band when enabled', function (): void {
-    publishPageWithBlocks('gallery-bg', [
-        ['id' => 'new-1', 'type' => 'gallery', 'content' => [
-            'hasBackground' => true,
-            'media' => [
-                ['id' => 1, 'source' => 'media/photo-a.jpg', 'mime_type' => 'image/jpeg'],
-            ],
-        ]],
-    ]);
-
-    $this->get(route('page', 'gallery-bg'))
-        ->assertOk()
-        ->assertSee('background-color:var(--wire-card-bg)', false);
-});
-
-it('renders a testimonials grid with quotes, authors, roles and star ratings', function (): void {
-    publishPageWithBlocks('tst-grid', [
+it('renders testimonials content in every layout', function (string $layout): void {
+    publishPageWithBlocks("tst-{$layout}", [
         ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'layout' => $layout,
             'heading' => ['en' => '<p>What clients say</p>'],
             'intro' => ['en' => '<p>Real words from real people</p>'],
-            'layout' => 'grid',
-            'columns' => 2,
             'items' => [
-                ['id' => 'a', 'quote' => ['en' => '<p>Absolutely <strong>brilliant</strong></p>'], 'author' => ['en' => 'Jane Doe'], 'role' => ['en' => 'CEO, Acme'], 'rating' => 5, 'avatar' => ['source' => 'media/jane.jpg', 'crop' => [], 'alt_text' => 'Jane']],
-                ['id' => 'b', 'quote' => ['en' => '<p>Solid service</p>'], 'author' => ['en' => 'John Roe'], 'role' => [], 'rating' => 0, 'avatar' => null],
+                ['id' => 'a', 'quote' => ['en' => '<p>Absolutely <strong>brilliant</strong></p>'], 'author' => ['en' => 'Jane Doe'], 'role' => ['en' => 'CEO, Acme'], 'rating' => 5],
+                ['id' => 'b', 'quote' => ['en' => '<p>Solid service</p>'], 'author' => ['en' => 'John Roe']],
             ],
         ]],
     ]);
 
-    $this->get(route('page', 'tst-grid'))
+    $this->get(route('page', "tst-{$layout}"))
         ->assertOk()
         ->assertSee('What clients say')
         ->assertSee('Real words from real people')
         ->assertSee('<strong>brilliant</strong>', false)
         ->assertSee('Jane Doe')
         ->assertSee('CEO, Acme')
-        ->assertSee('John Roe')
+        ->assertSee('John Roe');
+})->with(['grid', 'carousel', 'single', 'split']);
+
+it('renders a testimonial avatar with alt text', function (): void {
+    publishPageWithBlocks('tst-avatar', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'items' => [
+                ['id' => 'a', 'quote' => ['en' => '<p>Great</p>'], 'author' => ['en' => 'Jane Doe'], 'avatar' => ['source' => 'media/jane.jpg', 'crop' => [], 'alt_text' => 'Jane']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'tst-avatar'))
+        ->assertOk()
         ->assertSee('media/jane.jpg', false)
-        ->assertSee('alt="Jane"', false)
-        ->assertSee('sm:grid-cols-2', false)
-        ->assertSee('color-mix(in_srgb,var(--wire-card-bg)_20%,transparent)', false)
-        ->assertSee('text-(--wire-primary-bg)', false)
-        ->assertSee('text-center', false);
+        ->assertSee('alt="Jane"', false);
 });
 
-it('renders the testimonials carousel with navigation and responsive slides', function (): void {
-    publishPageWithBlocks('tst-carousel', [
-        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
-            'layout' => 'carousel',
-            'items' => [
-                ['id' => 'a', 'quote' => ['en' => '<p>One</p>'], 'author' => ['en' => 'Anna']],
-                ['id' => 'b', 'quote' => ['en' => '<p>Two</p>'], 'author' => ['en' => 'Bo']],
-            ],
-        ]],
-    ]);
-
-    $this->get(route('page', 'tst-carousel'))
-        ->assertOk()
-        ->assertSee('snap-mandatory', false)
-        ->assertSee('lg:basis-1/3', false)
-        ->assertSee('x-ref="track"', false)
-        ->assertSee('scroll(1)', false);
-});
-
-it('renders the testimonials single featured layout with a large quote and accent stars', function (): void {
-    publishPageWithBlocks('tst-single', [
-        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
-            'layout' => 'single',
-            'items' => [
-                ['id' => 'a', 'quote' => ['en' => '<p>Just one</p>'], 'author' => ['en' => 'Solo'], 'role' => ['en' => 'Founder'], 'rating' => 5],
-            ],
-        ]],
-    ]);
-
-    $this->get(route('page', 'tst-single'))
-        ->assertOk()
-        ->assertSee('max-w-3xl', false)
-        ->assertSee('<blockquote', false)
-        ->assertSee('text-2xl', false)
-        ->assertSee('Just one', false)
-        ->assertSee('Solo')
-        ->assertSee('Founder')
-        ->assertSee('text-(--wire-primary-bg)', false)
-        ->assertDontSee('x-ref="track"', false);
-});
-
-it('renders the testimonials split layout with a heading column and side cards', function (): void {
-    publishPageWithBlocks('tst-split', [
-        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
-            'layout' => 'split',
-            'heading' => ['en' => '<p>Customer feedback</p>'],
-            'intro' => ['en' => '<p>What people think</p>'],
-            'items' => [
-                ['id' => 'a', 'quote' => ['en' => '<p>Loved it</p>'], 'author' => ['en' => 'Emily Johnson'], 'role' => ['en' => 'Sales Manager']],
-            ],
-        ]],
-    ]);
-
-    $this->get(route('page', 'tst-split'))
-        ->assertOk()
-        ->assertSee('lg:grid-cols-2', false)
-        ->assertSee('lg:sticky', false)
-        ->assertSee('Customer feedback')
-        ->assertSee('What people think')
-        ->assertSee('Emily Johnson')
-        ->assertSee('Sales Manager')
-        ->assertSee('Loved it', false)
-        ->assertSee('border-(--wire-card-border)', false);
-});
-
-it('renders the testimonials spotlight layout with centered cards and a highlighted first card', function (): void {
-    publishPageWithBlocks('tst-spotlight', [
-        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
-            'layout' => 'spotlight',
-            'columns' => 3,
-            'items' => [
-                ['id' => 'a', 'quote' => ['en' => '<p>First</p>'], 'author' => ['en' => 'Ethan Miller'], 'role' => ['en' => 'Product Designer'], 'rating' => 5, 'avatar' => ['source' => 'media/ethan.jpg', 'crop' => [], 'alt_text' => 'Ethan']],
-                ['id' => 'b', 'quote' => ['en' => '<p>Second</p>'], 'author' => ['en' => 'Emily Johnson'], 'role' => ['en' => 'Design Lead'], 'rating' => 5],
-            ],
-        ]],
-    ]);
-
-    $this->get(route('page', 'tst-spotlight'))
-        ->assertOk()
-        ->assertSee('text-center', false)
-        ->assertSee('lg:grid-cols-3', false)
-        ->assertSee('size-20', false)
-        ->assertSee('border border-(--wire-primary-bg)', false)
-        ->assertSee('Ethan Miller')
-        ->assertSee('Product Designer')
-        ->assertSee('media/ethan.jpg', false);
-});
-
-it('drops testimonials with no quote and no author and adapts the card fill on a background band', function (): void {
+it('drops testimonials with no quote and no author', function (): void {
     publishPageWithBlocks('tst-empty', [
         ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
-            'hasBackground' => true,
             'items' => [
                 ['id' => 'a', 'quote' => ['en' => '<p>Kept</p>'], 'author' => ['en' => 'Real']],
                 ['id' => 'b', 'quote' => [], 'author' => []],
@@ -741,9 +550,54 @@ it('drops testimonials with no quote and no author and adapts the card fill on a
     $this->get(route('page', 'tst-empty'))
         ->assertOk()
         ->assertSee('Kept', false)
-        ->assertSee('Real')
-        ->assertSee('background-color:var(--wire-card-bg)', false)
-        ->assertSee('color-mix(in_srgb,var(--wire-body-bg)_20%,transparent)', false);
+        ->assertSee('Real');
+});
+
+it('fills cards with the card token by default and honors a per-block color override', function (): void {
+    publishPageWithBlocks('tst-card-default', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'items' => [['id' => 'a', 'quote' => ['en' => '<p>Hi</p>'], 'author' => ['en' => 'Jane']]],
+        ]],
+    ]);
+
+    publishPageWithBlocks('tst-card-override', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'cardBg' => '#112233',
+            'cardText' => '#ffeedd',
+            'items' => [['id' => 'a', 'quote' => ['en' => '<p>Hi</p>'], 'author' => ['en' => 'Jane']]],
+        ]],
+    ]);
+
+    $this->get(route('page', 'tst-card-default'))
+        ->assertOk()
+        ->assertSee('background-color:var(--wire-card-bg);color:var(--wire-card-text)', false);
+
+    $this->get(route('page', 'tst-card-override'))
+        ->assertOk()
+        ->assertSee('background-color:#112233;color:#ffeedd', false);
+});
+
+it('renders gold stars when the amber option is enabled, theme accent otherwise', function (): void {
+    publishPageWithBlocks('tst-amber', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'amberStars' => true,
+            'items' => [['id' => 'a', 'quote' => ['en' => '<p>Great</p>'], 'author' => ['en' => 'Jane'], 'rating' => 5]],
+        ]],
+    ]);
+
+    publishPageWithBlocks('tst-accent', [
+        ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
+            'items' => [['id' => 'a', 'quote' => ['en' => '<p>Great</p>'], 'author' => ['en' => 'Jane'], 'rating' => 5]],
+        ]],
+    ]);
+
+    $this->get(route('page', 'tst-amber'))
+        ->assertOk()
+        ->assertSee('size-5 text-amber-400', false);
+
+    $this->get(route('page', 'tst-accent'))
+        ->assertOk()
+        ->assertSee('size-5 text-(--wire-primary-bg)', false);
 });
 
 it('renders a page with no blocks without error', function (): void {

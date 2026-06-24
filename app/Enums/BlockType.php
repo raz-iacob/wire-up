@@ -138,6 +138,9 @@ enum BlockType: string
                 'layout' => 'grid',
                 'columns' => 3,
                 'hasBackground' => false,
+                'amberStars' => false,
+                'cardBg' => null,
+                'cardText' => null,
                 'heading' => [],
                 'intro' => [],
                 'items' => [

@@ -487,7 +487,9 @@ it('renders the testimonials block editor fields', function (): void {
         ->assertSee('Rating')
         ->assertSee('Layout')
         ->assertSee('Split')
-        ->assertSee('Spotlight');
+        ->assertSee('Use gold star ratings')
+        ->assertSee('Card background')
+        ->assertSee('Card text');
 });
 
 it('adds and removes testimonial items', function (): void {

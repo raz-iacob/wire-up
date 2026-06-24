@@ -60,6 +60,9 @@ it('seeds the testimonials default content shape', function (): void {
         'layout' => 'grid',
         'columns' => 3,
         'hasBackground' => false,
+        'amberStars' => false,
+        'cardBg' => null,
+        'cardText' => null,
         'heading' => [],
         'intro' => [],
     ]);
