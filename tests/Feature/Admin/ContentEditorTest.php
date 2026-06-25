@@ -659,6 +659,68 @@ it('seeds the new sponsor item with the full field shape', function (): void {
         });
 });
 
+it('renders the feature cards block editor fields', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-f' => ['id' => 'new-f', 'type' => 'feature-cards', 'position' => 0, 'content' => BlockType::FEATURE_CARDS->defaultContent()],
+        ])
+        ->assertSee('Add card')
+        ->assertSee('Image or icon')
+        ->assertSee('Title')
+        ->assertSee('Description')
+        ->assertSee('Columns')
+        ->assertSee('Image height')
+        ->assertSee('Round the image corners')
+        ->assertSee('Show a button')
+        ->assertSee('Show cards with a background');
+});
+
+it('adds and removes feature card items', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-f' => ['id' => 'new-f', 'type' => 'feature-cards', 'position' => 0, 'content' => ['items' => [['image' => null, 'title' => []]]]],
+        ])
+        ->call('addFeatureItem', 'new-f')
+        ->assertSet('blocks.new-f.content.items', fn (array $items): bool => count($items) === 2)
+        ->call('addFeatureItem', 'new-f')
+        ->assertSet('blocks.new-f.content.items', fn (array $items): bool => count($items) === 3)
+        ->call('removeFeatureItem', 'new-f', 1)
+        ->assertSet('blocks.new-f.content.items', fn (array $items): bool => count($items) === 2 && array_keys($items) === [0, 1]);
+});
+
+it('reorders feature card items by id', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-f' => ['id' => 'new-f', 'type' => 'feature-cards', 'position' => 0, 'content' => ['items' => [
+                ['id' => 'a', 'title' => ['en' => 'A'], 'image' => null],
+                ['id' => 'b', 'title' => ['en' => 'B'], 'image' => null],
+                ['id' => 'c', 'title' => ['en' => 'C'], 'image' => null],
+            ]]],
+        ])
+        ->call('reorderFeatureItems', 'c', 0)
+        ->assertSet('blocks.new-f.content.items', fn (array $items): bool => array_column($items, 'id') === ['c', 'a', 'b'])
+        ->call('reorderFeatureItems', 'c', 2)
+        ->assertSet('blocks.new-f.content.items', fn (array $items): bool => array_column($items, 'id') === ['a', 'b', 'c']);
+});
+
+it('seeds the new feature card item with the full field shape', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-f' => ['id' => 'new-f', 'type' => 'feature-cards', 'position' => 0, 'content' => ['items' => []]],
+        ])
+        ->call('addFeatureItem', 'new-f')
+        ->assertSet('blocks.new-f.content.items', function (array $items): bool {
+            $item = $items[0];
+
+            return is_string($item['id']) && $item['id'] !== ''
+                && $item['image'] === null
+                && $item['title'] === []
+                && $item['body'] === []
+                && $item['cta']['enabled'] === false
+                && $item['cta']['link']['type'] === 'url';
+        });
+});
+
 it('backfills missing default content for existing text-image blocks', function (): void {
     $page = $this->page;
 

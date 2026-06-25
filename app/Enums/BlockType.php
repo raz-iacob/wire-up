@@ -16,6 +16,7 @@ enum BlockType: string
     case VIDEO = 'video';
     case TESTIMONIALS = 'testimonials';
     case SPONSORS = 'sponsors';
+    case FEATURE_CARDS = 'feature-cards';
     case CONTACT_FORM = 'contact-form';
     case SPACER = 'spacer';
 
@@ -38,6 +39,7 @@ enum BlockType: string
             self::VIDEO => __('Video'),
             self::TESTIMONIALS => __('Testimonials'),
             self::SPONSORS => __('Sponsors'),
+            self::FEATURE_CARDS => __('Feature Cards'),
             self::CONTACT_FORM => __('Contact Form'),
             self::SPACER => __('Spacer'),
         };
@@ -54,6 +56,7 @@ enum BlockType: string
             self::VIDEO => 'video-camera',
             self::TESTIMONIALS => 'chat-bubble-left-right',
             self::SPONSORS => 'handshake',
+            self::FEATURE_CARDS => 'squares-2x2',
             self::CONTACT_FORM => 'mail',
             self::SPACER => 'arrows-up-down',
         };
@@ -75,6 +78,7 @@ enum BlockType: string
             self::VIDEO => __('A video player using an uploaded file, a YouTube or Vimeo link, or a direct video URL.'),
             self::TESTIMONIALS => __('Customer quotes shown in a grid, carousel or single column.'),
             self::SPONSORS => __('Sponsor and partner logos shown in a grid, marquee or grouped by tier.'),
+            self::FEATURE_CARDS => __('A responsive grid of cards, each with an image or icon, a title and a short description.'),
             self::CONTACT_FORM => __('A contact form that emails you and stores each submission.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
         };
@@ -180,6 +184,20 @@ enum BlockType: string
                 'intro' => [],
                 'items' => [
                     ['id' => (string) Str::uuid(), 'logo' => null, 'name' => [], 'link' => '', 'tier' => ''],
+                ],
+            ],
+            self::FEATURE_CARDS => [
+                'columns' => 3,
+                'imageHeight' => 'medium',
+                'imageRounded' => false,
+                'hasBackground' => false,
+                'cardStyle' => true,
+                'cardBg' => null,
+                'cardText' => null,
+                'heading' => [],
+                'intro' => [],
+                'items' => [
+                    ['id' => (string) Str::uuid(), 'image' => null, 'title' => [], 'body' => [], 'cta' => $cta],
                 ],
             ],
             self::CONTACT_FORM => [

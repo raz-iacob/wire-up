@@ -824,6 +824,106 @@ it('drops sponsors with no logo', function (): void {
         ->assertDontSee('Dropped');
 });
 
+it('renders feature cards with their image, title and body', function (): void {
+    publishPageWithBlocks('feat', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'heading' => ['en' => '<p>Why choose us</p>'],
+            'intro' => ['en' => '<p>The essentials</p>'],
+            'columns' => 4,
+            'items' => [
+                ['id' => 'a', 'image' => ['source' => 'media/fast.svg', 'crop' => []], 'title' => ['en' => 'Fast'], 'body' => ['en' => '<p>Quick <strong>setup</strong></p>']],
+                ['id' => 'b', 'image' => null, 'title' => ['en' => 'Secure'], 'body' => ['en' => '<p>Locked down</p>']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'feat'))
+        ->assertOk()
+        ->assertSee('Why choose us')
+        ->assertSee('The essentials')
+        ->assertSee('media/fast.svg', false)
+        ->assertSee('Fast')
+        ->assertSee('<strong>setup</strong>', false)
+        ->assertSee('Secure')
+        ->assertSee('lg:grid-cols-4', false);
+});
+
+it('renders a full-width feature card image with the chosen height and rounded corners', function (): void {
+    publishPageWithBlocks('feat-img', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'imageHeight' => 'xl',
+            'imageRounded' => true,
+            'items' => [
+                ['id' => 'a', 'image' => ['source' => 'media/shot.png', 'crop' => []], 'title' => ['en' => 'Airtable']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'feat-img'))
+        ->assertOk()
+        ->assertSee('media/shot.png', false)
+        ->assertSee('w-full', false)
+        ->assertSee('max-h-60', false)
+        ->assertSee('rounded-(--wire-radius)', false);
+});
+
+it('omits the image rounding class when the toggle is off', function (): void {
+    publishPageWithBlocks('feat-square', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'imageHeight' => 'icon',
+            'imageRounded' => false,
+            'items' => [
+                ['id' => 'a', 'image' => ['source' => 'media/icon.svg', 'crop' => []], 'title' => ['en' => 'Fast']],
+            ],
+        ]],
+    ]);
+
+    $response = $this->get(route('page', 'feat-square'))->assertOk();
+
+    preg_match('/<img[^>]*object-contain[^>]*>/', (string) $response->getContent(), $matches);
+
+    expect($matches[0] ?? '')
+        ->toContain('max-h-12')
+        ->not->toContain('rounded-(--wire-radius)');
+});
+
+it('renders a feature card button that links and opens in a new tab', function (): void {
+    publishPageWithBlocks('feat-cta', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'items' => [
+                ['id' => 'a', 'title' => ['en' => 'Learn'], 'body' => ['en' => '<p>More</p>'], 'cta' => [
+                    'enabled' => true,
+                    'text' => ['en' => 'Read more'],
+                    'link' => ['type' => 'url', 'value' => 'https://example.test', 'newTab' => true],
+                ]],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'feat-cta'))
+        ->assertOk()
+        ->assertSee('Read more')
+        ->assertSee('href="https://example.test"', false)
+        ->assertSee('target="_blank"', false);
+});
+
+it('drops feature cards with no image, title or body', function (): void {
+    publishPageWithBlocks('feat-empty', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'items' => [
+                ['id' => 'a', 'title' => ['en' => 'Kept'], 'body' => ['en' => '<p>Body</p>']],
+                ['id' => 'b', 'image' => null, 'title' => ['en' => ''], 'body' => ['en' => '']],
+            ],
+        ]],
+    ]);
+
+    $response = $this->get(route('page', 'feat-empty'))
+        ->assertOk()
+        ->assertSee('Kept');
+
+    expect(mb_substr_count((string) $response->getContent(), 'flex h-full flex-col gap-4'))->toBe(1);
+});
+
 it('renders a page with no blocks without error', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],

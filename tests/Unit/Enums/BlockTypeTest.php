@@ -23,7 +23,7 @@ it('derives admin and frontend view paths from the value', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'testimonials', 'sponsors', 'contact-form', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'testimonials', 'sponsors', 'feature-cards', 'contact-form', 'spacer']);
 });
 
 it('seeds the contact form default content shape', function (): void {
@@ -103,6 +103,39 @@ it('seeds the sponsors default content shape', function (): void {
 it('derives the sponsors title from the heading, falling back to the label', function (): void {
     expect(BlockType::SPONSORS->editorTitle(['heading' => ['en' => '<p>Our partners</p>']], 'en'))->toBe('Our partners');
     expect(BlockType::SPONSORS->editorTitle([], 'en'))->toBe('Sponsors');
+});
+
+it('seeds the feature cards default content shape', function (): void {
+    $content = BlockType::FEATURE_CARDS->defaultContent();
+
+    expect($content)->toMatchArray([
+        'columns' => 3,
+        'imageHeight' => 'medium',
+        'imageRounded' => false,
+        'hasBackground' => false,
+        'cardStyle' => true,
+        'cardBg' => null,
+        'cardText' => null,
+        'heading' => [],
+        'intro' => [],
+    ]);
+    expect($content['items'])->toHaveCount(1);
+    expect($content['items'][0]['image'])->toBeNull();
+    expect($content['items'][0]['title'])->toBe([]);
+    expect($content['items'][0]['body'])->toBe([]);
+    expect($content['items'][0]['cta'])->toBe([
+        'enabled' => false,
+        'text' => [],
+        'link' => ['type' => 'url', 'value' => '', 'newTab' => false],
+        'bg' => null,
+        'textColor' => null,
+    ]);
+    expect($content['items'][0]['id'])->toBeString()->not->toBeEmpty();
+});
+
+it('derives the feature cards title from the heading, falling back to the label', function (): void {
+    expect(BlockType::FEATURE_CARDS->editorTitle(['heading' => ['en' => '<p>Why choose us</p>']], 'en'))->toBe('Why choose us');
+    expect(BlockType::FEATURE_CARDS->editorTitle([], 'en'))->toBe('Feature Cards');
 });
 
 it('seeds the video default content shape', function (): void {
