@@ -179,6 +179,20 @@ it('shows a crop dimension line only for variants that have been cropped', funct
         ->assertDontSee('Desktop:', false);
 });
 
+it('shows the duration for an audio or video item', function (): void {
+    $item = [...mediaPayload(1, 'clip.mp4'), 'mime_type' => 'video/mp4', 'icon' => 'film', 'duration' => 125];
+
+    Livewire::test('admin.media-selector')
+        ->set('media', $item)
+        ->assertSee('Duration: 00:02:05', false);
+});
+
+it('does not show a duration line for an image', function (): void {
+    Livewire::test('admin.media-selector')
+        ->set('media', mediaPayload(1))
+        ->assertDontSee('Duration:', false);
+});
+
 it('offers the crop control for a raster image', function (): void {
     Livewire::test('admin.media-selector')
         ->set('media', mediaPayload(1))

@@ -518,6 +518,10 @@ return new class extends Component
                                     <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('Original') }}: {{ $item['width'] }} × {{ $item['height'] }}</flux:text>
                                 @endif
 
+                                @if(! empty($item['duration']))
+                                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('Duration') }}: {{ gmdate('H:i:s', (int) $item['duration']) }}</flux:text>
+                                @endif
+
                                 @if($isCroppable)
                                     @foreach($crops as $variantKey => $cropDef)
                                         @php
