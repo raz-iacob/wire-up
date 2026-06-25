@@ -7,6 +7,7 @@ use App\Actions\DownloadMediaAction;
 use App\Actions\UpdateMediaAction;
 use App\Enums\MediaType;
 use App\Models\Media;
+use App\Services\UploadLimit;
 use enshrined\svgSanitize\Sanitizer;
 use Flux\Flux;
 use Illuminate\Support\Collection;
@@ -322,11 +323,21 @@ return new class extends Component
         return Media::query()->where('etag', $etag)->first();
     }
 
+    public function maxImageKilobytes(): int
+    {
+        return UploadLimit::cappedKilobytes(UploadLimit::IMAGE_MAX_KILOBYTES);
+    }
+
+    public function maxVideoKilobytes(): int
+    {
+        return UploadLimit::cappedKilobytes(UploadLimit::VIDEO_MAX_KILOBYTES);
+    }
+
     /** @param array<int, array<string, mixed>> $metadata */
     public function save(array $metadata, CreateMediaAction $action): void
     {
         $allowsVideo = $this->type === MediaType::VIDEO || in_array(MediaType::VIDEO->value, $this->allowedTypes, true);
-        $maxKilobytes = $allowsVideo ? 307200 : 10240;
+        $maxKilobytes = UploadLimit::enforcedKilobytes($allowsVideo ? UploadLimit::VIDEO_MAX_KILOBYTES : UploadLimit::IMAGE_MAX_KILOBYTES);
 
         $rules = ['files.*' => ['max:'.$maxKilobytes]];
 
@@ -531,10 +542,12 @@ return new class extends Component
                 </div>
                 
                 @php($acceptsVideo = $type === MediaType::VIDEO || in_array(MediaType::VIDEO->value, $allowedTypes, true))
+                @php($imageLimit = Number::fileSize($this->maxImageKilobytes() * 1024, precision: 0))
+                @php($videoLimit = Number::fileSize($this->maxVideoKilobytes() * 1024, precision: 0))
                 <flux:file-upload multiple>
                     <flux:file-upload.dropzone
                         heading="{{ __('Drop files or click to browse') }}"
-                        text="{{ $acceptsVideo ? __('Images up to 10MB, videos up to 300MB') : __('JPG, PNG, GIF up to 10MB') }}"
+                        text="{{ $acceptsVideo ? __('Images up to :image, videos up to :video', ['image' => $imageLimit, 'video' => $videoLimit]) : __('JPG, PNG, GIF up to :image', ['image' => $imageLimit]) }}"
                         with-progress
                         inline
                         class="justify-center"

@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Actions\DownloadMediaAction;
 use App\Enums\MediaType;
 use App\Models\Media;
+use App\Services\UploadLimit;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Number;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -27,6 +29,15 @@ it('initializes with correct default values', function (): void {
         ->assertSet('showEditModal', false)
         ->assertSet('showDeleteModal', false)
         ->assertSet('loaded', false);
+});
+
+it('shows the effective upload limit capped by the php configuration', function (): void {
+    $videoLimit = Number::fileSize(UploadLimit::cappedKilobytes(UploadLimit::VIDEO_MAX_KILOBYTES) * 1024, precision: 0);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 't', type: MediaType::VIDEO->value, max: 1, media: null)
+        ->assertSee("videos up to {$videoLimit}")
+        ->assertDontSee('300MB');
 });
 
 it('handles select media event and opens library', function (): void {
@@ -389,6 +400,19 @@ it('allows large video uploads when video is permitted', function (): void {
         'type' => MediaType::VIDEO->value,
         'mime_type' => 'video/mp4',
     ]);
+});
+
+it('rejects uploads larger than the configured override limit', function (): void {
+    config()->set('media.max_upload_kilobytes', 12000);
+
+    $video = UploadedFile::fake()->create('clip.mp4', 20000, 'video/mp4');
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'gallery', type: 'image,video', max: 10, media: null)
+        ->set('files', [$video])
+        ->call('save', [[]]);
+
+    $this->assertDatabaseMissing('media', ['mime_type' => 'video/mp4']);
 });
 
 it('rejects videos beyond the 300MB cap', function (): void {
