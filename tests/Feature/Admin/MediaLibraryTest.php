@@ -52,6 +52,24 @@ it('opens as a browsable gallery of all media when launched from the sidebar', f
         ->assertCount('medias', 3);
 });
 
+it('hides the insert button when browsing as a gallery', function (): void {
+    $media = Media::factory()->create();
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'media-gallery', type: null, max: 50, media: null)
+        ->call('selectMedia', $media)
+        ->assertDontSee('Insert');
+});
+
+it('shows the insert button when picking media for a field', function (): void {
+    $media = Media::factory()->create();
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'hero.image', type: null, max: 1, media: null)
+        ->call('selectMedia', $media)
+        ->assertSee('Insert');
+});
+
 it('handles select media event and opens library', function (): void {
     $media = Media::factory()->create();
 

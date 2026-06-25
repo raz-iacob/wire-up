@@ -34,7 +34,7 @@ return new class extends Component
      */
     public array $allowedTypes = [];
 
-    public string $target;
+    public string $target = '';
 
     public int $max = 1;
 
@@ -729,9 +729,9 @@ return new class extends Component
 
                 <div class="flex justify-between items-center gap-4 mt-6">
                     <flux:button wire:click="$set('showLibrary', false)" class="w-full">
-                        {{ __('Cancel') }}
+                        {{ $target === 'media-gallery' ? __('Close') : __('Cancel') }}
                     </flux:button>
-                    @if($selected->count() > 0)
+                    @if($target !== 'media-gallery' && $selected->count() > 0)
                     <flux:button variant="primary" wire:click="insertMedia" class="w-full">
                         {{ __('Insert') }}
                     </flux:button>
