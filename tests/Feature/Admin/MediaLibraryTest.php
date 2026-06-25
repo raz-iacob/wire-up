@@ -101,6 +101,35 @@ it('selects a single media item', function (): void {
         ->assertCount('selected', 1);
 });
 
+it('plays a selected video inline instead of showing a thumbnail', function (): void {
+    $media = Media::factory()->create([
+        'type' => MediaType::VIDEO,
+        'mime_type' => 'video/mp4',
+        'source' => 'videos/clip.mp4',
+        'thumbnail' => null,
+    ]);
+
+    Livewire::test('admin.media-library')
+        ->call('selectMedia', $media)
+        ->assertSee('<video', false)
+        ->assertSee('videos/clip.mp4', false)
+        ->assertSee('autoplay', false);
+});
+
+it('shows a play-preview control for a selected audio file', function (): void {
+    $media = Media::factory()->create([
+        'type' => MediaType::AUDIO,
+        'mime_type' => 'audio/mpeg',
+        'source' => 'audio/song.mp3',
+    ]);
+
+    Livewire::test('admin.media-library')
+        ->call('selectMedia', $media)
+        ->assertSee('<audio', false)
+        ->assertSee('audio/song.mp3', false)
+        ->assertSee('Play preview');
+});
+
 it('deselects media when clicking it again', function (): void {
     $media = Media::factory()->create();
 

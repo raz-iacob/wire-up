@@ -639,11 +639,31 @@ return new class extends Component
                 @if($selected->count() > 0)
                     @foreach ($selected as $media)
                     <div wire:key="selected-media-{{ $media->id }}" class="flex items-center gap-4 w-full bg-zinc-100 dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-800 rounded-sm overflow-hidden {{ $loop->index > 0 ? 'absolute shadow-lg scale-93 origin-center left-1/2 -translate-x-1/2' : 'relative' }}" {!! $loop->index > 0 ? $this->stackStyle($media->id, $loop->index) : '' !!}>
+                        @if($loop->first && $media->type === MediaType::VIDEO)
+                        <video src="{{ Storage::disk(config('filesystems.media'))->url($media->source) }}" poster="{{ $media->preview }}" class="w-full aspect-video object-contain bg-black" controls autoplay muted loop playsinline></video>
+                        @elseif($loop->first && $media->type === MediaType::AUDIO)
+                        <div class="relative w-full aspect-video" x-data="{ playing: false }">
+                            <img src="{{ $media->preview }}" alt="{{ $media->alt_text }}" class="w-full aspect-video object-contain" />
+                            <audio x-ref="audio" src="{{ Storage::disk(config('filesystems.media'))->url($media->source) }}" preload="none" x-on:ended="playing = false"></audio>
+                            <button type="button" class="absolute inset-0 flex items-center justify-center" aria-label="{{ __('Play preview') }}" x-on:click="playing ? $refs.audio.pause() : $refs.audio.play(); playing = ! playing">
+                                <span class="flex size-14 items-center justify-center rounded-full bg-black/55 text-white transition hover:bg-black/70">
+                                    <flux:icon name="play" x-show="!playing" class="size-7" />
+                                    <flux:icon name="pause" x-show="playing" x-cloak class="size-7" />
+                                </span>
+                            </button>
+                            @if($media->filename)
+                            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-center pointer-events-none px-2 w-full">
+                                <flux:text class="text-xs break-all" variant="subtle">{{ $media->filename }}</flux:text>
+                            </div>
+                            @endif
+                        </div>
+                        @else
                         <img src="{{ $media->preview }}" alt="{{ $media->alt_text }}" class="w-full aspect-video object-contain" />
                         @if($media->type->icon() !== 'photo' && !$media->thumbnail)
                         <div class="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 text-center pointer-events-none px-2 w-full">
                             <flux:text class="text-sm break-all" variant="subtle">{{ $media->filename }}</flux:text>
                         </div>
+                        @endif
                         @endif
                     </div>
                     @endforeach
