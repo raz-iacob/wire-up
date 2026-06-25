@@ -303,3 +303,37 @@ it('renders and toggles collapsible accordion items in the editor', function ():
         ->assertSee('Body one')
         ->assertNoJavascriptErrors();
 });
+
+it('keeps block items collapsed on load and opens only a newly added one', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Sponsors Collapse',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'sponsors-collapse']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'sponsors', 'content' => ['items' => [
+            ['id' => 'a', 'logo' => null, 'name' => ['en' => 'Acme'], 'link' => '', 'tier' => ''],
+            ['id' => 'b', 'logo' => null, 'name' => [], 'link' => '', 'tier' => ''],
+        ]]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->assertNoJavascriptErrors();
+
+    $browser->script("window.dispatchEvent(new CustomEvent('blocks-toggle-all', { detail: true })); void 0");
+    $browser->wait(0.5);
+
+    $openStates = "(() => { const cards = document.querySelectorAll('[wire\\\\:sort\\\\:group^=\"sponsors-\"] [wire\\\\:sort\\\\:item]'); return Array.from(cards).map(c => window.Alpine.\$data(c).open).join(','); })()";
+
+    $browser->assertScript($openStates, 'false,false');
+
+    $comp = "window.Livewire.all().find(c => c.\$wire.get('blocks') !== undefined)";
+    $browser->script("$comp.\$wire.addSponsorItem(Object.keys($comp.\$wire.get('blocks'))[0]); void 0");
+    $browser->wait(0.6);
+
+    $browser->assertScript($openStates, 'false,false,true')
+        ->assertNoJavascriptErrors();
+});

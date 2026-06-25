@@ -21,7 +21,8 @@
                     class="p-0! overflow-hidden"
                     wire:key="sponsor-item-{{ $item['id'] ?? $i }}"
                     wire:sort:item="{{ $item['id'] ?? $i }}"
-                    x-data="{ open: {{ $itemTitle === '' ? 'true' : 'false' }} }"
+                    x-data="{ open: false }"
+                    x-on:open-block-item.window="$event.detail.id === '{{ $item['id'] ?? $i }}' && (open = true)"
                 >
                     <div class="flex items-center justify-between gap-3 bg-zinc-100 dark:bg-white/10 px-3 py-2">
                         <div wire:sort:handle class="cursor-grab text-zinc-400" title="{{ __('Drag to reorder') }}">

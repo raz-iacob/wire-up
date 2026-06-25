@@ -395,7 +395,9 @@ return new class extends Component
             return;
         }
 
-        $this->blocks[$id]['content']['items'][] = ['id' => (string) Str::uuid(), 'title' => [], 'body' => []];
+        $itemId = (string) Str::uuid();
+        $this->blocks[$id]['content']['items'][] = ['id' => $itemId, 'title' => [], 'body' => []];
+        $this->dispatch('open-block-item', id: $itemId);
     }
 
     public function removeAccordionItem(string $id, int $index): void
@@ -457,7 +459,9 @@ return new class extends Component
             return;
         }
 
-        $this->blocks[$id]['content']['items'][] = ['id' => (string) Str::uuid(), 'quote' => [], 'author' => [], 'role' => [], 'avatar' => null, 'rating' => 0];
+        $itemId = (string) Str::uuid();
+        $this->blocks[$id]['content']['items'][] = ['id' => $itemId, 'quote' => [], 'author' => [], 'role' => [], 'avatar' => null, 'rating' => 0];
+        $this->dispatch('open-block-item', id: $itemId);
     }
 
     public function addSponsorItem(string $id): void
@@ -466,7 +470,9 @@ return new class extends Component
             return;
         }
 
-        $this->blocks[$id]['content']['items'][] = ['id' => (string) Str::uuid(), 'logo' => null, 'name' => [], 'link' => '', 'tier' => ''];
+        $itemId = (string) Str::uuid();
+        $this->blocks[$id]['content']['items'][] = ['id' => $itemId, 'logo' => null, 'name' => [], 'link' => '', 'tier' => ''];
+        $this->dispatch('open-block-item', id: $itemId);
     }
 
     public function removeSponsorItem(string $id, int $index): void
@@ -486,8 +492,9 @@ return new class extends Component
             return;
         }
 
+        $itemId = (string) Str::uuid();
         $this->blocks[$id]['content']['items'][] = [
-            'id' => (string) Str::uuid(),
+            'id' => $itemId,
             'image' => null,
             'title' => [],
             'body' => [],
@@ -499,6 +506,7 @@ return new class extends Component
                 'textColor' => null,
             ],
         ];
+        $this->dispatch('open-block-item', id: $itemId);
     }
 
     public function removeFeatureItem(string $id, int $index): void
@@ -639,6 +647,7 @@ return new class extends Component
         ];
 
         $this->blocks[$id]['content']['fieldOrder'][] = $fieldId;
+        $this->dispatch('open-block-item', id: $fieldId);
     }
 
     public function removeContactField(string $id, string $token): void
