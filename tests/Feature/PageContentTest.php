@@ -522,6 +522,75 @@ it('plays a gallery video inline when the lightbox is disabled', function (): vo
         ->assertDontSee('bg-black/90', false);
 });
 
+it('renders an uploaded video as a native player with a poster', function (): void {
+    publishPageWithBlocks('vid-upload', [
+        ['id' => 'new-1', 'type' => 'video', 'content' => [
+            'heading' => ['en' => 'Watch the tour'],
+            'source' => 'upload',
+            'video' => ['source' => 'media/clip.mp4', 'mime_type' => 'video/mp4'],
+            'poster' => ['source' => 'media/poster.jpg', 'crop' => []],
+            'controls' => true,
+        ]],
+    ]);
+
+    $this->get(route('page', 'vid-upload'))
+        ->assertOk()
+        ->assertSee('Watch the tour')
+        ->assertSee('<video', false)
+        ->assertSee('media/clip.mp4', false)
+        ->assertSee('controls', false)
+        ->assertSee('poster="', false)
+        ->assertSee('media/poster.jpg', false);
+});
+
+it('embeds a youtube url with privacy-friendly nocookie and autoplay params', function (): void {
+    publishPageWithBlocks('vid-yt', [
+        ['id' => 'new-1', 'type' => 'video', 'content' => [
+            'source' => 'url',
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'autoplay' => true,
+            'controls' => false,
+        ]],
+    ]);
+
+    $this->get(route('page', 'vid-yt'))
+        ->assertOk()
+        ->assertSee('<iframe', false)
+        ->assertSee('youtube-nocookie.com/embed/dQw4w9WgXcQ', false)
+        ->assertSee('autoplay=1', false)
+        ->assertSee('mute=1', false)
+        ->assertSee('controls=0', false);
+});
+
+it('embeds a vimeo url', function (): void {
+    publishPageWithBlocks('vid-vimeo', [
+        ['id' => 'new-1', 'type' => 'video', 'content' => [
+            'source' => 'url',
+            'url' => 'https://vimeo.com/123456789',
+        ]],
+    ]);
+
+    $this->get(route('page', 'vid-vimeo'))
+        ->assertOk()
+        ->assertSee('player.vimeo.com/video/123456789', false);
+});
+
+it('plays a direct video url natively and honours the vertical aspect ratio', function (): void {
+    publishPageWithBlocks('vid-direct', [
+        ['id' => 'new-1', 'type' => 'video', 'content' => [
+            'source' => 'url',
+            'url' => 'https://example.com/promo.webm',
+            'aspect' => '9:16',
+        ]],
+    ]);
+
+    $this->get(route('page', 'vid-direct'))
+        ->assertOk()
+        ->assertSee('<video', false)
+        ->assertSee('https://example.com/promo.webm', false)
+        ->assertSee('aspect-[9/16]', false);
+});
+
 it('renders testimonials content in every layout', function (string $layout): void {
     publishPageWithBlocks("tst-{$layout}", [
         ['id' => 'new-1', 'type' => 'testimonials', 'content' => [

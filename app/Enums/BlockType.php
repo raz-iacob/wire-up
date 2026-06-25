@@ -13,6 +13,7 @@ enum BlockType: string
     case LOCATION = 'location';
     case ACCORDION = 'accordion';
     case GALLERY = 'gallery';
+    case VIDEO = 'video';
     case TESTIMONIALS = 'testimonials';
     case SPONSORS = 'sponsors';
     case CONTACT_FORM = 'contact-form';
@@ -34,6 +35,7 @@ enum BlockType: string
             self::LOCATION => __('Location'),
             self::ACCORDION => __('Accordion'),
             self::GALLERY => __('Gallery'),
+            self::VIDEO => __('Video'),
             self::TESTIMONIALS => __('Testimonials'),
             self::SPONSORS => __('Sponsors'),
             self::CONTACT_FORM => __('Contact Form'),
@@ -49,6 +51,7 @@ enum BlockType: string
             self::LOCATION => 'map',
             self::ACCORDION => 'list-collapse',
             self::GALLERY => 'images',
+            self::VIDEO => 'video-camera',
             self::TESTIMONIALS => 'chat-bubble-left-right',
             self::SPONSORS => 'handshake',
             self::CONTACT_FORM => 'mail',
@@ -69,6 +72,7 @@ enum BlockType: string
             self::LOCATION => __('An embedded map alongside address and contact details.'),
             self::ACCORDION => __('Collapsible sections of content, great for services or FAQs.'),
             self::GALLERY => __('A responsive grid of images and videos with an optional lightbox.'),
+            self::VIDEO => __('A video player using an uploaded file, a YouTube or Vimeo link, or a direct video URL.'),
             self::TESTIMONIALS => __('Customer quotes shown in a grid, carousel or single column.'),
             self::SPONSORS => __('Sponsor and partner logos shown in a grid, marquee or grouped by tier.'),
             self::CONTACT_FORM => __('A contact form that emails you and stores each submission.'),
@@ -137,6 +141,20 @@ enum BlockType: string
                 'columns' => 3,
                 'lightbox' => true,
                 'hasBackground' => false,
+            ],
+            self::VIDEO => [
+                'source' => 'upload',
+                'video' => null,
+                'url' => '',
+                'poster' => null,
+                'aspect' => '16:9',
+                'autoplay' => false,
+                'loop' => false,
+                'muted' => false,
+                'controls' => true,
+                'hasBackground' => false,
+                'heading' => [],
+                'intro' => [],
             ],
             self::TESTIMONIALS => [
                 'layout' => 'grid',

@@ -109,3 +109,48 @@ it('resolves the public file url, or null when there is no source', function ():
     expect($block->fileUrl('media.0'))->toContain('media/clip.mp4');
     expect($block->fileUrl('media.1'))->toBeNull();
 });
+
+it('parses youtube and vimeo urls into provider and id', function (string $url, ?array $expected): void {
+    expect(Block::parseVideoUrl($url))->toBe($expected);
+})->with([
+    'watch' => ['https://www.youtube.com/watch?v=dQw4w9WgXcQ', ['provider' => 'youtube', 'id' => 'dQw4w9WgXcQ']],
+    'short' => ['https://youtu.be/dQw4w9WgXcQ', ['provider' => 'youtube', 'id' => 'dQw4w9WgXcQ']],
+    'shorts' => ['https://www.youtube.com/shorts/dQw4w9WgXcQ', ['provider' => 'youtube', 'id' => 'dQw4w9WgXcQ']],
+    'watch with params' => ['https://www.youtube.com/watch?list=abc&v=dQw4w9WgXcQ&t=10', ['provider' => 'youtube', 'id' => 'dQw4w9WgXcQ']],
+    'vimeo' => ['https://vimeo.com/123456789', ['provider' => 'vimeo', 'id' => '123456789']],
+    'vimeo player' => ['https://player.vimeo.com/video/123456789', ['provider' => 'vimeo', 'id' => '123456789']],
+    'direct mp4' => ['https://example.com/clip.mp4', null],
+    'empty' => ['', null],
+]);
+
+it('resolves an uploaded video as a native source', function (): void {
+    $block = Block::factory()->create([
+        'content' => ['source' => 'upload', 'video' => ['source' => 'media/clip.mp4', 'mime_type' => 'video/mp4']],
+    ]);
+
+    $embed = $block->videoEmbed();
+
+    expect($embed['kind'])->toBe('native');
+    expect($embed['src'])->toContain('media/clip.mp4');
+});
+
+it('resolves a youtube url as an iframe embed', function (): void {
+    $block = Block::factory()->create([
+        'content' => ['source' => 'url', 'url' => 'https://youtu.be/dQw4w9WgXcQ'],
+    ]);
+
+    expect($block->videoEmbed())->toBe(['kind' => 'iframe', 'provider' => 'youtube', 'id' => 'dQw4w9WgXcQ']);
+});
+
+it('resolves a direct video url as a native source', function (): void {
+    $block = Block::factory()->create([
+        'content' => ['source' => 'url', 'url' => 'https://example.com/clip.mp4'],
+    ]);
+
+    expect($block->videoEmbed())->toBe(['kind' => 'native', 'src' => 'https://example.com/clip.mp4']);
+});
+
+it('returns null when the video block has no source', function (): void {
+    expect(Block::factory()->create(['content' => ['source' => 'upload', 'video' => null]])->videoEmbed())->toBeNull();
+    expect(Block::factory()->create(['content' => ['source' => 'url', 'url' => '']])->videoEmbed())->toBeNull();
+});

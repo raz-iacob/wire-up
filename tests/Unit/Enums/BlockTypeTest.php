@@ -23,7 +23,7 @@ it('derives admin and frontend view paths from the value', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'testimonials', 'sponsors', 'contact-form', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'testimonials', 'sponsors', 'contact-form', 'spacer']);
 });
 
 it('seeds the contact form default content shape', function (): void {
@@ -103,6 +103,30 @@ it('seeds the sponsors default content shape', function (): void {
 it('derives the sponsors title from the heading, falling back to the label', function (): void {
     expect(BlockType::SPONSORS->editorTitle(['heading' => ['en' => '<p>Our partners</p>']], 'en'))->toBe('Our partners');
     expect(BlockType::SPONSORS->editorTitle([], 'en'))->toBe('Sponsors');
+});
+
+it('seeds the video default content shape', function (): void {
+    $content = BlockType::VIDEO->defaultContent();
+
+    expect($content)->toMatchArray([
+        'source' => 'upload',
+        'video' => null,
+        'url' => '',
+        'poster' => null,
+        'aspect' => '16:9',
+        'autoplay' => false,
+        'loop' => false,
+        'muted' => false,
+        'controls' => true,
+        'hasBackground' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+});
+
+it('derives the video title from the heading, falling back to the label', function (): void {
+    expect(BlockType::VIDEO->editorTitle(['heading' => ['en' => '<p>Watch this</p>']], 'en'))->toBe('Watch this');
+    expect(BlockType::VIDEO->editorTitle([], 'en'))->toBe('Video');
 });
 
 it('seeds the gallery default content shape', function (): void {

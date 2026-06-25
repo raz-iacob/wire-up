@@ -538,6 +538,37 @@ it('seeds the new testimonial item with the full field shape', function (): void
         });
 });
 
+it('seeds a full default content structure for a video block', function (): void {
+    editor($this->page)
+        ->call('addBlock', 'video')
+        ->assertCount('blocks', 1)
+        ->assertSet('blocks', function (array $blocks): bool {
+            $content = Arr::first($blocks)['content'];
+
+            return $content['source'] === 'upload'
+                && $content['video'] === null
+                && $content['url'] === ''
+                && $content['poster'] === null
+                && $content['aspect'] === '16:9'
+                && $content['autoplay'] === false
+                && $content['controls'] === true
+                && $content['hasBackground'] === false;
+        });
+});
+
+it('renders the video block editor fields', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-v' => ['id' => 'new-v', 'type' => 'video', 'position' => 0, 'content' => BlockType::VIDEO->defaultContent()],
+        ])
+        ->assertSee('Video source')
+        ->assertSee('Link / embed')
+        ->assertSee('Poster image')
+        ->assertSee('Aspect ratio')
+        ->assertSee('Autoplay (muted)')
+        ->assertSee('Show controls');
+});
+
 it('seeds a full default content structure for a sponsors block', function (): void {
     editor($this->page)
         ->call('addBlock', 'sponsors')

@@ -29,6 +29,24 @@ final class Block extends Model
     use HasFactory;
 
     /**
+     * @return array{provider: 'youtube'|'vimeo', id: string}|null
+     */
+    public static function parseVideoUrl(string $url): ?array
+    {
+        $url = mb_trim($url);
+
+        if (preg_match('~(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})~i', $url, $matches) === 1) {
+            return ['provider' => 'youtube', 'id' => $matches[1]];
+        }
+
+        if (preg_match('~vimeo\.com/(?:video/|channels/[^/]+/|groups/[^/]+/videos/)?(\d+)~i', $url, $matches) === 1) {
+            return ['provider' => 'vimeo', 'id' => $matches[1]];
+        }
+
+        return null;
+    }
+
+    /**
      * @return array<string, string>
      */
     public function casts(): array
@@ -159,6 +177,34 @@ final class Block extends Model
         }
 
         return Storage::disk(config()->string('filesystems.media'))->url($source);
+    }
+
+    /**
+     * @return array{kind: 'native', src: string}|array{kind: 'iframe', provider: string, id: string}|null
+     */
+    public function videoEmbed(): ?array
+    {
+        $content = $this->content ?? [];
+
+        if (($content['source'] ?? 'upload') === 'upload') {
+            $src = $this->fileUrl('video');
+
+            return $src !== null ? ['kind' => 'native', 'src' => $src] : null;
+        }
+
+        $url = mb_trim((string) ($content['url'] ?? ''));
+
+        if ($url === '') {
+            return null;
+        }
+
+        $parsed = self::parseVideoUrl($url);
+
+        if ($parsed !== null) {
+            return ['kind' => 'iframe', 'provider' => $parsed['provider'], 'id' => $parsed['id']];
+        }
+
+        return ['kind' => 'native', 'src' => $url];
     }
 
     public function ctaUrl(string $field): ?string
