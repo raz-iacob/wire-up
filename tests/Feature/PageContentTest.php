@@ -325,6 +325,27 @@ it('renders a fit-content hero image inline and boxed for container width', func
         ->assertSee('Boxed art', false);
 });
 
+it('renders a hero background video that loops, mutes and hides controls', function (): void {
+    publishPageWithBlocks('video-hero', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => [
+            'heading' => ['en' => 'Motion hero'],
+            'height' => 'screen',
+            'background' => ['type' => 'video', 'video' => ['source' => 'media/bg.mp4', 'mime_type' => 'video/mp4', 'thumbnail' => 'media/bg-thumb.jpg']],
+        ]],
+    ]);
+
+    $this->get(route('page', 'video-hero'))
+        ->assertOk()
+        ->assertSee('Motion hero')
+        ->assertSee('<video', false)
+        ->assertSee('media/bg.mp4', false)
+        ->assertSee('autoplay', false)
+        ->assertSee('loop', false)
+        ->assertSee('muted', false)
+        ->assertSee('media/bg-thumb.jpg', false)
+        ->assertDontSee('controls', false);
+});
+
 it('renders separate desktop and mobile hero crops in a picture element', function (): void {
     publishPageWithBlocks('responsive-hero', [
         ['id' => 'new-1', 'type' => 'hero', 'content' => [

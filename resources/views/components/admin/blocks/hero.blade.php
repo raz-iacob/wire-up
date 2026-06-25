@@ -18,6 +18,7 @@
 
     <flux:radio.group wire:model.live="{{ $c }}.background.type" label="{{ __('Background') }}" variant="segmented">
         <flux:radio value="image" label="{{ __('Image') }}" icon="photo" />
+        <flux:radio value="video" label="{{ __('Video') }}" icon="video-camera" />
         <flux:radio value="color" label="{{ __('Color') }}" icon="swatch" />
     </flux:radio.group>
 
@@ -29,6 +30,16 @@
             type="image"
             :crops="['desktop' => ['label' => __('Desktop'), 'q' => 80, 'fm' => 'jpg'], 'mobile' => ['label' => __('Mobile'), 'w' => 1080, 'h' => 1350, 'q' => 80, 'fm' => 'jpg']]"
             label="{{ __('Background image') }}" />
+    </div>
+
+    <div x-show="{{ $b }}?.background?.type === 'video'">
+        <livewire:admin.media-selector
+            wire:model="{{ $c }}.background.video"
+            wire:key="block-{{ $block['id'] }}-bg-video"
+            name="block-{{ $block['id'] }}-bg-video"
+            type="video"
+            :multiple="false"
+            label="{{ __('Background video') }}" />
     </div>
 
     <div x-show="{{ $b }}?.background?.type === 'color'" class="flex flex-col gap-4">

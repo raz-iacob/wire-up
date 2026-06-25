@@ -320,11 +320,20 @@ it('seeds a full default content structure for a hero block', function (): void 
             $content = Arr::first($blocks)['content'];
 
             return $content['background']['type'] === 'image'
+                && $content['background']['video'] === null
                 && $content['width'] === 'full'
                 && $content['height'] === 'auto'
                 && $content['verticalAlign'] === 'center'
                 && $content['ctaPrimary']['enabled'] === false;
         });
+});
+
+it('offers a background video option in the hero editor', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-h' => ['id' => 'new-h', 'type' => 'hero', 'position' => 0, 'content' => BlockType::HERO->defaultContent()],
+        ])
+        ->assertSee('Background video');
 });
 
 it('backfills missing default content for existing hero blocks', function (): void {

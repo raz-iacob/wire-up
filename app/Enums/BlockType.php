@@ -104,6 +104,7 @@ enum BlockType: string
                 'background' => [
                     'type' => 'image',
                     'image' => null,
+                    'video' => null,
                     'gradient' => ['start' => null, 'end' => null, 'direction' => 'to-b'],
                 ],
                 'ctaPrimary' => $cta,

@@ -9,6 +9,8 @@
     $type = $bg['type'] ?? 'image';
     $imageDesktop = $type === 'image' ? $block->imageUrl('background.image', ['w' => 1920, 'h' => 1080], 'desktop') : null;
     $imageMobile = $type === 'image' ? $block->imageUrl('background.image', ['w' => 1080, 'h' => 1350], 'mobile') : null;
+    $bgVideo = $type === 'video' ? $block->fileUrl('background.video') : null;
+    $bgVideoPoster = $type === 'video' ? $block->posterUrl('background.video', ['w' => 1920, 'h' => 1080]) : null;
 
     $align = $content['align'] ?? 'center';
     $valign = $content['verticalAlign'] ?? 'center';
@@ -17,7 +19,7 @@
 
     $isCover = in_array($height, ['large', 'screen'], true);
     $isContainer = $width === 'container';
-    $overlayContent = ! $isCover && $imageDesktop;
+    $overlayContent = ! $isCover && ($imageDesktop || $bgVideo);
 
     $headingColor = ($content['headingColor'] ?? null) ?: null;
     $subheadingColor = ($content['subheadingColor'] ?? null) ?: null;
@@ -74,6 +76,23 @@
                 ])
             />
         </picture>
+    @endif
+
+    @if ($bgVideo)
+        <video
+            @class([
+                'absolute inset-0 size-full object-cover' => $isCover,
+                'block w-full' => ! $isCover,
+            ])
+            autoplay
+            loop
+            muted
+            playsinline
+            @if ($bgVideoPoster) poster="{{ $bgVideoPoster }}" @endif
+            preload="metadata"
+        >
+            <source src="{{ $bgVideo }}" />
+        </video>
     @endif
 
     <div @class([
