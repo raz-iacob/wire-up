@@ -38,6 +38,8 @@
 - Node.js 22+ (see `.nvmrc`)
 - Composer 2.0+
 - MySQL/PostgreSQL/SQLite
+- PHP `gd` extension (image resizing/cropping)
+- _Optional:_ PHP `imagick` extension built with `libheif` — enables HEIC/HEIF uploads (converted to JPEG on upload). Without it, HEIC uploads are rejected with a friendly message; all other image formats are unaffected.
 
 ## Getting Started
 

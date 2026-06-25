@@ -346,11 +346,11 @@ return new class extends Component
                 MediaType::AUDIO => $rules['files.*'][] = 'mimetypes:audio/mpeg,audio/wav,audio/ogg',
                 MediaType::VIDEO => $rules['files.*'][] = 'mimetypes:video/mp4,video/quicktime,video/x-msvideo',
                 MediaType::DOCUMENT => $rules['files.*'][] = 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                MediaType::IMAGE => $rules['files.*'][] = 'image:allow_svg',
+                MediaType::IMAGE => $rules['files.*'][] = 'mimetypes:image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/heic,image/heif',
             };
         } elseif ($this->allowedTypes !== []) {
             $mimeTypes = [
-                MediaType::IMAGE->value => 'image/jpeg,image/png,image/gif,image/webp,image/svg+xml',
+                MediaType::IMAGE->value => 'image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/heic,image/heif',
                 MediaType::VIDEO->value => 'video/mp4,video/quicktime,video/x-msvideo',
                 MediaType::AUDIO->value => 'audio/mpeg,audio/wav,audio/ogg',
                 MediaType::DOCUMENT->value => 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -436,11 +436,16 @@ return new class extends Component
             }
 
             $uuid = Str::uuid()->toString();
-            $extension = $file->getClientOriginalExtension();
+            $originalExtension = $file->getClientOriginalExtension();
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $isSvg = mb_strtolower($extension) === 'svg';
+            $isSvg = mb_strtolower($originalExtension) === 'svg';
+            $isHeic = in_array(mb_strtolower($originalExtension), ['heic', 'heif'], true)
+                || str_contains(mb_strtolower((string) $file->getMimeType()), 'hei');
+            $extension = $isHeic ? 'jpg' : $originalExtension;
             $filename = $uuid.'_'.Str::slug($originalName).'.'.$extension;
             $path = 'media';
+            $width = $metadata['width'] ?? null;
+            $height = $metadata['height'] ?? null;
 
             if ($isSvg) {
                 $clean = (new Sanitizer)->sanitize((string) file_get_contents($file->getRealPath()));
@@ -450,6 +455,46 @@ return new class extends Component
 
                 $size = $clean === false ? 0 : mb_strlen($clean, '8bit');
                 $mimeType = 'image/svg+xml';
+            } elseif ($isHeic) {
+                try {
+                    $imagick = new Imagick($file->getRealPath());
+
+                    match ($imagick->getImageOrientation()) {
+                        Imagick::ORIENTATION_BOTTOMRIGHT => $imagick->rotateImage('#000', 180),
+                        Imagick::ORIENTATION_RIGHTTOP => $imagick->rotateImage('#000', 90),
+                        Imagick::ORIENTATION_LEFTBOTTOM => $imagick->rotateImage('#000', -90),
+                        default => null,
+                    };
+                    $imagick->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
+
+                    $imagick->setImageFormat('jpeg');
+                    $imagick->setImageCompressionQuality(85);
+
+                    $jpeg = $imagick->getImageBlob();
+                    $width = $imagick->getImageWidth();
+                    $height = $imagick->getImageHeight();
+
+                    $imagick->clear();
+                    $imagick->destroy();
+
+                    Storage::disk(config('filesystems.media'))
+                        ->put("$path/$filename", $jpeg, 'public');
+
+                    $size = mb_strlen($jpeg, '8bit');
+                    $mimeType = 'image/jpeg';
+                } catch (\Throwable) {
+                    Flux::toast(
+                        variant: 'danger',
+                        heading: __('Upload Failed'),
+                        text: __('":filename" couldn\'t be converted. Please upload it as a JPG or PNG instead.', [
+                            'filename' => $file->getClientOriginalName(),
+                        ]),
+                        duration: 10000,
+                    );
+                    $file->delete();
+
+                    continue;
+                }
             } else {
                 $file->storeAs($path, $filename, [
                     'disk' => config('filesystems.media'),
@@ -486,8 +531,8 @@ return new class extends Component
                 'thumbnail' => $thumbnail,
                 'size' => $size,
                 'duration' => $metadata['duration'] ?? null,
-                'width' => $metadata['width'] ?? null,
-                'height' => $metadata['height'] ?? null,
+                'width' => $width,
+                'height' => $height,
             ]);
         }
 

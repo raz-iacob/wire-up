@@ -526,6 +526,43 @@ it('uploads and saves image files', function (): void {
     Storage::disk(config('filesystems.media'))->assertExists($media->source);
 });
 
+it('converts an uploaded heic image to jpeg', function (): void {
+    $file = UploadedFile::fake()->createWithContent('photo.heic', (string) file_get_contents(base_path('tests/Fixtures/sample.heic')));
+
+    Livewire::test('admin.media-library')
+        ->set('type', MediaType::IMAGE)
+        ->set('files', [$file])
+        ->call('save', [[]])
+        ->assertSet('files', []);
+
+    $media = Media::query()->latest()->first();
+
+    expect($media)->not->toBeNull()
+        ->and($media->mime_type)->toBe('image/jpeg')
+        ->and($media->source)->toEndWith('.jpg')
+        ->and($media->width)->toBe(120)
+        ->and($media->height)->toBe(80);
+
+    $bytes = (string) Storage::disk(config('filesystems.media'))->get($media->source);
+    expect(new finfo(FILEINFO_MIME_TYPE)->buffer($bytes))->toBe('image/jpeg');
+})->skip(
+    fn (): bool => ! extension_loaded('imagick') || (new Imagick)->queryFormats('HEIC') === [],
+    'Imagick HEIC support is not available in this environment',
+);
+
+it('skips a heic upload that cannot be converted without crashing', function (): void {
+    $file = UploadedFile::fake()->createWithContent('broken.heic', (string) file_get_contents(base_path('tests/Fixtures/invalid.heic')));
+
+    Livewire::test('admin.media-library')
+        ->set('type', MediaType::IMAGE)
+        ->set('files', [$file])
+        ->call('save', [[]])
+        ->assertSet('files', [])
+        ->assertHasNoErrors();
+
+    expect(Media::query()->count())->toBe(0);
+});
+
 it('uploads svg files and strips embedded scripts', function (): void {
     $svg = <<<'SVG'
     <svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
