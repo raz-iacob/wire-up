@@ -42,14 +42,17 @@
                     </div>
 
                     <div class="flex flex-col gap-4 p-4" x-show="open" x-collapse x-cloak>
-                        <livewire:admin.media-selector
-                            wire:model="{{ $c }}.items.{{ $i }}.image"
-                            wire:key="feature-{{ $item['id'] ?? $i }}-image"
-                            name="feature-{{ $item['id'] ?? $i }}-image"
-                            type="image"
-                            :locale="$locale"
+                        <livewire:admin.blocks.item-media
+                            :block-id="$block['id']"
+                            item-id="{{ $item['id'] ?? $i }}"
+                            field="image"
+                            :value="data_get($item, 'image')"
+                            media-type="image"
                             :multiple="false"
-                            label="{{ __('Image or icon') }}" />
+                            :locale="$locale"
+                            :multi-locale="$multiLocale"
+                            label="{{ __('Image or icon') }}"
+                            wire:key="feature-image-{{ $block['id'] }}-{{ $item['id'] ?? $i }}" />
 
                         <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.title" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Title') }}" />
                         <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.body" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Description') }}" toolbar="bold italic | align | link" />

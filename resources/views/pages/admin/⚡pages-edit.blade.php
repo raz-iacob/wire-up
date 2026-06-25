@@ -435,6 +435,22 @@ return new class extends Component
         }
     }
 
+    #[On('block-item-media-updated')]
+    public function syncBlockItemMedia(string $blockId, string $itemId, string $field, mixed $value): void
+    {
+        if (! isset($this->blocks[$blockId]['content']['items'])) {
+            return;
+        }
+
+        foreach ($this->blocks[$blockId]['content']['items'] as $index => $item) {
+            if (($item['id'] ?? null) === $itemId) {
+                $this->blocks[$blockId]['content']['items'][$index][$field] = $value;
+
+                return;
+            }
+        }
+    }
+
     public function addTestimonialItem(string $id): void
     {
         if (! isset($this->blocks[$id])) {

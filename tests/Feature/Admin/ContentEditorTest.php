@@ -659,6 +659,32 @@ it('seeds the new sponsor item with the full field shape', function (): void {
         });
 });
 
+it('syncs item media into the matching block item by id', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'b1' => ['id' => 'b1', 'type' => 'testimonials', 'position' => 0, 'content' => ['items' => [
+                ['id' => 'one', 'avatar' => null],
+                ['id' => 'two', 'avatar' => null],
+            ]]],
+        ])
+        ->call('syncBlockItemMedia', 'b1', 'two', 'avatar', ['id' => 9, 'source' => 'media/a.jpg'])
+        ->assertSet('blocks.b1.content.items.1.avatar', ['id' => 9, 'source' => 'media/a.jpg'])
+        ->assertSet('blocks.b1.content.items.0.avatar', null);
+});
+
+it('ignores item media sync for an unknown block or item', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'b1' => ['id' => 'b1', 'type' => 'testimonials', 'position' => 0, 'content' => ['items' => [
+                ['id' => 'one', 'avatar' => null],
+            ]]],
+        ])
+        ->call('syncBlockItemMedia', 'b1', 'missing', 'avatar', ['id' => 9])
+        ->assertSet('blocks.b1.content.items.0.avatar', null)
+        ->call('syncBlockItemMedia', 'nope', 'one', 'avatar', ['id' => 9])
+        ->assertSet('blocks.b1.content.items.0.avatar', null);
+});
+
 it('renders the feature cards block editor fields', function (): void {
     editor($this->page)
         ->set('blocks', [

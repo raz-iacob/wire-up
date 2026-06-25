@@ -49,15 +49,18 @@
                             <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.role" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Role / company') }}" />
                         </div>
 
-                        <livewire:admin.media-selector
-                            wire:model="{{ $c }}.items.{{ $i }}.avatar"
-                            wire:key="testimonial-{{ $item['id'] ?? $i }}-avatar"
-                            name="testimonial-{{ $item['id'] ?? $i }}-avatar"
-                            type="image"
-                            :locale="$locale"
+                        <livewire:admin.blocks.item-media
+                            :block-id="$block['id']"
+                            item-id="{{ $item['id'] ?? $i }}"
+                            field="avatar"
+                            :value="data_get($item, 'avatar')"
+                            media-type="image"
                             :multiple="false"
                             :crops="['default' => ['label' => __('Square'), 'w' => 400, 'h' => 400]]"
-                            label="{{ __('Avatar') }}" />
+                            :locale="$locale"
+                            :multi-locale="$multiLocale"
+                            label="{{ __('Avatar') }}"
+                            wire:key="testimonial-avatar-{{ $block['id'] }}-{{ $item['id'] ?? $i }}" />
 
                         <flux:select wire:model="{{ $c }}.items.{{ $i }}.rating" variant="listbox" label="{{ __('Rating') }}">
                             <flux:select.option value="0">{{ __('No rating') }}</flux:select.option>

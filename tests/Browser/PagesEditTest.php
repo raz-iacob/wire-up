@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\PageStatus;
+use App\Models\Media;
 use App\Models\Page;
 use App\Models\Settings;
 
@@ -121,6 +122,154 @@ it('toggles a raw HTML source view on rich text editors and round-trips edits', 
     );
 
     $browser->assertNoJavascriptErrors();
+});
+
+it('reorders testimonial items with saved avatars then saves without errors', function (): void {
+    $first = Media::factory()->create();
+    $second = Media::factory()->create();
+    $third = Media::factory()->create();
+
+    $avatar = fn (Media $media): array => [
+        'id' => $media->id,
+        'source' => $media->source,
+        'preview' => $media->preview,
+        'filename' => $media->filename,
+        'alt_text' => $media->alt_text,
+        'mime_type' => $media->mime_type,
+        'crop' => [],
+        'metadata' => [],
+    ];
+
+    $page = Page::factory()->create([
+        'title' => 'Testimonials Save',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'testimonials-save']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>Intro</p>']]],
+        ['id' => 'new-2', 'type' => 'testimonials', 'content' => [
+            'items' => [
+                ['id' => 'one', 'quote' => ['en' => '<p>First</p>'], 'author' => ['en' => 'Author One'], 'avatar' => $avatar($first), 'rating' => 0],
+                ['id' => 'two', 'quote' => ['en' => '<p>Second</p>'], 'author' => ['en' => 'Author Two'], 'avatar' => $avatar($second), 'rating' => 0],
+                ['id' => 'three', 'quote' => ['en' => '<p>Third</p>'], 'author' => ['en' => 'Author Three'], 'avatar' => $avatar($third), 'rating' => 0],
+            ],
+        ]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->assertNoJavascriptErrors();
+
+    $browser->script("window.dispatchEvent(new CustomEvent('blocks-toggle-all', { detail: true })); void 0");
+    $browser->wait(0.4);
+
+    $browser->drag('[wire\\:sort\\:item="three"] [wire\\:sort\\:handle]', '[wire\\:sort\\:item="one"]');
+    $browser->wait(0.6);
+
+    $comp = "window.Livewire.all().find(c => c.\$wire.get('blocks') !== undefined)";
+    $testimonialItems = "(() => { const b = Object.values($comp.\$wire.get('blocks')).find(b => b.type === 'testimonials'); return b.content.items.map(i => i.id).join(','); })()";
+
+    $browser->assertScript($testimonialItems, 'three,one,two');
+
+    $browser->script("$comp.\$wire.update(); void 0");
+    $browser->wait(1.0);
+    $browser->assertNoJavascriptErrors();
+
+    $browser->click('Author One')
+        ->wait(0.6)
+        ->assertNoJavascriptErrors();
+});
+
+it('reorders feature cards with saved images then saves without errors', function (): void {
+    $media = collect(range(1, 3))->map(fn (): Media => Media::factory()->create());
+    $image = fn (Media $m): array => ['id' => $m->id, 'source' => $m->source, 'crop' => [], 'metadata' => []];
+
+    $page = Page::factory()->create([
+        'title' => 'Feature Save',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'feature-save']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'items' => [
+                ['id' => 'one', 'image' => $image($media[0]), 'title' => ['en' => 'Card One'], 'body' => ['en' => '<p>First</p>']],
+                ['id' => 'two', 'image' => $image($media[1]), 'title' => ['en' => 'Card Two'], 'body' => ['en' => '<p>Second</p>']],
+                ['id' => 'three', 'image' => $image($media[2]), 'title' => ['en' => 'Card Three'], 'body' => ['en' => '<p>Third</p>']],
+            ],
+        ]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->assertNoJavascriptErrors();
+
+    $browser->script("window.dispatchEvent(new CustomEvent('blocks-toggle-all', { detail: true })); void 0");
+    $browser->wait(0.4);
+
+    $browser->drag('[wire\\:sort\\:item="three"] [wire\\:sort\\:handle]', '[wire\\:sort\\:item="one"]');
+    $browser->wait(0.6);
+
+    $comp = "window.Livewire.all().find(c => c.\$wire.get('blocks') !== undefined)";
+    $items = "(() => { const b = Object.values($comp.\$wire.get('blocks')).find(b => b.type === 'feature-cards'); return b.content.items.map(i => i.id).join(','); })()";
+
+    $browser->assertScript($items, 'three,one,two');
+
+    $browser->script("$comp.\$wire.update(); void 0");
+    $browser->wait(1.0);
+    $browser->assertNoJavascriptErrors();
+
+    $browser->click('Card One')
+        ->wait(0.6)
+        ->assertNoJavascriptErrors();
+});
+
+it('reorders sponsors with saved logos then saves without errors', function (): void {
+    $media = collect(range(1, 3))->map(fn (): Media => Media::factory()->create());
+    $logo = fn (Media $m): array => ['id' => $m->id, 'source' => $m->source, 'crop' => [], 'metadata' => []];
+
+    $page = Page::factory()->create([
+        'title' => 'Sponsors Save',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'sponsors-save']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'sponsors', 'content' => [
+            'items' => [
+                ['id' => 'one', 'logo' => $logo($media[0]), 'name' => ['en' => 'Acme'], 'link' => '', 'tier' => ''],
+                ['id' => 'two', 'logo' => $logo($media[1]), 'name' => ['en' => 'Globex'], 'link' => '', 'tier' => ''],
+                ['id' => 'three', 'logo' => $logo($media[2]), 'name' => ['en' => 'Initech'], 'link' => '', 'tier' => ''],
+            ],
+        ]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->assertNoJavascriptErrors();
+
+    $browser->script("window.dispatchEvent(new CustomEvent('blocks-toggle-all', { detail: true })); void 0");
+    $browser->wait(0.4);
+
+    $browser->drag('[wire\\:sort\\:item="three"] [wire\\:sort\\:handle]', '[wire\\:sort\\:item="one"]');
+    $browser->wait(0.6);
+
+    $comp = "window.Livewire.all().find(c => c.\$wire.get('blocks') !== undefined)";
+    $items = "(() => { const b = Object.values($comp.\$wire.get('blocks')).find(b => b.type === 'sponsors'); return b.content.items.map(i => i.id).join(','); })()";
+
+    $browser->assertScript($items, 'three,one,two');
+
+    $browser->script("$comp.\$wire.update(); void 0");
+    $browser->wait(1.0);
+    $browser->assertNoJavascriptErrors();
+
+    $browser->click('Acme')
+        ->wait(0.6)
+        ->assertNoJavascriptErrors();
 });
 
 it('renders and toggles collapsible accordion items in the editor', function (): void {
