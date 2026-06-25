@@ -27,7 +27,7 @@
             wire:key="block-{{ $block['id'] }}-image"
             name="block-{{ $block['id'] }}-image"
             type="image"
-            :crops="['default' => ['label' => __('Background image'), 'q' => 80, 'fm' => 'jpg']]"
+            :crops="['desktop' => ['label' => __('Desktop'), 'q' => 80, 'fm' => 'jpg'], 'mobile' => ['label' => __('Mobile'), 'w' => 1080, 'h' => 1350, 'q' => 80, 'fm' => 'jpg']]"
             label="{{ __('Background image') }}" />
     </div>
 

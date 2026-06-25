@@ -7,7 +7,8 @@
 
     $bg = $content['background'] ?? [];
     $type = $bg['type'] ?? 'image';
-    $image = $type === 'image' ? $block->imageUrl('background.image', ['w' => 1920, 'h' => 1080]) : null;
+    $imageDesktop = $type === 'image' ? $block->imageUrl('background.image', ['w' => 1920, 'h' => 1080], 'desktop') : null;
+    $imageMobile = $type === 'image' ? $block->imageUrl('background.image', ['w' => 1080, 'h' => 1350], 'mobile') : null;
 
     $align = $content['align'] ?? 'center';
     $valign = $content['verticalAlign'] ?? 'center';
@@ -16,7 +17,7 @@
 
     $isCover = in_array($height, ['large', 'screen'], true);
     $isContainer = $width === 'container';
-    $overlayContent = ! $isCover && $image;
+    $overlayContent = ! $isCover && $imageDesktop;
 
     $headingColor = ($content['headingColor'] ?? null) ?: null;
     $subheadingColor = ($content['subheadingColor'] ?? null) ?: null;
@@ -58,16 +59,21 @@
     ])
     style="{{ implode(';', $styles) }}"
 >
-    @if ($image)
-        <img
-            src="{{ $image }}"
-            alt="{{ $block->imageAlt('background.image') }}"
-            fetchpriority="high"
-            @class([
-                'absolute inset-0 size-full object-cover' => $isCover,
-                'block w-full' => ! $isCover,
-            ])
-        />
+    @if ($imageDesktop)
+        <picture class="contents">
+            @if ($imageMobile)
+                <source media="(max-width: 767px)" srcset="{{ $imageMobile }}" />
+            @endif
+            <img
+                src="{{ $imageDesktop }}"
+                alt="{{ $block->imageAlt('background.image') }}"
+                fetchpriority="high"
+                @class([
+                    'absolute inset-0 size-full object-cover' => $isCover,
+                    'block w-full' => ! $isCover,
+                ])
+            />
+        </picture>
     @endif
 
     <div @class([

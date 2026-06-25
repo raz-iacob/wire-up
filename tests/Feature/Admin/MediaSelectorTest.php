@@ -142,6 +142,43 @@ it('stores a crop variant for a selected item in multiple mode', function (): vo
         ->assertSet('media.0.crop', []);
 });
 
+it('shows only the original size for an uncropped image, even when crop variants are configured', function (): void {
+    $crops = [
+        'desktop' => ['label' => 'Desktop'],
+        'mobile' => ['label' => 'Mobile', 'w' => 1080, 'h' => 1350],
+    ];
+
+    $item = [...mediaPayload(1), 'width' => 5600, 'height' => 3733, 'crop' => []];
+
+    Livewire::test('admin.media-selector')
+        ->set('crops', $crops)
+        ->set('media', $item)
+        ->assertSee('Original: 5600 × 3733', false)
+        ->assertDontSee('Desktop:', false)
+        ->assertDontSee('Mobile:', false);
+});
+
+it('shows a crop dimension line only for variants that have been cropped', function (): void {
+    $crops = [
+        'desktop' => ['label' => 'Desktop'],
+        'mobile' => ['label' => 'Mobile', 'w' => 1080, 'h' => 1350],
+    ];
+
+    $item = [
+        ...mediaPayload(1),
+        'width' => 5600,
+        'height' => 3733,
+        'crop' => ['mobile' => ['crop_w' => 2651, 'crop_h' => 3316, 'crop_x' => 5, 'crop_y' => 10]],
+    ];
+
+    Livewire::test('admin.media-selector')
+        ->set('crops', $crops)
+        ->set('media', $item)
+        ->assertSee('Mobile: 2651 × 3316', false)
+        ->assertDontSee('Mobile: 1080 × 1350', false)
+        ->assertDontSee('Desktop:', false);
+});
+
 it('offers the crop control for a raster image', function (): void {
     Livewire::test('admin.media-selector')
         ->set('media', mediaPayload(1))

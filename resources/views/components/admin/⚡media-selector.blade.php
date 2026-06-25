@@ -522,8 +522,8 @@ return new class extends Component
                                     @foreach($crops as $variantKey => $cropDef)
                                         @php
                                             $variantCrop = $item['crop'][$variantKey] ?? null;
-                                            $variantW = $variantCrop['crop_w'] ?? ($cropDef['w'] ?? null);
-                                            $variantH = $variantCrop['crop_h'] ?? ($cropDef['h'] ?? null);
+                                            $variantW = $variantCrop['crop_w'] ?? null;
+                                            $variantH = $variantCrop['crop_h'] ?? null;
                                         @endphp
                                         @if($variantW && $variantH)
                                             <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ $cropDef['label'] ?? ucfirst($variantKey) }}: {{ $variantW }} × {{ $variantH }}</flux:text>

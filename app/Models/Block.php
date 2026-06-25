@@ -65,7 +65,7 @@ final class Block extends Model
     /**
      * @param  array<string, int|string>  $params
      */
-    public function imageUrl(string $field = 'image', array $params = []): ?string
+    public function imageUrl(string $field = 'image', array $params = [], string $cropKey = 'default'): ?string
     {
         $image = data_get($this->content, $field);
 
@@ -74,7 +74,7 @@ final class Block extends Model
         }
 
         /** @var array<string, int> $crop */
-        $crop = is_array($image['crop']['default'] ?? null) ? $image['crop']['default'] : [];
+        $crop = is_array($image['crop'][$cropKey] ?? null) ? $image['crop'][$cropKey] : [];
 
         $options = [
             'w' => $params['w'] ?? 1200,

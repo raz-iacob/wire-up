@@ -325,6 +325,29 @@ it('renders a fit-content hero image inline and boxed for container width', func
         ->assertSee('Boxed art', false);
 });
 
+it('renders separate desktop and mobile hero crops in a picture element', function (): void {
+    publishPageWithBlocks('responsive-hero', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => [
+            'heading' => ['en' => 'Responsive hero'],
+            'height' => 'screen',
+            'background' => ['type' => 'image', 'image' => [
+                'source' => 'uploads/hero.jpg',
+                'crop' => [
+                    'desktop' => ['crop_w' => 1920, 'crop_h' => 1080, 'crop_x' => 0, 'crop_y' => 0],
+                    'mobile' => ['crop_w' => 1080, 'crop_h' => 1350, 'crop_x' => 5, 'crop_y' => 10],
+                ],
+            ]],
+        ]],
+    ]);
+
+    $this->get(route('page', 'responsive-hero'))
+        ->assertOk()
+        ->assertSee('<picture', false)
+        ->assertSee('media="(max-width: 767px)"', false)
+        ->assertSee('crop=1920-1080-0-0', false)
+        ->assertSee('crop=1080-1350-5-10', false);
+});
+
 it('wraps a block with an anchor id target', function (): void {
     publishPageWithBlocks('anchored', [
         ['id' => 'new-1', 'type' => 'hero', 'content' => ['heading' => ['en' => 'Jump here'], 'anchor' => 'contact']],
