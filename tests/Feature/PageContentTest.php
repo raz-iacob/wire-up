@@ -924,6 +924,71 @@ it('drops feature cards with no image, title or body', function (): void {
     expect(mb_substr_count((string) $response->getContent(), 'flex h-full flex-col gap-4'))->toBe(1);
 });
 
+it('renders a photo with its heading and image', function (): void {
+    publishPageWithBlocks('photo-basic', [
+        ['id' => 'new-1', 'type' => 'photo', 'content' => [
+            'heading' => ['en' => '<p>Our studio</p>'],
+            'intro' => ['en' => '<p>Where it happens</p>'],
+            'image' => ['source' => 'media/studio.jpg', 'crop' => [], 'alt_text' => 'The studio'],
+        ]],
+    ]);
+
+    $this->get(route('page', 'photo-basic'))
+        ->assertOk()
+        ->assertSee('Our studio')
+        ->assertSee('Where it happens')
+        ->assertSee('media/studio.jpg', false)
+        ->assertSee('alt="The studio"', false);
+});
+
+it('serves separate desktop and mobile crops for a photo', function (): void {
+    publishPageWithBlocks('photo-crops', [
+        ['id' => 'new-1', 'type' => 'photo', 'content' => [
+            'image' => ['source' => 'media/p.jpg', 'crop' => [
+                'desktop' => ['crop_w' => 1600, 'crop_h' => 900, 'crop_x' => 0, 'crop_y' => 0],
+                'mobile' => ['crop_w' => 800, 'crop_h' => 1000, 'crop_x' => 10, 'crop_y' => 20],
+            ]],
+        ]],
+    ]);
+
+    $this->get(route('page', 'photo-crops'))
+        ->assertOk()
+        ->assertSee('<picture', false)
+        ->assertSee('media="(max-width: 767px)"', false)
+        ->assertSee('crop=1600-900-0-0', false)
+        ->assertSee('crop=800-1000-10-20', false);
+});
+
+it('wraps a photo in a new-tab link when one is set and goes full-bleed', function (): void {
+    publishPageWithBlocks('photo-link', [
+        ['id' => 'new-1', 'type' => 'photo', 'content' => [
+            'image' => ['source' => 'media/banner.jpg', 'crop' => []],
+            'width' => 'full',
+            'imageLink' => ['link' => ['type' => 'url', 'value' => 'https://example.test', 'newTab' => true]],
+        ]],
+    ]);
+
+    $this->get(route('page', 'photo-link'))
+        ->assertOk()
+        ->assertSee('media/banner.jpg', false)
+        ->assertSee('href="https://example.test"', false)
+        ->assertSee('target="_blank"', false);
+});
+
+it('omits the photo section image when none is selected', function (): void {
+    publishPageWithBlocks('photo-empty', [
+        ['id' => 'new-1', 'type' => 'photo', 'content' => [
+            'heading' => ['en' => '<p>Heading only</p>'],
+            'image' => null,
+        ]],
+    ]);
+
+    $this->get(route('page', 'photo-empty'))
+        ->assertOk()
+        ->assertSee('Heading only')
+        ->assertDontSee('<img', false);
+});
+
 it('renders a page with no blocks without error', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],

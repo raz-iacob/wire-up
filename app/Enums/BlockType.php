@@ -14,6 +14,7 @@ enum BlockType: string
     case ACCORDION = 'accordion';
     case GALLERY = 'gallery';
     case VIDEO = 'video';
+    case PHOTO = 'photo';
     case TESTIMONIALS = 'testimonials';
     case SPONSORS = 'sponsors';
     case FEATURE_CARDS = 'feature-cards';
@@ -37,6 +38,7 @@ enum BlockType: string
             self::ACCORDION => __('Accordion'),
             self::GALLERY => __('Gallery'),
             self::VIDEO => __('Video'),
+            self::PHOTO => __('Photo'),
             self::TESTIMONIALS => __('Testimonials'),
             self::SPONSORS => __('Sponsors'),
             self::FEATURE_CARDS => __('Feature Cards'),
@@ -54,6 +56,7 @@ enum BlockType: string
             self::ACCORDION => 'list-collapse',
             self::GALLERY => 'images',
             self::VIDEO => 'video-camera',
+            self::PHOTO => 'photo',
             self::TESTIMONIALS => 'chat-bubble-left-right',
             self::SPONSORS => 'handshake',
             self::FEATURE_CARDS => 'squares-2x2',
@@ -76,6 +79,7 @@ enum BlockType: string
             self::ACCORDION => __('Collapsible sections of content, great for services or FAQs.'),
             self::GALLERY => __('A responsive grid of images and videos with an optional lightbox.'),
             self::VIDEO => __('A video player using an uploaded file, a YouTube or Vimeo link, or a direct video URL.'),
+            self::PHOTO => __('A single image, shown at container width or full-bleed, with an optional link.'),
             self::TESTIMONIALS => __('Customer quotes shown in a grid, carousel or single column.'),
             self::SPONSORS => __('Sponsor and partner logos shown in a grid, marquee or grouped by tier.'),
             self::FEATURE_CARDS => __('A responsive grid of cards, each with an image or icon, a title and a short description.'),
@@ -158,6 +162,14 @@ enum BlockType: string
                 'muted' => false,
                 'controls' => true,
                 'hasBackground' => false,
+                'heading' => [],
+                'intro' => [],
+            ],
+            self::PHOTO => [
+                'image' => null,
+                'width' => 'normal',
+                'hasBackground' => false,
+                'imageLink' => ['link' => ['type' => 'url', 'value' => '', 'newTab' => false]],
                 'heading' => [],
                 'intro' => [],
             ],

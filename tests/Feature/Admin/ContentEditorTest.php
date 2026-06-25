@@ -685,6 +685,18 @@ it('ignores item media sync for an unknown block or item', function (): void {
         ->assertSet('blocks.b1.content.items.0.avatar', null);
 });
 
+it('renders the photo block editor fields', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-p' => ['id' => 'new-p', 'type' => 'photo', 'position' => 0, 'content' => BlockType::PHOTO->defaultContent()],
+        ])
+        ->assertSee('Image')
+        ->assertSee('Width')
+        ->assertSee('Full-bleed')
+        ->assertSee('Link (optional)')
+        ->assertSee('Use background color');
+});
+
 it('renders the feature cards block editor fields', function (): void {
     editor($this->page)
         ->set('blocks', [

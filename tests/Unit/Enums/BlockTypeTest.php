@@ -23,7 +23,7 @@ it('derives admin and frontend view paths from the value', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'testimonials', 'sponsors', 'feature-cards', 'contact-form', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'contact-form', 'spacer']);
 });
 
 it('seeds the contact form default content shape', function (): void {
@@ -160,6 +160,24 @@ it('seeds the video default content shape', function (): void {
 it('derives the video title from the heading, falling back to the label', function (): void {
     expect(BlockType::VIDEO->editorTitle(['heading' => ['en' => '<p>Watch this</p>']], 'en'))->toBe('Watch this');
     expect(BlockType::VIDEO->editorTitle([], 'en'))->toBe('Video');
+});
+
+it('seeds the photo default content shape', function (): void {
+    $content = BlockType::PHOTO->defaultContent();
+
+    expect($content)->toMatchArray([
+        'image' => null,
+        'width' => 'normal',
+        'hasBackground' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+    expect($content['imageLink']['link'])->toBe(['type' => 'url', 'value' => '', 'newTab' => false]);
+});
+
+it('derives the photo title from the heading, falling back to the label', function (): void {
+    expect(BlockType::PHOTO->editorTitle(['heading' => ['en' => '<p>Our studio</p>']], 'en'))->toBe('Our studio');
+    expect(BlockType::PHOTO->editorTitle([], 'en'))->toBe('Photo');
 });
 
 it('seeds the gallery default content shape', function (): void {
