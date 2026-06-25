@@ -40,6 +40,18 @@ it('shows the effective upload limit capped by the php configuration', function 
         ->assertDontSee('300MB');
 });
 
+it('opens as a browsable gallery of all media when launched from the sidebar', function (): void {
+    Media::factory()->count(3)->create();
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'media-gallery', type: null, max: 50, media: null)
+        ->assertSet('showLibrary', true)
+        ->assertSet('target', 'media-gallery')
+        ->assertSet('type', null)
+        ->assertSet('max', 50)
+        ->assertCount('medias', 3);
+});
+
 it('handles select media event and opens library', function (): void {
     $media = Media::factory()->create();
 

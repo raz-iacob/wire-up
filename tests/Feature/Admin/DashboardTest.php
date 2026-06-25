@@ -13,6 +13,14 @@ it('can render the dashboard screen', function (): void {
         ->assertSeeLivewire('pages::admin.dashboard');
 });
 
+it('shows a media gallery launcher in the sidebar', function (): void {
+    $this->actingAsAdmin()
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee('Media')
+        ->assertSee("Livewire.dispatch('select-media', { target: 'media-gallery'", false);
+});
+
 it('redirects authenticated non-admin users away from dashboard', function (): void {
     $user = User::factory()->create([
         'active' => true,
