@@ -1,4 +1,4 @@
-@props(['title' => null, 'description' => null])
+@props(['title' => null, 'description' => null, 'customCss' => ''])
 
 @php
     $site = \App\Services\SettingsService::current();
@@ -29,6 +29,9 @@
     <link href="{{ $googleFonts }}" rel="stylesheet">
     @endif
     <style>{!! $site->themeCss() !!}</style>
+    @if ($customCss !== '')
+    <style>{!! $customCss !!}</style>
+    @endif
 
     <title>{{ $title ? "$title | " : '' }}{{ $siteName }}</title>
     @if ($description)

@@ -44,6 +44,11 @@ return new class extends Component
     public array $og_image = [];
 
     /**
+     * @var array<string, mixed>
+     */
+    public array $layout = [];
+
+    /**
      * @var array<string, string>
      */
     public array $slugs = [];
@@ -92,6 +97,15 @@ return new class extends Component
         $this->activeLocales = resolve('localization')->getActiveLocales();
         $this->publishedLocales = array_values(array_intersect($page->published_locales, array_keys($this->activeLocales)));
         $this->og_image = $this->mediaForRole('og_image');
+        $this->layout = [
+            'hideHeader' => false,
+            'hideFooter' => false,
+            'backgroundColor' => null,
+            'backgroundImage' => null,
+            'backgroundFixed' => false,
+            'customCss' => '',
+            ...(is_array($page->metadata['layout'] ?? null) ? $page->metadata['layout'] : []),
+        ];
 
         foreach (array_keys($this->activeLocales) as $locale) {
             $this->og_image[$locale] ??= [];
@@ -164,6 +178,13 @@ return new class extends Component
             'og_image.*.*.metadata' => ['nullable', 'array'],
             'og_image.*.*.metadata.caption' => ['nullable', 'string', 'max:500'],
             'og_image.*.*.metadata.alt' => ['nullable', 'string', 'max:255'],
+            'layout' => ['array'],
+            'layout.hideHeader' => ['boolean'],
+            'layout.hideFooter' => ['boolean'],
+            'layout.backgroundFixed' => ['boolean'],
+            'layout.backgroundColor' => ['nullable', 'string', 'max:30'],
+            'layout.backgroundImage' => ['nullable', 'array'],
+            'layout.customCss' => ['nullable', 'string', 'max:50000'],
         ];
 
         foreach (array_keys($this->activeLocales) as $locale) {
@@ -191,6 +212,7 @@ return new class extends Component
         $attributes = [
             'publishedLocales.*' => __('language'),
             'published_at' => __('scheduled date'),
+            'layout.customCss' => __('custom CSS'),
         ];
 
         try {
@@ -204,12 +226,13 @@ return new class extends Component
         }
 
         $action->handle($this->page, [
-            ...Arr::except($validated, ['publishedLocales', 'blocks']),
+            ...Arr::except($validated, ['publishedLocales', 'blocks', 'layout']),
             'blocks' => $this->blocks,
             'og_image' => $this->og_image,
             'metadata' => [
                 ...($this->page->metadata ?? []),
                 'published_locales' => array_values($validated['publishedLocales'] ?? []),
+                'layout' => $this->layoutMetadata(),
             ],
         ]);
 
@@ -631,6 +654,23 @@ return new class extends Component
         Flux::modal('remove-block')->close();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function layoutMetadata(): array
+    {
+        $color = mb_trim((string) ($this->layout['backgroundColor'] ?? ''));
+
+        return [
+            'hideHeader' => (bool) ($this->layout['hideHeader'] ?? false),
+            'hideFooter' => (bool) ($this->layout['hideFooter'] ?? false),
+            'backgroundColor' => $color !== '' ? $color : null,
+            'backgroundImage' => $this->layout['backgroundImage'] ?? null,
+            'backgroundFixed' => (bool) ($this->layout['backgroundFixed'] ?? false),
+            'customCss' => mb_trim((string) ($this->layout['customCss'] ?? '')),
+        ];
+    }
+
     public function preview(): void
     {
         $this->previewToken = (string) Str::uuid();
@@ -641,6 +681,7 @@ return new class extends Component
             'title' => $this->title[$this->locale] ?? '',
             'description' => $this->description[$this->locale] ?? '',
             'blocks' => array_values($this->blocks),
+            'layout' => $this->layoutMetadata(),
         ], now()->addMinutes(30));
 
         $this->showPreview = true;
@@ -795,7 +836,7 @@ return new class extends Component
 
             <flux:separator />
 
-            <flux:fieldset class="pb-6">
+            <flux:fieldset>
                 <flux:legend>{{ __('SEO Settings') }}</flux:legend>
                 <flux:description>{{ __('Manage how this page appears in search results.') }}</flux:description>
 
@@ -804,6 +845,57 @@ return new class extends Component
                     <x-forms.url-translated name="slugs" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Web Address') }}" :readonly="$this->isHomePage" :note="$this->isHomePage ? __('Served at /. Its URL redirects here.') : ''" />
                     <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Description') }}" />
                     <livewire:admin.media-selector wire:model="og_image.{{ $locale }}" type="image" name="og_image" :crops="['desktop' => ['label' => __('Desktop'), 'w' => 1200, 'h' => 700], 'mobile' => ['label' => __('Mobile'), 'w' => 800, 'h' => 800]]" label="{{ __('Open Graph Image') }}" />
+                </div>
+            </flux:fieldset>
+
+            <flux:separator />
+
+            <flux:fieldset class="pb-6">
+                <flux:legend>{{ __('Layout') }}</flux:legend>
+                <flux:description>{{ __('Optional design overrides for this page.') }}</flux:description>
+
+                <div class="flex flex-col gap-6 mt-6">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <flux:switch wire:model.live="layout.hideHeader" label="{{ __('Hide site header') }}" align="left" />
+                        <flux:switch wire:model.live="layout.hideFooter" label="{{ __('Hide site footer') }}" align="left" />
+                    </div>
+
+                    <livewire:admin.media-selector
+                        wire:model="layout.backgroundImage"
+                        wire:key="page-background-image"
+                        name="page-background-image"
+                        type="image"
+                        :locale="$locale"
+                        :multiple="false"
+                        label="{{ __('Background image') }}" />
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <flux:color-picker wire:model="layout.backgroundColor" clearable label="{{ __('Background color') }}" placeholder="{{ __('Theme') }}" />
+                        <div class="flex md:h-full md:items-center md:pt-5">
+                            <flux:switch wire:model.live="layout.backgroundFixed" label="{{ __('Fixed background') }}" align="left" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <flux:modal.trigger name="page-custom-css">
+                            <flux:button icon="code-bracket" variant="filled">{{ ($layout['customCss'] ?? '') !== '' ? __('Edit custom CSS') : __('Add custom CSS') }}</flux:button>
+                        </flux:modal.trigger>
+                    </div>
+
+                    <flux:modal name="page-custom-css" class="w-full md:max-w-2xl">
+                        <div class="space-y-6">
+                            <div>
+                                <flux:heading size="lg">{{ __('Custom CSS') }}</flux:heading>
+                                <flux:text class="mt-2">{{ __('Add custom CSS rules that apply only to this page.') }}</flux:text>
+                            </div>
+                            <flux:textarea wire:model.lazy="layout.customCss" rows="12" class="font-mono text-sm" placeholder=".my-class &#123; color: red; &#125;" />
+                            <div class="flex justify-end">
+                                <flux:modal.close>
+                                    <flux:button variant="primary">{{ __('Done') }}</flux:button>
+                                </flux:modal.close>
+                            </div>
+                        </div>
+                    </flux:modal>
                 </div>
             </flux:fieldset>
         </div>

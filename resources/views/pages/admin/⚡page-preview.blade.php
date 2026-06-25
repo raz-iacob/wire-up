@@ -16,9 +16,14 @@ return new class extends Component
 
     public string $pageDescription = '';
 
+    /**
+     * @var array<string, mixed>
+     */
+    public array $siteLayout = [];
+
     public function mount(Page $page, string $token): void
     {
-        /** @var array{page_id: int, locale: string, title: string, description: string, blocks: array<int, array{type: string, content?: array<string, mixed>, position?: int}>}|null $snapshot */
+        /** @var array{page_id: int, locale: string, title: string, description: string, blocks: array<int, array{type: string, content?: array<string, mixed>, position?: int}>, layout?: array<string, mixed>}|null $snapshot */
         $snapshot = Cache::get("page-preview:{$page->id}:".auth()->id().":{$token}");
 
         abort_unless(is_array($snapshot) && $snapshot['page_id'] === $page->id, 404);
@@ -27,6 +32,7 @@ return new class extends Component
 
         $this->pageTitle = $snapshot['title'];
         $this->pageDescription = $snapshot['description'];
+        $this->siteLayout = Page::normalizeLayout($snapshot['layout'] ?? []);
 
         $page->setRelation('blocks', collect($snapshot['blocks'])
             ->map(fn (array $block): Block => new Block([
@@ -44,7 +50,10 @@ return new class extends Component
         return $this->view()
             ->layout('layouts.app')
             ->title($this->pageTitle)
-            ->layoutData(['description' => $this->pageDescription]);
+            ->layoutData([
+                'description' => $this->pageDescription,
+                'siteLayout' => $this->siteLayout,
+            ]);
     }
 };
 ?>

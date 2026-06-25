@@ -23,7 +23,10 @@ return new class extends Component
     {
         return $this->view()
             ->title($this->page->title ?: config()->string('app.name'))
-            ->layoutData(['description' => $this->page->description]);
+            ->layoutData([
+                'description' => $this->page->description,
+                'siteLayout' => $this->page->resolvedLayout(),
+            ]);
     }
 };
 ?>

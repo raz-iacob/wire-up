@@ -40,6 +40,29 @@ final class Page extends Model
     use HasBlocks, HasFactory, HasMedia, HasSlugs, HasTranslations;
 
     /**
+     * @param  array<string, mixed>  $layout
+     * @return array{hideHeader: bool, hideFooter: bool, backgroundColor: ?string, backgroundImage: ?string, backgroundFixed: bool, customCss: string}
+     */
+    public static function normalizeLayout(array $layout): array
+    {
+        $color = mb_trim((string) ($layout['backgroundColor'] ?? ''));
+
+        return [
+            'hideHeader' => (bool) ($layout['hideHeader'] ?? false),
+            'hideFooter' => (bool) ($layout['hideFooter'] ?? false),
+            'backgroundColor' => $color !== '' ? $color : null,
+            'backgroundImage' => self::backgroundImageUrl($layout['backgroundImage'] ?? null),
+            'backgroundFixed' => (bool) ($layout['backgroundFixed'] ?? false),
+            'customCss' => self::sanitizeCustomCss((string) ($layout['customCss'] ?? '')),
+        ];
+    }
+
+    public static function sanitizeCustomCss(string $css): string
+    {
+        return str_ireplace('</style', '', mb_trim($css));
+    }
+
+    /**
      * @return array<string, string>
      */
     public function casts(): array
@@ -57,6 +80,14 @@ final class Page extends Model
     public function getUrl(?string $locale = null): string
     {
         return route('page', $this->getSlug($locale));
+    }
+
+    /**
+     * @return array{hideHeader: bool, hideFooter: bool, backgroundColor: ?string, backgroundImage: ?string, backgroundFixed: bool, customCss: string}
+     */
+    public function resolvedLayout(): array
+    {
+        return self::normalizeLayout(is_array($this->metadata['layout'] ?? null) ? $this->metadata['layout'] : []);
     }
 
     /**
@@ -116,5 +147,26 @@ final class Page extends Model
         if (count(resolve('localization')->getActiveLocales()) > 1) {
             $query->whereJsonContains('metadata->published_locales', $locale ?? app()->getLocale());
         }
+    }
+
+    private static function backgroundImageUrl(mixed $image): ?string
+    {
+        if (! is_array($image) || empty($image['source'])) {
+            return null;
+        }
+
+        /** @var array<string, int> $crop */
+        $crop = is_array($image['crop']['default'] ?? null) ? $image['crop']['default'] : [];
+
+        $optionParts = ['w=1920', 'q=80', 'fm=jpg'];
+
+        if (($crop['crop_w'] ?? 0) > 0 && ($crop['crop_h'] ?? 0) > 0) {
+            $optionParts[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
+        }
+
+        return route('image.show', [
+            'options' => implode(',', $optionParts),
+            'path' => $image['source'],
+        ]);
     }
 }

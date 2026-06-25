@@ -700,3 +700,82 @@ it('does not add an anchor field to spacer blocks', function (): void {
         ])
         ->assertDontSee('Link directly to this block');
 });
+
+it('renders the page layout options fieldset', function (): void {
+    $this->get(route('admin.pages-edit', $this->page))
+        ->assertOk()
+        ->assertSee('Layout')
+        ->assertSee('Background image')
+        ->assertSee('Background color')
+        ->assertSee('Fixed background')
+        ->assertSee('Add custom CSS')
+        ->assertSee('Hide site header')
+        ->assertSee('Hide site footer');
+});
+
+it('seeds default layout options on mount', function (): void {
+    editor($this->page)
+        ->assertSet('layout.hideHeader', false)
+        ->assertSet('layout.hideFooter', false)
+        ->assertSet('layout.backgroundColor', null)
+        ->assertSet('layout.backgroundImage', null)
+        ->assertSet('layout.backgroundFixed', false)
+        ->assertSet('layout.customCss', '');
+});
+
+it('loads saved layout options from metadata on mount', function (): void {
+    $page = Page::factory()->create([
+        'metadata' => ['layout' => ['hideHeader' => true, 'customCss' => '.promo { color: red; }']],
+    ]);
+
+    editor($page)
+        ->assertSet('layout.hideHeader', true)
+        ->assertSet('layout.customCss', '.promo { color: red; }')
+        ->assertSet('layout.hideFooter', false);
+});
+
+it('shows the edit label when custom CSS is already set', function (): void {
+    $page = Page::factory()->create([
+        'metadata' => ['layout' => ['customCss' => '.promo { color: red; }']],
+    ]);
+
+    editor($page)->assertSee('Edit custom CSS');
+});
+
+it('persists page layout options into metadata when saving', function (): void {
+    $page = $this->page;
+
+    editor($page)
+        ->set('title.en', 'Sample')
+        ->set('slugs.en', 'sample')
+        ->set('layout.hideHeader', true)
+        ->set('layout.hideFooter', true)
+        ->set('layout.backgroundColor', '#101820')
+        ->set('layout.backgroundFixed', true)
+        ->set('layout.customCss', '.promo { color: #bada55; }')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $layout = Page::query()->whereKey($page->id)->sole()->metadata['layout'];
+
+    expect($layout)->toMatchArray([
+        'hideHeader' => true,
+        'hideFooter' => true,
+        'backgroundColor' => '#101820',
+        'backgroundFixed' => true,
+        'customCss' => '.promo { color: #bada55; }',
+    ]);
+});
+
+it('normalizes an empty background color to null when saving', function (): void {
+    $page = $this->page;
+
+    editor($page)
+        ->set('title.en', 'Sample')
+        ->set('slugs.en', 'sample')
+        ->set('layout.backgroundColor', '')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Page::query()->whereKey($page->id)->sole()->metadata['layout']['backgroundColor'])->toBeNull();
+});

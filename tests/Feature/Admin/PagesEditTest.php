@@ -432,7 +432,7 @@ it('persists published locales to page metadata on update', function (): void {
 it('preserves existing metadata when updating published locales', function (): void {
     $page = Page::factory()->create([
         'status' => PageStatus::DRAFT,
-        'metadata' => ['layout' => 'wide'],
+        'metadata' => ['custom_flag' => 'wide'],
     ]);
 
     $this->actingAsAdmin();
@@ -444,7 +444,7 @@ it('preserves existing metadata when updating published locales', function (): v
         ->call('update')
         ->assertHasNoErrors();
 
-    expect($page->fresh()->metadata)->toBe(['layout' => 'wide', 'published_locales' => ['en']]);
+    expect($page->fresh()->metadata)->toMatchArray(['custom_flag' => 'wide', 'published_locales' => ['en']]);
 });
 
 it('rejects published locales that are not active site locales', function (): void {
