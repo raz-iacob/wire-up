@@ -600,6 +600,117 @@ it('renders gold stars when the amber option is enabled, theme accent otherwise'
         ->assertSee('size-5 text-(--wire-primary-bg)', false);
 });
 
+it('renders sponsors content in every layout', function (string $layout): void {
+    publishPageWithBlocks("spn-{$layout}", [
+        ['id' => 'new-1', 'type' => 'sponsors', 'content' => [
+            'layout' => $layout,
+            'heading' => ['en' => '<p>Our partners</p>'],
+            'intro' => ['en' => '<p>The teams behind us</p>'],
+            'items' => [
+                ['id' => 'a', 'logo' => ['source' => 'media/logo-a.png', 'crop' => []], 'name' => ['en' => 'Acme Corp'], 'tier' => 'Gold'],
+                ['id' => 'b', 'logo' => ['source' => 'media/logo-b.png', 'crop' => []], 'name' => ['en' => 'Globex'], 'tier' => 'Silver'],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', "spn-{$layout}"))
+        ->assertOk()
+        ->assertSee('Our partners')
+        ->assertSee('The teams behind us')
+        ->assertSee('media/logo-a.png', false)
+        ->assertSee('media/logo-b.png', false)
+        ->assertSee('alt="Acme Corp"', false);
+})->with(['grid', 'marquee', 'grouped']);
+
+it('wraps a sponsor logo in a new-tab link and shows the name when enabled', function (): void {
+    publishPageWithBlocks('spn-link', [
+        ['id' => 'new-1', 'type' => 'sponsors', 'content' => [
+            'showNames' => true,
+            'items' => [
+                ['id' => 'a', 'logo' => ['source' => 'media/logo-a.png', 'crop' => []], 'name' => ['en' => 'Acme Corp'], 'link' => 'https://acme.test'],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'spn-link'))
+        ->assertOk()
+        ->assertSee('href="https://acme.test"', false)
+        ->assertSee('target="_blank"', false)
+        ->assertSee('<figcaption', false)
+        ->assertSee('Acme Corp');
+});
+
+it('renders tier headings only in the grouped layout', function (): void {
+    publishPageWithBlocks('spn-grouped', [
+        ['id' => 'new-1', 'type' => 'sponsors', 'content' => [
+            'layout' => 'grouped',
+            'items' => [
+                ['id' => 'a', 'logo' => ['source' => 'media/logo-a.png', 'crop' => []], 'name' => ['en' => 'Acme'], 'tier' => 'Gold'],
+                ['id' => 'b', 'logo' => ['source' => 'media/logo-b.png', 'crop' => []], 'name' => ['en' => 'Globex'], 'tier' => 'Silver'],
+            ],
+        ]],
+    ]);
+
+    publishPageWithBlocks('spn-flat', [
+        ['id' => 'new-1', 'type' => 'sponsors', 'content' => [
+            'layout' => 'grid',
+            'items' => [
+                ['id' => 'a', 'logo' => ['source' => 'media/logo-a.png', 'crop' => []], 'name' => ['en' => 'Acme'], 'tier' => 'Gold'],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'spn-grouped'))
+        ->assertOk()
+        ->assertSee('Gold')
+        ->assertSee('Silver');
+
+    $this->get(route('page', 'spn-flat'))
+        ->assertOk()
+        ->assertDontSee('Gold');
+});
+
+it('scales columns and logo size per tier in the grouped layout', function (): void {
+    publishPageWithBlocks('spn-tiers', [
+        ['id' => 'new-1', 'type' => 'sponsors', 'content' => [
+            'layout' => 'grouped',
+            'items' => [
+                ['id' => 'a', 'logo' => ['source' => 'media/p.png', 'crop' => []], 'name' => ['en' => 'Plat'], 'tier' => 'Platinum'],
+                ['id' => 'b', 'logo' => ['source' => 'media/g.png', 'crop' => []], 'name' => ['en' => 'Gold1'], 'tier' => 'Gold'],
+                ['id' => 'c', 'logo' => ['source' => 'media/s.png', 'crop' => []], 'name' => ['en' => 'Silv'], 'tier' => 'Silver'],
+                ['id' => 'd', 'logo' => ['source' => 'media/c.png', 'crop' => []], 'name' => ['en' => 'Comm'], 'tier' => 'Community'],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'spn-tiers'))
+        ->assertOk()
+        ->assertSeeInOrder(['Platinum', 'Gold', 'Silver', 'Community'])
+        ->assertSee('lg:grid-cols-4', false)
+        ->assertSee('lg:grid-cols-5', false)
+        ->assertSee('lg:grid-cols-6', false)
+        ->assertSee('xl:grid-cols-8', false)
+        ->assertSee('h-16 md:h-20', false)
+        ->assertSee('h-10 md:h-12', false);
+});
+
+it('drops sponsors with no logo', function (): void {
+    publishPageWithBlocks('spn-empty', [
+        ['id' => 'new-1', 'type' => 'sponsors', 'content' => [
+            'items' => [
+                ['id' => 'a', 'logo' => ['source' => 'media/logo-a.png', 'crop' => []], 'name' => ['en' => 'Kept']],
+                ['id' => 'b', 'logo' => null, 'name' => ['en' => 'Dropped']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'spn-empty'))
+        ->assertOk()
+        ->assertSee('media/logo-a.png', false)
+        ->assertSee('alt="Kept"', false)
+        ->assertDontSee('Dropped');
+});
+
 it('renders a page with no blocks without error', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],

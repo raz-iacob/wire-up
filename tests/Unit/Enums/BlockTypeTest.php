@@ -23,7 +23,7 @@ it('derives admin and frontend view paths from the value', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'testimonials', 'contact-form', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'testimonials', 'sponsors', 'contact-form', 'spacer']);
 });
 
 it('seeds the contact form default content shape', function (): void {
@@ -78,6 +78,31 @@ it('seeds the testimonials default content shape', function (): void {
 it('derives the testimonials title from the heading, falling back to the label', function (): void {
     expect(BlockType::TESTIMONIALS->editorTitle(['heading' => ['en' => '<p>What clients say</p>']], 'en'))->toBe('What clients say');
     expect(BlockType::TESTIMONIALS->editorTitle([], 'en'))->toBe('Testimonials');
+});
+
+it('seeds the sponsors default content shape', function (): void {
+    $content = BlockType::SPONSORS->defaultContent();
+
+    expect($content)->toMatchArray([
+        'layout' => 'grid',
+        'columns' => 4,
+        'hasBackground' => false,
+        'grayscale' => false,
+        'showNames' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+    expect($content['items'])->toHaveCount(1);
+    expect($content['items'][0]['logo'])->toBeNull();
+    expect($content['items'][0]['name'])->toBe([]);
+    expect($content['items'][0]['link'])->toBe('');
+    expect($content['items'][0]['tier'])->toBe('');
+    expect($content['items'][0]['id'])->toBeString()->not->toBeEmpty();
+});
+
+it('derives the sponsors title from the heading, falling back to the label', function (): void {
+    expect(BlockType::SPONSORS->editorTitle(['heading' => ['en' => '<p>Our partners</p>']], 'en'))->toBe('Our partners');
+    expect(BlockType::SPONSORS->editorTitle([], 'en'))->toBe('Sponsors');
 });
 
 it('seeds the gallery default content shape', function (): void {

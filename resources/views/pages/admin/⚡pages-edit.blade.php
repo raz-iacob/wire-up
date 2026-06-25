@@ -421,6 +421,52 @@ return new class extends Component
         $this->blocks[$id]['content']['items'][] = ['id' => (string) Str::uuid(), 'quote' => [], 'author' => [], 'role' => [], 'avatar' => null, 'rating' => 0];
     }
 
+    public function addSponsorItem(string $id): void
+    {
+        if (! isset($this->blocks[$id])) {
+            return;
+        }
+
+        $this->blocks[$id]['content']['items'][] = ['id' => (string) Str::uuid(), 'logo' => null, 'name' => [], 'link' => '', 'tier' => ''];
+    }
+
+    public function removeSponsorItem(string $id, int $index): void
+    {
+        if (! isset($this->blocks[$id]['content']['items'][$index])) {
+            return;
+        }
+
+        unset($this->blocks[$id]['content']['items'][$index]);
+
+        $this->blocks[$id]['content']['items'] = array_values($this->blocks[$id]['content']['items']);
+    }
+
+    #[Renderless]
+    public function reorderSponsorItems(string $itemId, int $position): void
+    {
+        foreach ($this->blocks as $blockId => $block) {
+            $items = $block['content']['items'] ?? null;
+
+            if (! is_array($items)) {
+                continue;
+            }
+
+            $from = collect($items)->search(fn (array $item): bool => ($item['id'] ?? null) === $itemId);
+
+            if ($from === false) {
+                continue;
+            }
+
+            $moved = $items[$from];
+            array_splice($items, $from, 1);
+            array_splice($items, $position, 0, [$moved]);
+
+            $this->blocks[$blockId]['content']['items'] = array_values($items);
+
+            return;
+        }
+    }
+
     public function removeTestimonialItem(string $id, int $index): void
     {
         if (! isset($this->blocks[$id]['content']['items'][$index])) {

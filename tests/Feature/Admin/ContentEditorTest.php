@@ -538,6 +538,87 @@ it('seeds the new testimonial item with the full field shape', function (): void
         });
 });
 
+it('seeds a full default content structure for a sponsors block', function (): void {
+    editor($this->page)
+        ->call('addBlock', 'sponsors')
+        ->assertCount('blocks', 1)
+        ->assertSet('blocks', function (array $blocks): bool {
+            $content = Arr::first($blocks)['content'];
+
+            return $content['layout'] === 'grid'
+                && $content['columns'] === 4
+                && $content['hasBackground'] === false
+                && $content['grayscale'] === false
+                && $content['showNames'] === false
+                && $content['intro'] === []
+                && count($content['items']) === 1
+                && $content['items'][0]['logo'] === null
+                && $content['items'][0]['name'] === []
+                && $content['items'][0]['link'] === ''
+                && $content['items'][0]['tier'] === '';
+        });
+});
+
+it('renders the sponsors block editor fields', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-s' => ['id' => 'new-s', 'type' => 'sponsors', 'position' => 0, 'content' => BlockType::SPONSORS->defaultContent()],
+        ])
+        ->assertSee('Add sponsor')
+        ->assertSee('Logo')
+        ->assertSee('Tier')
+        ->assertSee('Layout')
+        ->assertSee('Marquee')
+        ->assertSee('Grouped by tier')
+        ->assertSee('Show sponsor names')
+        ->assertSee('Show logos in grayscale (color on hover)');
+});
+
+it('adds and removes sponsor items', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-s' => ['id' => 'new-s', 'type' => 'sponsors', 'position' => 0, 'content' => ['items' => [['logo' => null, 'name' => []]]]],
+        ])
+        ->call('addSponsorItem', 'new-s')
+        ->assertSet('blocks.new-s.content.items', fn (array $items): bool => count($items) === 2)
+        ->call('addSponsorItem', 'new-s')
+        ->assertSet('blocks.new-s.content.items', fn (array $items): bool => count($items) === 3)
+        ->call('removeSponsorItem', 'new-s', 1)
+        ->assertSet('blocks.new-s.content.items', fn (array $items): bool => count($items) === 2 && array_keys($items) === [0, 1]);
+});
+
+it('reorders sponsor items by id', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-s' => ['id' => 'new-s', 'type' => 'sponsors', 'position' => 0, 'content' => ['items' => [
+                ['id' => 'a', 'name' => ['en' => 'A'], 'logo' => null],
+                ['id' => 'b', 'name' => ['en' => 'B'], 'logo' => null],
+                ['id' => 'c', 'name' => ['en' => 'C'], 'logo' => null],
+            ]]],
+        ])
+        ->call('reorderSponsorItems', 'c', 0)
+        ->assertSet('blocks.new-s.content.items', fn (array $items): bool => array_column($items, 'id') === ['c', 'a', 'b'])
+        ->call('reorderSponsorItems', 'c', 2)
+        ->assertSet('blocks.new-s.content.items', fn (array $items): bool => array_column($items, 'id') === ['a', 'b', 'c']);
+});
+
+it('seeds the new sponsor item with the full field shape', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-s' => ['id' => 'new-s', 'type' => 'sponsors', 'position' => 0, 'content' => ['items' => []]],
+        ])
+        ->call('addSponsorItem', 'new-s')
+        ->assertSet('blocks.new-s.content.items', function (array $items): bool {
+            $item = $items[0];
+
+            return is_string($item['id']) && $item['id'] !== ''
+                && $item['logo'] === null
+                && $item['name'] === []
+                && $item['link'] === ''
+                && $item['tier'] === '';
+        });
+});
+
 it('backfills missing default content for existing text-image blocks', function (): void {
     $page = $this->page;
 

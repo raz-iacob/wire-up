@@ -8,6 +8,25 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+    --animate-marquee: marquee 18s linear infinite;
+}
+
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+        animation: none;
+    }
+}
+
 @layer base {
     body {
         font-size: var(--wire-body-size, 1rem);
