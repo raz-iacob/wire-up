@@ -8,8 +8,8 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline | align" />
-    <x-forms.texteditor-translated name="{{ $c }}.subheading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" toolbar="bold italic underline | align | link ~ undo redo" />
+    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
+    <x-forms.texteditor-translated name="{{ $c }}.subheading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" />
 
     <div class="grid gap-4 sm:grid-cols-2">
         <flux:color-picker wire:model="{{ $c }}.headingColor" clearable label="{{ __('Heading color') }}" placeholder="{{ __('Header text') }}" />

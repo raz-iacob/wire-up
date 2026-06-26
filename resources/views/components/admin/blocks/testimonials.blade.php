@@ -7,8 +7,8 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline | align" />
-    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" toolbar="bold italic | align | link" />
+    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
+    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" />
 
     <div class="flex flex-col gap-2">
         <flux:label>{{ __('Testimonials') }}</flux:label>
@@ -43,7 +43,7 @@
                     </div>
 
                     <div class="flex flex-col gap-4 p-4" x-show="open" x-collapse x-cloak>
-                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.quote" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Quote') }}" toolbar="bold italic | align | link" />
+                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.quote" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Quote') }}" />
 
                         <div class="grid md:grid-cols-2 gap-4">
                             <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.author" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Author') }}" />

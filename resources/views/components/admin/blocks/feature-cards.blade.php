@@ -7,8 +7,8 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline | align" />
-    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" toolbar="bold italic | align | link" />
+    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
+    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" />
 
     <div class="flex flex-col gap-2">
         <flux:label>{{ __('Cards') }}</flux:label>
@@ -56,7 +56,7 @@
                             wire:key="feature-image-{{ $block['id'] }}-{{ $item['id'] ?? $i }}" />
 
                         <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.title" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Title') }}" />
-                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.body" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Description') }}" toolbar="bold italic | align | link" />
+                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.body" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Description') }}" />
 
                         <flux:switch wire:model.live="{{ $c }}.items.{{ $i }}.cta.enabled" label="{{ __('Show a button') }}" align="left" />
 

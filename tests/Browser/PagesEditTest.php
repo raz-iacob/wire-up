@@ -52,6 +52,10 @@ it('derives the text-image block header title from the heading, not the body', f
         ->assertScript(
             "window.blockTitle({ type: 'text-image', content: { body: { en: '<p>Body only</p>' } } }, 'en', 'Text + Image')",
             'Text + Image',
+        )
+        ->assertScript(
+            "window.blockTitle({ type: 'text-image', content: { heading: { en: '<p><span data-badge class=\"wire-badge\">For women</span></p><p>Hormones off</p><p>Life is hard</p>' } } }, 'en', 'fallback')",
+            'For women Hormones off Life is hard',
         );
 });
 
@@ -122,6 +126,99 @@ it('toggles a raw HTML source view on rich text editors and round-trips edits', 
     );
 
     $browser->assertNoJavascriptErrors();
+});
+
+it('registers an inline badge mark and applies chosen colours in the editor', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Badge Page',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'badge-editor']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => [
+            'body' => ['en' => '<p>Make this a badge</p>'],
+        ]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->assertNoJavascriptErrors();
+
+    $browser->assertScript("document.querySelectorAll('button[aria-label=\"Badge\"]').length >= 1", true);
+
+    $browser->script("document.querySelector('button[aria-label=\"Badge\"]').click(); void 0");
+    $browser->wait(0.3);
+
+    $browser->assertScript(
+        "(() => { const panel = [...document.querySelectorAll('[data-flux-editor] [popover]')].find(p => p.matches(':popover-open')); return !!panel && panel.querySelectorAll('input[type=\"color\"]').length === 2 && panel.innerText.includes('Apply'); })()",
+        true,
+    );
+
+    $apply = "(() => { const root = [...document.querySelectorAll('[data-flux-editor]')].find(r => r._tiptap && r._tiptap.getText().includes('Make this a badge')); if (! root) { return false; } root._tiptap.chain().focus().selectAll().setBadge({ bg: '#2563eb', color: '#ffffff' }).run(); const h = root._tiptap.getHTML(); return h.includes('data-badge') && h.includes('#2563eb') && h.includes('#ffffff'); })()";
+
+    $browser->assertScript($apply, true);
+
+    $browser->assertScript(
+        "(() => { const span = document.querySelector('ui-editor-content .wire-badge'); if (! span) { return 'no-span'; } const s = getComputedStyle(span); return [s.fontSize, s.fontWeight, s.textTransform, s.display].join('|'); })()",
+        '11px|700|uppercase|inline-block',
+    );
+
+    $roundTrip = "(() => { const root = [...document.querySelectorAll('[data-flux-editor]')].find(r => r._tiptap); root._tiptap.commands.setContent('<p><span data-badge data-badge-bg=\"#abcdef\" data-badge-color=\"#123456\">Hi</span></p>', true); const h = root._tiptap.getHTML(); return h.includes('data-badge') && h.includes('#abcdef') && h.includes('#123456'); })()";
+
+    $browser->assertScript($roundTrip, true);
+
+    $browser->assertNoJavascriptErrors();
+});
+
+it('gives every editor the same toolbar with links and badges', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Toolbar Page',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'toolbar-page']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => [
+            'heading' => ['en' => '<p>Heading copy</p>'],
+            'body' => ['en' => '<p>Body copy</p>'],
+        ]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->assertNoJavascriptErrors();
+
+    $browser->assertScript(
+        "(() => { const editors = document.querySelectorAll('[data-flux-editor]').length; const links = document.querySelectorAll('[data-flux-editor] [data-editor=\"link\"]').length; const badges = document.querySelectorAll('[data-flux-editor] button[aria-label=\"Badge\"]').length; return editors >= 2 && links === editors && badges === editors; })()",
+        true,
+    );
+});
+
+it('strips formatting from pasted content but keeps paragraphs, lists and links', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Paste Page',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'paste-page']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>Body copy</p>']]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->assertNoJavascriptErrors();
+
+    $dirty = '<h1>Big title</h1><p>Hi <strong>bold</strong> <span style=\"color:red\">red</span> <a href=\"https://example.com\">link</a></p><ul><li>one</li></ul>';
+
+    $browser->assertScript(
+        "(() => { const out = window.cleanPastedHtml('{$dirty}'); return !/<h1|<strong|<span|style=/.test(out) && out.includes('Big title') && out.includes('bold') && out.includes('href=\"https://example.com\"') && out.includes('<li>one</li>'); })()",
+        true,
+    );
 });
 
 it('reorders testimonial items with saved avatars then saves without errors', function (): void {

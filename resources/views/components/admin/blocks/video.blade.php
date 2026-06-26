@@ -6,8 +6,8 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline | align" />
-    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" toolbar="bold italic | align | link" />
+    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
+    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" />
 
     <flux:radio.group wire:model.live="{{ $c }}.source" variant="segmented" label="{{ __('Video source') }}">
         <flux:radio value="upload" icon="arrow-up-tray" label="{{ __('Uploaded') }}" />

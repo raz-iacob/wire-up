@@ -240,7 +240,8 @@ enum BlockType: string
      */
     public function editorTitle(array $content, string $locale): string
     {
-        $text = str(strip_tags((string) data_get($content, "heading.{$locale}")))->squish()->limit(50)->value();
+        $html = (string) preg_replace('/<\/(?:p|div|li|h[1-6])>|<br\s*\/?>/i', ' ', (string) data_get($content, "heading.{$locale}"));
+        $text = str(strip_tags($html))->squish()->limit(50)->value();
 
         return $text !== '' ? $text : $this->label();
     }

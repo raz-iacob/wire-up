@@ -826,6 +826,9 @@ return new class extends Component
 ?>
 
 <div>
+@push('head')
+    @vite('resources/js/editor.js')
+@endpush
 <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid grid-cols-1 md:grid-cols-5 gap-10 items-stretch">
     <div class="md:col-span-3 min-w-0">
         <div class="space-y-6 mb-10 md:col-span-2">
@@ -1132,7 +1135,8 @@ return new class extends Component
         }
 
         const content = block.content || {};
-        const raw = (content.heading || {})[locale] || '';
+        const raw = ((content.heading || {})[locale] || '')
+            .replace(/<\/(?:p|div|li|h[1-6])>|<br\s*\/?>/gi, ' ');
 
         const div = document.createElement('div');
         div.innerHTML = raw;

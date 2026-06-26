@@ -235,6 +235,16 @@ it('derives an editor title from content, stripping html', function (): void {
     expect(BlockType::TEXT_IMAGE->editorTitle(['heading' => ['en' => '<p>Rich <strong>copy</strong> here</p>']], 'en'))->toBe('Rich copy here');
 });
 
+it('separates badges, paragraphs and line breaks with spaces in the editor title', function (): void {
+    $heading = '<p><span data-badge class="wire-badge">For women</span></p><p>Hormones off</p><p>Life is hard</p>';
+
+    expect(BlockType::TEXT_IMAGE->editorTitle(['heading' => ['en' => $heading]], 'en'))
+        ->toBe('For women Hormones off Life is hard');
+
+    expect(BlockType::HERO->editorTitle(['heading' => ['en' => '<p>Line one<br>Line two</p>']], 'en'))
+        ->toBe('Line one Line two');
+});
+
 it('derives the text + image title from the heading, ignoring the body', function (): void {
     $content = ['heading' => ['en' => 'The heading wins'], 'body' => ['en' => '<p>Body copy</p>']];
 

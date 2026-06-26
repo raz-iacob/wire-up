@@ -20,8 +20,8 @@
 <div class="flex flex-col gap-6">
     <flux:input wire:model.lazy="{{ $c }}.formName" label="{{ __('Form name') }}" placeholder="{{ __('e.g. Massage enquiry') }}" description="{{ __('Shown in the notification email so you know which form was submitted.') }}" />
 
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline | align" />
-    <x-forms.texteditor-translated name="{{ $c }}.description" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" toolbar="bold italic underline | align | link" />
+    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
+    <x-forms.texteditor-translated name="{{ $c }}.description" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" />
 
     <flux:radio.group wire:model.live="{{ $c }}.layout" variant="segmented" label="{{ __('Layout') }}">
         <flux:radio value="stacked" label="{{ __('Stacked') }}" />
@@ -137,7 +137,7 @@
     </div>
 
     <x-forms.input-translated name="{{ $c }}.submitText" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Submit button text') }}" />
-    <x-forms.texteditor-translated name="{{ $c }}.successMessage" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Success message') }}" toolbar="bold italic | link" />
+    <x-forms.texteditor-translated name="{{ $c }}.successMessage" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Success message') }}" />
 
     <flux:input wire:model.lazy="{{ $c }}.recipient" label="{{ __('Send submissions to') }}" placeholder="{{ __('Defaults to your site contact email') }}" description="{{ __('Separate multiple addresses with a comma.') }}" />
 

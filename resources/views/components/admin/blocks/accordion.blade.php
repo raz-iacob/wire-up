@@ -6,7 +6,7 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline | align" />
+    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
 
     <div class="flex flex-col gap-2">
         <flux:label>{{ __('Items') }}</flux:label>
@@ -42,7 +42,7 @@
 
                     <div class="flex flex-col gap-4 p-4" x-show="open" x-collapse x-cloak>
                         <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.title" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Title') }}" />
-                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.body" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Content') }}" toolbar="bold italic | bullet ordered | link" />
+                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.body" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Content') }}" />
                     </div>
                 </flux:card>
             @endforeach

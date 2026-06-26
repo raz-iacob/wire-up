@@ -6,7 +6,7 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" toolbar="bold italic underline | align" />
+    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
 
     <flux:input
         wire:model.lazy="{{ $c }}.map"
@@ -22,7 +22,7 @@
         <flux:input wire:model.lazy="{{ $c }}.email" type="email" label="{{ __('Email') }}" placeholder="hello@example.com" />
     </div>
 
-    <x-forms.texteditor-translated name="{{ $c }}.hours" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Opening hours') }}" toolbar="bold italic | bullet ordered" />
+    <x-forms.texteditor-translated name="{{ $c }}.hours" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Opening hours') }}" />
 
     <div class="flex flex-col gap-4">
         <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />

@@ -42,6 +42,20 @@ it('renders all block types on the public page', function (): void {
         ->assertSee('aria-hidden="true"', false);
 });
 
+it('renders an inline badge span from rich-text content on the public page', function (): void {
+    publishPageWithBlocks('badge-page', [
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => [
+            'body' => ['en' => '<p><span data-badge data-badge-bg="#2563eb" data-badge-color="#ffffff" class="wire-badge" style="background-color:#2563eb;color:#ffffff">For Children</span> hello</p>'],
+        ]],
+    ]);
+
+    $this->get(route('page', 'badge-page'))
+        ->assertOk()
+        ->assertSee('class="wire-badge"', false)
+        ->assertSee('background-color:#2563eb', false)
+        ->assertSee('For Children');
+});
+
 it('renders the contact form block with its present fields and submit label', function (): void {
     publishPageWithBlocks('contact', [
         ['id' => 'new-1', 'type' => 'contact-form', 'content' => array_replace_recursive(

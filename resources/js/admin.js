@@ -66,15 +66,6 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
     });
 });
 
-document.addEventListener("flux:editor", (e) => {
-    e.detail.init(({ editor }) => {
-        const root = (editor.options?.element ?? editor.view?.dom)?.closest(
-            "[data-flux-editor]",
-        );
-        if (root) root._tiptap = editor;
-    });
-});
-
 document.addEventListener("alpine:init", () => {
     // Toggles a raw-HTML "source" view for a Flux rich-text editor. The textarea
     // reads from and writes back to the underlying Tiptap instance (captured above
