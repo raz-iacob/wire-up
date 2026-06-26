@@ -23,7 +23,143 @@ it('derives admin and frontend view paths from the value', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'contact-form', 'spacer']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'buttons', 'audio', 'downloads', 'rich-text', 'stats', 'team', 'pricing', 'contact-form', 'spacer', 'divider']);
+});
+
+it('seeds the divider default content and has no anchor', function (): void {
+    expect(BlockType::DIVIDER->defaultContent())->toBe(['size' => 'medium']);
+    expect(BlockType::DIVIDER->hasAnchor())->toBeFalse();
+    expect(BlockType::DIVIDER->editorTitle([], 'en'))->toBe('Divider');
+});
+
+it('seeds the rich text default content shape', function (): void {
+    expect(BlockType::RICH_TEXT->defaultContent())->toMatchArray([
+        'heading' => [],
+        'body' => [],
+        'width' => 'normal',
+        'align' => 'left',
+        'hasBackground' => false,
+    ]);
+});
+
+it('derives the rich text title from the heading, falling back to the label', function (): void {
+    expect(BlockType::RICH_TEXT->editorTitle(['heading' => ['en' => '<p>Our story</p>']], 'en'))->toBe('Our story');
+    expect(BlockType::RICH_TEXT->editorTitle([], 'en'))->toBe('Rich Text');
+});
+
+it('seeds the stats default content shape', function (): void {
+    $content = BlockType::STATS->defaultContent();
+
+    expect($content)->toMatchArray([
+        'columns' => 4,
+        'layout' => 'plain',
+        'hasBackground' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+    expect($content['items'])->toHaveCount(1);
+    expect($content['items'][0]['value'])->toBe([]);
+    expect($content['items'][0]['label'])->toBe([]);
+    expect($content['items'][0]['id'])->toBeString()->not->toBeEmpty();
+});
+
+it('seeds the team default content shape', function (): void {
+    $content = BlockType::TEAM->defaultContent();
+
+    expect($content)->toMatchArray([
+        'columns' => 3,
+        'hasBackground' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+    expect($content['items'])->toHaveCount(1);
+    expect($content['items'][0]['photo'])->toBeNull();
+    expect($content['items'][0]['name'])->toBe([]);
+    expect($content['items'][0]['role'])->toBe([]);
+    expect($content['items'][0]['bio'])->toBe([]);
+    expect($content['items'][0]['socials'])->toBe(['email' => '', 'website' => '', 'linkedin' => '', 'x' => '', 'instagram' => '']);
+    expect($content['items'][0]['id'])->toBeString()->not->toBeEmpty();
+});
+
+it('seeds the pricing default content shape', function (): void {
+    $content = BlockType::PRICING->defaultContent();
+
+    expect($content)->toMatchArray([
+        'columns' => 3,
+        'hasBackground' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+    expect($content['items'])->toHaveCount(1);
+    expect($content['items'][0]['name'])->toBe([]);
+    expect($content['items'][0]['price'])->toBe([]);
+    expect($content['items'][0]['period'])->toBe([]);
+    expect($content['items'][0]['features'])->toBe([]);
+    expect($content['items'][0]['featured'])->toBeFalse();
+    expect($content['items'][0]['cta'])->toBe([
+        'enabled' => false,
+        'text' => [],
+        'link' => ['type' => 'url', 'value' => '', 'newTab' => false],
+        'bg' => null,
+        'textColor' => null,
+    ]);
+    expect($content['items'][0]['id'])->toBeString()->not->toBeEmpty();
+});
+
+it('derives stats, team and pricing titles from their headings', function (): void {
+    expect(BlockType::STATS->editorTitle(['heading' => ['en' => '<p>By the numbers</p>']], 'en'))->toBe('By the numbers');
+    expect(BlockType::STATS->editorTitle([], 'en'))->toBe('Stats');
+    expect(BlockType::TEAM->editorTitle(['heading' => ['en' => '<p>Meet the team</p>']], 'en'))->toBe('Meet the team');
+    expect(BlockType::TEAM->editorTitle([], 'en'))->toBe('Team');
+    expect(BlockType::PRICING->editorTitle(['heading' => ['en' => '<p>Simple pricing</p>']], 'en'))->toBe('Simple pricing');
+    expect(BlockType::PRICING->editorTitle([], 'en'))->toBe('Pricing');
+});
+
+it('seeds the buttons default content shape', function (): void {
+    $content = BlockType::BUTTONS->defaultContent();
+
+    expect($content)->toMatchArray([
+        'align' => 'center',
+        'hasBackground' => false,
+    ]);
+    expect($content['items'])->toHaveCount(1);
+    expect($content['items'][0]['text'])->toBe([]);
+    expect($content['items'][0]['variant'])->toBe('primary');
+    expect($content['items'][0]['link'])->toBe(['type' => 'url', 'value' => '', 'newTab' => false]);
+    expect($content['items'][0]['id'])->toBeString()->not->toBeEmpty();
+});
+
+it('falls back to the label for the buttons title', function (): void {
+    expect(BlockType::BUTTONS->editorTitle([], 'en'))->toBe('Buttons');
+});
+
+it('seeds the audio default content shape', function (): void {
+    expect(BlockType::AUDIO->defaultContent())->toMatchArray([
+        'audio' => null,
+        'hasBackground' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+});
+
+it('derives the audio title from the heading, falling back to the label', function (): void {
+    expect(BlockType::AUDIO->editorTitle(['heading' => ['en' => '<p>Listen now</p>']], 'en'))->toBe('Listen now');
+    expect(BlockType::AUDIO->editorTitle([], 'en'))->toBe('Audio');
+});
+
+it('seeds the downloads default content shape', function (): void {
+    expect(BlockType::DOWNLOADS->defaultContent())->toMatchArray([
+        'files' => [],
+        'columns' => 1,
+        'hasBackground' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+});
+
+it('derives the downloads title from the heading, falling back to the label', function (): void {
+    expect(BlockType::DOWNLOADS->editorTitle(['heading' => ['en' => '<p>Resources</p>']], 'en'))->toBe('Resources');
+    expect(BlockType::DOWNLOADS->editorTitle([], 'en'))->toBe('Downloads');
 });
 
 it('seeds the contact form default content shape', function (): void {

@@ -41,7 +41,7 @@
         @elseif ($linkType === 'anchor')
             <flux:input wire:model.lazy="{{ $c }}.imageLink.link.value" label="{{ __('Section anchor') }}" placeholder="#contact" />
         @else
-            <flux:input wire:model.lazy="{{ $c }}.imageLink.link.value" type="url" label="{{ __('URL') }}" placeholder="https://example.com" />
+            <flux:input wire:model.lazy="{{ $c }}.imageLink.link.value" label="{{ __('URL') }}" placeholder="https://example.com" />
             <flux:switch wire:model.lazy="{{ $c }}.imageLink.link.newTab" label="{{ __('Open in a new tab') }}" align="left" />
         @endif
     </div>

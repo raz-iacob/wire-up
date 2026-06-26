@@ -41,6 +41,25 @@ it('maps mime types to correct enum cases', function (): void {
         ->and(MediaType::fromMimeType(null))->toBe(MediaType::DOCUMENT);
 });
 
+it('allows common office document mime types for downloads', function (): void {
+    $document = MediaType::DOCUMENT->allowedMimeTypes();
+
+    expect($document)
+        ->toContain('application/pdf')
+        ->toContain('application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        ->toContain('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        ->toContain('application/vnd.ms-excel')
+        ->toContain('application/vnd.openxmlformats-officedocument.presentationml.presentation')
+        ->toContain('text/csv')
+        ->toContain('application/zip')
+        ->toContain('application/vnd.rar')
+        ->toContain('application/x-7z-compressed')
+        ->toContain('application/gzip')
+        ->toContain('application/epub+zip');
+
+    expect(MediaType::IMAGE->allowedMimeTypes())->toContain('image/jpeg')->not->toContain('application/pdf');
+});
+
 it('returns correct icon for each case', function (): void {
     expect(MediaType::AUDIO->icon())->toBe('speaker-wave')
         ->and(MediaType::DOCUMENT->icon())->toBe('document')

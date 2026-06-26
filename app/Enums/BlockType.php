@@ -18,8 +18,16 @@ enum BlockType: string
     case TESTIMONIALS = 'testimonials';
     case SPONSORS = 'sponsors';
     case FEATURE_CARDS = 'feature-cards';
+    case BUTTONS = 'buttons';
+    case AUDIO = 'audio';
+    case DOWNLOADS = 'downloads';
+    case RICH_TEXT = 'rich-text';
+    case STATS = 'stats';
+    case TEAM = 'team';
+    case PRICING = 'pricing';
     case CONTACT_FORM = 'contact-form';
     case SPACER = 'spacer';
+    case DIVIDER = 'divider';
 
     /**
      * @return array<int, string>
@@ -42,8 +50,16 @@ enum BlockType: string
             self::TESTIMONIALS => __('Testimonials'),
             self::SPONSORS => __('Sponsors'),
             self::FEATURE_CARDS => __('Feature Cards'),
+            self::BUTTONS => __('Buttons'),
+            self::AUDIO => __('Audio'),
+            self::DOWNLOADS => __('Downloads'),
+            self::RICH_TEXT => __('Rich Text'),
+            self::STATS => __('Stats'),
+            self::TEAM => __('Team'),
+            self::PRICING => __('Pricing'),
             self::CONTACT_FORM => __('Contact Form'),
             self::SPACER => __('Spacer'),
+            self::DIVIDER => __('Divider'),
         };
     }
 
@@ -60,14 +76,22 @@ enum BlockType: string
             self::TESTIMONIALS => 'chat-bubble-left-right',
             self::SPONSORS => 'handshake',
             self::FEATURE_CARDS => 'squares-2x2',
+            self::BUTTONS => 'cursor-arrow-rays',
+            self::AUDIO => 'musical-note',
+            self::DOWNLOADS => 'arrow-down-tray',
+            self::RICH_TEXT => 'document-text',
+            self::STATS => 'chart-bar',
+            self::TEAM => 'users',
+            self::PRICING => 'currency-dollar',
             self::CONTACT_FORM => 'mail',
             self::SPACER => 'arrows-up-down',
+            self::DIVIDER => 'minus',
         };
     }
 
     public function hasAnchor(): bool
     {
-        return $this !== self::SPACER;
+        return ! in_array($this, [self::SPACER, self::DIVIDER], true);
     }
 
     public function description(): string
@@ -83,8 +107,16 @@ enum BlockType: string
             self::TESTIMONIALS => __('Customer quotes shown in a grid, carousel or single column.'),
             self::SPONSORS => __('Sponsor and partner logos shown in a grid, marquee or grouped by tier.'),
             self::FEATURE_CARDS => __('A responsive grid of cards, each with an image or icon, a title and a short description.'),
+            self::BUTTONS => __('A row of call-to-action buttons linking to pages, sections or external URLs.'),
+            self::AUDIO => __('An audio player for a single uploaded track or recording.'),
+            self::DOWNLOADS => __('A list of downloadable files such as PDFs, documents or archives.'),
+            self::RICH_TEXT => __('A standalone block of formatted text with an optional heading.'),
+            self::STATS => __('Eye-catching numbers or statistics shown in a row.'),
+            self::TEAM => __('A grid of team members with a photo, role, bio and social links.'),
+            self::PRICING => __('Pricing plans shown side by side, each with features and a button.'),
             self::CONTACT_FORM => __('A contact form that emails you and stores each submission.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
+            self::DIVIDER => __('A horizontal divider line in your chosen thickness.'),
         };
     }
 
@@ -212,6 +244,61 @@ enum BlockType: string
                     ['id' => (string) Str::uuid(), 'image' => null, 'title' => [], 'body' => [], 'cta' => $cta],
                 ],
             ],
+            self::BUTTONS => [
+                'align' => 'center',
+                'hasBackground' => false,
+                'items' => [
+                    ['id' => (string) Str::uuid(), 'text' => [], 'variant' => 'primary', 'link' => ['type' => 'url', 'value' => '', 'newTab' => false]],
+                ],
+            ],
+            self::AUDIO => [
+                'audio' => null,
+                'hasBackground' => false,
+                'heading' => [],
+                'intro' => [],
+            ],
+            self::DOWNLOADS => [
+                'files' => [],
+                'columns' => 1,
+                'hasBackground' => false,
+                'heading' => [],
+                'intro' => [],
+            ],
+            self::RICH_TEXT => [
+                'heading' => [],
+                'body' => [],
+                'width' => 'normal',
+                'align' => 'left',
+                'hasBackground' => false,
+            ],
+            self::STATS => [
+                'columns' => 4,
+                'layout' => 'plain',
+                'hasBackground' => false,
+                'heading' => [],
+                'intro' => [],
+                'items' => [
+                    ['id' => (string) Str::uuid(), 'value' => [], 'label' => []],
+                ],
+            ],
+            self::TEAM => [
+                'columns' => 3,
+                'hasBackground' => false,
+                'heading' => [],
+                'intro' => [],
+                'items' => [
+                    ['id' => (string) Str::uuid(), 'photo' => null, 'name' => [], 'role' => [], 'bio' => [], 'socials' => ['email' => '', 'website' => '', 'linkedin' => '', 'x' => '', 'instagram' => '']],
+                ],
+            ],
+            self::PRICING => [
+                'columns' => 3,
+                'hasBackground' => false,
+                'heading' => [],
+                'intro' => [],
+                'items' => [
+                    ['id' => (string) Str::uuid(), 'name' => [], 'price' => [], 'period' => [], 'description' => [], 'features' => [], 'featured' => false, 'badge' => [], 'cta' => $cta],
+                ],
+            ],
             self::CONTACT_FORM => [
                 'formName' => '',
                 'layout' => 'stacked',
@@ -232,6 +319,7 @@ enum BlockType: string
                 'customFields' => [],
             ],
             self::SPACER => ['size' => 'medium'],
+            self::DIVIDER => ['size' => 'medium'],
         };
     }
 

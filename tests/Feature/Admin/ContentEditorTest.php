@@ -31,9 +31,11 @@ it('renders each block type partial', function (): void {
             'new-a' => ['id' => 'new-a', 'type' => 'hero', 'position' => 0, 'content' => ['align' => 'center']],
             'new-b' => ['id' => 'new-b', 'type' => 'text-image', 'position' => 1, 'content' => ['reverseLayout' => false]],
             'new-c' => ['id' => 'new-c', 'type' => 'spacer', 'position' => 2, 'content' => ['size' => 'medium']],
+            'new-d' => ['id' => 'new-d', 'type' => 'divider', 'position' => 3, 'content' => ['size' => 'medium']],
         ])
         ->assertSee('Heading')
         ->assertSee('Spacer size')
+        ->assertSee('Thickness')
         ->assertSee('Display image on the right');
 });
 
@@ -217,11 +219,13 @@ it('inserts a block at the chosen position and renumbers', function (): void {
     expect($blocks[2]['position'])->toBe(2);
 });
 
-it('shows the block picker options with descriptions', function (): void {
+it('shows the block picker options with descriptions and a search input', function (): void {
     $this->get(route('admin.pages-edit', $this->page))
         ->assertOk()
         ->assertSee('Add a block')
-        ->assertSee('Full-width banner with a heading, subheading and background image.');
+        ->assertSee('Full-width banner with a heading, subheading and background image.')
+        ->assertSee('Search blocks…')
+        ->assertDontSee('Choose a block to add to your page.');
 });
 
 it('keys blocks by id so nested bindings stay stable', function (): void {
@@ -405,6 +409,86 @@ it('seeds a full default content structure for an accordion block', function ():
                 && $content['hasBackground'] === false
                 && count($content['items']) === 1;
         });
+});
+
+it('renders the rich text, stats, team and pricing block partials', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-rt' => ['id' => 'new-rt', 'type' => 'rich-text', 'position' => 0, 'content' => BlockType::RICH_TEXT->defaultContent()],
+            'new-st' => ['id' => 'new-st', 'type' => 'stats', 'position' => 1, 'content' => BlockType::STATS->defaultContent()],
+            'new-tm' => ['id' => 'new-tm', 'type' => 'team', 'position' => 2, 'content' => BlockType::TEAM->defaultContent()],
+            'new-pr' => ['id' => 'new-pr', 'type' => 'pricing', 'position' => 3, 'content' => BlockType::PRICING->defaultContent()],
+        ])
+        ->assertSee('Add stat')
+        ->assertSee('Dividers')
+        ->assertSee('Add member')
+        ->assertSee('Add plan')
+        ->assertSee('Social links')
+        ->assertSee('Highlight this plan');
+});
+
+it('adds, removes and reorders stats, team and pricing items', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'st' => ['id' => 'st', 'type' => 'stats', 'position' => 0, 'content' => ['columns' => 4, 'items' => [
+                ['id' => 'a', 'value' => ['en' => 'A'], 'label' => []],
+            ]]],
+            'tm' => ['id' => 'tm', 'type' => 'team', 'position' => 1, 'content' => ['columns' => 3, 'items' => [
+                ['id' => 'x', 'name' => ['en' => 'X'], 'role' => [], 'bio' => [], 'photo' => null, 'socials' => []],
+                ['id' => 'y', 'name' => ['en' => 'Y'], 'role' => [], 'bio' => [], 'photo' => null, 'socials' => []],
+            ]]],
+            'pr' => ['id' => 'pr', 'type' => 'pricing', 'position' => 2, 'content' => ['columns' => 3, 'items' => []]],
+        ])
+        ->call('addStatItem', 'st')
+        ->assertSet('blocks.st.content.items', fn (array $items): bool => count($items) === 2)
+        ->call('removeStatItem', 'st', 0)
+        ->assertSet('blocks.st.content.items', fn (array $items): bool => count($items) === 1 && array_keys($items) === [0])
+        ->call('reorderTeamItems', 'y', 0)
+        ->assertSet('blocks.tm.content.items', fn (array $items): bool => array_column($items, 'id') === ['y', 'x'])
+        ->call('addPricingItem', 'pr')
+        ->assertSet('blocks.pr.content.items', fn (array $items): bool => count($items) === 1 && $items[0]['featured'] === false)
+        ->call('removePricingItem', 'pr', 0)
+        ->assertSet('blocks.pr.content.items', fn (array $items): bool => $items === []);
+});
+
+it('renders the buttons, audio and downloads block partials', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-btn' => ['id' => 'new-btn', 'type' => 'buttons', 'position' => 0, 'content' => BlockType::BUTTONS->defaultContent()],
+            'new-aud' => ['id' => 'new-aud', 'type' => 'audio', 'position' => 1, 'content' => BlockType::AUDIO->defaultContent()],
+            'new-dl' => ['id' => 'new-dl', 'type' => 'downloads', 'position' => 2, 'content' => BlockType::DOWNLOADS->defaultContent()],
+        ])
+        ->assertSee('Add button')
+        ->assertSee('Alignment')
+        ->assertSee('Audio file')
+        ->assertSee('Files');
+});
+
+it('adds and removes buttons, capping at three', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-btn' => ['id' => 'new-btn', 'type' => 'buttons', 'position' => 0, 'content' => BlockType::BUTTONS->defaultContent()],
+        ])
+        ->call('addButtonItem', 'new-btn')
+        ->assertSet('blocks.new-btn.content.items', fn (array $items): bool => count($items) === 2)
+        ->call('addButtonItem', 'new-btn')
+        ->assertSet('blocks.new-btn.content.items', fn (array $items): bool => count($items) === 3)
+        ->call('addButtonItem', 'new-btn')
+        ->assertSet('blocks.new-btn.content.items', fn (array $items): bool => count($items) === 3)
+        ->call('removeButtonItem', 'new-btn', 1)
+        ->assertSet('blocks.new-btn.content.items', fn (array $items): bool => count($items) === 2 && array_keys($items) === [0, 1]);
+});
+
+it('reorders buttons by id', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-btn' => ['id' => 'new-btn', 'type' => 'buttons', 'position' => 0, 'content' => ['align' => 'center', 'items' => [
+                ['id' => 'a', 'text' => ['en' => 'A'], 'variant' => 'primary', 'link' => ['type' => 'url', 'value' => '', 'newTab' => false]],
+                ['id' => 'b', 'text' => ['en' => 'B'], 'variant' => 'primary', 'link' => ['type' => 'url', 'value' => '', 'newTab' => false]],
+            ]]],
+        ])
+        ->call('reorderButtonItems', 'b', 0)
+        ->assertSet('blocks.new-btn.content.items', fn (array $items): bool => array_column($items, 'id') === ['b', 'a']);
 });
 
 it('adds and removes accordion items', function (): void {

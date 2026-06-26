@@ -47,7 +47,7 @@
                     <flux:input wire:model.lazy="{{ $c }}.{{ $cta }}.link.value" label="{{ __('Section anchor') }}" placeholder="#contact" />
                 @else
                     <div class="flex flex-col gap-3">
-                        <flux:input wire:model.lazy="{{ $c }}.{{ $cta }}.link.value" type="url" label="{{ __('URL') }}" placeholder="https://example.com" />
+                        <flux:input wire:model.lazy="{{ $c }}.{{ $cta }}.link.value" label="{{ __('URL') }}" placeholder="https://example.com" />
                         <flux:switch wire:model.lazy="{{ $c }}.{{ $cta }}.link.newTab" label="{{ __('Open in a new tab') }}" align="left" />
                     </div>
                 @endif

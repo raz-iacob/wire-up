@@ -11,15 +11,15 @@
     <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" />
 
     <div class="flex flex-col gap-2">
-        <flux:label>{{ __('Cards') }}</flux:label>
+        <flux:label>{{ __('Plans') }}</flux:label>
 
-        <div wire:sort="reorderFeatureItems" wire:sort:group="feature-cards-{{ $block['id'] }}" class="flex flex-col gap-3">
+        <div wire:sort="reorderPricingItems" wire:sort:group="pricing-{{ $block['id'] }}" class="flex flex-col gap-3">
             @foreach ($items as $i => $item)
-                @php($itemTitle = \Illuminate\Support\Str::of((string) data_get($item, "title.{$locale}"))->squish()->limit(50)->value())
+                @php($planName = \Illuminate\Support\Str::of((string) data_get($item, "name.{$locale}"))->squish()->limit(50)->value())
                 <flux:card
                     size="sm"
                     class="p-0! overflow-hidden"
-                    wire:key="feature-item-{{ $item['id'] ?? $i }}"
+                    wire:key="pricing-item-{{ $item['id'] ?? $i }}"
                     wire:sort:item="{{ $item['id'] ?? $i }}"
                     x-data="{ open: false }"
                     x-on:open-block-item.window="$event.detail.id === '{{ $item['id'] ?? $i }}' && (open = true)"
@@ -30,7 +30,7 @@
                         </div>
 
                         <button type="button" class="flex items-center gap-2 grow min-w-0 text-left" x-on:click="open = !open">
-                            <flux:heading size="sm" class="truncate">{{ $itemTitle !== '' ? $itemTitle : __('Card :number', ['number' => $i + 1]) }}</flux:heading>
+                            <flux:heading size="sm" class="truncate">{{ $planName !== '' ? $planName : __('Plan :number', ['number' => $i + 1]) }}</flux:heading>
                         </button>
 
                         <div wire:sort:ignore class="flex items-center gap-1 shrink-0">
@@ -38,25 +38,29 @@
                                 <flux:icon name="chevron-down" variant="mini" x-show="!open" />
                                 <flux:icon name="chevron-up" variant="mini" x-show="open" x-cloak />
                             </flux:button>
-                            <flux:button size="sm" variant="subtle" icon="trash" square wire:click="removeFeatureItem('{{ $block['id'] }}', {{ $i }})" :tooltip="__('Remove card')" />
+                            <flux:button size="sm" variant="subtle" icon="trash" square wire:click="removePricingItem('{{ $block['id'] }}', {{ $i }})" :tooltip="__('Remove plan')" />
                         </div>
                     </div>
 
                     <div class="flex flex-col gap-4 p-4" x-show="open" x-collapse x-cloak>
-                        <livewire:admin.blocks.item-media
-                            :block-id="$block['id']"
-                            item-id="{{ $item['id'] ?? $i }}"
-                            field="image"
-                            :value="data_get($item, 'image')"
-                            media-type="image"
-                            :multiple="false"
-                            :locale="$locale"
-                            :multi-locale="$multiLocale"
-                            label="{{ __('Image or icon') }}"
-                            wire:key="feature-image-{{ $block['id'] }}-{{ $item['id'] ?? $i }}" />
+                        <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.name" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Plan name') }}" />
 
-                        <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.title" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Title') }}" />
-                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.body" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Description') }}" />
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.price" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Price') }}" />
+                            <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.period" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Period') }}" />
+                        </div>
+
+                        <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.description" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Short description') }}" />
+
+                        <x-forms.texteditor-translated name="{{ $c }}.items.{{ $i }}.features" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Features') }}" />
+
+                        <flux:switch wire:model.live="{{ $c }}.items.{{ $i }}.featured" label="{{ __('Highlight this plan') }}" align="left" />
+
+                        <div x-show="{{ $b }}?.items?.[{{ $i }}]?.featured" x-cloak>
+                            <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.badge" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Highlight label') }}" />
+                        </div>
+
+                        <flux:separator variant="subtle" />
 
                         <flux:switch wire:model.live="{{ $c }}.items.{{ $i }}.cta.enabled" label="{{ __('Show a button') }}" align="left" />
 
@@ -96,34 +100,15 @@
         </div>
 
         <div>
-            <flux:button size="sm" icon="plus" wire:click="addFeatureItem('{{ $block['id'] }}')">{{ __('Add card') }}</flux:button>
+            <flux:button size="sm" icon="plus" wire:click="addPricingItem('{{ $block['id'] }}')">{{ __('Add plan') }}</flux:button>
         </div>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-4">
-        <flux:radio.group wire:model.live="{{ $c }}.columns" variant="segmented" label="{{ __('Columns') }}">
-            @foreach ([2, 3, 4] as $columnOption)
-                <flux:radio value="{{ $columnOption }}" label="{{ $columnOption }}" />
-            @endforeach
-        </flux:radio.group>
+    <flux:radio.group wire:model.live="{{ $c }}.columns" variant="segmented" label="{{ __('Columns') }}">
+        @foreach ([2, 3, 4] as $columnOption)
+            <flux:radio value="{{ $columnOption }}" label="{{ $columnOption }}" />
+        @endforeach
+    </flux:radio.group>
 
-        <flux:select wire:model.live="{{ $c }}.imageHeight" variant="listbox" label="{{ __('Image height') }}">
-            <flux:select.option value="icon">{{ __('Icon') }}</flux:select.option>
-            <flux:select.option value="small">{{ __('Small') }}</flux:select.option>
-            <flux:select.option value="medium">{{ __('Medium') }}</flux:select.option>
-            <flux:select.option value="large">{{ __('Large') }}</flux:select.option>
-            <flux:select.option value="xl">{{ __('Extra large') }}</flux:select.option>
-        </flux:select>
-    </div>
-
-    <div class="flex flex-col gap-4">
-        <flux:switch wire:model.live="{{ $c }}.imageRounded" label="{{ __('Round the image corners') }}" align="left" />
-        <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />
-        <flux:switch wire:model.live="{{ $c }}.cardStyle" label="{{ __('Show cards with a background') }}" align="left" />
-    </div>
-
-    <div x-show="{{ $b }}?.cardStyle" x-cloak class="grid md:grid-cols-2 gap-4">
-        <flux:color-picker wire:model="{{ $c }}.cardBg" clearable label="{{ __('Card background') }}" placeholder="{{ __('Theme') }}" />
-        <flux:color-picker wire:model="{{ $c }}.cardText" clearable label="{{ __('Card text') }}" placeholder="{{ __('Theme') }}" />
-    </div>
+    <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />
 </div>

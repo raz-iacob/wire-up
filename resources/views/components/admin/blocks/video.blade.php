@@ -28,7 +28,6 @@
     <div x-show="{{ $b }}?.source === 'url'" x-cloak>
         <flux:input
             wire:model.lazy="{{ $c }}.url"
-            type="url"
             label="{{ __('Video URL') }}"
             placeholder="https://www.youtube.com/watch?v=..."
             description="{{ __('A YouTube or Vimeo link, or a direct .mp4 / .webm URL.') }}" />

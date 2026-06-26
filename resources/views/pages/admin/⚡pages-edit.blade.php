@@ -376,6 +376,8 @@ return new class extends Component
         $this->insertPosition = $position;
 
         Flux::modal('block-picker')->show();
+
+        $this->dispatch('block-picker-opened');
     }
 
     public function addBlock(string $type): void
@@ -387,6 +389,7 @@ return new class extends Component
         }
 
         $id = 'new-'.Str::uuid()->toString();
+        $content = $blockType->defaultContent();
 
         $blocks = array_values($this->blocks);
         $position = $this->insertPosition ?? count($blocks);
@@ -395,7 +398,7 @@ return new class extends Component
             'id' => $id,
             'type' => $blockType->value,
             'position' => $position,
-            'content' => $blockType->defaultContent(),
+            'content' => $content,
         ]]);
 
         $this->blocks = collect($blocks)
@@ -407,6 +410,10 @@ return new class extends Component
         $this->insertPosition = null;
 
         Flux::modal('block-picker')->close();
+
+        if (($firstItemId = data_get($content, 'items.0.id')) !== null) {
+            $this->dispatch('open-block-item', id: $firstItemId);
+        }
     }
 
     public function addAccordionItem(string $id): void
@@ -605,6 +612,184 @@ return new class extends Component
 
     #[Renderless]
     public function reorderTestimonialItems(string $itemId, int $position): void
+    {
+        foreach ($this->blocks as $blockId => $block) {
+            $items = $block['content']['items'] ?? null;
+
+            if (! is_array($items)) {
+                continue;
+            }
+
+            $from = collect($items)->search(fn (array $item): bool => ($item['id'] ?? null) === $itemId);
+
+            if ($from === false) {
+                continue;
+            }
+
+            $moved = $items[$from];
+            array_splice($items, $from, 1);
+            array_splice($items, $position, 0, [$moved]);
+
+            $this->blocks[$blockId]['content']['items'] = array_values($items);
+
+            return;
+        }
+    }
+
+    public function addButtonItem(string $id): void
+    {
+        if (! isset($this->blocks[$id]) || count($this->blocks[$id]['content']['items'] ?? []) >= 3) {
+            return;
+        }
+
+        $itemId = (string) Str::uuid();
+        $this->blocks[$id]['content']['items'][] = [
+            'id' => $itemId,
+            'text' => [],
+            'variant' => 'primary',
+            'link' => ['type' => 'url', 'value' => '', 'newTab' => false],
+        ];
+        $this->dispatch('open-block-item', id: $itemId);
+    }
+
+    public function removeButtonItem(string $id, int $index): void
+    {
+        if (! isset($this->blocks[$id]['content']['items'][$index])) {
+            return;
+        }
+
+        unset($this->blocks[$id]['content']['items'][$index]);
+
+        $this->blocks[$id]['content']['items'] = array_values($this->blocks[$id]['content']['items']);
+    }
+
+    #[Renderless]
+    public function reorderButtonItems(string $itemId, int $position): void
+    {
+        foreach ($this->blocks as $blockId => $block) {
+            $items = $block['content']['items'] ?? null;
+
+            if (! is_array($items)) {
+                continue;
+            }
+
+            $from = collect($items)->search(fn (array $item): bool => ($item['id'] ?? null) === $itemId);
+
+            if ($from === false) {
+                continue;
+            }
+
+            $moved = $items[$from];
+            array_splice($items, $from, 1);
+            array_splice($items, $position, 0, [$moved]);
+
+            $this->blocks[$blockId]['content']['items'] = array_values($items);
+
+            return;
+        }
+    }
+
+    public function addStatItem(string $id): void
+    {
+        if (! isset($this->blocks[$id])) {
+            return;
+        }
+
+        $itemId = (string) Str::uuid();
+        $this->blocks[$id]['content']['items'][] = ['id' => $itemId, 'value' => [], 'label' => []];
+        $this->dispatch('open-block-item', id: $itemId);
+    }
+
+    public function removeStatItem(string $id, int $index): void
+    {
+        $this->removeBlockItem($id, $index);
+    }
+
+    #[Renderless]
+    public function reorderStatItems(string $itemId, int $position): void
+    {
+        $this->reorderBlockItems($itemId, $position);
+    }
+
+    public function addTeamItem(string $id): void
+    {
+        if (! isset($this->blocks[$id])) {
+            return;
+        }
+
+        $itemId = (string) Str::uuid();
+        $this->blocks[$id]['content']['items'][] = [
+            'id' => $itemId,
+            'photo' => null,
+            'name' => [],
+            'role' => [],
+            'bio' => [],
+            'socials' => ['email' => '', 'website' => '', 'linkedin' => '', 'x' => '', 'instagram' => ''],
+        ];
+        $this->dispatch('open-block-item', id: $itemId);
+    }
+
+    public function removeTeamItem(string $id, int $index): void
+    {
+        $this->removeBlockItem($id, $index);
+    }
+
+    #[Renderless]
+    public function reorderTeamItems(string $itemId, int $position): void
+    {
+        $this->reorderBlockItems($itemId, $position);
+    }
+
+    public function addPricingItem(string $id): void
+    {
+        if (! isset($this->blocks[$id])) {
+            return;
+        }
+
+        $itemId = (string) Str::uuid();
+        $this->blocks[$id]['content']['items'][] = [
+            'id' => $itemId,
+            'name' => [],
+            'price' => [],
+            'period' => [],
+            'description' => [],
+            'features' => [],
+            'featured' => false,
+            'badge' => [],
+            'cta' => [
+                'enabled' => false,
+                'text' => [],
+                'link' => ['type' => 'url', 'value' => '', 'newTab' => false],
+                'bg' => null,
+                'textColor' => null,
+            ],
+        ];
+        $this->dispatch('open-block-item', id: $itemId);
+    }
+
+    public function removePricingItem(string $id, int $index): void
+    {
+        $this->removeBlockItem($id, $index);
+    }
+
+    #[Renderless]
+    public function reorderPricingItems(string $itemId, int $position): void
+    {
+        $this->reorderBlockItems($itemId, $position);
+    }
+
+    private function removeBlockItem(string $id, int $index): void
+    {
+        if (! isset($this->blocks[$id]['content']['items'][$index])) {
+            return;
+        }
+
+        unset($this->blocks[$id]['content']['items'][$index]);
+
+        $this->blocks[$id]['content']['items'] = array_values($this->blocks[$id]['content']['items']);
+    }
+
+    private function reorderBlockItems(string $itemId, int $position): void
     {
         foreach ($this->blocks as $blockId => $block) {
             $items = $block['content']['items'] ?? null;
@@ -906,19 +1091,24 @@ return new class extends Component
                     <flux:button icon="plus" variant="filled" wire:click="openBlockPicker">{{ __('Add block') }}</flux:button>
 
                     <flux:modal name="block-picker" class="w-full md:max-w-5xl">
-                        <div class="space-y-6">
-                            <div>
+                        @php($pickerSearches = collect(\App\Enums\BlockType::cases())->map(fn (\App\Enums\BlockType $type): string => \Illuminate\Support\Str::lower($type->label().' '.$type->description()))->values())
+                        <div class="space-y-6" x-data="{ q: '' }" x-on:block-picker-opened.window="q = ''; $nextTick(() => { const i = $refs.blockSearch; (i?.tagName === 'INPUT' ? i : i?.querySelector('input'))?.focus() })">
+                            <div class="space-y-4">
                                 <flux:heading size="lg">{{ __('Add a block') }}</flux:heading>
-                                <flux:text class="mt-2">{{ __('Choose a block to add to your page.') }}</flux:text>
+                                <flux:input x-ref="blockSearch" x-model="q" icon="magnifying-glass" clearable placeholder="{{ __('Search blocks…') }}" />
                             </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                            <div class="grid content-start min-h-100 overflow-y-auto overscroll-contain p-1 md:h-[calc(100vh-20rem)] grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                 @foreach (\App\Enums\BlockType::cases() as $pickerType)
-                                    <button type="button" wire:click="addBlock('{{ $pickerType->value }}')" class="flex flex-col gap-2 rounded-lg border border-zinc-200 dark:border-white/10 p-4 text-left transition hover:border-zinc-300 hover:bg-zinc-50 dark:hover:border-white/20 dark:hover:bg-white/5">
+                                    <button type="button" wire:click="addBlock('{{ $pickerType->value }}')" x-show="q.trim() === '' || @js($pickerSearches[$loop->index]).includes(q.toLowerCase().trim())" class="flex h-fit flex-col gap-2 rounded-lg border border-zinc-200 dark:border-white/10 p-4 text-left transition hover:border-zinc-300 hover:bg-zinc-50 dark:hover:border-white/20 dark:hover:bg-white/5">
                                         <flux:icon name="{{ $pickerType->icon() }}" class="size-6 text-zinc-400" />
                                         <flux:heading size="sm">{{ $pickerType->label() }}</flux:heading>
                                         <flux:text size="sm">{{ $pickerType->description() }}</flux:text>
                                     </button>
                                 @endforeach
+
+                                <div class="col-span-full py-10 text-center" x-show="q.trim() !== '' && @js($pickerSearches->all()).every(h => !h.includes(q.toLowerCase().trim()))" x-cloak>
+                                    <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No blocks match your search.') }}</flux:text>
+                                </div>
                             </div>
                         </div>
                     </flux:modal>

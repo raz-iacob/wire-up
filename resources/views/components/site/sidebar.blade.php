@@ -31,12 +31,12 @@
     $fallbackLabel = data_get(collect($menu['items'])->firstWhere('type', 'heading'), 'label') ?: __('Menu');
 @endphp
 
-<aside data-site-sidebar x-data="{ open: false }" class="w-full">
+<aside data-site-sidebar x-data="{ open: false }" @class([
+    'w-full',
+    'md:sticky md:top-24 md:self-start' => $display['sticky'],
+])>
     {{-- Desktop: the full vertical panel --}}
-    <div @class([
-        'hidden md:block',
-        'md:sticky md:top-24 md:self-start' => $display['sticky'],
-    ])>
+    <div class="hidden md:block">
         <div @class(['rounded-(--wire-radius) bg-(--wire-card-bg) p-6 text-(--wire-card-text)' => $background])>
             <x-site.navlist :items="$menu['items']" />
         </div>

@@ -58,7 +58,7 @@
                         <x-forms.input-translated name="{{ $c }}.items.{{ $i }}.name" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Name') }}" />
 
                         <div class="grid md:grid-cols-2 gap-4">
-                            <flux:input wire:model.lazy="{{ $c }}.items.{{ $i }}.link" type="url" label="{{ __('Link') }}" placeholder="https://example.com" />
+                            <flux:input wire:model.lazy="{{ $c }}.items.{{ $i }}.link" label="{{ __('Link') }}" placeholder="https://example.com" />
                             <flux:input wire:model.lazy="{{ $c }}.items.{{ $i }}.tier" label="{{ __('Tier') }}" placeholder="{{ __('e.g. Gold') }}" />
                         </div>
                     </div>

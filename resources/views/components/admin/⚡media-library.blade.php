@@ -522,23 +522,13 @@ return new class extends Component
         $rules = ['files.*' => ['max:'.$maxKilobytes]];
 
         if ($this->type instanceof MediaType) {
-            match ($this->type) {
-                MediaType::AUDIO => $rules['files.*'][] = 'mimetypes:audio/mpeg,audio/wav,audio/ogg',
-                MediaType::VIDEO => $rules['files.*'][] = 'mimetypes:video/mp4,video/quicktime,video/x-msvideo',
-                MediaType::DOCUMENT => $rules['files.*'][] = 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                MediaType::IMAGE => $rules['files.*'][] = 'mimetypes:image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/heic,image/heif',
-            };
+            $rules['files.*'][] = 'mimetypes:'.implode(',', $this->type->allowedMimeTypes());
         } elseif ($this->allowedTypes !== []) {
-            $mimeTypes = [
-                MediaType::IMAGE->value => 'image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/heic,image/heif',
-                MediaType::VIDEO->value => 'video/mp4,video/quicktime,video/x-msvideo',
-                MediaType::AUDIO->value => 'audio/mpeg,audio/wav,audio/ogg',
-                MediaType::DOCUMENT->value => 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            ];
-
             $allowed = collect($this->allowedTypes)
-                ->map(fn (string $value): ?string => $mimeTypes[$value] ?? null)
+                ->map(fn (string $value): ?MediaType => MediaType::tryFrom($value))
                 ->filter()
+                ->flatMap(fn (MediaType $type): array => $type->allowedMimeTypes())
+                ->unique()
                 ->implode(',');
 
             if ($allowed !== '') {

@@ -487,6 +487,20 @@ it('rejects uploads outside the allowed types', function (): void {
     expect(Media::query()->count())->toBe(0);
 });
 
+it('allows spreadsheet uploads to a document field', function (): void {
+    $sheet = UploadedFile::fake()->create('orders.xlsx', 100, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'downloads', type: 'document', max: 10, media: null)
+        ->set('files', [$sheet])
+        ->call('save', [[]]);
+
+    $this->assertDatabaseHas('media', [
+        'type' => MediaType::DOCUMENT->value,
+        'mime_type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ]);
+});
+
 it('allows large video uploads when video is permitted', function (): void {
     $video = UploadedFile::fake()->create('clip.mp4', 50000, 'video/mp4');
 

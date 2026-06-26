@@ -1004,6 +1004,260 @@ it('omits the photo section image when none is selected', function (): void {
         ->assertDontSee('<img', false);
 });
 
+it('renders call-to-action buttons with resolved links and variant styles', function (): void {
+    $target = publishPageWithBlocks('btn-target', [
+        ['id' => 'new-1', 'type' => 'spacer', 'content' => ['size' => 'small']],
+    ]);
+
+    publishPageWithBlocks('btn-page', [
+        ['id' => 'new-1', 'type' => 'buttons', 'content' => [
+            'align' => 'right',
+            'items' => [
+                ['id' => 'a', 'text' => ['en' => 'Get started'], 'variant' => 'primary', 'link' => ['type' => 'anchor', 'value' => 'contact']],
+                ['id' => 'b', 'text' => ['en' => 'Our page'], 'variant' => 'secondary', 'link' => ['type' => 'page', 'value' => (string) $target->id]],
+                ['id' => 'c', 'text' => ['en' => 'External'], 'variant' => 'outline', 'link' => ['type' => 'url', 'value' => 'https://example.test', 'newTab' => true]],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'btn-page'))
+        ->assertOk()
+        ->assertSee('Get started')
+        ->assertSee('href="#contact"', false)
+        ->assertSee('Our page')
+        ->assertSee($target->getUrl(), false)
+        ->assertSee('External')
+        ->assertSee('href="https://example.test"', false)
+        ->assertSee('target="_blank"', false)
+        ->assertSee('var(--wire-secondary-bg)', false)
+        ->assertSee('justify-end', false);
+});
+
+it('omits buttons with no text or no link', function (): void {
+    publishPageWithBlocks('btn-empty', [
+        ['id' => 'new-1', 'type' => 'buttons', 'content' => [
+            'items' => [
+                ['id' => 'a', 'text' => ['en' => ''], 'variant' => 'primary', 'link' => ['type' => 'url', 'value' => 'https://x.test']],
+                ['id' => 'b', 'text' => ['en' => 'No link'], 'variant' => 'primary', 'link' => ['type' => 'url', 'value' => '']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'btn-empty'))
+        ->assertOk()
+        ->assertDontSee('No link');
+});
+
+it('renders an audio player for an uploaded track', function (): void {
+    publishPageWithBlocks('audio-page', [
+        ['id' => 'new-1', 'type' => 'audio', 'content' => [
+            'heading' => ['en' => '<p>Listen now</p>'],
+            'audio' => ['source' => 'media/track.mp3', 'mime_type' => 'audio/mpeg'],
+        ]],
+    ]);
+
+    $this->get(route('page', 'audio-page'))
+        ->assertOk()
+        ->assertSee('Listen now')
+        ->assertSee('<audio', false)
+        ->assertSee('media/track.mp3', false)
+        ->assertSee('type="audio/mpeg"', false);
+});
+
+it('omits the audio block when no file is selected', function (): void {
+    publishPageWithBlocks('audio-empty', [
+        ['id' => 'new-1', 'type' => 'audio', 'content' => ['heading' => ['en' => '<p>Silent</p>'], 'audio' => null]],
+    ]);
+
+    $this->get(route('page', 'audio-empty'))
+        ->assertOk()
+        ->assertDontSee('<audio', false);
+});
+
+it('renders a downloads list with names, sizes and download links', function (): void {
+    publishPageWithBlocks('downloads-page', [
+        ['id' => 'new-1', 'type' => 'downloads', 'content' => [
+            'heading' => ['en' => '<p>Resources</p>'],
+            'columns' => 3,
+            'files' => [
+                ['id' => 1, 'source' => 'media/guide.pdf', 'filename' => 'guide.pdf', 'mime_type' => 'application/pdf', 'size' => 1048576, 'icon' => 'document'],
+                ['id' => 2, 'source' => 'media/terms.pdf', 'filename' => 'terms.pdf', 'size' => 2048, 'icon' => 'document', 'metadata' => ['caption' => 'Terms and Conditions']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'downloads-page'))
+        ->assertOk()
+        ->assertSee('Resources')
+        ->assertSee('guide.pdf')
+        ->assertSee('media/guide.pdf', false)
+        ->assertSee('download', false)
+        ->assertSee('Terms and Conditions')
+        ->assertSee('1.0 MB')
+        ->assertSee('lg:grid-cols-3', false);
+});
+
+it('omits downloads with no resolvable file', function (): void {
+    publishPageWithBlocks('downloads-empty', [
+        ['id' => 'new-1', 'type' => 'downloads', 'content' => [
+            'files' => [
+                ['id' => 1, 'filename' => 'ghost.pdf'],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'downloads-empty'))
+        ->assertOk()
+        ->assertDontSee('ghost.pdf');
+});
+
+it('renders a rich text block with heading and body, honouring narrow width and centering', function (): void {
+    publishPageWithBlocks('rich', [
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
+            'heading' => ['en' => '<p>Our story</p>'],
+            'body' => ['en' => '<p>We started in a <strong>garage</strong>.</p><ul><li>One</li><li>Two</li></ul>'],
+            'width' => 'narrow',
+            'align' => 'center',
+        ]],
+    ]);
+
+    $this->get(route('page', 'rich'))
+        ->assertOk()
+        ->assertSee('Our story')
+        ->assertSee('<strong>garage</strong>', false)
+        ->assertSee('<li>One</li>', false)
+        ->assertSee('max-w-2xl', false)
+        ->assertSee('text-center', false);
+});
+
+it('omits the rich text block when it has no content', function (): void {
+    publishPageWithBlocks('rich-empty', [
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => ['heading' => ['en' => ''], 'body' => ['en' => '']]],
+    ]);
+
+    $this->get(route('page', 'rich-empty'))
+        ->assertOk()
+        ->assertDontSee('[&_ul]:list-disc', false);
+});
+
+it('renders a stats block and drops empty stats', function (): void {
+    publishPageWithBlocks('stats', [
+        ['id' => 'new-1', 'type' => 'stats', 'content' => [
+            'heading' => ['en' => '<p>By the numbers</p>'],
+            'columns' => 3,
+            'items' => [
+                ['id' => 'a', 'value' => ['en' => '500+'], 'label' => ['en' => 'Happy clients']],
+                ['id' => 'b', 'value' => ['en' => '12'], 'label' => ['en' => 'Years']],
+                ['id' => 'c', 'value' => ['en' => ''], 'label' => ['en' => '']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'stats'))
+        ->assertOk()
+        ->assertSee('By the numbers')
+        ->assertSee('500+')
+        ->assertSee('Happy clients')
+        ->assertSee('Years')
+        ->assertSee('lg:grid-cols-3', false);
+});
+
+it('renders stats as cards or with vertical dividers', function (): void {
+    publishPageWithBlocks('stats-cards', [
+        ['id' => 'new-1', 'type' => 'stats', 'content' => [
+            'layout' => 'cards',
+            'items' => [['id' => 'a', 'value' => ['en' => '500+'], 'label' => ['en' => 'Clients']]],
+        ]],
+    ]);
+
+    publishPageWithBlocks('stats-dividers', [
+        ['id' => 'new-1', 'type' => 'stats', 'content' => [
+            'layout' => 'dividers',
+            'items' => [
+                ['id' => 'a', 'value' => ['en' => '12'], 'label' => ['en' => 'Years']],
+                ['id' => 'b', 'value' => ['en' => '99%'], 'label' => ['en' => 'Uptime']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'stats-cards'))
+        ->assertOk()
+        ->assertSee('500+')
+        ->assertSee('rounded-(--wire-radius) p-6 shadow-sm', false)
+        ->assertSee('background-color:var(--wire-card-bg)', false);
+
+    $this->get(route('page', 'stats-dividers'))
+        ->assertOk()
+        ->assertSee('Years')
+        ->assertSee('Uptime')
+        ->assertSee('sm:border-l', false)
+        ->assertSee('border-(--wire-card-border)', false);
+});
+
+it('renders a divider with the chosen thickness and card background colour', function (): void {
+    publishPageWithBlocks('divider-page', [
+        ['id' => 'new-1', 'type' => 'divider', 'content' => ['size' => 'thick']],
+    ]);
+
+    $this->get(route('page', 'divider-page'))
+        ->assertOk()
+        ->assertSee('<hr', false)
+        ->assertSee('height:3px', false)
+        ->assertSee('background-color:var(--wire-card-border)', false);
+});
+
+it('renders a team block with photo, role, bio and social links', function (): void {
+    publishPageWithBlocks('team', [
+        ['id' => 'new-1', 'type' => 'team', 'content' => [
+            'heading' => ['en' => '<p>Meet the team</p>'],
+            'items' => [
+                ['id' => 'a', 'photo' => ['source' => 'media/jane.jpg', 'crop' => [], 'alt_text' => 'Jane'], 'name' => ['en' => 'Jane Doe'], 'role' => ['en' => 'Founder'], 'bio' => ['en' => '<p>Leads the <strong>vision</strong>.</p>'], 'socials' => ['email' => 'jane@example.com', 'linkedin' => 'https://linkedin.com/in/jane', 'website' => '']],
+                ['id' => 'b', 'photo' => null, 'name' => [], 'role' => [], 'bio' => [], 'socials' => []],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'team'))
+        ->assertOk()
+        ->assertSee('Meet the team')
+        ->assertSee('Jane Doe')
+        ->assertSee('Founder')
+        ->assertSee('<strong>vision</strong>', false)
+        ->assertSee('media/jane.jpg', false)
+        ->assertSee('href="mailto:jane@example.com"', false)
+        ->assertSee('href="https://linkedin.com/in/jane"', false)
+        ->assertSee('aria-label="Linkedin"', false);
+});
+
+it('renders a pricing block with a highlighted plan, features and a button', function (): void {
+    $target = publishPageWithBlocks('plan-target', [
+        ['id' => 'new-1', 'type' => 'spacer', 'content' => ['size' => 'small']],
+    ]);
+
+    publishPageWithBlocks('pricing', [
+        ['id' => 'new-1', 'type' => 'pricing', 'content' => [
+            'heading' => ['en' => '<p>Simple pricing</p>'],
+            'columns' => 2,
+            'items' => [
+                ['id' => 'a', 'name' => ['en' => 'Starter'], 'price' => ['en' => '$0'], 'period' => ['en' => '/mo'], 'description' => ['en' => 'For trying it out'], 'features' => ['en' => '<ul><li>1 site</li></ul>'], 'featured' => false, 'badge' => [], 'cta' => ['enabled' => true, 'text' => ['en' => 'Start free'], 'link' => ['type' => 'page', 'value' => (string) $target->id]]],
+                ['id' => 'b', 'name' => ['en' => 'Pro'], 'price' => ['en' => '$49'], 'period' => ['en' => '/mo'], 'description' => ['en' => 'For teams'], 'features' => ['en' => '<ul><li>Unlimited</li></ul>'], 'featured' => true, 'badge' => ['en' => 'Most popular'], 'cta' => ['enabled' => false, 'text' => [], 'link' => ['type' => 'url', 'value' => '']]],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'pricing'))
+        ->assertOk()
+        ->assertSee('Simple pricing')
+        ->assertSee('Starter')
+        ->assertSee('$49')
+        ->assertSee('/mo')
+        ->assertSee('<li>Unlimited</li>', false)
+        ->assertSee('Most popular')
+        ->assertSee('ring-2 ring-(--wire-primary-bg)', false)
+        ->assertSee('Start free')
+        ->assertSee($target->getUrl(), false);
+});
+
 it('renders a page with no blocks without error', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
