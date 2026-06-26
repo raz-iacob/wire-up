@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
 use App\Models\Page;
+use App\Services\SettingsService;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
@@ -15,14 +17,9 @@ use Livewire\Component;
 return new class extends Component
 {
     /**
-     * @var array<string, array<int, array<string, mixed>>>
+     * @var array<int, array{key: string, name: string, builtin: bool, display: array{background: bool, position: string, sticky: bool, mobile: string}, items: array<string, array<int, array<string, mixed>>>}>
      */
-    public array $header = [];
-
-    /**
-     * @var array<string, array<int, array<string, mixed>>>
-     */
-    public array $footer = [];
+    public array $menus = [];
 
     public int $seq = 0;
 
@@ -41,9 +38,13 @@ return new class extends Component
 
     public bool $showRemoveModal = false;
 
-    public ?string $removeMenu = null;
+    public ?string $removeMenuKey = null;
 
     public ?int $removeIndex = null;
+
+    public bool $showRemoveMenuModal = false;
+
+    public ?string $removeMenuTarget = null;
 
     public function mount(): void
     {
@@ -53,12 +54,20 @@ return new class extends Component
             $this->locale = app()->getLocale();
         }
 
-        $header = is_array(config('site.header_menu')) ? config('site.header_menu') : [];
-        $footer = is_array(config('site.footer_menu')) ? config('site.footer_menu') : [];
+        foreach (SettingsService::current()->allMenus() as $menu) {
+            $items = [];
 
-        foreach (array_keys($this->activeLocales) as $code) {
-            $this->header[$code] = $this->hydrateItems(is_array($header[$code] ?? null) ? $header[$code] : []);
-            $this->footer[$code] = $this->hydrateItems(is_array($footer[$code] ?? null) ? $footer[$code] : []);
+            foreach (array_keys($this->activeLocales) as $code) {
+                $items[$code] = $this->hydrateItems(is_array($menu['items'][$code] ?? null) ? $menu['items'][$code] : []);
+            }
+
+            $this->menus[] = [
+                'key' => $menu['key'],
+                'name' => $menu['name'],
+                'builtin' => $menu['builtin'],
+                'display' => $menu['display'],
+                'items' => $items,
+            ];
         }
 
         $this->pages = Page::query()
@@ -69,55 +78,116 @@ return new class extends Component
             ->all();
     }
 
-    public function addItem(string $menu): void
+    public function addItem(string $key, string $type = 'page'): void
     {
-        if (! in_array($menu, ['header', 'footer'], true)) {
+        $index = $this->menuIndex($key);
+
+        if ($index === null) {
             return;
         }
 
-        $this->{$menu}[$this->locale][] = $this->defaultItem();
+        $this->menus[$index]['items'][$this->locale][] = $this->defaultItem(in_array($type, ['page', 'link', 'heading'], true) ? $type : 'page');
     }
 
-    public function confirmRemove(string $menu, int $index): void
+    public function addMenu(): void
     {
-        if (! in_array($menu, ['header', 'footer'], true) || ! isset($this->{$menu}[$this->locale][$index])) {
+        $items = [];
+
+        foreach (array_keys($this->activeLocales) as $code) {
+            $items[$code] = [];
+        }
+
+        $this->menus[] = [
+            'key' => (string) Str::uuid(),
+            'name' => '',
+            'builtin' => false,
+            'display' => SettingsService::normalizeMenuDisplay(null),
+            'items' => $items,
+        ];
+    }
+
+    public function confirmRemove(string $key, int $index): void
+    {
+        $menuIndex = $this->menuIndex($key);
+
+        if ($menuIndex === null || ! isset($this->menus[$menuIndex]['items'][$this->locale][$index])) {
             return;
         }
 
-        $this->removeMenu = $menu;
+        $this->removeMenuKey = $key;
         $this->removeIndex = $index;
         $this->showRemoveModal = true;
     }
 
     public function removeConfirmed(): void
     {
-        if ($this->removeMenu !== null && $this->removeIndex !== null) {
-            $this->removeItem($this->removeMenu, $this->removeIndex);
+        if ($this->removeMenuKey !== null && $this->removeIndex !== null) {
+            $this->removeItem($this->removeMenuKey, $this->removeIndex);
         }
 
         $this->showRemoveModal = false;
-        $this->removeMenu = null;
+        $this->removeMenuKey = null;
         $this->removeIndex = null;
     }
 
-    public function removeItem(string $menu, int $index): void
+    public function removeItem(string $key, int $index): void
     {
-        if (! in_array($menu, ['header', 'footer'], true) || ! isset($this->{$menu}[$this->locale][$index])) {
+        $menuIndex = $this->menuIndex($key);
+
+        if ($menuIndex === null || ! isset($this->menus[$menuIndex]['items'][$this->locale][$index])) {
             return;
         }
 
-        unset($this->{$menu}[$this->locale][$index]);
-        $this->{$menu}[$this->locale] = array_values($this->{$menu}[$this->locale]);
+        unset($this->menus[$menuIndex]['items'][$this->locale][$index]);
+        $this->menus[$menuIndex]['items'][$this->locale] = array_values($this->menus[$menuIndex]['items'][$this->locale]);
     }
 
-    public function reorderHeader(string $key, int $position): void
+    public function confirmRemoveMenu(string $key): void
     {
-        $this->reorder('header', $key, $position);
+        $index = $this->menuIndex($key);
+
+        if ($index === null || $this->menus[$index]['builtin']) {
+            return;
+        }
+
+        $this->removeMenuTarget = $key;
+        $this->showRemoveMenuModal = true;
     }
 
-    public function reorderFooter(string $key, int $position): void
+    public function removeMenuConfirmed(): void
     {
-        $this->reorder('footer', $key, $position);
+        if ($this->removeMenuTarget !== null) {
+            $index = $this->menuIndex($this->removeMenuTarget);
+
+            if ($index !== null && ! $this->menus[$index]['builtin']) {
+                unset($this->menus[$index]);
+                $this->menus = array_values($this->menus);
+            }
+        }
+
+        $this->showRemoveMenuModal = false;
+        $this->removeMenuTarget = null;
+    }
+
+    public function reorder(string $key, int $position): void
+    {
+        foreach ($this->menus as $menuIndex => $menu) {
+            $items = $menu['items'][$this->locale] ?? [];
+            $current = array_search($key, array_column($items, '_key'), true);
+
+            if ($current === false) {
+                continue;
+            }
+
+            $item = $items[$current];
+            unset($items[$current]);
+            $items = array_values($items);
+            array_splice($items, max(0, min($position, count($items))), 0, [$item]);
+
+            $this->menus[$menuIndex]['items'][$this->locale] = $items;
+
+            return;
+        }
     }
 
     #[On('change-locale')]
@@ -139,17 +209,38 @@ return new class extends Component
             throw $e;
         }
 
-        $header = [];
-        $footer = [];
+        $payload = [];
 
-        foreach (array_keys($this->activeLocales) as $code) {
-            $header[$code] = $this->cleanItems($this->header[$code] ?? []);
-            $footer[$code] = $this->cleanItems($this->footer[$code] ?? []);
+        foreach ($this->menus as $menu) {
+            $items = [];
+
+            foreach (array_keys($this->activeLocales) as $code) {
+                $items[$code] = $this->cleanItems($menu['items'][$code] ?? []);
+            }
+
+            $payload[] = [
+                'key' => $menu['key'],
+                'name' => mb_trim($menu['name']),
+                'builtin' => $menu['builtin'],
+                'display' => SettingsService::normalizeMenuDisplay($menu['display']),
+                'items' => $items,
+            ];
         }
 
-        $action->handle(['header_menu' => $header, 'footer_menu' => $footer]);
+        $action->handle(['menus' => $payload]);
 
         Flux::toast(__('Menus have been updated.'), variant: 'success');
+    }
+
+    private function menuIndex(string $key): ?int
+    {
+        foreach ($this->menus as $index => $menu) {
+            if ($menu['key'] === $key) {
+                return $index;
+            }
+        }
+
+        return null;
     }
 
     public function render(): View
@@ -166,17 +257,14 @@ return new class extends Component
     {
         $urlHint = __('Enter a full URL (https://…), a path (/about), or an anchor link (#contact).');
 
-        $messages = [];
-
-        foreach (['header', 'footer'] as $menu) {
-            $messages["$menu.*.*.label.required"] = __('Give this menu item a label.');
-            $messages["$menu.*.*.page_id.required_if"] = __('Choose a page for this menu item.');
-            $messages["$menu.*.*.page_id.exists"] = __('The selected page is no longer available.');
-            $messages["$menu.*.*.url.required_if"] = __('Enter a link for this menu item.');
-            $messages["$menu.*.*.url.regex"] = $urlHint;
-        }
-
-        return $messages;
+        return [
+            'menus.*.name.required' => __('Give this menu a name.'),
+            'menus.*.items.*.*.label.required' => __('Give this menu item a label.'),
+            'menus.*.items.*.*.page_id.required_if' => __('Choose a page for this menu item.'),
+            'menus.*.items.*.*.page_id.exists' => __('The selected page is no longer available.'),
+            'menus.*.items.*.*.url.required_if' => __('Enter a link for this menu item.'),
+            'menus.*.items.*.*.url.regex' => $urlHint,
+        ];
     }
 
     /**
@@ -184,18 +272,15 @@ return new class extends Component
      */
     private function validationAttributeNames(): array
     {
-        $attributes = [];
-
-        foreach (['header', 'footer'] as $menu) {
-            $attributes["$menu.*.*.label"] = __('label');
-            $attributes["$menu.*.*.url"] = __('link');
-            $attributes["$menu.*.*.page_id"] = __('page');
-            $attributes["$menu.*.*.type"] = __('type');
-            $attributes["$menu.*.*.appearance"] = __('appearance');
-            $attributes["$menu.*.*.target"] = __('target');
-        }
-
-        return $attributes;
+        return [
+            'menus.*.name' => __('menu name'),
+            'menus.*.items.*.*.label' => __('label'),
+            'menus.*.items.*.*.url' => __('link'),
+            'menus.*.items.*.*.page_id' => __('page'),
+            'menus.*.items.*.*.type' => __('type'),
+            'menus.*.items.*.*.appearance' => __('appearance'),
+            'menus.*.items.*.*.target' => __('target'),
+        ];
     }
 
     private function revealErrors(ValidationException $e): void
@@ -209,25 +294,33 @@ return new class extends Component
         foreach (array_keys($e->errors()) as $errorKey) {
             $segments = explode('.', (string) $errorKey);
 
-            if (count($segments) < 3) {
+            if ($segments[0] !== 'menus') {
                 continue;
             }
 
-            [$menu, $locale, $index] = $segments;
-            if (! in_array($menu, ['header', 'footer'], true)) {
+            if (($segments[2] ?? null) !== 'items') {
                 continue;
             }
+
+            if (count($segments) < 5) {
+                continue;
+            }
+
+            $menuIndex = (int) $segments[1];
+            $locale = $segments[3];
+            $index = (int) $segments[4];
+
             if (! in_array($locale, $codes, true)) {
                 continue;
             }
 
-            $item = $this->{$menu}[$locale][(int) $index] ?? null;
+            $item = $this->menus[$menuIndex]['items'][$locale][$index] ?? null;
 
             if (! is_array($item)) {
                 continue;
             }
 
-            $this->{$menu}[$locale][(int) $index]['open'] = true;
+            $this->menus[$menuIndex]['items'][$locale][$index]['open'] = true;
             $erroredLocales[$locale] ??= $locale;
             $keysToOpen[] = $item['_key'];
         }
@@ -246,15 +339,26 @@ return new class extends Component
     {
         $rules = [];
 
-        foreach (['header', 'footer'] as $menu) {
+        foreach (array_keys($this->menus) as $i) {
+            $rules["menus.$i.name"] = ['required', 'string', 'max:100'];
+            $rules["menus.$i.display.background"] = ['boolean'];
+            $rules["menus.$i.display.position"] = [Rule::in(['left', 'right'])];
+            $rules["menus.$i.display.sticky"] = ['boolean'];
+            $rules["menus.$i.display.mobile"] = [Rule::in(['collapse', 'hide', 'toggle'])];
+
             foreach (array_keys($this->activeLocales) as $locale) {
-                $rules["$menu.$locale"] = ['array', 'max:20'];
-                $rules["$menu.$locale.*.type"] = ['required', Rule::in(['page', 'link'])];
-                $rules["$menu.$locale.*.appearance"] = ['required', Rule::in(['link', 'button'])];
-                $rules["$menu.$locale.*.target"] = ['required', Rule::in(['_self', '_blank'])];
-                $rules["$menu.$locale.*.label"] = ['required', 'string', 'max:100'];
-                $rules["$menu.$locale.*.page_id"] = ["required_if:$menu.$locale.*.type,page", 'nullable', 'integer', 'exists:pages,id'];
-                $rules["$menu.$locale.*.url"] = ["required_if:$menu.$locale.*.type,link", 'nullable', 'string', 'max:255', 'regex:/^(https?:\/\/\S+|\/\S*|#\S+)$/'];
+                $base = "menus.$i.items.$locale";
+
+                $rules[$base] = ['array', 'max:20'];
+                $rules["$base.*.type"] = ['required', Rule::in(['page', 'link', 'heading'])];
+                $rules["$base.*.appearance"] = ['required', Rule::in(['link', 'button'])];
+                $rules["$base.*.target"] = ['required', Rule::in(['_self', '_blank'])];
+                $rules["$base.*.label"] = ['required', 'string', 'max:100'];
+                $rules["$base.*.page_id"] = ["required_if:$base.*.type,page", 'nullable', 'integer', 'exists:pages,id'];
+                $rules["$base.*.url"] = ["required_if:$base.*.type,link", 'nullable', 'string', 'max:255', 'regex:/^(https?:\/\/\S+|\/\S*|#\S+)$/'];
+                $rules["$base.*.icon"] = ['nullable', 'string', Rule::in(config()->array('menu.icons'))];
+                $rules["$base.*.badge"] = ['nullable', 'string', 'max:20'];
+                $rules["$base.*.badgeColor"] = [Rule::in(config()->array('menu.badge_colors'))];
             }
         }
 
@@ -276,12 +380,15 @@ return new class extends Component
 
             $hydrated[] = [
                 '_key' => (string) $this->seq++,
-                'type' => in_array($item['type'] ?? null, ['page', 'link'], true) ? $item['type'] : 'page',
+                'type' => in_array($item['type'] ?? null, ['page', 'link', 'heading'], true) ? $item['type'] : 'page',
                 'appearance' => in_array($item['appearance'] ?? null, ['link', 'button'], true) ? $item['appearance'] : 'link',
                 'target' => in_array($item['target'] ?? null, ['_self', '_blank'], true) ? $item['target'] : '_self',
                 'label' => is_string($item['label'] ?? null) ? $item['label'] : '',
                 'page_id' => isset($item['page_id']) ? (int) $item['page_id'] : null,
                 'url' => is_string($item['url'] ?? null) ? $item['url'] : '',
+                'icon' => is_string($item['icon'] ?? null) ? $item['icon'] : '',
+                'badge' => is_string($item['badge'] ?? null) ? $item['badge'] : '',
+                'badgeColor' => is_string($item['badgeColor'] ?? null) ? $item['badgeColor'] : 'zinc',
                 'open' => false,
             ];
         }
@@ -292,16 +399,19 @@ return new class extends Component
     /**
      * @return array<string, mixed>
      */
-    private function defaultItem(): array
+    private function defaultItem(string $type = 'page'): array
     {
         return [
             '_key' => (string) $this->seq++,
-            'type' => 'page',
+            'type' => $type,
             'appearance' => 'link',
             'target' => '_self',
             'label' => '',
             'page_id' => null,
             'url' => '',
+            'icon' => '',
+            'badge' => '',
+            'badgeColor' => 'zinc',
             'open' => true,
         ];
     }
@@ -319,32 +429,18 @@ return new class extends Component
             'label' => $item['label'] ?? '',
             'page_id' => ($item['type'] ?? null) === 'page' ? ($item['page_id'] ?? null) : null,
             'url' => ($item['type'] ?? null) === 'link' ? ($item['url'] ?? '') : '',
+            'icon' => $item['icon'] ?? '',
+            'badge' => $item['badge'] ?? '',
+            'badgeColor' => $item['badgeColor'] ?? 'zinc',
         ], array_values($items));
-    }
-
-    private function reorder(string $menu, string $key, int $position): void
-    {
-        $items = $this->{$menu}[$this->locale] ?? [];
-        $current = array_search($key, array_column($items, '_key'), true);
-
-        if ($current === false) {
-            return;
-        }
-
-        $item = $items[$current];
-        unset($items[$current]);
-        $items = array_values($items);
-        array_splice($items, max(0, min($position, count($items))), 0, [$item]);
-
-        $this->{$menu}[$this->locale] = $items;
     }
 };
 ?>
 
 @php
     $multiLocale = count($activeLocales) > 1;
-    $currentHeader = $header[$locale] ?? [];
-    $currentFooter = $footer[$locale] ?? [];
+    $builtinMenus = collect($menus)->where('builtin', true);
+    $customMenus = collect($menus)->reject(fn (array $menu): bool => $menu['builtin']);
 @endphp
 
 <x-admin.settings-layout>
@@ -354,43 +450,34 @@ return new class extends Component
         class="grid md:grid-cols-5 gap-10 items-start"
     >
         <div class="space-y-10 md:col-span-3">
-            @foreach (['header' => $currentHeader, 'footer' => $currentFooter] as $menu => $items)
-                <section>
-                    <div class="flex items-center gap-3 mb-2">
-                        <flux:label>{{ $menu === 'header' ? __('Header') : __('Footer') }} {{ __('menu') }}</flux:label>
-
-                        @if ($multiLocale)
-                            <flux:tooltip content="{{ __('Change language') }}">
-                                <flux:badge size="sm" class="text-xs py-0.5!" as="button" inset="top bottom" x-on:click="$wire.dispatch('change-locale')">{{ strtoupper($locale) }}</flux:badge>
-                            </flux:tooltip>
-                        @endif
-                    </div>
-
-                    @if ($items !== [])
-                        <div class="space-y-3" wire:sort="reorder{{ ucfirst($menu) }}">
-                            @foreach ($items as $index => $item)
-                                <x-admin.menu-item
-                                    :menu="$menu"
-                                    :index="$index"
-                                    :item="$item"
-                                    :locale="$locale"
-                                    :pages="$pages"
-                                />
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="mt-4">
-                            <flux:text>{{ __('No menu items yet. Add your first one below.') }}</flux:text>
-                        </div>
-                    @endif
-
-                    <flux:button type="button" size="sm" icon="plus" class="mt-6" wire:click="addItem('{{ $menu }}')">
-                        {{ __('Add') }}
-                    </flux:button>
-                </section>
+            {{-- Built-in menus --}}
+            @foreach ($builtinMenus as $i => $menu)
+                <x-admin.menu-builder-section :menu="$menu" :index="$i" :locale="$locale" :pages="$pages" :multi-locale="$multiLocale" />
             @endforeach
 
+            {{-- Custom menus --}}
             <div>
+                <div class="flex items-center gap-3">
+                    <flux:label>{{ __('Custom menus') }}</flux:label>
+                    @if ($multiLocale)
+                        <x-admin.locale-switcher :locale="$locale" />
+                    @endif
+                </div>
+
+                <div class="divide-y-2 divide-gray-200 dark:divide-white/20">
+                    @forelse ($customMenus as $i => $menu)
+                        <x-admin.menu-builder-section :menu="$menu" :index="$i" :locale="$locale" :pages="$pages" :multi-locale="$multiLocale" />
+                    @empty
+                        <flux:text>{{ __('No custom menus yet. Add your first one below.') }}</flux:text>
+                    @endforelse
+                </div>
+
+                <flux:button type="button" icon="plus" wire:click="addMenu">
+                    {{ __('Add menu') }}
+                </flux:button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
                 <flux:button type="submit" variant="primary" icon="check">
                     {{ __('Update') }}
                 </flux:button>
@@ -399,10 +486,12 @@ return new class extends Component
     </form>
 
     @php
-        $removing = ($removeMenu !== null && $removeIndex !== null)
-            ? (($removeMenu === 'header' ? $header : $footer)[$locale][$removeIndex] ?? null)
+        $removingItem = ($removeMenuKey !== null && $removeIndex !== null)
+            ? (collect($menus)->firstWhere('key', $removeMenuKey)['items'][$locale][$removeIndex] ?? null)
             : null;
-        $removingLabel = is_array($removing) ? ($removing['label'] ?? '') : '';
+        $removingLabel = is_array($removingItem) ? ($removingItem['label'] ?? '') : '';
+        $removingMenu = $removeMenuTarget !== null ? collect($menus)->firstWhere('key', $removeMenuTarget) : null;
+        $removingMenuName = is_array($removingMenu) ? ($removingMenu['name'] ?? '') : '';
     @endphp
     <flux:modal wire:model.self="showRemoveModal" class="min-w-sm">
         <div class="space-y-6">
@@ -421,6 +510,27 @@ return new class extends Component
                     <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
                 </flux:modal.close>
                 <flux:button variant="danger" wire:click="removeConfirmed">{{ __('Remove') }}</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <flux:modal wire:model.self="showRemoveMenuModal" class="min-w-sm">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Delete menu?') }}</flux:heading>
+                <flux:text class="mt-2">
+                    @if ($removingMenuName !== '')
+                        {{ __('":name" and all of its items will be deleted.', ['name' => $removingMenuName]) }}
+                    @else
+                        {{ __('This menu and all of its items will be deleted.') }}
+                    @endif
+                </flux:text>
+            </div>
+            <div class="flex justify-end gap-2">
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button variant="danger" wire:click="removeMenuConfirmed">{{ __('Delete') }}</flux:button>
             </div>
         </div>
     </flux:modal>

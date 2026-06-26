@@ -11,9 +11,94 @@ use Illuminate\Support\Arr;
 
 final class SettingsService
 {
+    /**
+     * @var array<int, string>
+     */
+    public const array BUILTIN_MENUS = ['header', 'footer'];
+
     public static function current(): self
     {
         return new self;
+    }
+
+    /**
+     * @return array<int, array{key: string, name: string, builtin: bool, display: array{background: bool, position: string, sticky: bool, mobile: string}, items: array<string, array<int, mixed>>}>
+     */
+    public static function normalizeMenus(mixed $stored): array
+    {
+        $byKey = [];
+
+        if (is_array($stored)) {
+            foreach ($stored as $menu) {
+                $key = is_array($menu) && is_string($menu['key'] ?? null) ? $menu['key'] : '';
+
+                if ($key === '') {
+                    continue;
+                }
+
+                $byKey[$key] = [
+                    'key' => $key,
+                    'name' => is_string($menu['name'] ?? null) && $menu['name'] !== '' ? $menu['name'] : ucfirst($key),
+                    'builtin' => in_array($key, self::BUILTIN_MENUS, true),
+                    'display' => self::normalizeMenuDisplay($menu['display'] ?? null),
+                    'items' => is_array($menu['items'] ?? null) ? $menu['items'] : [],
+                ];
+            }
+        }
+
+        $ordered = [];
+
+        foreach (self::BUILTIN_MENUS as $builtin) {
+            $ordered[] = $byKey[$builtin] ?? [
+                'key' => $builtin,
+                'name' => ucfirst($builtin),
+                'builtin' => true,
+                'display' => self::normalizeMenuDisplay(null),
+                'items' => [],
+            ];
+
+            unset($byKey[$builtin]);
+        }
+
+        return [...$ordered, ...array_values($byKey)];
+    }
+
+    /**
+     * @return array{background: bool, position: string, sticky: bool, mobile: string}
+     */
+    public static function normalizeMenuDisplay(mixed $display): array
+    {
+        $display = is_array($display) ? $display : [];
+
+        return [
+            'background' => (bool) ($display['background'] ?? true),
+            'position' => ($display['position'] ?? null) === 'right' ? 'right' : 'left',
+            'sticky' => (bool) ($display['sticky'] ?? false),
+            'mobile' => in_array($display['mobile'] ?? null, ['collapse', 'hide', 'toggle'], true) ? $display['mobile'] : 'collapse',
+        ];
+    }
+
+    /**
+     * @return array{display: array{background: bool, position: string, sticky: bool, mobile: string}, items: array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}>}|null
+     */
+    public function menuForDisplay(string $key): ?array
+    {
+        $menu = collect($this->allMenus())->firstWhere('key', $key);
+
+        if ($menu === null) {
+            return null;
+        }
+
+        $items = $this->menu($key);
+
+        if ($items === []) {
+            return null;
+        }
+
+        return [
+            'display' => $menu['display'],
+            'items' => $items,
+        ];
     }
 
     public function homePage(): ?Page
@@ -203,6 +288,15 @@ final class SettingsService
             $root[] = "--wire-container:$container";
         }
 
+        $root[] = '--wire-gutter:1.5rem';
+        $fullGutter = $containerKey === 'full'
+            ? match ($this->blockSpacing()) {
+                'small' => '3rem',
+                'large' => '5rem',
+                default => '4rem',
+            }
+        : '';
+
         $headingSizeKey = (string) config('site.heading_size', '') ?: config()->string('theme.default_heading_size');
         $bodySizeKey = (string) config('site.body_size', '') ?: config()->string('theme.default_body_size');
         $headingSize = config()->string("theme.heading_sizes.$headingSizeKey", '');
@@ -214,7 +308,13 @@ final class SettingsService
             $root[] = "--wire-body-size:$bodySize";
         }
 
-        return ':root{'.implode(';', $root).'}'.($dark === [] ? '' : '.dark{'.implode(';', $dark).'}');
+        $css = ':root{'.implode(';', $root).'}'.($dark === [] ? '' : '.dark{'.implode(';', $dark).'}');
+
+        if ($fullGutter !== '') {
+            $css .= '@media(min-width:768px){:root{--wire-gutter:'.$fullGutter.'}}';
+        }
+
+        return $css;
     }
 
     public function googleFontsUrl(): ?string
@@ -241,20 +341,17 @@ final class SettingsService
     }
 
     /**
-     * @return array<int, array{label: string, url: string, target: string, appearance: string}>
+     * @return array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}>
      */
-    public function menu(string $location): array
+    public function menu(string $key): array
     {
-        if (! in_array($location, ['header', 'footer'], true)) {
+        $menu = collect($this->allMenus())->firstWhere('key', $key);
+
+        if ($menu === null) {
             return [];
         }
 
-        $menus = config('site.'.$location.'_menu');
-        if (! is_array($menus)) {
-            return [];
-        }
-
-        $items = $this->localeMenuItems($menus);
+        $items = $this->localeMenuItems($menu['items']);
         $pages = $this->menuPages($items);
 
         $resolved = [];
@@ -270,6 +367,14 @@ final class SettingsService
         }
 
         return $resolved;
+    }
+
+    /**
+     * @return array<int, array{key: string, name: string, builtin: bool, display: array{background: bool, position: string, sticky: bool, mobile: string}, items: array<string, array<int, mixed>>}>
+     */
+    public function allMenus(): array
+    {
+        return self::normalizeMenus(config('site.menus'));
     }
 
     /**
@@ -292,6 +397,15 @@ final class SettingsService
         }
 
         return $links;
+    }
+
+    public function blockSpacing(): string
+    {
+        $value = (string) config('site.block_spacing', '');
+
+        return array_key_exists($value, config()->array('theme.block_spacings'))
+            ? $value
+            : config()->string('theme.default_block_spacing');
     }
 
     public function socialIconVariant(): string
@@ -452,7 +566,7 @@ final class SettingsService
     /**
      * @param  array<string, mixed>  $item
      * @param  Collection<int, Page>  $pages
-     * @return array{label: string, url: string, target: string, appearance: string}|null
+     * @return array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}|null
      */
     private function resolveMenuItem(array $item, Collection $pages): ?array
     {
@@ -462,6 +576,20 @@ final class SettingsService
         }
 
         $type = $item['type'] ?? null;
+
+        if ($type === 'heading') {
+            return [
+                'type' => 'heading',
+                'label' => $label,
+                'url' => '',
+                'target' => '_self',
+                'appearance' => 'link',
+                'icon' => null,
+                'badge' => '',
+                'badgeColor' => 'zinc',
+            ];
+        }
+
         $url = null;
 
         if ($type === 'link') {
@@ -478,11 +606,18 @@ final class SettingsService
             return null;
         }
 
+        $icon = is_string($item['icon'] ?? null) ? $item['icon'] : '';
+        $badgeColor = is_string($item['badgeColor'] ?? null) ? $item['badgeColor'] : 'zinc';
+
         return [
+            'type' => 'link',
             'label' => $label,
             'url' => $url,
             'target' => ($item['target'] ?? null) === '_blank' ? '_blank' : '_self',
             'appearance' => ($item['appearance'] ?? null) === 'button' ? 'button' : 'link',
+            'icon' => in_array($icon, config()->array('menu.icons'), true) ? $icon : null,
+            'badge' => is_string($item['badge'] ?? null) ? $item['badge'] : '',
+            'badgeColor' => in_array($badgeColor, config()->array('menu.badge_colors'), true) ? $badgeColor : 'zinc',
         ];
     }
 }

@@ -22,9 +22,9 @@ it('renders the header and footer on a public page', function (): void {
 });
 
 it('renders the current locale header menu items with their urls', function (): void {
-    setSiteMetadata(['header_menu' => ['en' => [
+    setSiteMetadata(['menus' => menusPayload(['header' => ['en' => [
         ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Documentation', 'page_id' => null, 'url' => 'https://example.com/docs'],
-    ]]]);
+    ]]])]);
 
     $this->get(route('home'))
         ->assertOk()
@@ -33,10 +33,10 @@ it('renders the current locale header menu items with their urls', function (): 
 });
 
 it('renders the header menu for the active locale', function (): void {
-    setSiteMetadata(['header_menu' => [
+    setSiteMetadata(['menus' => menusPayload(['header' => [
         'en' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'English item', 'page_id' => null, 'url' => 'https://example.com/en']],
         'nl' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Nederlands item', 'page_id' => null, 'url' => 'https://example.com/nl']],
-    ]]);
+    ]])]);
 
     app()->setLocale('nl');
 
@@ -50,9 +50,9 @@ it('applies the configured logo and navigation sizes in the header', function ()
         'header_logo_size' => 'lg',
         'header_nav_size' => 'lg',
         'header_nav_hover' => 'scale',
-        'header_menu' => ['en' => [
+        'menus' => menusPayload(['header' => ['en' => [
             ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'About', 'page_id' => null, 'url' => 'https://example.com'],
-        ]],
+        ]]]),
     ]);
 
     Livewire::test('site.header')
@@ -119,10 +119,10 @@ it('overlays a transparent header', function (): void {
 it('skips menu items whose page is missing or unpublished', function (): void {
     $draft = Page::factory()->create(['status' => PageStatus::DRAFT]);
 
-    setSiteMetadata(['header_menu' => ['en' => [
+    setSiteMetadata(['menus' => menusPayload(['header' => ['en' => [
         ['type' => 'page', 'appearance' => 'link', 'target' => '_self', 'label' => 'Hidden draft', 'page_id' => $draft->id, 'url' => ''],
         ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Visible link', 'page_id' => null, 'url' => 'https://example.com'],
-    ]]]);
+    ]]])]);
 
     $this->get(route('home'))
         ->assertOk()
@@ -134,9 +134,9 @@ it('renders the published page menu item with its localized url', function (): v
     $page = Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'get-started']);
 
-    setSiteMetadata(['header_menu' => ['en' => [
+    setSiteMetadata(['menus' => menusPayload(['header' => ['en' => [
         ['type' => 'page', 'appearance' => 'button', 'target' => '_self', 'label' => 'Get started', 'page_id' => $page->id, 'url' => ''],
-    ]]]);
+    ]]])]);
 
     $this->get(route('home'))
         ->assertOk()

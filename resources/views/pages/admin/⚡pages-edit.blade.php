@@ -49,6 +49,11 @@ return new class extends Component
     public array $layout = [];
 
     /**
+     * @var array<int, array{key: string, label: string}>
+     */
+    public array $menuOptions = [];
+
+    /**
      * @var array<string, string>
      */
     public array $slugs = [];
@@ -105,7 +110,19 @@ return new class extends Component
             'backgroundFixed' => false,
             'customCss' => '',
             ...(is_array($page->metadata['layout'] ?? null) ? $page->metadata['layout'] : []),
+            'sidebar' => Page::normalizeSidebar(($page->metadata['layout'] ?? [])['sidebar'] ?? null),
         ];
+
+        $this->menuOptions = collect(SettingsService::current()->allMenus())
+            ->reject(fn (array $menu): bool => $menu['builtin'])
+            ->map(fn (array $menu): array => ['key' => $menu['key'], 'label' => $menu['name']])
+            ->values()
+            ->all();
+
+        $this->layout['sidebar']['menus'] = array_values(array_intersect(
+            $this->layout['sidebar']['menus'],
+            array_column($this->menuOptions, 'key'),
+        ));
 
         foreach (array_keys($this->activeLocales) as $locale) {
             $this->og_image[$locale] ??= [];
@@ -185,6 +202,9 @@ return new class extends Component
             'layout.backgroundColor' => ['nullable', 'string', 'max:30'],
             'layout.backgroundImage' => ['nullable', 'array'],
             'layout.customCss' => ['nullable', 'string', 'max:50000'],
+            'layout.sidebar' => ['array'],
+            'layout.sidebar.menus' => ['array'],
+            'layout.sidebar.menus.*' => ['string'],
         ];
 
         foreach (array_keys($this->activeLocales) as $locale) {
@@ -751,6 +771,7 @@ return new class extends Component
             'backgroundImage' => $this->layout['backgroundImage'] ?? null,
             'backgroundFixed' => (bool) ($this->layout['backgroundFixed'] ?? false),
             'customCss' => mb_trim((string) ($this->layout['customCss'] ?? '')),
+            'sidebar' => Page::normalizeSidebar($this->layout['sidebar'] ?? null),
         ];
     }
 
@@ -958,6 +979,25 @@ return new class extends Component
                             <flux:switch wire:model.live="layout.backgroundFixed" label="{{ __('Fixed background') }}" align="left" />
                         </div>
                     </div>
+
+                    <flux:separator variant="subtle" />
+
+                    <flux:field>
+                        <flux:label>{{ __('Menus to show') }}</flux:label>
+
+                        <flux:pillbox variant="combobox" multiple wire:model="layout.sidebar.menus" placeholder="{{ __('Select menus…') }}">
+                            @forelse ($menuOptions as $option)
+                                <flux:pillbox.option value="{{ $option['key'] }}" wire:key="sidebar-menu-{{ $option['key'] }}">{{ $option['label'] }}</flux:pillbox.option>
+                            @empty
+                                <flux:pillbox.option.empty>{{ __('No menus yet.') }}</flux:pillbox.option.empty>
+                            @endforelse
+                        </flux:pillbox>
+
+                        <flux:description>
+                            {{ __('Create and edit menus in') }}
+                            <flux:link href="{{ route('admin.settings-menus') }}" wire:navigate>{{ __('Settings → Menus') }}</flux:link>.
+                        </flux:description>
+                    </flux:field>
 
                     <div>
                         <flux:modal.trigger name="page-custom-css">

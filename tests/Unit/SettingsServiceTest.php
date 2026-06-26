@@ -10,7 +10,9 @@ use App\Services\SettingsService;
 
 function headerMenu(array $items): SettingsService
 {
-    Settings::set(['header_menu' => ['en' => $items]]);
+    Settings::set(['menus' => [
+        ['key' => 'header', 'name' => 'Header', 'builtin' => true, 'items' => ['en' => $items]],
+    ]]);
 
     return new SettingsService;
 }
@@ -120,13 +122,78 @@ it('returns an empty array for an unknown location', function (): void {
     ])->menu('sidebar'))->toBeEmpty();
 });
 
+it('resolves a group heading item alongside link items', function (): void {
+    $menu = headerMenu([
+        ['type' => 'heading', 'appearance' => 'link', 'target' => '_self', 'label' => 'Guides', 'page_id' => null, 'url' => ''],
+        ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Install', 'page_id' => null, 'url' => 'https://example.com/install'],
+    ])->menu('header');
+
+    expect($menu)->toHaveCount(2)
+        ->and($menu[0])->toMatchArray(['type' => 'heading', 'label' => 'Guides', 'url' => ''])
+        ->and($menu[1])->toMatchArray(['type' => 'link', 'label' => 'Install']);
+});
+
+it('resolves a custom named menu by its key', function (): void {
+    Settings::set(['menus' => [
+        ['key' => 'docs-nav', 'name' => 'Docs', 'builtin' => false, 'items' => ['en' => [
+            ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Guide', 'page_id' => null, 'url' => 'https://example.com/guide'],
+        ]]],
+    ]]);
+
+    $menu = (new SettingsService)->menu('docs-nav');
+
+    expect($menu)->toHaveCount(1)
+        ->and($menu[0]['label'])->toBe('Guide');
+});
+
+it('skips stored menus that have no key', function (): void {
+    $menus = SettingsService::normalizeMenus([
+        ['name' => 'Missing key'],
+        ['key' => 'docs', 'name' => 'Docs'],
+    ]);
+
+    expect(collect($menus)->pluck('key')->all())->toBe(['header', 'footer', 'docs']);
+});
+
+it('returns null from menuForDisplay for an unknown menu key', function (): void {
+    expect((new SettingsService)->menuForDisplay('does-not-exist'))->toBeNull();
+});
+
+it('uses a 3rem desktop gutter for a small-spacing full-width layout', function (): void {
+    Settings::set(['container' => 'full', 'block_spacing' => 'small']);
+
+    expect((new SettingsService)->themeCss())
+        ->toContain('@media(min-width:768px){:root{--wire-gutter:3rem}}');
+});
+
+it('always exposes header and footer as built-in menus, even with none saved', function (): void {
+    $menus = (new SettingsService)->allMenus();
+
+    expect(collect($menus)->pluck('key')->all())->toBe(['header', 'footer'])
+        ->and(collect($menus)->every(fn (array $menu): bool => $menu['builtin']))->toBeTrue();
+});
+
+it('keeps built-ins first and appends custom menus when listing all menus', function (): void {
+    Settings::set(['menus' => [
+        ['key' => 'docs-nav', 'name' => 'Docs', 'builtin' => false, 'items' => ['en' => []]],
+        ['key' => 'footer', 'name' => 'Footer', 'builtin' => true, 'items' => ['en' => []]],
+    ]]);
+
+    $menus = (new SettingsService)->allMenus();
+
+    expect(collect($menus)->pluck('key')->all())->toBe(['header', 'footer', 'docs-nav'])
+        ->and(collect($menus)->firstWhere('key', 'docs-nav')['builtin'])->toBeFalse();
+});
+
 it('falls back to the default locale menu when the current locale has none', function (): void {
     Locale::query()->where('code', 'nl')->update(['active' => true]);
     cache()->forget('site-locales');
 
-    Settings::set(['header_menu' => [
-        'en' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'English', 'page_id' => null, 'url' => 'https://example.com']],
-        'nl' => [],
+    Settings::set(['menus' => [
+        ['key' => 'header', 'name' => 'Header', 'builtin' => true, 'items' => [
+            'en' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'English', 'page_id' => null, 'url' => 'https://example.com']],
+            'nl' => [],
+        ]],
     ]]);
 
     app()->setLocale('nl');
@@ -141,9 +208,11 @@ it('prefers the current locale menu over the default', function (): void {
     Locale::query()->where('code', 'nl')->update(['active' => true]);
     cache()->forget('site-locales');
 
-    Settings::set(['header_menu' => [
-        'en' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'English', 'page_id' => null, 'url' => 'https://example.com/en']],
-        'nl' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Nederlands', 'page_id' => null, 'url' => 'https://example.com/nl']],
+    Settings::set(['menus' => [
+        ['key' => 'header', 'name' => 'Header', 'builtin' => true, 'items' => [
+            'en' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'English', 'page_id' => null, 'url' => 'https://example.com/en']],
+            'nl' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Nederlands', 'page_id' => null, 'url' => 'https://example.com/nl']],
+        ]],
     ]]);
 
     app()->setLocale('nl');
@@ -169,6 +238,20 @@ it('returns only the social platforms that are set, in config order', function (
 
 it('returns no social links when none are saved', function (): void {
     expect((new SettingsService)->socialLinks())->toBeEmpty();
+});
+
+it('returns the saved block spacing', function (): void {
+    Settings::set(['block_spacing' => 'large']);
+
+    expect((new SettingsService)->blockSpacing())->toBe('large');
+});
+
+it('falls back to the default block spacing when unset or unknown', function (): void {
+    expect((new SettingsService)->blockSpacing())->toBe('default');
+
+    Settings::set(['block_spacing' => 'bogus']);
+
+    expect((new SettingsService)->blockSpacing())->toBe('default');
 });
 
 it('returns the saved social icon variant', function (): void {

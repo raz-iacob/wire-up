@@ -41,7 +41,7 @@ final class Page extends Model
 
     /**
      * @param  array<string, mixed>  $layout
-     * @return array{hideHeader: bool, hideFooter: bool, backgroundColor: ?string, backgroundImage: ?string, backgroundFixed: bool, customCss: string}
+     * @return array{hideHeader: bool, hideFooter: bool, backgroundColor: ?string, backgroundImage: ?string, backgroundFixed: bool, customCss: string, sidebar: array{menus: array<int, string>}}
      */
     public static function normalizeLayout(array $layout): array
     {
@@ -54,6 +54,24 @@ final class Page extends Model
             'backgroundImage' => self::backgroundImageUrl($layout['backgroundImage'] ?? null),
             'backgroundFixed' => (bool) ($layout['backgroundFixed'] ?? false),
             'customCss' => self::sanitizeCustomCss((string) ($layout['customCss'] ?? '')),
+            'sidebar' => self::normalizeSidebar($layout['sidebar'] ?? null),
+        ];
+    }
+
+    /**
+     * @return array{menus: array<int, string>}
+     */
+    public static function normalizeSidebar(mixed $sidebar): array
+    {
+        $sidebar = is_array($sidebar) ? $sidebar : [];
+
+        $menus = array_values(array_filter(
+            is_array($sidebar['menus'] ?? null) ? $sidebar['menus'] : [],
+            fn (mixed $key): bool => is_string($key) && $key !== '',
+        ));
+
+        return [
+            'menus' => $menus,
         ];
     }
 
@@ -83,7 +101,7 @@ final class Page extends Model
     }
 
     /**
-     * @return array{hideHeader: bool, hideFooter: bool, backgroundColor: ?string, backgroundImage: ?string, backgroundFixed: bool, customCss: string}
+     * @return array{hideHeader: bool, hideFooter: bool, backgroundColor: ?string, backgroundImage: ?string, backgroundFixed: bool, customCss: string, sidebar: array{menus: array<int, string>}}
      */
     public function resolvedLayout(): array
     {

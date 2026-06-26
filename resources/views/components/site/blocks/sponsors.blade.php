@@ -45,11 +45,12 @@
 @endphp
 
 <section @class([
-    'w-full py-18',
+    'w-full',
     'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+    ($pad ?? 'py-16') => $hasBg,
 ])>
     @if ($hasHeading)
-        <div class="mx-auto mb-12 max-w-(--wire-container) px-6">
+        <div class="mx-auto mb-12 max-w-(--wire-container) px-(--wire-gutter)">
             @if (strip_tags($heading) !== '')
                 <div class="tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
             @endif
@@ -72,7 +73,7 @@
                 </div>
             </div>
         @elseif ($layout === 'grouped')
-            <div class="mx-auto flex max-w-(--wire-container) flex-col gap-14 px-6">
+            <div class="mx-auto flex max-w-(--wire-container) flex-col gap-14 px-(--wire-gutter)">
                 @foreach ($items->groupBy('tier') as $tier => $group)
                     @php($tierCols = $tierColumns[min($loop->index, count($tierColumns) - 1)])
                     <div class="flex flex-col gap-6">
@@ -92,7 +93,7 @@
                 @endforeach
             </div>
         @else
-            <div class="mx-auto max-w-(--wire-container) px-6">
+            <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                 <div class="grid {{ $gridClassFor($columns) }} items-center gap-x-8 gap-y-10">
                     @foreach ($items as $item)
                         <x-site.blocks.sponsor-logo :item="$item" :grayscale="$grayscale" :show-name="$showNames" :size="$sizeFor($columns)" wire:key="sponsor-grid-{{ $loop->index }}" />

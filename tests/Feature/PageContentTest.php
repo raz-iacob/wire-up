@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\BlockType;
 use App\Enums\PageStatus;
 use App\Models\Page;
+use App\Models\Settings;
 
 function publishPageWithBlocks(string $slug, array $blocks): Page
 {
@@ -999,4 +1000,52 @@ it('renders a page with no blocks without error', function (): void {
     $page->slugs()->create(['locale' => 'en', 'slug' => 'empty']);
 
     $this->get(route('page', 'empty'))->assertOk();
+});
+
+it('separates blocks with a gap and adds no vertical padding to blocks without a background', function (): void {
+    publishPageWithBlocks('plain-blocks', [
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>Intro copy</p>'], 'hasBackground' => false]],
+        ['id' => 'new-2', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>More copy</p>'], 'hasBackground' => false]],
+    ]);
+
+    $this->get(route('page', 'plain-blocks'))
+        ->assertOk()
+        ->assertSee('gap-16', false)
+        ->assertSee('mb-(--wire-gutter)', false)
+        ->assertDontSee('py-16', false);
+});
+
+it('pads only the blocks that have a background, sized to the spacing setting', function (): void {
+    publishPageWithBlocks('bg-block', [
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>Intro</p>'], 'hasBackground' => true]],
+    ]);
+
+    $this->get(route('page', 'bg-block'))
+        ->assertOk()
+        ->assertSee('py-16', false)
+        ->assertSee('bg-(--wire-card-bg)', false);
+});
+
+it('applies the configured block spacing to the gap and background padding', function (): void {
+    Settings::set(['block_spacing' => 'large']);
+
+    publishPageWithBlocks('roomy', [
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>Intro</p>'], 'hasBackground' => true]],
+    ]);
+
+    $this->get(route('page', 'roomy'))
+        ->assertOk()
+        ->assertSee('gap-20', false)
+        ->assertSee('py-20', false);
+});
+
+it('gives the hero content generous vertical padding so it is not cramped', function (): void {
+    publishPageWithBlocks('hero-pad', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => ['heading' => ['en' => 'Welcome aboard']]],
+    ]);
+
+    $this->get(route('page', 'hero-pad'))
+        ->assertOk()
+        ->assertSee('Welcome aboard')
+        ->assertSee('py-24', false);
 });

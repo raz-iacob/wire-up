@@ -181,6 +181,26 @@ return [
         'small' => '64rem',
         'medium' => '72rem',
         'large' => '80rem',
+        'full' => '100%',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Block spacing
+    |--------------------------------------------------------------------------
+    |
+    | Controls the vertical gap between page-builder blocks (and the inner
+    | padding of blocks that use a background colour). Values map to the
+    | gap and padding utilities in the page-content and block views.
+    |
+    */
+
+    'default_block_spacing' => 'default',
+
+    'block_spacings' => [
+        'small' => 'Small',
+        'default' => 'Default',
+        'large' => 'Large',
     ],
 
     'default_header_logo_size' => 'md',

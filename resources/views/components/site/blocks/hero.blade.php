@@ -72,7 +72,7 @@
                 fetchpriority="high"
                 @class([
                     'absolute inset-0 size-full object-cover' => $isCover,
-                    'block w-full' => ! $isCover,
+                    'block w-full max-md:absolute max-md:inset-0 max-md:size-full max-md:object-cover' => $overlayContent,
                 ])
             />
         </picture>
@@ -82,7 +82,7 @@
         <video
             @class([
                 'absolute inset-0 size-full object-cover' => $isCover,
-                'block w-full' => ! $isCover,
+                'block w-full max-md:absolute max-md:inset-0 max-md:size-full max-md:object-cover' => $overlayContent,
             ])
             autoplay
             loop
@@ -96,9 +96,9 @@
     @endif
 
     <div @class([
-        'z-10 mx-auto flex w-full max-w-(--wire-container) flex-col gap-5 px-6 py-20',
+        'z-10 mx-auto flex w-full max-w-(--wire-container) flex-col gap-5 px-(--wire-gutter) py-24',
         'md:py-28' => ! $isCover,
-        'absolute inset-0' => $overlayContent,
+        'absolute inset-0 max-md:relative max-md:inset-auto' => $overlayContent,
         'relative' => ! $overlayContent,
         'items-start text-left' => $align === 'left',
         'items-center text-center' => $align === 'center',
@@ -108,11 +108,11 @@
         'justify-end' => $valign === 'bottom',
     ])>
         @if ($heading)
-            <div class="max-w-3xl font-bold tracking-tight [&>p]:m-0 [&_a]:underline text-[length:calc(var(--wire-heading-size)*1.5)]" @if ($headingColor) style="color:{{ $headingColor }}" @endif>{!! $heading !!}</div>
+            <div class="max-w-3xl font-bold tracking-tight [&>p]:m-0 [&_a]:underline text-[length:calc(var(--wire-heading-size)*1.2)] md:text-[length:calc(var(--wire-heading-size)*1.5)]" @if ($headingColor) style="color:{{ $headingColor }}" @endif>{!! $heading !!}</div>
         @endif
 
         @if ($subheading)
-            <div class="max-w-2xl opacity-90 [&_a]:underline text-[length:calc(var(--wire-body-size)*1.25)]" @if ($subheadingColor) style="color:{{ $subheadingColor }}" @endif>{!! $subheading !!}</div>
+            <div class="max-w-2xl opacity-90 [&_a]:underline text-[length:calc(var(--wire-body-size)*1.1)] md:text-[length:calc(var(--wire-body-size)*1.25)]" @if ($subheadingColor) style="color:{{ $subheadingColor }}" @endif>{!! $subheading !!}</div>
         @endif
 
         @if ($ctas->isNotEmpty())

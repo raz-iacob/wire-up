@@ -30,8 +30,9 @@
 @endphp
 
 <section @class([
-    'w-full py-18',
+    'w-full',
     'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+    ($pad ?? 'py-16') => $hasBg,
 ])>
     @if ($layout === 'carousel')
         <div
@@ -44,7 +45,7 @@
             x-init="$nextTick(() => update())"
         >
             @if ($hasHeading || $items->count() > 1)
-                <div class="relative mx-auto max-w-(--wire-container) px-6">
+                <div class="relative mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                     @if ($hasHeading)
                         <div>
                             @if (strip_tags($heading) !== '')
@@ -73,7 +74,7 @@
                 <div
                     x-ref="track"
                     x-on:scroll="update()"
-                    class="mt-8 flex items-stretch gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory px-[max(1.5rem,calc((100%-var(--wire-container))/2+1.5rem))] pb-2 scroll-pl-[max(1.5rem,calc((100%-var(--wire-container))/2+1.5rem))] scrollbar-none [&::-webkit-scrollbar]:hidden"
+                    class="mt-8 flex items-stretch gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory px-[max(var(--wire-gutter),calc((100%-var(--wire-container))/2+var(--wire-gutter)))] pb-2 scroll-pl-[max(var(--wire-gutter),calc((100%-var(--wire-container))/2+var(--wire-gutter)))] scrollbar-none [&::-webkit-scrollbar]:hidden"
                 >
                     @foreach ($items as $item)
                         <article class="flex w-[86vw] shrink-0 snap-start flex-col gap-5 rounded-(--wire-radius) p-8 shadow-sm sm:w-96 md:w-120" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
@@ -113,7 +114,7 @@
             @endif
         </div>
     @else
-        <div class="mx-auto max-w-(--wire-container) px-6">
+        <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
             @if ($layout === 'split')
                 <div class="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
                     <div class="lg:sticky lg:top-24">

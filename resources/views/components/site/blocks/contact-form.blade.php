@@ -11,11 +11,12 @@
 
 <section
     @class([
-        'w-full py-18',
+        'w-full',
         'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+        ($pad ?? 'py-16') => $hasBg,
     ])
 >
-    <div class="mx-auto max-w-(--wire-container) px-6">
+    <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         <livewire:site.contact-form
             :config="$config"
             :block-id="$block->id"

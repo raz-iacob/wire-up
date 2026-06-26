@@ -19,11 +19,12 @@
 
 <section
     @class([
-        'w-full py-18',
+        'w-full',
         'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+        ($pad ?? 'py-16') => $hasBg,
     ])
 >
-    <div class="mx-auto max-w-(--wire-container) px-6">
+    <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         <div class="max-w-3xl">
             @if ($heading)
                 <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>

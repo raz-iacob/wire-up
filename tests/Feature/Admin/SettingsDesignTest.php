@@ -319,6 +319,33 @@ it('persists the content width and emits the container token', function (): void
     expect((new SettingsService)->themeCss())->toContain('--wire-container:64rem');
 });
 
+it('supports a full content width with no max-width', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('container', 'full')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect((new SettingsService)->themeCss())->toContain('--wire-container:100%');
+});
+
+it('widens the desktop content gutter to match the block spacing on a full-width layout', function (): void {
+    Settings::set(['container' => 'full', 'block_spacing' => 'large']);
+
+    expect((new SettingsService)->themeCss())
+        ->toContain('--wire-gutter:1.5rem')
+        ->toContain('@media(min-width:768px){:root{--wire-gutter:5rem}}');
+});
+
+it('keeps the default gutter when the layout is not full width', function (): void {
+    Settings::set(['container' => 'medium']);
+
+    expect((new SettingsService)->themeCss())
+        ->toContain('--wire-gutter:1.5rem')
+        ->not->toContain('--wire-gutter:4rem');
+});
+
 it('emits the default container token when nothing is configured', function (): void {
     expect((new SettingsService)->themeCss())->toContain('--wire-container:72rem');
 });

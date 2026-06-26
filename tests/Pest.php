@@ -33,3 +33,23 @@ function something(): void
 {
     //
 }
+
+/**
+ * @param  array<string, array<string, array<int, array<string, mixed>>>>  $menus  keyed by menu key => [locale => items]
+ * @return array<int, array{key: string, name: string, builtin: bool, items: array<string, array<int, array<string, mixed>>>}>
+ */
+function menusPayload(array $menus): array
+{
+    $payload = [];
+
+    foreach ($menus as $key => $items) {
+        $payload[] = [
+            'key' => $key,
+            'name' => ucfirst($key),
+            'builtin' => in_array($key, ['header', 'footer'], true),
+            'items' => $items,
+        ];
+    }
+
+    return $payload;
+}

@@ -1,5 +1,9 @@
 @props(['items' => [], 'size' => 'md', 'hover' => 'opacity'])
 
+@php
+    $items = array_values(array_filter($items, fn (array $item): bool => ($item['type'] ?? 'link') !== 'heading'));
+@endphp
+
 @if (! empty($items))
     <nav {{ $attributes->merge(['class' => 'flex flex-wrap items-center gap-6']) }}>
         @foreach ($items as $item)

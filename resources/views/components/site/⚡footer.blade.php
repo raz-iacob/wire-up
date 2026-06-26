@@ -9,7 +9,7 @@ return new class extends Component
 {
     public string $layout;
 
-    /** @var array<int, array{label: string, url: string, target: string, appearance: string}> */
+    /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}> */
     public array $items = [];
 
     /** @var array<string, string> */
@@ -71,7 +71,7 @@ return new class extends Component
             @break
 
         @case('columns')
-            <div class="mx-auto max-w-(--wire-container) px-6">
+            <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                 <div class="grid gap-8 py-12 sm:grid-cols-2 md:grid-cols-3">
                     <div class="space-y-4">
                         <x-site.brand :logo="$logo" :brand="$brand" />
@@ -94,13 +94,13 @@ return new class extends Component
             @break
 
         @case('minimal')
-            <div class="mx-auto max-w-(--wire-container) px-6 py-6 text-center text-[length:calc(var(--wire-body-size)*0.75)] opacity-70">
+            <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter) py-6 text-center text-[length:calc(var(--wire-body-size)*0.75)] opacity-70">
                 &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp; <a href="https://wire-up.dev" target="_blank" rel="noopener noreferrer" class="hover:underline">{{ __('Made with Wire-Up') }}</a>
             </div>
             @break
 
         @default
-            <div class="mx-auto max-w-(--wire-container) px-6">
+            <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                 <div class="flex flex-wrap items-start justify-between gap-6 py-10">
                     <div class="space-y-4">
                         <x-site.brand :logo="$logo" :brand="$brand" />

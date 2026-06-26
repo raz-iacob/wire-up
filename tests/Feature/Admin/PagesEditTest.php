@@ -483,3 +483,74 @@ it('does not mark a non-homepage page as the homepage', function (): void {
     Livewire::test('pages::admin.pages-edit', ['page' => $page])
         ->assertDontSee('Homepage');
 });
+
+it('hydrates the sidebar selection from metadata on mount', function (): void {
+    Settings::set(['menus' => menusPayload(['docs-nav' => ['en' => []]])]);
+
+    $page = Page::factory()->create([
+        'metadata' => ['layout' => ['sidebar' => ['menus' => ['docs-nav']]]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('layout.sidebar.menus', ['docs-nav']);
+});
+
+it('lists only custom menus as sidebar options, not the built-ins', function (): void {
+    Settings::set(['menus' => menusPayload(['docs-nav' => ['en' => []]])]);
+
+    $page = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    $options = Livewire::test('pages::admin.pages-edit', ['page' => $page])->get('menuOptions');
+
+    expect(collect($options)->pluck('key')->all())->toBe(['docs-nav'])
+        ->and($options[0]['label'])->toBe('Docs-nav');
+});
+
+it('drops sidebar references to menus that no longer exist on mount', function (): void {
+    Settings::set(['menus' => menusPayload(['docs-nav' => ['en' => []]])]);
+
+    $page = Page::factory()->create([
+        'metadata' => ['layout' => ['sidebar' => ['menus' => ['docs-nav', 'deleted-menu']]]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('layout.sidebar.menus', ['docs-nav']);
+});
+
+it('shows the sidebar menu picker with a link to the menus settings', function (): void {
+    Settings::set(['menus' => menusPayload(['docs-nav' => ['en' => []]])]);
+
+    $page = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSee('Menus to show')
+        ->assertSee('Docs-nav')
+        ->assertSeeHtml(route('admin.settings-menus'));
+});
+
+it('persists the per-page sidebar selection to metadata', function (): void {
+    Settings::set(['menus' => menusPayload(['docs-nav' => ['en' => []]])]);
+
+    $page = Page::factory()->create(['title' => 'Handbook']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'Handbook')
+        ->set('slugs.en', 'handbook')
+        ->set('layout.sidebar.menus', ['docs-nav'])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($page->fresh()->metadata['layout']['sidebar'])->toMatchArray([
+        'menus' => ['docs-nav'],
+    ]);
+});

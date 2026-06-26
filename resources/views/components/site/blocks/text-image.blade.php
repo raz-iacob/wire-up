@@ -26,11 +26,12 @@
 
 <section
     @class([
-        'w-full py-18',
+        'w-full',
         'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+        ($pad ?? 'py-16') => $hasBg,
     ])
 >
-    <div class="mx-auto max-w-(--wire-container) px-6">
+    <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         <div @class([
             'md:grid md:grid-cols-2 md:items-center md:gap-10' => $image,
         ])>

@@ -17,11 +17,12 @@
 @endphp
 
 <section @class([
-    'w-full py-18',
+    'w-full',
     'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+    ($pad ?? 'py-16') => $hasBg,
 ])>
     @if ($hasHeading)
-        <div class="mx-auto mb-8 max-w-(--wire-container) px-6">
+        <div class="mx-auto mb-8 max-w-(--wire-container) px-(--wire-gutter)">
             @if (strip_tags($heading) !== '')
                 <div class="tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
             @endif
@@ -32,7 +33,7 @@
     @endif
 
     @if ($image)
-        <div @class(['mx-auto max-w-(--wire-container) px-6' => ! $full])>
+        <div @class(['mx-auto max-w-(--wire-container) px-(--wire-gutter)' => ! $full])>
             <figure class="m-0">
                 @if ($linkUrl)
                     <a href="{{ $linkUrl }}" @if ($newTab) target="_blank" rel="noopener noreferrer" @endif class="block">
