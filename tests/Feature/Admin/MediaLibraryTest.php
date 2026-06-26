@@ -3,10 +3,14 @@
 declare(strict_types=1);
 
 use App\Actions\DownloadMediaAction;
+use App\Enums\BlockType;
 use App\Enums\MediaType;
+use App\Models\Block;
 use App\Models\Media;
+use App\Models\Page;
 use App\Services\UploadLimit;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Livewire\Livewire;
@@ -309,6 +313,42 @@ it('does not delete when no media is selected', function (): void {
         ->call('deleteCurrentItem');
 
     expect(Media::query()->find($media->id))->not->toBeNull();
+});
+
+it('refuses to delete media that is in use and reports where', function (): void {
+    $page = Page::factory()->create();
+    $media = Media::factory()->create(['source' => 'media/in-use.jpg']);
+
+    Block::factory()->create([
+        'blockable_id' => $page->id,
+        'blockable_type' => 'page',
+        'type' => BlockType::TEXT_IMAGE,
+        'content' => ['image' => ['source' => 'media/in-use.jpg']],
+    ]);
+
+    Livewire::test('admin.media-library')
+        ->call('selectMedia', $media)
+        ->call('confirmDelete')
+        ->assertSee('in use')
+        ->assertSee('Used in:')
+        ->call('deleteCurrentItem')
+        ->assertSet('showDeleteModal', false)
+        ->assertCount('selected', 1);
+
+    expect(Media::query()->whereKey($media->id)->exists())->toBeTrue();
+});
+
+it('still deletes media that is not in use', function (): void {
+    $media = Media::factory()->create();
+
+    Livewire::test('admin.media-library')
+        ->call('selectMedia', $media)
+        ->call('confirmDelete')
+        ->assertDontSee('in use')
+        ->call('deleteCurrentItem')
+        ->assertCount('selected', 0);
+
+    expect(Media::query()->whereKey($media->id)->exists())->toBeFalse();
 });
 
 it('loads media on initialization', function (): void {
@@ -718,4 +758,176 @@ it('selects a range of media items respecting max', function (): void {
         ->set('max', 2)
         ->call('selectMediaRange', [$media[0]->id, $media[1]->id, $media[2]->id])
         ->assertCount('selected', 2);
+});
+
+it('shows the pexels toggle when an api key is configured and images are allowed', function (): void {
+    config()->set('services.pexels.key', 'test-key');
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'hero.image', type: MediaType::IMAGE->value, max: 1, media: null)
+        ->assertSee('Search in Pexels');
+});
+
+it('hides the pexels toggle when no api key is configured', function (): void {
+    config()->set('services.pexels.key');
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'hero.image', type: MediaType::IMAGE->value, max: 1, media: null)
+        ->assertDontSee('Search in Pexels');
+});
+
+it('hides the pexels toggle for unsupported media types', function (): void {
+    config()->set('services.pexels.key', 'test-key');
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'doc', type: MediaType::DOCUMENT->value, max: 1, media: null)
+        ->assertDontSee('Search in Pexels');
+});
+
+it('enters pexels mode and loads photo results', function (): void {
+    config()->set('services.pexels.key', 'test-key');
+
+    Http::fake(['api.pexels.com/*' => Http::response([
+        'photos' => [[
+            'id' => 1,
+            'width' => 100,
+            'height' => 80,
+            'url' => 'https://www.pexels.com/photo/1',
+            'photographer' => 'Jane',
+            'photographer_url' => 'https://www.pexels.com/@jane',
+            'alt' => 'cat',
+            'src' => ['original' => 'https://images.pexels.com/1.jpeg', 'medium' => 'https://images.pexels.com/1m.jpeg'],
+        ]],
+        'next_page' => null,
+    ])]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'hero.image', type: MediaType::IMAGE->value, max: 1, media: null)
+        ->call('togglePexels')
+        ->assertSet('pexelsMode', true)
+        ->assertSet('pexelsLoaded', true)
+        ->assertCount('pexelsResults', 1);
+});
+
+it('previews a pexels result without importing it', function (): void {
+    config()->set('services.pexels.key', 'test-key');
+
+    Http::fake(['api.pexels.com/*' => Http::response([
+        'photos' => [[
+            'id' => 3,
+            'width' => 100,
+            'height' => 80,
+            'url' => 'https://www.pexels.com/photo/3',
+            'photographer' => 'Jane',
+            'photographer_url' => 'https://www.pexels.com/@jane',
+            'alt' => 'a calico cat',
+            'src' => ['original' => 'https://images.pexels.com/3.jpeg', 'medium' => 'https://images.pexels.com/3m.jpeg', 'large' => 'https://images.pexels.com/3l.jpeg'],
+        ]],
+        'next_page' => null,
+    ])]);
+
+    $component = Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'hero.image', type: MediaType::IMAGE->value, max: 1, media: null)
+        ->call('togglePexels')
+        ->call('previewPexels', 3)
+        ->assertSee('a calico cat')
+        ->assertSee('Import');
+
+    expect($component->get('pexelsPreview')['id'])->toBe(3)
+        ->and(Media::query()->count())->toBe(0);
+
+    Http::assertNotSent(fn ($request): bool => str_contains((string) $request->url(), 'images.pexels.com'));
+});
+
+it('clears the preview when the search query changes', function (): void {
+    config()->set('services.pexels.key', 'test-key');
+
+    Http::fake(['api.pexels.com/*' => Http::response([
+        'photos' => [[
+            'id' => 4,
+            'width' => 100,
+            'height' => 80,
+            'url' => 'https://www.pexels.com/photo/4',
+            'photographer' => 'Jane',
+            'photographer_url' => 'https://www.pexels.com/@jane',
+            'alt' => 'cat',
+            'src' => ['original' => 'https://images.pexels.com/4.jpeg', 'medium' => 'https://images.pexels.com/4m.jpeg'],
+        ]],
+        'next_page' => null,
+    ])]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'hero.image', type: MediaType::IMAGE->value, max: 1, media: null)
+        ->call('togglePexels')
+        ->call('previewPexels', 4)
+        ->assertSet('pexelsPreview.id', 4)
+        ->set('pexelsQuery', 'dogs')
+        ->assertSet('pexelsPreview', null);
+});
+
+it('imports a pexels photo and returns to the library with it selected', function (): void {
+    config()->set('services.pexels.key', 'test-key');
+
+    Http::fake([
+        'api.pexels.com/*' => Http::response([
+            'photos' => [[
+                'id' => 7,
+                'width' => 100,
+                'height' => 80,
+                'url' => 'https://www.pexels.com/photo/7',
+                'photographer' => 'Jane',
+                'photographer_url' => 'https://www.pexels.com/@jane',
+                'alt' => 'cat',
+                'src' => ['original' => 'https://images.pexels.com/7.jpeg', 'medium' => 'https://images.pexels.com/7m.jpeg'],
+            ]],
+            'next_page' => null,
+        ]),
+        'images.pexels.com/*' => Http::response('image-bytes', 200),
+    ]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'hero.image', type: MediaType::IMAGE->value, max: 1, media: null)
+        ->call('togglePexels')
+        ->call('previewPexels', 7)
+        ->call('importFromPexels', 7)
+        ->assertSet('showLibrary', true)
+        ->assertSet('pexelsMode', false)
+        ->assertSet('pexelsPreview', null)
+        ->assertCount('selected', 1)
+        ->assertNotDispatched('media-selected');
+
+    $this->assertDatabaseHas('media', [
+        'type' => MediaType::IMAGE->value,
+        'metadata->source' => 'pexels',
+        'metadata->pexels_id' => 7,
+    ]);
+});
+
+it('keeps the library open and selects the import when picking multiple', function (): void {
+    config()->set('services.pexels.key', 'test-key');
+
+    Http::fake([
+        'api.pexels.com/*' => Http::response([
+            'photos' => [[
+                'id' => 9,
+                'width' => 100,
+                'height' => 80,
+                'url' => 'https://www.pexels.com/photo/9',
+                'photographer' => 'Jane',
+                'photographer_url' => 'https://www.pexels.com/@jane',
+                'alt' => 'cat',
+                'src' => ['original' => 'https://images.pexels.com/9.jpeg', 'medium' => 'https://images.pexels.com/9m.jpeg'],
+            ]],
+            'next_page' => null,
+        ]),
+        'images.pexels.com/*' => Http::response('image-bytes', 200),
+    ]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'gallery', type: 'image,video', max: 10, media: null)
+        ->call('togglePexels')
+        ->call('importFromPexels', 9)
+        ->assertSet('showLibrary', true)
+        ->assertSet('pexelsMode', false)
+        ->assertCount('selected', 1);
 });

@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Enums\BlockType;
 use App\Enums\MediaType;
+use App\Models\Block;
 use App\Models\Media;
 use App\Models\Mediable;
 use App\Models\Page;
+use App\Models\Settings;
 use App\Services\ImageService;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,6 +29,7 @@ test('to array', function (): void {
             'duration',
             'width',
             'height',
+            'metadata',
             'created_at',
             'updated_at',
         ]);
@@ -248,4 +252,35 @@ it('can delete safely returns false when mediables exist', function (): void {
     $page->media()->attach($media, ['role' => 'example', 'locale' => app()->getLocale()]);
 
     expect($media->delete())->toBeFalse();
+});
+
+it('prevents deletion when media is embedded in a block', function (): void {
+    Storage::fake(config('filesystems.media'));
+
+    $page = Page::factory()->create();
+    $media = Media::factory()->create(['source' => 'media/in-block.jpg']);
+    Storage::disk(config('filesystems.media'))->put('media/in-block.jpg', 'content');
+
+    Block::factory()->create([
+        'blockable_id' => $page->id,
+        'blockable_type' => 'page',
+        'type' => BlockType::TEXT_IMAGE,
+        'content' => ['image' => ['source' => 'media/in-block.jpg']],
+    ]);
+
+    expect($media->delete())->toBeFalse()
+        ->and(Media::query()->whereKey($media->id)->exists())->toBeTrue()
+        ->and(Storage::disk(config('filesystems.media'))->exists('media/in-block.jpg'))->toBeTrue();
+});
+
+it('prevents deletion when media is used in site settings', function (): void {
+    Storage::fake(config('filesystems.media'));
+
+    $media = Media::factory()->create(['source' => 'media/site-logo.jpg']);
+    Storage::disk(config('filesystems.media'))->put('media/site-logo.jpg', 'content');
+
+    Settings::set(['logo' => ['source' => 'media/site-logo.jpg']]);
+
+    expect($media->delete())->toBeFalse()
+        ->and(Media::query()->whereKey($media->id)->exists())->toBeTrue();
 });

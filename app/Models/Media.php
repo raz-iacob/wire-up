@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\MediaType;
 use App\Services\ImageService;
+use App\Services\MediaUsageService;
 use Carbon\CarbonImmutable;
 use Database\Factories\MediaFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -28,6 +29,7 @@ use Illuminate\Support\Facades\Storage;
  * @property int|null $duration
  * @property int|null $width
  * @property int|null $height
+ * @property array<string, mixed>|null $metadata
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  * @property-read string $url
@@ -68,6 +70,7 @@ final class Media extends Model
             'duration' => 'integer',
             'width' => 'integer',
             'height' => 'integer',
+            'metadata' => 'array',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -87,6 +90,19 @@ final class Media extends Model
         }
 
         return false;
+    }
+
+    public function isInUse(): bool
+    {
+        return resolve(MediaUsageService::class)->isInUse($this);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function usageLabels(): array
+    {
+        return resolve(MediaUsageService::class)->labels($this);
     }
 
     /**
@@ -149,7 +165,6 @@ final class Media extends Model
 
     private function canDeleteSafely(): bool
     {
-        return $this->mediables()
-            ->where('media_id', $this->id)->doesntExist();
+        return ! $this->isInUse();
     }
 }

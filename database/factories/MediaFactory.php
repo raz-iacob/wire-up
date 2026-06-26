@@ -39,6 +39,24 @@ final class MediaFactory extends Factory
         ];
     }
 
+    public function pexels(): static
+    {
+        $pexelsId = $this->faker->numberBetween(1000, 9999999);
+        $photographer = $this->faker->name();
+
+        return $this->state(fn (): array => [
+            'type' => MediaType::IMAGE,
+            'mime_type' => 'image/jpeg',
+            'metadata' => [
+                'source' => 'pexels',
+                'pexels_id' => $pexelsId,
+                'photographer' => $photographer,
+                'photographer_url' => 'https://www.pexels.com/@'.$this->faker->userName(),
+                'pexels_url' => 'https://www.pexels.com/photo/'.$pexelsId,
+            ],
+        ]);
+    }
+
     public function externalVideo(): static
     {
         return $this->state(fn (): array => [

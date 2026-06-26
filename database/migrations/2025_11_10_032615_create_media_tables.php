@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('duration')->nullable();
             $table->unsignedInteger('width')->nullable();
             $table->unsignedInteger('height')->nullable();
+            $table->json('metadata')->nullable()->comment('Provider attribution, e.g. Pexels photographer details');
             $table->timestamps();
 
             $table->index('type');
