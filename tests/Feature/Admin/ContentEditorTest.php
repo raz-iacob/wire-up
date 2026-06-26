@@ -743,6 +743,26 @@ it('seeds the new sponsor item with the full field shape', function (): void {
         });
 });
 
+it('persists a team member photo through save', function (): void {
+    $page = $this->page;
+
+    editor($page)
+        ->set('title.en', 'Sample')
+        ->set('slugs.en', 'sample')
+        ->set('blocks', [
+            'new-tm' => ['id' => 'new-tm', 'type' => 'team', 'position' => 0, 'content' => array_replace_recursive(
+                BlockType::TEAM->defaultContent(),
+                ['items' => [['id' => 'm1', 'name' => ['en' => 'Jane']]]],
+            )],
+        ])
+        ->call('syncBlockItemMedia', 'new-tm', 'm1', 'photo', ['id' => 9, 'source' => 'media/jane.jpg'])
+        ->assertSet('blocks.new-tm.content.items.0.photo', ['id' => 9, 'source' => 'media/jane.jpg'])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($page->blocks()->first()->content['items'][0]['photo'])->toBe(['id' => 9, 'source' => 'media/jane.jpg']);
+});
+
 it('syncs item media into the matching block item by id', function (): void {
     editor($this->page)
         ->set('blocks', [

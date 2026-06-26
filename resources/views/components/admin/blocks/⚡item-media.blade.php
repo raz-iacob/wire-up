@@ -44,7 +44,7 @@ return new class extends Component
 
 <div>
     <livewire:admin.media-selector
-        wire:model="value"
+        wire:model.live="value"
         wire:key="item-media-{{ $blockId }}-{{ $itemId }}-{{ $field }}-inner"
         name="item-media-{{ $blockId }}-{{ $itemId }}-{{ $field }}"
         :type="$mediaType"

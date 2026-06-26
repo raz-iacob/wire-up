@@ -369,6 +369,56 @@ it('reorders sponsors with saved logos then saves without errors', function (): 
         ->assertNoJavascriptErrors();
 });
 
+it('saves a per-item media photo selected through the media library', function (): void {
+    $media = Media::factory()->create();
+
+    $page = Page::factory()->create([
+        'title' => 'Team Save',
+        'status' => PageStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'team-photo-save']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'team', 'content' => [
+            'items' => [
+                ['id' => 'm1', 'photo' => null, 'name' => ['en' => 'Jane'], 'role' => [], 'bio' => [], 'socials' => ['email' => '', 'website' => '', 'linkedin' => '', 'x' => '', 'instagram' => '']],
+            ],
+        ]],
+    ]);
+
+    $blockId = (string) $page->blocks()->first()->id;
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->assertNoJavascriptErrors();
+
+    $target = "item-media-{$blockId}-m1-photo.en";
+    $payload = json_encode([[
+        'id' => $media->id,
+        'source' => $media->source,
+        'filename' => $media->filename,
+        'mime_type' => $media->mime_type,
+        'icon' => 'photo',
+        'crop' => [],
+        'metadata' => [],
+    ]]);
+
+    $browser->script("window.Livewire.dispatch('media-selected', { target: '{$target}', media: {$payload} }); void 0");
+    $browser->wait(1.5);
+
+    $comp = "window.Livewire.all().find(c => c.\$wire.get('blocks') !== undefined)";
+    $photoId = "(() => { const b = Object.values($comp.\$wire.get('blocks')).find(b => b.type === 'team'); const p = b.content.items[0].photo; return p ? p.id : null; })()";
+
+    $browser->assertScript($photoId, $media->id);
+
+    $browser->script("$comp.\$wire.update(); void 0");
+    $browser->wait(1.0);
+    $browser->assertNoJavascriptErrors();
+
+    expect($page->blocks()->first()->content['items'][0]['photo']['id'] ?? null)->toBe($media->id);
+});
+
 it('renders and toggles collapsible accordion items in the editor', function (): void {
     $page = Page::factory()->create([
         'title' => 'Accordion Editor',

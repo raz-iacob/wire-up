@@ -57,6 +57,7 @@
                             :value="data_get($item, 'photo')"
                             media-type="image"
                             :multiple="false"
+                            :crops="['default' => ['label' => __('Square'), 'w' => 400, 'h' => 400]]"
                             :locale="$locale"
                             :multi-locale="$multiLocale"
                             label="{{ __('Photo') }}"
