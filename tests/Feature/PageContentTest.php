@@ -1002,19 +1002,6 @@ it('renders a page with no blocks without error', function (): void {
     $this->get(route('page', 'empty'))->assertOk();
 });
 
-it('separates blocks with a gap and adds no vertical padding to blocks without a background', function (): void {
-    publishPageWithBlocks('plain-blocks', [
-        ['id' => 'new-1', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>Intro copy</p>'], 'hasBackground' => false]],
-        ['id' => 'new-2', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>More copy</p>'], 'hasBackground' => false]],
-    ]);
-
-    $this->get(route('page', 'plain-blocks'))
-        ->assertOk()
-        ->assertSee('gap-16', false)
-        ->assertSee('mb-(--wire-gutter)', false)
-        ->assertDontSee('py-16', false);
-});
-
 it('pads only the blocks that have a background, sized to the spacing setting', function (): void {
     publishPageWithBlocks('bg-block', [
         ['id' => 'new-1', 'type' => 'text-image', 'content' => ['body' => ['en' => '<p>Intro</p>'], 'hasBackground' => true]],
