@@ -43,6 +43,8 @@ return new class extends Component
      */
     public array $og_image = [];
 
+    public bool $noindex = false;
+
     /**
      * @var array<string, mixed>
      */
@@ -102,6 +104,7 @@ return new class extends Component
         $this->activeLocales = resolve('localization')->getActiveLocales();
         $this->publishedLocales = array_values(array_intersect($page->published_locales, array_keys($this->activeLocales)));
         $this->og_image = $this->mediaForRole('og_image');
+        $this->noindex = (bool) ($page->metadata['noindex'] ?? false);
         $this->layout = [
             'hideHeader' => false,
             'hideFooter' => false,
@@ -195,6 +198,7 @@ return new class extends Component
             'og_image.*.*.metadata' => ['nullable', 'array'],
             'og_image.*.*.metadata.caption' => ['nullable', 'string', 'max:500'],
             'og_image.*.*.metadata.alt' => ['nullable', 'string', 'max:255'],
+            'noindex' => ['boolean'],
             'layout' => ['array'],
             'layout.hideHeader' => ['boolean'],
             'layout.hideFooter' => ['boolean'],
@@ -246,12 +250,13 @@ return new class extends Component
         }
 
         $action->handle($this->page, [
-            ...Arr::except($validated, ['publishedLocales', 'blocks', 'layout']),
+            ...Arr::except($validated, ['publishedLocales', 'blocks', 'layout', 'noindex']),
             'blocks' => $this->blocks,
             'og_image' => $this->og_image,
             'metadata' => [
                 ...($this->page->metadata ?? []),
                 'published_locales' => array_values($validated['publishedLocales'] ?? []),
+                'noindex' => (bool) ($validated['noindex'] ?? false),
                 'layout' => $this->layoutMetadata(),
             ],
         ]);
@@ -1142,6 +1147,8 @@ return new class extends Component
                     <x-forms.url-translated name="slugs" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Web Address') }}" :readonly="$this->isHomePage" :note="$this->isHomePage ? __('Served at /. Its URL redirects here.') : ''" />
                     <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Description') }}" />
                     <livewire:admin.media-selector wire:model="og_image.{{ $locale }}" type="image" name="og_image" :crops="['desktop' => ['label' => __('Desktop'), 'w' => 1200, 'h' => 700], 'mobile' => ['label' => __('Mobile'), 'w' => 800, 'h' => 800]]" label="{{ __('Open Graph Image') }}" />
+
+                    <flux:switch wire:model="noindex" label="{{ __('Discourage search engines from indexing this page') }}" description="{{ __('Adds a noindex tag to this page only and leaves it out of the sitemap.') }}" align="left" />
                 </div>
             </flux:fieldset>
 

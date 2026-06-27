@@ -22,6 +22,7 @@ return new class extends Component
             ->layoutData([
                 'description' => $this->page->description,
                 'siteLayout' => $this->page->resolvedLayout(),
+                'page' => $this->page,
             ]);
     }
 };

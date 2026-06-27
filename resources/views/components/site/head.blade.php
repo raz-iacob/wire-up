@@ -1,4 +1,4 @@
-@props(['title' => null, 'description' => null, 'customCss' => ''])
+@props(['title' => null, 'description' => null, 'customCss' => '', 'page' => null])
 
 @php
     $site = \App\Services\SettingsService::current();
@@ -11,9 +11,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    @if ($site->noindex())
-    <meta name="robots" content="noindex, nofollow">
-    @endif
+    <x-site.meta :page="$page" :title="$title" :description="$description" :site="$site" :site-name="$siteName" />
 
     @if ($favicon)
     <link rel="icon" href="{{ $favicon }}" />
@@ -50,7 +48,4 @@
     @endif
 
     <title>{{ $title ? "$title | " : '' }}{{ $siteName }}</title>
-    @if ($description)
-    <meta name="description" content="{{ $description }}">
-    @endif
 </head>

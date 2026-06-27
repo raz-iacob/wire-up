@@ -203,6 +203,13 @@ final class SettingsService
         return $this->imageUrl(is_array($item) ? $item : null, $crop, ['fm' => 'png']);
     }
 
+    public function defaultOgImageUrl(string $crop = 'default'): ?string
+    {
+        $item = config('site.default_og_image');
+
+        return $this->imageUrl(is_array($item) ? $item : null, $crop, ['w' => 1200, 'h' => 630, 'fm' => 'jpg']);
+    }
+
     public function color(string $slot): ?string
     {
         $palette = $this->themeColors() ?: config()->array('theme.presets.default.colors');

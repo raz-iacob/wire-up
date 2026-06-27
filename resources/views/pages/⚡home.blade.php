@@ -14,6 +14,7 @@ return new class extends Component
     public function mount(): void
     {
         $this->page = Page::query()
+            ->with('blocks')
             ->whereKey(SettingsService::current()->homePageId())
             ->publishedInLocale()
             ->firstOrFail();
@@ -26,6 +27,7 @@ return new class extends Component
             ->layoutData([
                 'description' => $this->page->description,
                 'siteLayout' => $this->page->resolvedLayout(),
+                'page' => $this->page,
             ]);
     }
 };

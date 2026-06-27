@@ -122,6 +122,31 @@ QUEUE_CONNECTION=redis
 
 > **Pexels media library integration:** Add a free Pexels API key (from [pexels.com/api](https://www.pexels.com/api/)) under **Settings → Integrations** in the admin to enable the integration. Editors can then search Pexels photos and videos directly from the media picker and import them into the library. When no key is set, the Pexels option is hidden. Per the [Pexels API Guidelines](https://www.pexels.com/api/documentation/#guidelines), photographer attribution and a link back to Pexels are shown in the picker, and the photographer/source details are stored with each imported asset (in `media.metadata`) so credit can be surfaced wherever the media is used.
 
+## SEO & AI discoverability
+
+Every public page renders a full discovery layer from the head component, and the site exposes
+machine-readable resources for crawlers and AI agents:
+
+- **Social & search meta** - canonical URL, Open Graph, Twitter cards, `hreflang` alternates (for
+  multi-locale sites), `theme-color`, and JSON-LD structured data (`Organization`, `WebSite`,
+  `WebPage`, `BreadcrumbList`). Descriptions fall back to a clean excerpt derived from a page's
+  content blocks when no description is set.
+- **Share images** - each page's Open Graph image is used when set; otherwise the **Default share
+  image** from **Settings → Identity** is used.
+- **`/sitemap.xml`** - dynamically lists published pages across their published locales with
+  `lastmod` and `hreflang` alternates.
+- **`/llms.txt`** - a Markdown index of published pages (title, URL, description) for AI crawlers.
+- **`/llms-full.txt`** - the full plain-text content of every published page.
+- **`/robots.txt`** - dynamic; references the sitemap and reflects the indexing settings below.
+
+**Controlling indexing:**
+
+- **Settings → Identity** has a *Discourage search engines* toggle. When on, every page gets a
+  `noindex` robots tag, `robots.txt` returns `Disallow: /`, images send an `X-Robots-Tag` header,
+  and `/sitemap.xml` + `/llms.txt` are emptied.
+- Each page's **SEO Settings** has its own *Discourage search engines from indexing this page*
+  toggle, which adds `noindex` to that page only and drops it from the sitemap.
+
 ## Contributing
 
 1. Fork the repository

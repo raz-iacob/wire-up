@@ -91,6 +91,31 @@ it('can update page basic information', function (): void {
     ]);
 });
 
+it('persists the per-page noindex flag into metadata', function (): void {
+    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('status', PageStatus::PUBLISHED)
+        ->set('title.en', 'Hidden Page')
+        ->set('slugs.en', 'hidden-page')
+        ->set('noindex', true)
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($page->refresh()->isNoindex())->toBeTrue();
+});
+
+it('hydrates the per-page noindex flag from metadata on mount', function (): void {
+    $page = Page::factory()->create(['metadata' => ['noindex' => true]]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('noindex', true);
+});
+
 it('validates required fields', function (): void {
     $page = Page::factory()->create();
 

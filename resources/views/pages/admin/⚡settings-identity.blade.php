@@ -27,6 +27,11 @@ return new class extends Component
      */
     public ?array $favicon = null;
 
+    /**
+     * @var array<string, mixed>|null
+     */
+    public ?array $default_og_image = null;
+
     public bool $noindex = false;
 
     #[Url(except: 'en')]
@@ -42,6 +47,7 @@ return new class extends Component
         $this->title = $this->localeMap('title');
         $this->description = $this->localeMap('description');
         $this->favicon = is_array(config('site.favicon')) ? config('site.favicon') : null;
+        $this->default_og_image = is_array(config('site.default_og_image')) ? config('site.default_og_image') : null;
         $this->noindex = (bool) config('site.noindex', false);
 
         $this->activeLocales = resolve('localization')->getActiveLocales();
@@ -57,6 +63,8 @@ return new class extends Component
         $rules = [
             'favicon' => ['nullable', 'array'],
             'favicon.id' => ['nullable', 'integer', 'exists:media,id'],
+            'default_og_image' => ['nullable', 'array'],
+            'default_og_image.id' => ['nullable', 'integer', 'exists:media,id'],
             'noindex' => ['boolean'],
         ];
 
@@ -71,6 +79,7 @@ return new class extends Component
             'title.*.max' => __('The title may not exceed :max characters.'),
             'description.*.max' => __('The tagline may not exceed :max characters.'),
             'favicon.id.exists' => __('The selected favicon is no longer available.'),
+            'default_og_image.id.exists' => __('The selected share image is no longer available.'),
         ];
 
         $attributes = [
@@ -78,6 +87,8 @@ return new class extends Component
             'description.*' => __('tagline'),
             'favicon' => __('favicon'),
             'favicon.id' => __('favicon'),
+            'default_og_image' => __('share image'),
+            'default_og_image.id' => __('share image'),
         ];
 
         try {
@@ -92,6 +103,7 @@ return new class extends Component
             'title' => $validated['title'],
             'description' => $validated['description'] ?? [],
             'favicon' => $this->favicon,
+            'default_og_image' => $this->default_og_image,
             'noindex' => $validated['noindex'] ?? false,
         ]);
 
@@ -163,6 +175,15 @@ return new class extends Component
                 type="image"
                 :crops="['default' => ['label' => __('Favicon'), 'w' => 512, 'h' => 512]]"
                 label="{{ __('Favicon') }}"
+            />
+
+            <livewire:admin.media-selector
+                wire:model="default_og_image"
+                name="default_og_image"
+                type="image"
+                :crops="['default' => ['label' => __('Share image'), 'w' => 1200, 'h' => 630]]"
+                label="{{ __('Default share image') }}"
+                note="{{ __('Shown when a page is shared on social media and has no image of its own.') }}"
             />
 
             <flux:separator variant="subtle" />

@@ -100,6 +100,25 @@ final class Page extends Model
         return route('page', $this->getSlug($locale));
     }
 
+    public function isNoindex(): bool
+    {
+        return (bool) ($this->metadata['noindex'] ?? false);
+    }
+
+    public function plainText(?string $locale = null): string
+    {
+        $this->loadMissing('blocks');
+
+        return (string) str(
+            $this->blocks->map(fn (Block $block): string => $block->plainText($locale))->filter()->implode(' ')
+        )->squish();
+    }
+
+    public function textExcerpt(int $chars = 160, ?string $locale = null): string
+    {
+        return str($this->plainText($locale))->limit($chars, '')->trim()->value();
+    }
+
     /**
      * @return array{hideHeader: bool, hideFooter: bool, backgroundColor: ?string, backgroundImage: ?string, backgroundFixed: bool, customCss: string, sidebar: array{menus: array<int, string>}}
      */

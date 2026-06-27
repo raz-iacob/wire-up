@@ -29,6 +29,14 @@ final class Block extends Model
     use HasFactory;
 
     /**
+     * @var array<int, string>
+     */
+    private const array PROSE_FIELDS = [
+        'heading', 'subheading', 'intro', 'lead', 'body', 'quote', 'question',
+        'answer', 'title', 'description', 'caption', 'label', 'value', 'role', 'bio',
+    ];
+
+    /**
      * @return array{provider: 'youtube'|'vimeo', id: string}|null
      */
     public static function parseVideoUrl(string $url): ?array
@@ -78,6 +86,19 @@ final class Block extends Model
         return (string) (
             data_get($this->content, "{$field}.{$locale}", data_get($this->content, $field.'.'.config()->string('app.default_locale', 'en'), ''))
         );
+    }
+
+    public function plainText(?string $locale = null): string
+    {
+        $locale ??= app()->getLocale();
+        $default = config()->string('app.default_locale', 'en');
+
+        $parts = [];
+        $this->harvestText($this->content ?? [], $locale, $default, $parts);
+
+        $spaced = (string) preg_replace('/<\/(?:p|div|li|h[1-6])>|<br\s*\/?>/i', ' ', implode(' ', $parts));
+
+        return (string) str(strip_tags($spaced))->squish();
     }
 
     /**
@@ -232,5 +253,28 @@ final class Block extends Model
     {
         return ($this->content[$field]['link']['type'] ?? null) === 'url'
             && (bool) ($this->content[$field]['link']['newTab'] ?? false);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $node
+     * @param  array<int, string>  $parts
+     */
+    private function harvestText(array $node, string $locale, string $default, array &$parts): void
+    {
+        foreach ($node as $key => $value) {
+            if (! is_array($value)) {
+                continue;
+            }
+
+            $text = $value[$locale] ?? $value[$default] ?? null;
+
+            if (is_string($key) && in_array($key, self::PROSE_FIELDS, true) && is_string($text)) {
+                $parts[] = $text;
+
+                continue;
+            }
+
+            $this->harvestText($value, $locale, $default, $parts);
+        }
     }
 }

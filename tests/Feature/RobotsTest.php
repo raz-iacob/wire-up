@@ -21,10 +21,11 @@ it('blocks all crawlers in robots.txt when search engines are discouraged', func
         ->assertSee('Disallow: /');
 });
 
-it('omits the robots noindex meta tag on the public site by default', function (): void {
+it('marks the public site indexable by default', function (): void {
     $this->get(route('home'))
         ->assertOk()
-        ->assertDontSee('name="robots"', false);
+        ->assertSee('<meta name="robots" content="index, follow, max-image-preview:large">', false)
+        ->assertDontSee('noindex', false);
 });
 
 it('adds the robots noindex meta tag on the public site when discouraged', function (): void {

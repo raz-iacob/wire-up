@@ -90,6 +90,20 @@ it('hydrates the favicon from the saved item on mount', function (): void {
         ->assertSet('favicon.id', 42);
 });
 
+it('persists the default share image on update', function (): void {
+    $media = Media::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-identity')
+        ->set('title.en', 'Acme')
+        ->set('default_og_image', ['id' => $media->id, 'source' => 'images/share.jpg'])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('default_og_image'))->toBe(['id' => $media->id, 'source' => 'images/share.jpg']);
+});
+
 it('persists title and tagline on update', function (): void {
     $this->actingAsAdmin();
 

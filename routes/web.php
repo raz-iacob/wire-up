@@ -6,6 +6,7 @@ use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\SessionController;
 use App\Http\Middleware\RedirectHomepageSlug;
+use App\Services\SeoService;
 use App\Services\SettingsService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -38,10 +39,28 @@ Route::get('img/{options}/{path}', [ImageController::class, 'show'])
 Route::get('robots.txt', function (): Response {
     $body = SettingsService::current()->noindex()
         ? "User-agent: *\nDisallow: /\n"
-        : "User-agent: *\nDisallow:\n";
+        : "User-agent: *\nDisallow:\n\nSitemap: ".url('/sitemap.xml')."\n";
 
     return response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
 })->name('robots');
+
+Route::get('sitemap.xml', fn (): Response => response(
+    SeoService::current()->sitemapXml(),
+    200,
+    ['Content-Type' => 'application/xml; charset=UTF-8'],
+))->name('sitemap');
+
+Route::get('llms.txt', fn (): Response => response(
+    SeoService::current()->llmsTxt(),
+    200,
+    ['Content-Type' => 'text/plain; charset=UTF-8'],
+))->name('llms');
+
+Route::get('llms-full.txt', fn (): Response => response(
+    SeoService::current()->llmsFullTxt(),
+    200,
+    ['Content-Type' => 'text/plain; charset=UTF-8'],
+))->name('llms-full');
 
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
     Route::livewire('{slug}', 'pages::page')

@@ -25,7 +25,7 @@
         $rightMenus = $sidebarMenus->filter(fn (array $menu): bool => $menu['display']['position'] === 'right')->values();
         $hasSidebar = $sidebarMenus->isNotEmpty();
     @endphp
-    <x-site.head :title="isset($title) ? $title : null" :description="isset($description) ? $description : null" :custom-css="$siteLayout['customCss']" />
+    <x-site.head :title="isset($title) ? $title : null" :description="isset($description) ? $description : null" :custom-css="$siteLayout['customCss']" :page="$page ?? null" />
     <body
         @class([
             'antialiased font-(family-name:--wire-body-font) bg-(--wire-body-bg) text-(--wire-body-text)',
