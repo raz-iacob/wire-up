@@ -37,7 +37,7 @@
 >
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         @if ($heading)
-            <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+            <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
         @endif
 
         <div @class([
@@ -67,7 +67,7 @@
                 @endif
 
                 @if (strip_tags($hours) !== '')
-                    <div class="opacity-90 [&_a]:underline [&_p]:whitespace-pre-wrap [&>p]:my-1 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 *:first:mt-0 *:last:mb-0">{!! $hours !!}</div>
+                    <div class="opacity-90 [&_a]:text-(--wire-accent) [&_a]:underline [&_p]:whitespace-pre-wrap [&>p]:my-1 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 *:first:mt-0 *:last:mb-0">{!! $hours !!}</div>
                 @endif
 
                 @if ($phone !== '' || $email !== '')
@@ -87,8 +87,8 @@
                             href="{{ $directions['url'] }}"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
-                            style="background-color:{{ $directions['bg'] }};color:{{ $directions['fg'] }}"
+                            class="wire-btn inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
+                            style="background-color:{{ $directions['bg'] }};color:{{ $directions['fg'] }};--wire-btn-border:var(--wire-primary-border)"
                         >{{ $directions['text'] }}</a>
                     </div>
                 @endif

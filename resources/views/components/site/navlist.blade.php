@@ -27,7 +27,7 @@
         {{ $attributes->merge(['class' => 'flex flex-col gap-6']) }}
         x-data="{
             active: null,
-            activeClass: 'border-(--wire-primary-bg) font-medium',
+            activeClass: 'border-(--wire-accent) font-medium',
             inactiveClass: 'border-transparent opacity-70 hover:opacity-100',
             init() {
                 const targets = [...$el.querySelectorAll('a[data-spy]')]
@@ -84,7 +84,7 @@
                                 @endif
                                 @class([
                                     '-ms-px flex items-center gap-2.5 border-s-2 py-1.5 ps-4 text-sm transition',
-                                    'border-(--wire-primary-bg) font-medium' => $serverActive,
+                                    'border-(--wire-accent) font-medium' => $serverActive,
                                     'border-transparent opacity-70 hover:opacity-100' => ! $serverActive && $fragment === '',
                                 ])
                             >

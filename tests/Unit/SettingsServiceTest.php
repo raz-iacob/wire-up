@@ -166,6 +166,42 @@ it('uses a 3rem desktop gutter for a small-spacing full-width layout', function 
         ->toContain('@media(min-width:768px){:root{--wire-gutter:3rem}}');
 });
 
+it('emits the button border colours and border width tokens', function (): void {
+    expect((new SettingsService)->themeCss())
+        ->toContain('--wire-primary-border:#18181b')
+        ->toContain('--wire-secondary-border:#e4e4e7')
+        ->toContain('--wire-border-width:1px');
+});
+
+it('derives the accent token and Flux accent from the accent colour', function (): void {
+    expect((new SettingsService)->themeCss())
+        ->toContain('--wire-accent:#18181b')
+        ->toContain('--color-accent:#18181b');
+
+    Settings::set(['theme' => 'custom', 'colors' => array_merge(
+        config()->array('theme.presets.default.colors'),
+        ['accent' => '#abcdef'],
+    )]);
+
+    expect((new SettingsService)->themeCss())
+        ->toContain('--wire-accent:#abcdef')
+        ->toContain('--color-accent:#abcdef');
+
+    Settings::set(['border_width' => 'thick']);
+
+    expect((new SettingsService)->themeCss())->toContain('--wire-border-width:3px');
+});
+
+it('returns the trimmed site-wide custom css', function (): void {
+    Settings::set(['custom_css' => '  body { color: red; }  ']);
+
+    expect((new SettingsService)->customCss())->toBe('body { color: red; }');
+
+    config()->set('site.custom_css');
+
+    expect((new SettingsService)->customCss())->toBe('');
+});
+
 it('always exposes header and footer as built-in menus, even with none saved', function (): void {
     $menus = (new SettingsService)->allMenus();
 

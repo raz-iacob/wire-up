@@ -28,6 +28,8 @@ return new class extends Component
 
     public string $radius;
 
+    public string $border_width;
+
     public string $container;
 
     public string $block_spacing;
@@ -47,6 +49,8 @@ return new class extends Component
     public string $footer_layout;
 
     public bool $footer_transparent = false;
+
+    public string $custom_css = '';
 
     /**
      * @var array<string, mixed>|null
@@ -70,6 +74,7 @@ return new class extends Component
         $this->heading_size = $meta['heading_size'] ?? config()->string('theme.default_heading_size');
         $this->body_size = $meta['body_size'] ?? config()->string('theme.default_body_size');
         $this->radius = $meta['radius'] ?? config()->string('theme.default_radius');
+        $this->border_width = is_string($meta['border_width'] ?? null) ? $meta['border_width'] : config()->string('theme.default_border_width');
         $this->container = is_string($meta['container'] ?? null) ? $meta['container'] : config()->string('theme.default_container');
         $this->block_spacing = is_string($meta['block_spacing'] ?? null) ? $meta['block_spacing'] : config()->string('theme.default_block_spacing');
         $this->header_layout = is_string($meta['header_layout'] ?? null) ? $meta['header_layout'] : config()->string('theme.default_header_layout');
@@ -80,6 +85,7 @@ return new class extends Component
         $this->header_nav_hover = is_string($meta['header_nav_hover'] ?? null) ? $meta['header_nav_hover'] : config()->string('theme.default_header_nav_hover');
         $this->footer_layout = is_string($meta['footer_layout'] ?? null) ? $meta['footer_layout'] : config()->string('theme.default_footer_layout');
         $this->footer_transparent = (bool) ($meta['footer_transparent'] ?? false);
+        $this->custom_css = is_string($meta['custom_css'] ?? null) ? $meta['custom_css'] : '';
 
         $this->logo_header = is_array($meta['logo_header'] ?? null) ? $meta['logo_header'] : null;
         $this->logo_footer = is_array($meta['logo_footer'] ?? null) ? $meta['logo_footer'] : null;
@@ -94,6 +100,7 @@ return new class extends Component
             'heading_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.heading_sizes')))],
             'body_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.body_sizes')))],
             'radius' => ['required', 'string', Rule::in(array_keys(config()->array('theme.radii')))],
+            'border_width' => ['required', 'string', Rule::in(array_keys(config()->array('theme.border_widths')))],
             'container' => ['required', 'string', Rule::in(array_keys(config()->array('theme.containers')))],
             'block_spacing' => ['required', 'string', Rule::in(array_keys(config()->array('theme.block_spacings')))],
             'header_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.header_layouts')))],
@@ -104,6 +111,7 @@ return new class extends Component
             'header_nav_hover' => ['required', 'string', Rule::in(array_keys(config()->array('theme.nav_hover_states')))],
             'footer_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.footer_layouts')))],
             'footer_transparent' => ['boolean'],
+            'custom_css' => ['nullable', 'string', 'max:50000'],
             'logo_header' => ['nullable', 'array'],
             'logo_header.id' => ['nullable', 'integer', 'exists:media,id'],
             'logo_footer' => ['nullable', 'array'],
@@ -116,7 +124,8 @@ return new class extends Component
 
         $validated = $this->validate($rules);
 
-        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_size', 'body_size', 'radius', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent']);
+        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent']);
+        $metadata['custom_css'] = mb_trim((string) ($validated['custom_css'] ?? ''));
 
         if ($this->theme === 'custom') {
             $metadata['colors'] = Arr::only($this->colors, array_keys(config()->array('theme.slots')));
@@ -205,6 +214,7 @@ return new class extends Component
             headingSizes: @js(config('theme.heading_sizes')),
             bodySizes: @js(config('theme.body_sizes')),
             radii: @js(config('theme.radii')),
+            borderWidths: @js(config('theme.border_widths')),
             presetPalettes: @js(collect($presets)->map(fn (array $p): array => $p['colors'])),
             get c() {
                 return ($wire.theme !== 'custom' && this.presetPalettes[$wire.theme])
@@ -216,6 +226,7 @@ return new class extends Component
             get headingSize() { return (parseFloat(this.headingSizes[$wire.heading_size] || '1.5rem') * 0.6).toFixed(3) + 'rem' },
             get bodySize() { return (parseFloat(this.bodySizes[$wire.body_size] || '0.875rem') * 0.6).toFixed(3) + 'rem' },
             get radius() { return this.radii[$wire.radius] || '0.5rem' },
+            get borderWidth() { return this.borderWidths[$wire.border_width] || '1px' },
             get headerBg() { return $wire.header_transparent ? 'transparent' : (this.c.header_bg || '') },
             get footerBg() { return $wire.footer_transparent ? 'transparent' : (this.c.footer_bg || '') },
             logoSrc(logo) {
@@ -245,7 +256,7 @@ return new class extends Component
                         <div :class="navPreviewSize" class="flex items-center gap-3" :style="`font-family:${bodyFont}`">
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
-                            <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Sign up') }}</span>
+                            <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Sign up') }}</span>
                         </div>
                     </div>
                     <div data-test="header-variant" x-show="$wire.header_layout === 'centered'" class="px-4 py-3 text-center" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
@@ -257,7 +268,7 @@ return new class extends Component
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
                             <span>{{ __('Pricing') }}</span>
-                            <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Sign up') }}</span>
+                            <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Sign up') }}</span>
                         </div>
                     </div>
                     <div data-test="header-variant" x-show="$wire.header_layout === 'split'" class="grid grid-cols-3 items-center gap-2 px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
@@ -271,7 +282,7 @@ return new class extends Component
                             <span>{{ __('Pricing') }}</span>
                         </div>
                         <div class="flex justify-end">
-                            <span class="px-2.5 py-1 text-xs font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Sign up') }}</span>
+                            <span class="px-2.5 py-1 text-xs font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Sign up') }}</span>
                         </div>
                     </div>
                     <div data-test="header-variant" x-show="$wire.header_layout === 'minimal'" class="flex items-center justify-between px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
@@ -293,17 +304,17 @@ return new class extends Component
                         <h1 class="font-bold" :style="`font-family:${headingFont}; font-size:${headingSize}`">{{ __('Build something great') }}</h1>
                         <p class="mx-auto max-w-xs" :style="`color:${c.muted}; font-family:${bodyFont}; font-size:${bodySize}`">{{ __('A clean starting point for your next project, themed to your brand.') }}</p>
                         <div class="flex items-center justify-center gap-2 pt-2" :style="`font-family:${bodyFont}`">
-                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Get started') }}</span>
-                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.secondary_bg}; color:${c.secondary_text}; border-radius:${radius}`">{{ __('Learn more') }}</span>
+                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Get started') }}</span>
+                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.secondary_bg}; color:${c.secondary_text}; border:${borderWidth} solid ${c.secondary_border}; border-radius:${radius}`">{{ __('Learn more') }}</span>
                         </div>
                         <div class="mx-auto flex max-w-xs items-center gap-2 pt-2" :style="`font-family:${bodyFont}`">
-                            <span class="flex-1 px-2 py-1 text-left text-[10px]" :style="`background:${c.input_bg}; color:${c.input_text}; border:1px solid ${c.input_border}; border-radius:${radius}`">name@email.com</span>
-                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border-radius:${radius}`">{{ __('Subscribe') }}</span>
+                            <span class="flex-1 px-2 py-1 text-left text-[10px]" :style="`background:${c.input_bg}; color:${c.input_text}; border:${borderWidth} solid ${c.input_border}; border-radius:${radius}`">name@email.com</span>
+                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Subscribe') }}</span>
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-3 pt-6">
                         @for ($i = 0; $i < 3; $i++)
-                            <div class="space-y-1.5 p-3 text-left" :style="`background:${c.card_bg}; border:1px solid ${c.card_border}; border-radius:${radius}`">
+                            <div class="space-y-1.5 p-3 text-left" :style="`background:${c.card_bg}; border:${borderWidth} solid ${c.card_border}; border-radius:${radius}`">
                                 <div class="text-[0.65rem] font-semibold" :style="`color:${c.card_text}; font-family:${headingFont}`">{{ __('Card title') }}</div>
                                 <div class="text-[0.6rem] leading-snug" :style="`color:${c.card_text}; font-family:${bodyFont}`">{{ __('A short supporting line of text.') }}</div>
                             </div>
@@ -460,6 +471,11 @@ return new class extends Component
                 </flux:select>
                 <flux:select variant="listbox" wire:model="radius" label="{{ __('Corner radius') }}">
                     @foreach (array_keys(config('theme.radii')) as $key)
+                        <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:select variant="listbox" wire:model="border_width" label="{{ __('Border width') }}">
+                    @foreach (array_keys(config('theme.border_widths')) as $key)
                         <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>
                     @endforeach
                 </flux:select>
@@ -632,6 +648,31 @@ return new class extends Component
                     label="{{ __('Footer logo') }}"
                 />
             </div>
+
+            <flux:separator variant="subtle" />
+
+            <div class="space-y-3">
+                <flux:heading size="sm">{{ __('Custom CSS') }}</flux:heading>
+                <flux:text>{{ __('Add custom CSS rules that apply across the whole site.') }}</flux:text>
+                <flux:modal.trigger name="site-custom-css">
+                    <flux:button icon="code-bracket" variant="filled">{{ $custom_css !== '' ? __('Edit custom CSS') : __('Add custom CSS') }}</flux:button>
+                </flux:modal.trigger>
+            </div>
+
+            <flux:modal name="site-custom-css" class="w-full md:max-w-2xl">
+                <div class="space-y-6">
+                    <div>
+                        <flux:heading size="lg">{{ __('Custom CSS') }}</flux:heading>
+                        <flux:text class="mt-2">{{ __('These rules are added to every page on your site.') }}</flux:text>
+                    </div>
+                    <flux:textarea wire:model="custom_css" rows="12" class="font-mono text-sm" placeholder=".my-class &#123; color: red; &#125;" />
+                    <div class="flex justify-end">
+                        <flux:modal.close>
+                            <flux:button variant="primary">{{ __('Done') }}</flux:button>
+                        </flux:modal.close>
+                    </div>
+                </div>
+            </flux:modal>
 
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary" icon="check">

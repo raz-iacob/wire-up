@@ -6,10 +6,10 @@
     $hasBg = (bool) ($content['hasBackground'] ?? false);
     $rawItems = is_array($content['items'] ?? null) ? $content['items'] : [];
 
-    $variantStyle = fn (string $variant): string => match ($variant) {
-        'secondary' => 'background-color:var(--wire-secondary-bg);color:var(--wire-secondary-text)',
-        'outline' => 'background-color:transparent;color:var(--wire-primary-bg);border:1px solid var(--wire-primary-bg)',
-        default => 'background-color:var(--wire-primary-bg);color:var(--wire-primary-text)',
+    $variantClass = fn (string $variant): string => match ($variant) {
+        'secondary' => 'bg-(--wire-secondary-bg) text-(--wire-secondary-text) [--wire-btn-border:var(--wire-secondary-border)]',
+        'outline' => 'bg-transparent text-(--wire-primary-border) [--wire-btn-border:var(--wire-primary-border)]',
+        default => 'bg-(--wire-primary-bg) text-(--wire-primary-text) [--wire-btn-border:var(--wire-primary-border)]',
     };
 
     $buttons = collect($rawItems)
@@ -40,8 +40,7 @@
                     <a
                         href="{{ $button['url'] }}"
                         @if ($button['newTab']) target="_blank" rel="noopener noreferrer" @endif
-                        class="inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
-                        style="{{ $variantStyle($button['variant']) }}"
+                        class="wire-btn inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90 {{ $variantClass($button['variant']) }}"
                     >{{ $button['text'] }}</a>
                 @endforeach
             </div>

@@ -1,13 +1,14 @@
-@props(['member', 'layout' => 'circle', 'cardBg' => 'var(--wire-card-bg)', 'cardText' => 'var(--wire-card-text)'])
+@props(['member', 'layout' => 'circle', 'hasBg' => false])
 
 @php
     $bio = strip_tags($member['bio']) !== '' ? $member['bio'] : '';
-    $bioClass = 'leading-relaxed opacity-80 [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0';
+    $bioClass = 'leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0';
+    $cardClass = $hasBg ? 'bg-(--wire-body-bg) text-(--wire-body-text)' : 'bg-(--wire-card-bg) text-(--wire-card-text)';
 @endphp
 
 @switch($layout)
     @case('card')
-        <article class="flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
+        <article class="wire-card flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm {{ $cardClass }}">
             @if ($member['photo'])
                 <img src="{{ $member['photo'] }}" alt="{{ $member['alt'] }}" loading="lazy" class="aspect-square w-full object-cover" />
             @endif
@@ -29,8 +30,7 @@
     @case('overlay')
         <article
             tabindex="0"
-            class="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-(--wire-radius) shadow-sm focus:outline-none"
-            style="background-color:var(--wire-primary-bg)"
+            class="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-(--wire-radius) bg-(--wire-primary-bg) shadow-sm focus:outline-none"
         >
             @if ($member['photo'])
                 <img src="{{ $member['photo'] }}" alt="{{ $member['alt'] }}" loading="lazy" class="absolute inset-0 size-full object-cover" />
@@ -38,7 +38,7 @@
 
             <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent transition-opacity duration-300 group-hover:opacity-0 group-focus-within:opacity-0"></div>
 
-            <div class="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100" style="background-color:var(--wire-primary-bg)"></div>
+            <div class="absolute inset-0 bg-(--wire-primary-bg) opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100"></div>
 
             <div class="relative p-6 text-white transition-colors duration-300 group-hover:text-(--wire-primary-text) group-focus-within:text-(--wire-primary-text)">
                 @if ($member['name'] !== '')
@@ -79,7 +79,7 @@
         @break
 
     @default
-        <article class="flex h-full flex-col items-center rounded-(--wire-radius) p-8 text-center shadow-sm" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
+        <article class="wire-card flex h-full flex-col items-center rounded-(--wire-radius) p-8 text-center shadow-sm {{ $cardClass }}">
             @if ($member['photo'])
                 <img src="{{ $member['photo'] }}" alt="{{ $member['alt'] }}" loading="lazy" class="size-28 rounded-full object-cover" />
             @endif

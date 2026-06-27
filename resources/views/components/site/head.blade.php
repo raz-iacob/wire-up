@@ -29,6 +29,9 @@
     <link href="{{ $googleFonts }}" rel="stylesheet">
     @endif
     <style>{!! $site->themeCss() !!}</style>
+    @if ($site->customCss() !== '')
+    <style>{!! $site->customCss() !!}</style>
+    @endif
     @if ($customCss !== '')
     <style>{!! $customCss !!}</style>
     @endif

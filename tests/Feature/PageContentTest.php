@@ -725,7 +725,7 @@ it('renders gold stars when the amber option is enabled, theme accent otherwise'
 
     $this->get(route('page', 'tst-accent'))
         ->assertOk()
-        ->assertSee('size-5 text-(--wire-primary-bg)', false);
+        ->assertSee('size-5 text-(--wire-accent)', false);
 });
 
 it('renders sponsors content in every layout', function (string $layout): void {
@@ -1029,7 +1029,7 @@ it('renders call-to-action buttons with resolved links and variant styles', func
         ->assertSee('External')
         ->assertSee('href="https://example.test"', false)
         ->assertSee('target="_blank"', false)
-        ->assertSee('var(--wire-secondary-bg)', false)
+        ->assertSee('bg-(--wire-secondary-bg)', false)
         ->assertSee('justify-end', false);
 });
 
@@ -1184,14 +1184,14 @@ it('renders stats as cards or with vertical dividers', function (): void {
         ->assertOk()
         ->assertSee('500+')
         ->assertSee('rounded-(--wire-radius) p-6 shadow-sm', false)
-        ->assertSee('background-color:var(--wire-card-bg)', false);
+        ->assertSee('bg-(--wire-card-bg)', false);
 
     $this->get(route('page', 'stats-dividers'))
         ->assertOk()
         ->assertSee('Years')
         ->assertSee('Uptime')
         ->assertSee('sm:border-l', false)
-        ->assertSee('border-(--wire-card-border)', false);
+        ->assertSee('border-(--wire-divider)', false);
 });
 
 it('renders a divider with the chosen thickness and card background colour', function (): void {
@@ -1202,8 +1202,8 @@ it('renders a divider with the chosen thickness and card background colour', fun
     $this->get(route('page', 'divider-page'))
         ->assertOk()
         ->assertSee('<hr', false)
-        ->assertSee('height:3px', false)
-        ->assertSee('background-color:var(--wire-card-border)', false);
+        ->assertSee('h-[3px]', false)
+        ->assertSee('bg-(--wire-divider)', false);
 });
 
 it('renders a team block with photo, role, bio and social links', function (): void {
@@ -1288,9 +1288,21 @@ it('renders a pricing block with a highlighted plan, features and a button', fun
         ->assertSee('/mo')
         ->assertSee('<li>Unlimited</li>', false)
         ->assertSee('Most popular')
-        ->assertSee('ring-2 ring-(--wire-primary-bg)', false)
+        ->assertSee('ring-2 ring-(--wire-accent)', false)
         ->assertSee('Start free')
         ->assertSee($target->getUrl(), false);
+});
+
+it('injects site-wide custom css into every page head', function (): void {
+    Settings::set(['custom_css' => '.site-wide { color: rebeccapurple; }']);
+
+    publishPageWithBlocks('styled', [
+        ['id' => 'new-1', 'type' => 'spacer', 'content' => ['size' => 'small']],
+    ]);
+
+    $this->get(route('page', 'styled'))
+        ->assertOk()
+        ->assertSee('.site-wide { color: rebeccapurple; }', false);
 });
 
 it('renders a page with no blocks without error', function (): void {

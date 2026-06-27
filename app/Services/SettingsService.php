@@ -250,10 +250,11 @@ final class SettingsService
         }
 
         $dark = [];
-        if (isset($palette['primary_bg'], $palette['primary_text'])) {
+        $accentColor = $palette['accent'] ?? $palette['primary_bg'] ?? null;
+        if ($accentColor !== null && isset($palette['primary_text'])) {
             $accent = [
-                "--color-accent:{$palette['primary_bg']}",
-                "--color-accent-content:{$palette['primary_bg']}",
+                "--color-accent:{$accentColor}",
+                "--color-accent-content:{$accentColor}",
                 "--color-accent-foreground:{$palette['primary_text']}",
             ];
             $root = [...$root, ...$accent];
@@ -268,6 +269,12 @@ final class SettingsService
             foreach (['sm', 'md', 'lg', 'xl'] as $size) {
                 $root[] = "--radius-$size:$radius";
             }
+        }
+
+        $borderWidthKey = (string) config('site.border_width', '') ?: config()->string('theme.default_border_width');
+        $borderWidth = config()->string("theme.border_widths.$borderWidthKey", '');
+        if ($borderWidth !== '') {
+            $root[] = "--wire-border-width:$borderWidth";
         }
 
         $headingFontKey = (string) config('site.heading_font', '') ?: config()->string('theme.default_font');
@@ -315,6 +322,11 @@ final class SettingsService
         }
 
         return $css;
+    }
+
+    public function customCss(): string
+    {
+        return mb_trim((string) config('site.custom_css', ''));
     }
 
     public function googleFontsUrl(): ?string

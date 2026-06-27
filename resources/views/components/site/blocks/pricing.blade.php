@@ -38,8 +38,6 @@
         default => 'sm:grid-cols-2 lg:grid-cols-3',
     };
 
-    $cardBg = $hasBg ? 'var(--wire-body-bg)' : 'var(--wire-card-bg)';
-    $cardText = $hasBg ? 'var(--wire-body-text)' : 'var(--wire-card-text)';
 @endphp
 
 @if ($plans->isNotEmpty())
@@ -52,10 +50,10 @@
             @if ($hasHeading)
                 <div class="mb-12">
                     @if (strip_tags($heading) !== '')
-                        <div class="tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                        <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
                     @endif
                     @if (strip_tags($intro) !== '')
-                        <div class="mt-3 leading-relaxed opacity-80 [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                        <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
                     @endif
                 </div>
             @endif
@@ -64,14 +62,15 @@
                 @foreach ($plans as $plan)
                     <article
                         @class([
-                            'relative flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm',
-                            'ring-2 ring-(--wire-primary-bg)' => $plan['featured'],
+                            'wire-card relative flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm',
+                            'bg-(--wire-body-bg) text-(--wire-body-text)' => $hasBg,
+                            'bg-(--wire-card-bg) text-(--wire-card-text)' => ! $hasBg,
+                            'ring-2 ring-(--wire-accent)' => $plan['featured'],
                         ])
-                        style="background-color:{{ $cardBg }};color:{{ $cardText }}"
                         wire:key="plan-{{ $loop->index }}"
                     >
                         @if ($plan['featured'] && $plan['badge'] !== '')
-                            <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold" style="background-color:var(--wire-primary-bg);color:var(--wire-primary-text)">{{ $plan['badge'] }}</span>
+                            <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-(--wire-accent) px-3 py-1 text-xs font-semibold text-(--wire-primary-text)">{{ $plan['badge'] }}</span>
                         @endif
 
                         @if ($plan['name'] !== '')
@@ -92,15 +91,15 @@
                         @endif
 
                         @if (strip_tags($plan['features']) !== '')
-                            <div class="grow leading-relaxed opacity-80 [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $plan['features'] !!}</div>
+                            <div class="grow leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $plan['features'] !!}</div>
                         @endif
 
                         @if ($plan['cta']['enabled'] && $plan['cta']['text'] !== '' && $plan['cta']['url'] !== null)
                             <a
                                 href="{{ $plan['cta']['url'] }}"
                                 @if ($plan['cta']['newTab']) target="_blank" rel="noopener noreferrer" @endif
-                                class="mt-auto inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
-                                style="background-color:{{ $plan['cta']['bg'] }};color:{{ $plan['cta']['fg'] }}"
+                                class="wire-btn mt-auto inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
+                                style="background-color:{{ $plan['cta']['bg'] }};color:{{ $plan['cta']['fg'] }};--wire-btn-border:var(--wire-primary-border)"
                             >{{ $plan['cta']['text'] }}</a>
                         @endif
                     </article>

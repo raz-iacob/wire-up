@@ -27,8 +27,6 @@
         default => 'grid-cols-2 lg:grid-cols-4',
     };
 
-    $cardBg = $hasBg ? 'var(--wire-body-bg)' : 'var(--wire-card-bg)';
-    $cardText = $hasBg ? 'var(--wire-body-text)' : 'var(--wire-card-text)';
 @endphp
 
 @if ($items->isNotEmpty())
@@ -41,10 +39,10 @@
             @if ($hasHeading)
                 <div class="mb-12">
                     @if (strip_tags($heading) !== '')
-                        <div class="tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                        <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
                     @endif
                     @if (strip_tags($intro) !== '')
-                        <div class="mt-3 leading-relaxed opacity-80 [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                        <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
                     @endif
                 </div>
             @endif
@@ -54,9 +52,9 @@
                     @foreach ($items as $item)
                         <div @class([
                             'flex-1 px-6 text-center',
-                            'mt-8 border-t border-(--wire-card-border) pt-8 sm:mt-0 sm:border-t-0 sm:border-l sm:pt-0' => ! $loop->first,
+                            'mt-8 border-t border-(--wire-divider) pt-8 sm:mt-0 sm:border-t-0 sm:border-l sm:pt-0' => ! $loop->first,
                         ]) wire:key="stat-{{ $loop->index }}">
-                            <div class="font-bold tracking-tight text-(--wire-primary-bg) text-[length:calc(var(--wire-heading-size)*1.6)]">{{ $item['value'] }}</div>
+                            <div class="font-bold tracking-tight text-(--wire-accent) text-[length:calc(var(--wire-heading-size)*1.6)]">{{ $item['value'] }}</div>
                             @if ($item['label'] !== '')
                                 <div class="mt-2 leading-snug opacity-80">{{ $item['label'] }}</div>
                             @endif
@@ -68,9 +66,11 @@
                     @foreach ($items as $item)
                         <div @class([
                             'text-center',
-                            'rounded-(--wire-radius) p-6 shadow-sm' => $layout === 'cards',
-                        ]) @if ($layout === 'cards') style="background-color:{{ $cardBg }};color:{{ $cardText }}" @endif wire:key="stat-{{ $loop->index }}">
-                            <div class="font-bold tracking-tight text-(--wire-primary-bg) text-[length:calc(var(--wire-heading-size)*1.6)]">{{ $item['value'] }}</div>
+                            'wire-card rounded-(--wire-radius) p-6 shadow-sm' => $layout === 'cards',
+                            'bg-(--wire-body-bg) text-(--wire-body-text)' => $layout === 'cards' && $hasBg,
+                            'bg-(--wire-card-bg) text-(--wire-card-text)' => $layout === 'cards' && ! $hasBg,
+                        ]) wire:key="stat-{{ $loop->index }}">
+                            <div class="font-bold tracking-tight text-(--wire-accent) text-[length:calc(var(--wire-heading-size)*1.6)]">{{ $item['value'] }}</div>
                             @if ($item['label'] !== '')
                                 <div class="mt-2 leading-snug opacity-80">{{ $item['label'] }}</div>
                             @endif

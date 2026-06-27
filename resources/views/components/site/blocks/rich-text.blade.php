@@ -23,11 +23,11 @@
             'text-center' => $center,
         ])>
             @if (strip_tags($heading) !== '')
-                <div class="mb-6 tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                <div class="mb-6 tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
             @endif
 
             @if (strip_tags($body) !== '')
-                <div class="max-w-none leading-relaxed [&_a]:underline [&>p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 *:first:mt-0 *:last:mb-0">
+                <div class="max-w-none leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 *:first:mt-0 *:last:mb-0">
                     {!! $body !!}
                 </div>
             @endif

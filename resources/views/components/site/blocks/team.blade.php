@@ -56,8 +56,6 @@
         default => 'sm:grid-cols-2 lg:grid-cols-3',
     };
 
-    $cardBg = $hasBg ? 'var(--wire-body-bg)' : 'var(--wire-card-bg)';
-    $cardText = $hasBg ? 'var(--wire-body-text)' : 'var(--wire-card-text)';
 @endphp
 
 @if ($members->isNotEmpty())
@@ -70,10 +68,10 @@
             @if ($hasHeading)
                 <div class="mb-12">
                     @if (strip_tags($heading) !== '')
-                        <div class="tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                        <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
                     @endif
                     @if (strip_tags($intro) !== '')
-                        <div class="mt-3 leading-relaxed opacity-80 [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                        <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
                     @endif
                 </div>
             @endif
@@ -86,8 +84,7 @@
                     <x-site.blocks.team-member
                         :member="$member"
                         :layout="$layout"
-                        :card-bg="$cardBg"
-                        :card-text="$cardText"
+                        :has-bg="$hasBg"
                         wire:key="team-member-{{ $loop->index }}" />
                 @endforeach
             </div>

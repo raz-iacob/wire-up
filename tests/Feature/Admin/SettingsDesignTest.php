@@ -37,6 +37,7 @@ it('hydrates the form with the default preset when nothing is saved', function (
         ->assertSet('theme', config('theme.default'))
         ->assertSet('colors.background', config('theme.presets.'.config('theme.default').'.colors.background'))
         ->assertSet('radius', config('theme.default_radius'))
+        ->assertSet('border_width', config('theme.default_border_width'))
         ->assertSet('container', config('theme.default_container'))
         ->assertSet('header_layout', config('theme.default_header_layout'))
         ->assertSet('footer_layout', config('theme.default_footer_layout'));
@@ -102,6 +103,42 @@ it('persists a preset choice without storing the palette', function (): void {
 
     expect(Settings::get('theme'))->toBe('slate')
         ->and(Settings::cached())->not->toHaveKey('colors');
+});
+
+it('persists the border width and custom button border colours', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('border_width', 'thick')
+        ->set('theme', 'custom')
+        ->set('colors.primary_border', '#abcdef')
+        ->set('colors.secondary_border', '#123456')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('border_width'))->toBe('thick')
+        ->and(Settings::get('colors')['primary_border'])->toBe('#abcdef')
+        ->and(Settings::get('colors')['secondary_border'])->toBe('#123456');
+});
+
+it('rejects an unknown border width', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('border_width', 'chunky')
+        ->call('update')
+        ->assertHasErrors(['border_width']);
+});
+
+it('persists site-wide custom css, trimmed', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('custom_css', '  .hero { color: hotpink; }  ')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('custom_css'))->toBe('.hero { color: hotpink; }');
 });
 
 it('persists a custom palette', function (): void {

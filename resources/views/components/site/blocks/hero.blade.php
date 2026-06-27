@@ -38,6 +38,7 @@
 
     $defaultBg = ['ctaPrimary' => 'var(--wire-primary-bg)', 'ctaSecondary' => 'var(--wire-secondary-bg)'];
     $defaultText = ['ctaPrimary' => 'var(--wire-primary-text)', 'ctaSecondary' => 'var(--wire-secondary-text)'];
+    $defaultBorder = ['ctaPrimary' => 'var(--wire-primary-border)', 'ctaSecondary' => 'var(--wire-secondary-border)'];
 
     $ctas = collect(['ctaPrimary', 'ctaSecondary'])
         ->map(fn (string $key): array => [
@@ -47,6 +48,7 @@
             'enabled' => (bool) ($content[$key]['enabled'] ?? false),
             'bg' => ($content[$key]['bg'] ?? null) ?: $defaultBg[$key],
             'fg' => ($content[$key]['textColor'] ?? null) ?: $defaultText[$key],
+            'border' => $defaultBorder[$key],
         ])
         ->filter(fn (array $cta): bool => $cta['enabled'] && $cta['text'] !== '' && $cta['url'] !== null)
         ->values();
@@ -108,11 +110,11 @@
         'justify-end' => $valign === 'bottom',
     ])>
         @if ($heading)
-            <div class="max-w-3xl font-bold tracking-tight [&>p]:m-0 [&_a]:underline text-[length:calc(var(--wire-heading-size)*1.2)] md:text-[length:calc(var(--wire-heading-size)*1.5)]" @if ($headingColor) style="color:{{ $headingColor }}" @endif>{!! $heading !!}</div>
+            <div class="max-w-3xl font-bold tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-[length:calc(var(--wire-heading-size)*1.2)] md:text-[length:calc(var(--wire-heading-size)*1.5)]" @if ($headingColor) style="color:{{ $headingColor }}" @endif>{!! $heading !!}</div>
         @endif
 
         @if ($subheading)
-            <div class="max-w-2xl opacity-90 [&_a]:underline text-[length:calc(var(--wire-body-size)*1.1)] md:text-[length:calc(var(--wire-body-size)*1.25)]" @if ($subheadingColor) style="color:{{ $subheadingColor }}" @endif>{!! $subheading !!}</div>
+            <div class="max-w-2xl opacity-90 [&_a]:text-(--wire-accent) [&_a]:underline text-[length:calc(var(--wire-body-size)*1.1)] md:text-[length:calc(var(--wire-body-size)*1.25)]" @if ($subheadingColor) style="color:{{ $subheadingColor }}" @endif>{!! $subheading !!}</div>
         @endif
 
         @if ($ctas->isNotEmpty())
@@ -126,8 +128,8 @@
                     <a
                         href="{{ $cta['url'] }}"
                         @if ($cta['newTab']) target="_blank" rel="noopener noreferrer" @endif
-                        class="inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
-                        style="background-color:{{ $cta['bg'] }};color:{{ $cta['fg'] }}"
+                        class="wire-btn inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
+                        style="background-color:{{ $cta['bg'] }};color:{{ $cta['fg'] }};--wire-btn-border:{{ $cta['border'] }}"
                     >{{ $cta['text'] }}</a>
                 @endforeach
             </div>

@@ -27,6 +27,20 @@
     }
 }
 
+.wire-btn {
+    box-shadow: inset 0 0 0 var(--wire-border-width, 1px)
+        var(--wire-btn-border, transparent);
+}
+
+.wire-field {
+    box-shadow: inset 0 0 0 var(--wire-border-width, 1px)
+        var(--wire-input-border);
+}
+
+.wire-card {
+    border: var(--wire-border-width, 1px) solid var(--wire-card-border);
+}
+
 @layer base {
     body {
         font-size: var(--wire-body-size, 1rem);

@@ -52,7 +52,7 @@
 >
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         @if ($heading)
-            <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+            <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
         @endif
 
         @if ($items->isNotEmpty())

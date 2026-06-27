@@ -26,7 +26,7 @@
     $gridCols = $columns === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3';
     $cardBg = ($content['cardBg'] ?? null) ?: ($hasBg ? 'var(--wire-body-bg)' : 'var(--wire-card-bg)');
     $cardText = ($content['cardText'] ?? null) ?: ($hasBg ? 'var(--wire-body-text)' : 'var(--wire-card-text)');
-    $starColor = ($content['amberStars'] ?? false) ? 'text-amber-400' : 'text-(--wire-primary-bg)';
+    $starColor = ($content['amberStars'] ?? false) ? 'text-amber-400' : 'text-(--wire-accent)';
 @endphp
 
 <section @class([
@@ -49,10 +49,10 @@
                     @if ($hasHeading)
                         <div>
                             @if (strip_tags($heading) !== '')
-                                <div class="tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                                <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
                             @endif
                             @if (strip_tags($intro) !== '')
-                                <div class="mt-3 leading-relaxed opacity-80 [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                                <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
                             @endif
                         </div>
                     @endif
@@ -77,7 +77,7 @@
                     class="mt-8 flex items-stretch gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory px-[max(var(--wire-gutter),calc((100%-var(--wire-container))/2+var(--wire-gutter)))] pb-2 scroll-pl-[max(var(--wire-gutter),calc((100%-var(--wire-container))/2+var(--wire-gutter)))] scrollbar-none [&::-webkit-scrollbar]:hidden"
                 >
                     @foreach ($items as $item)
-                        <article class="flex w-[86vw] shrink-0 snap-start flex-col gap-5 rounded-(--wire-radius) p-8 shadow-sm sm:w-96 md:w-120" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
+                        <article class="wire-card flex w-[86vw] shrink-0 snap-start flex-col gap-5 rounded-(--wire-radius) p-8 shadow-sm sm:w-96 md:w-120" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
                             @if ($item['rating'] > 0)
                                 <div class="flex gap-0.5">
                                     @for ($star = 1; $star <= 5; $star++)
@@ -87,7 +87,7 @@
                             @endif
 
                             @if (strip_tags($item['quote']) !== '')
-                                <div class="grow leading-relaxed [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</div>
+                                <div class="grow leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</div>
                             @endif
 
                             @if ($item['author'] !== '' || $item['avatar'])
@@ -119,17 +119,17 @@
                 <div class="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
                     <div class="lg:sticky lg:top-24">
                         @if (strip_tags($heading) !== '')
-                            <div class="tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                            <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
                         @endif
                         @if (strip_tags($intro) !== '')
-                            <div class="mt-4 max-w-prose leading-relaxed opacity-80 [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                            <div class="mt-4 max-w-prose leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
                         @endif
                     </div>
 
                     @if ($items->isNotEmpty())
                         <div class="flex flex-col gap-6">
                             @foreach ($items as $item)
-                                <article class="flex items-start gap-5 rounded-(--wire-radius) p-6 shadow-sm" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
+                                <article class="wire-card flex items-start gap-5 rounded-(--wire-radius) p-6 shadow-sm" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
                                     @if ($item['avatar'])
                                         <img src="{{ $item['avatar'] }}" alt="{{ $item['alt'] }}" loading="lazy" class="size-14 shrink-0 rounded-full object-cover" />
                                     @endif
@@ -149,7 +149,7 @@
                                             </div>
                                         @endif
                                         @if (strip_tags($item['quote']) !== '')
-                                            <div class="mt-3 leading-relaxed [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</div>
+                                            <div class="mt-3 leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</div>
                                         @endif
                                     </div>
                                 </article>
@@ -161,10 +161,10 @@
                 @if ($hasHeading)
                     <div>
                         @if (strip_tags($heading) !== '')
-                            <div class="tracking-tight [&>p]:m-0 [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                            <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
                         @endif
                         @if (strip_tags($intro) !== '')
-                            <div class="mt-3 leading-relaxed opacity-80 [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                            <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
                         @endif
                     </div>
                 @endif
@@ -183,7 +183,7 @@
                                     @endif
 
                                     @if (strip_tags($item['quote']) !== '')
-                                        <blockquote class="text-2xl font-medium leading-relaxed tracking-tight [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</blockquote>
+                                        <blockquote class="text-2xl font-medium leading-relaxed tracking-tight [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</blockquote>
                                     @endif
 
                                     @if ($item['author'] !== '' || $item['avatar'])
@@ -210,7 +210,7 @@
                     @else
                         <div class="grid grid-cols-1 gap-6 {{ $gridCols }} {{ $hasHeading ? 'mt-12' : '' }}">
                             @foreach ($items as $item)
-                                <article class="flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
+                                <article class="wire-card flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
                                     @if ($item['rating'] > 0)
                                         <div class="flex gap-0.5">
                                             @for ($star = 1; $star <= 5; $star++)
@@ -220,7 +220,7 @@
                                     @endif
 
                                     @if (strip_tags($item['quote']) !== '')
-                                        <div class="grow leading-relaxed [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</div>
+                                        <div class="grow leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</div>
                                     @endif
 
                                     @if ($item['author'] !== '' || $item['avatar'])
