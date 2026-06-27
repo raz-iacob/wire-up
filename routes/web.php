@@ -6,6 +6,8 @@ use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\SessionController;
 use App\Http\Middleware\RedirectHomepageSlug;
+use App\Services\SettingsService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
@@ -32,6 +34,14 @@ Route::group(['prefix' => resolve('localization')->setLocale()], function (): vo
 Route::get('img/{options}/{path}', [ImageController::class, 'show'])
     ->where('path', '.*')
     ->name('image.show');
+
+Route::get('robots.txt', function (): Response {
+    $body = SettingsService::current()->noindex()
+        ? "User-agent: *\nDisallow: /\n"
+        : "User-agent: *\nDisallow:\n";
+
+    return response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+})->name('robots');
 
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
     Route::livewire('{slug}', 'pages::page')

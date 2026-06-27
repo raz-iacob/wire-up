@@ -11,6 +11,7 @@
         <flux:tab :href="route('admin.settings-design')" :selected="$current('admin.settings-design')" wire:navigate>{{ __('Design') }}</flux:tab>
         <flux:tab :href="route('admin.settings-menus')" :selected="$current('admin.settings-menus')" wire:navigate>{{ __('Menus') }}</flux:tab>
         <flux:tab :href="route('admin.settings-social')" :selected="$current('admin.settings-social')" wire:navigate>{{ __('Social') }}</flux:tab>
+        <flux:tab :href="route('admin.settings-integrations')" :selected="$current('admin.settings-integrations')" wire:navigate>{{ __('Integrations') }}</flux:tab>
     </flux:tabs>
 
     <div class="w-full max-w-5xl">

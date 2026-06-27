@@ -27,6 +27,8 @@ return new class extends Component
      */
     public ?array $favicon = null;
 
+    public bool $noindex = false;
+
     #[Url(except: 'en')]
     public string $locale;
 
@@ -40,6 +42,7 @@ return new class extends Component
         $this->title = $this->localeMap('title');
         $this->description = $this->localeMap('description');
         $this->favicon = is_array(config('site.favicon')) ? config('site.favicon') : null;
+        $this->noindex = (bool) config('site.noindex', false);
 
         $this->activeLocales = resolve('localization')->getActiveLocales();
 
@@ -54,6 +57,7 @@ return new class extends Component
         $rules = [
             'favicon' => ['nullable', 'array'],
             'favicon.id' => ['nullable', 'integer', 'exists:media,id'],
+            'noindex' => ['boolean'],
         ];
 
         foreach (array_keys($this->activeLocales) as $locale) {
@@ -88,6 +92,7 @@ return new class extends Component
             'title' => $validated['title'],
             'description' => $validated['description'] ?? [],
             'favicon' => $this->favicon,
+            'noindex' => $validated['noindex'] ?? false,
         ]);
 
         Flux::toast(__('Identity has been updated.'), variant: 'success');
@@ -158,6 +163,14 @@ return new class extends Component
                 type="image"
                 :crops="['default' => ['label' => __('Favicon'), 'w' => 512, 'h' => 512]]"
                 label="{{ __('Favicon') }}"
+            />
+
+            <flux:separator variant="subtle" />
+
+            <flux:switch
+                wire:model="noindex"
+                :label="__('Discourage search engines from indexing this site')"
+                :description="__('Adds a noindex tag to every page and blocks crawlers in robots.txt. Ideal for staging or unfinished sites. It is up to search engines to honour this request.')"
             />
 
             <div>

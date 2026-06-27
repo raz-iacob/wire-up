@@ -39,6 +39,17 @@ final class AppServiceProvider extends ServiceProvider
     private function configureSettings(): void
     {
         config()->set('site', Settings::cached());
+
+        $this->configureServiceCredentials();
+    }
+
+    private function configureServiceCredentials(): void
+    {
+        $pexelsKey = config('site.pexels_api_key');
+
+        if (is_string($pexelsKey) && $pexelsKey !== '') {
+            config()->set('services.pexels.key', $pexelsKey);
+        }
     }
 
     private function configureModels(): void

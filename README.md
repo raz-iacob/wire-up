@@ -118,14 +118,9 @@ DB_PASSWORD=your-password
 
 # Queue configuration (recommended)
 QUEUE_CONNECTION=redis
-
-# Pexels integration (optional) - enables Pexels stock photo/video
-# search inside the media library. Get a free key at
-# https://www.pexels.com/api/. When unset, the Pexels option is hidden.
-PEXELS_API_KEY=your-pexels-api-key
 ```
 
-> **Pexels media library integration:** When `PEXELS_API_KEY` is set, editors can search Pexels photos and videos directly from the media picker and import them into the library. Per the [Pexels API Guidelines](https://www.pexels.com/api/documentation/#guidelines), photographer attribution and a link back to Pexels are shown in the picker, and the photographer/source details are stored with each imported asset (in `media.metadata`) so credit can be surfaced wherever the media is used.
+> **Pexels media library integration:** Add a free Pexels API key (from [pexels.com/api](https://www.pexels.com/api/)) under **Settings → Integrations** in the admin to enable the integration. Editors can then search Pexels photos and videos directly from the media picker and import them into the library. When no key is set, the Pexels option is hidden. Per the [Pexels API Guidelines](https://www.pexels.com/api/documentation/#guidelines), photographer attribution and a link back to Pexels are shown in the picker, and the photographer/source details are stored with each imported asset (in `media.metadata`) so credit can be surfaced wherever the media is used.
 
 ## Contributing
 

@@ -37,6 +37,48 @@ it('returns an empty string when no contact email is configured', function (): v
     expect((new SettingsService)->contactEmail())->toBe('');
 });
 
+it('reports the discourage-search-engines flag', function (): void {
+    Settings::set(['noindex' => true]);
+
+    expect((new SettingsService)->noindex())->toBeTrue();
+});
+
+it('defaults the discourage-search-engines flag to false', function (): void {
+    config()->set('site.noindex');
+
+    expect((new SettingsService)->noindex())->toBeFalse();
+});
+
+it('returns the configured google analytics id', function (): void {
+    Settings::set(['google_analytics_id' => 'G-ABC123']);
+
+    expect((new SettingsService)->googleAnalyticsId())->toBe('G-ABC123');
+});
+
+it('returns an empty string when no google analytics id is configured', function (): void {
+    config()->set('site.google_analytics_id');
+
+    expect((new SettingsService)->googleAnalyticsId())->toBe('');
+});
+
+it('returns the trimmed head and body scripts', function (): void {
+    Settings::set([
+        'head_scripts' => '  <script>head()</script>  ',
+        'body_scripts' => '  <script>body()</script>  ',
+    ]);
+
+    expect((new SettingsService)->headScripts())->toBe('<script>head()</script>')
+        ->and((new SettingsService)->bodyScripts())->toBe('<script>body()</script>');
+});
+
+it('returns an empty string when no custom scripts are configured', function (): void {
+    config()->set('site.head_scripts');
+    config()->set('site.body_scripts');
+
+    expect((new SettingsService)->headScripts())->toBe('')
+        ->and((new SettingsService)->bodyScripts())->toBe('');
+});
+
 it('resolves a page item to its localized url', function (): void {
     $page = publishedPage('about');
 

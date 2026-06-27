@@ -149,6 +149,18 @@ final class SettingsService
         return is_string($email) ? $email : '';
     }
 
+    public function noindex(): bool
+    {
+        return (bool) config('site.noindex', false);
+    }
+
+    public function googleAnalyticsId(): string
+    {
+        $id = config('site.google_analytics_id');
+
+        return is_string($id) ? $id : '';
+    }
+
     public function logoUrl(string $role, string $crop = 'default', int $maxHeight = 320): ?string
     {
         $item = config('site.'.$role);
@@ -327,6 +339,16 @@ final class SettingsService
     public function customCss(): string
     {
         return mb_trim((string) config('site.custom_css', ''));
+    }
+
+    public function headScripts(): string
+    {
+        return mb_trim((string) config('site.head_scripts', ''));
+    }
+
+    public function bodyScripts(): string
+    {
+        return mb_trim((string) config('site.body_scripts', ''));
     }
 
     public function googleFontsUrl(): ?string

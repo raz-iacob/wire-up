@@ -76,7 +76,12 @@
         @persist('toast')
         <flux:toast />
         @endpersist
-        
+
         @fluxScripts
+
+        @php($bodyScripts = \App\Services\SettingsService::current()->bodyScripts())
+        @if ($bodyScripts !== '')
+        {!! $bodyScripts !!}
+        @endif
     </body>
 </html>

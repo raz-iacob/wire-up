@@ -103,6 +103,27 @@ it('persists title and tagline on update', function (): void {
         ->and(Settings::get('description'))->toBe(['en' => 'A fresh tagline']);
 });
 
+it('hydrates the discourage-search-engines toggle from the saved value', function (): void {
+    Settings::set(['noindex' => true]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-identity')
+        ->assertSet('noindex', true);
+});
+
+it('persists the discourage-search-engines toggle on update', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-identity')
+        ->set('title.en', 'Staging Site')
+        ->set('noindex', true)
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('noindex'))->toBeTrue();
+});
+
 it('stores the favicon item on update', function (): void {
     $favicon = Media::factory()->create();
 
