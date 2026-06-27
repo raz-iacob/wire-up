@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Settings;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\ImageManager;
@@ -45,6 +46,42 @@ it('serves svg files verbatim with a locked-down content security policy', funct
         ->and($response->getContent())->toBe($svg)
         ->and($response->headers->get('Content-Security-Policy'))->toContain('sandbox')
         ->and($response->headers->get('X-Content-Type-Options'))->toBe('nosniff');
+});
+
+it('does not tag images for robots by default', function (): void {
+    $this->get(route('image.show', [
+        'options' => 'w=50,h=50,q=80,fm=webp',
+        'path' => 'test-image.jpg',
+    ]))
+        ->assertOk()
+        ->assertHeaderMissing('X-Robots-Tag');
+});
+
+it('adds the X-Robots-Tag noindex header when search engines are discouraged', function (): void {
+    Settings::set(['noindex' => true]);
+
+    $response = $this->get(route('image.show', [
+        'options' => 'w=50,h=50,q=80,fm=webp',
+        'path' => 'test-image.jpg',
+    ]));
+
+    $response->assertOk();
+
+    expect($response->headers->get('X-Robots-Tag'))->toBe('noindex, nofollow');
+});
+
+it('adds the X-Robots-Tag noindex header to svg responses when discouraged', function (): void {
+    Settings::set(['noindex' => true]);
+    Storage::disk(config('filesystems.media'))->put('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+
+    $response = $this->get(route('image.show', [
+        'options' => 'w=350,h=200',
+        'path' => 'logo.svg',
+    ]));
+
+    $response->assertOk();
+
+    expect($response->headers->get('X-Robots-Tag'))->toBe('noindex, nofollow');
 });
 
 it('returns 404 for a missing svg file', function (): void {

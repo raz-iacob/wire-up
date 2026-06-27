@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\ImageService;
+use App\Services\SettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\RateLimiter;
@@ -17,13 +18,15 @@ final class ImageController
             $this->ratelimit($request, $path);
         }
 
-        if (str_ends_with(mb_strtolower($path), '.svg')) {
-            return ImageService::svg($path);
+        $response = str_ends_with(mb_strtolower($path), '.svg')
+            ? ImageService::svg($path)
+            : ImageService::make($path)->applyOptionsString($options)->response();
+
+        if (SettingsService::current()->noindex()) {
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
         }
 
-        return ImageService::make($path)
-            ->applyOptionsString($options)
-            ->response();
+        return $response;
     }
 
     private function ratelimit(Request $request, string $path): void
