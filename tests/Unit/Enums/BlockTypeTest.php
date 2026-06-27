@@ -68,6 +68,7 @@ it('seeds the team default content shape', function (): void {
 
     expect($content)->toMatchArray([
         'columns' => 3,
+        'layout' => 'circle',
         'hasBackground' => false,
         'heading' => [],
         'intro' => [],

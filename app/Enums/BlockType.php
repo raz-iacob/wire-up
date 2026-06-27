@@ -283,6 +283,7 @@ enum BlockType: string
             ],
             self::TEAM => [
                 'columns' => 3,
+                'layout' => 'circle',
                 'hasBackground' => false,
                 'heading' => [],
                 'intro' => [],

@@ -1229,6 +1229,41 @@ it('renders a team block with photo, role, bio and social links', function (): v
         ->assertSee('aria-label="Linkedin"', false);
 });
 
+it('renders the team block in each layout', function (string $layout): void {
+    publishPageWithBlocks("team-{$layout}", [
+        ['id' => 'new-1', 'type' => 'team', 'content' => [
+            'layout' => $layout,
+            'items' => [
+                ['id' => 'a', 'photo' => ['source' => 'media/jane.jpg', 'crop' => [], 'alt_text' => 'Jane'], 'name' => ['en' => 'Jane Doe'], 'role' => ['en' => 'Founder'], 'bio' => ['en' => '<p>Leads.</p>'], 'socials' => ['linkedin' => 'https://linkedin.com/in/jane']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', "team-{$layout}"))
+        ->assertOk()
+        ->assertSee('Jane Doe')
+        ->assertSee('Founder')
+        ->assertSee('media/jane.jpg', false)
+        ->assertSee('aria-label="Linkedin"', false);
+})->with(['circle', 'card', 'overlay', 'portrait']);
+
+it('uses a full-bleed portrait card with a gradient scrim in the team overlay layout', function (): void {
+    publishPageWithBlocks('team-overlay-shape', [
+        ['id' => 'new-1', 'type' => 'team', 'content' => [
+            'layout' => 'overlay',
+            'items' => [
+                ['id' => 'a', 'photo' => ['source' => 'media/jane.jpg', 'crop' => []], 'name' => ['en' => 'Jane Doe'], 'role' => ['en' => 'Founder'], 'bio' => ['en' => '<p>Leads.</p>']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'team-overlay-shape'))
+        ->assertOk()
+        ->assertSee('aspect-[3/4]', false)
+        ->assertSee('bg-gradient-to-t', false)
+        ->assertSee('group-hover:opacity-100', false);
+});
+
 it('renders a pricing block with a highlighted plan, features and a button', function (): void {
     $target = publishPageWithBlocks('plan-target', [
         ['id' => 'new-1', 'type' => 'spacer', 'content' => ['size' => 'small']],

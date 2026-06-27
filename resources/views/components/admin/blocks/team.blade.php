@@ -91,6 +91,13 @@
         </div>
     </div>
 
+    <flux:radio.group wire:model.live="{{ $c }}.layout" variant="segmented" label="{{ __('Layout') }}">
+        <flux:radio value="circle" label="{{ __('Circle') }}" />
+        <flux:radio value="card" label="{{ __('Card') }}" />
+        <flux:radio value="overlay" label="{{ __('Overlay') }}" />
+        <flux:radio value="portrait" label="{{ __('Portrait') }}" />
+    </flux:radio.group>
+
     <flux:radio.group wire:model.live="{{ $c }}.columns" variant="segmented" label="{{ __('Columns') }}">
         @foreach ([2, 3, 4] as $columnOption)
             <flux:radio value="{{ $columnOption }}" label="{{ $columnOption }}" />

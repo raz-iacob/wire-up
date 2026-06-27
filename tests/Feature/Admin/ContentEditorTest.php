@@ -422,6 +422,7 @@ it('renders the rich text, stats, team and pricing block partials', function ():
         ->assertSee('Add stat')
         ->assertSee('Dividers')
         ->assertSee('Add member')
+        ->assertSee('Overlay')
         ->assertSee('Add plan')
         ->assertSee('Social links')
         ->assertSee('Highlight this plan');

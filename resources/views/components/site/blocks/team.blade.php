@@ -47,11 +47,17 @@
 
     $hasHeading = strip_tags($heading) !== '' || strip_tags($intro) !== '';
 
+    $layout = $content['layout'] ?? 'circle';
+    $layout = in_array($layout, ['circle', 'card', 'overlay', 'portrait'], true) ? $layout : 'circle';
+
     $gridCols = match ($columns) {
         2 => 'sm:grid-cols-2',
         4 => 'sm:grid-cols-2 lg:grid-cols-4',
         default => 'sm:grid-cols-2 lg:grid-cols-3',
     };
+
+    $cardBg = $hasBg ? 'var(--wire-body-bg)' : 'var(--wire-card-bg)';
+    $cardText = $hasBg ? 'var(--wire-body-text)' : 'var(--wire-card-text)';
 @endphp
 
 @if ($members->isNotEmpty())
@@ -72,47 +78,17 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-1 gap-8 {{ $gridCols }}">
+            <div @class([
+                'grid grid-cols-1 gap-8 items-start',
+                $gridCols,
+            ])>
                 @foreach ($members as $member)
-                    <article class="flex flex-col items-center text-center" wire:key="team-member-{{ $loop->index }}">
-                        @if ($member['photo'])
-                            <img src="{{ $member['photo'] }}" alt="{{ $member['alt'] }}" loading="lazy" class="size-32 rounded-full object-cover shadow-sm" />
-                        @endif
-
-                        @if ($member['name'] !== '')
-                            <h3 class="mt-4 text-lg font-semibold tracking-tight">{{ $member['name'] }}</h3>
-                        @endif
-
-                        @if ($member['role'] !== '')
-                            <div class="mt-0.5 text-sm opacity-70">{{ $member['role'] }}</div>
-                        @endif
-
-                        @if (strip_tags($member['bio']) !== '')
-                            <div class="mt-3 leading-relaxed opacity-80 [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $member['bio'] !!}</div>
-                        @endif
-
-                        @if ($member['socials'] !== [])
-                            <div class="mt-4 flex items-center justify-center gap-4">
-                                @foreach ($member['socials'] as $social)
-                                    <a
-                                        href="{{ $social['href'] }}"
-                                        @if ($social['kind'] === 'mask' || $social['name'] === 'globe-alt') target="_blank" rel="noopener noreferrer" @endif
-                                        class="opacity-70 transition-opacity hover:opacity-100"
-                                        aria-label="{{ $social['label'] }}"
-                                    >
-                                        @if ($social['kind'] === 'mask')
-                                            <span
-                                                class="block size-5 bg-current mask-center mask-no-repeat mask-contain"
-                                                style="mask-image:url('{{ $social['src'] }}'); -webkit-mask-image:url('{{ $social['src'] }}');"
-                                            ></span>
-                                        @else
-                                            <flux:icon name="{{ $social['name'] }}" class="size-5" />
-                                        @endif
-                                    </a>
-                                @endforeach
-                            </div>
-                        @endif
-                    </article>
+                    <x-site.blocks.team-member
+                        :member="$member"
+                        :layout="$layout"
+                        :card-bg="$cardBg"
+                        :card-text="$cardText"
+                        wire:key="team-member-{{ $loop->index }}" />
                 @endforeach
             </div>
         </div>
