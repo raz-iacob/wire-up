@@ -97,8 +97,10 @@ final class Block extends Model
         $this->harvestText($this->content ?? [], $locale, $default, $parts);
 
         $spaced = (string) preg_replace('/<\/(?:p|div|li|h[1-6])>|<br\s*\/?>/i', ' ', implode(' ', $parts));
+        $decoded = html_entity_decode(strip_tags($spaced), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $decoded = str_replace("\u{00A0}", ' ', $decoded);
 
-        return (string) str(strip_tags($spaced))->squish();
+        return (string) str($decoded)->squish();
     }
 
     /**

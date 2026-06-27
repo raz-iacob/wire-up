@@ -42,6 +42,17 @@ it('harvests plain text from a block across prose fields and strips tags', funct
     expect($block->plainText('en'))->toBe('Our Mission We build great things.');
 });
 
+it('decodes html entities and non-breaking spaces in harvested text', function (): void {
+    $page = seoUnitPage([
+        ['type' => BlockType::RICH_TEXT->value, 'content' => [
+            'heading' => ['en' => 'Fish &amp; Chips'],
+            'body' => ['en' => '<p>Visit&nbsp;us today.</p>'],
+        ]],
+    ]);
+
+    expect($page->blocks->first()->plainText('en'))->toBe('Fish & Chips Visit us today.');
+});
+
 it('concatenates block text into a page excerpt and limits length', function (): void {
     $page = seoUnitPage([
         ['type' => BlockType::RICH_TEXT->value, 'content' => ['heading' => ['en' => 'Alpha'], 'body' => ['en' => 'Beta gamma delta.']]],
