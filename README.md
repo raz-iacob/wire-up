@@ -131,6 +131,9 @@ machine-readable resources for crawlers and AI agents:
   multi-locale sites), `theme-color`, and JSON-LD structured data (`Organization`, `WebSite`,
   `WebPage`, `BreadcrumbList`). Descriptions fall back to a clean excerpt derived from a page's
   content blocks when no description is set.
+- **Block-level structured data** - Location, Team, Pricing, Video, Audio, and Gallery blocks emit
+  matching Schema.org types (`LocalBusiness`, `Person`, `Offer`, `VideoObject`, `AudioObject`,
+  `ImageObject`) into the page's JSON-LD.
 - **Share images** - each page's Open Graph image is used when set; otherwise the **Default share
   image** from **Settings → Identity** is used.
 - **`/sitemap.xml`** - dynamically lists published pages across their published locales with

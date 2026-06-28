@@ -156,6 +156,17 @@ final class SeoService
                     ],
                 ];
             }
+
+            $page->loadMissing('blocks');
+            $blockSchema = new BlockSchema(
+                $page->title !== '' ? $page->title : $name,
+                $home.'#organization',
+                $this->ogImageUrl($page),
+            );
+
+            foreach ($page->blocks as $block) {
+                $graph = [...$graph, ...$blockSchema->nodes($block, app()->getLocale())];
+            }
         }
 
         return ['@context' => 'https://schema.org', '@graph' => $graph];

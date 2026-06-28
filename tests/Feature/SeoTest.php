@@ -145,6 +145,42 @@ it('includes the site tagline in the llms index', function (): void {
         ->assertSee('Building better things');
 });
 
+it('embeds block-level structured data in the page JSON-LD', function (): void {
+    seoFeaturePage('about-us', ['title' => ['en' => 'About Us']], [
+        ['type' => BlockType::LOCATION->value, 'content' => ['name' => ['en' => 'Acme'], 'address' => ['en' => '123 Main St'], 'phone' => '+1 555 0100']],
+        ['type' => BlockType::TEAM->value, 'content' => ['items' => [['id' => 'a', 'name' => ['en' => 'Jane'], 'role' => ['en' => 'CEO'], 'socials' => []]]]],
+        ['type' => BlockType::PRICING->value, 'content' => ['items' => [['id' => 'a', 'name' => ['en' => 'Pro'], 'price' => ['en' => '$99']], ['id' => 'b', 'name' => ['en' => 'Free'], 'price' => ['en' => 'Free']]]]],
+        ['type' => BlockType::AUDIO->value, 'content' => ['audio' => ['source' => 'uploads/song.mp3', 'mime_type' => 'audio/mpeg'], 'heading' => ['en' => 'Listen']]],
+    ]);
+
+    $html = $this->get('/about-us')->assertOk()->getContent();
+    expect(preg_match('#<script type="application/ld\+json">(.*?)</script>#s', (string) $html, $m))->toBe(1);
+
+    /** @var array{'@graph': array<int, array<string, mixed>>} $data */
+    $data = json_decode($m[1], true, flags: JSON_THROW_ON_ERROR);
+    $graph = $data['@graph'];
+    $types = array_column($graph, '@type');
+
+    expect($types)->toContain('LocalBusiness', 'Person', 'Offer', 'AudioObject');
+
+    $offers = array_values(array_filter($graph, fn (array $n): bool => $n['@type'] === 'Offer'));
+    expect($offers[0])->toMatchArray(['name' => 'Pro', 'price' => '99', 'priceCurrency' => 'USD'])
+        ->and($offers[1])->not->toHaveKey('price');
+});
+
+it('emits a VideoObject using the default share image as thumbnail', function (): void {
+    Settings::set(['default_og_image' => ['source' => 'default-share.jpg', 'crop' => ['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]]]);
+
+    seoFeaturePage('watch', ['title' => ['en' => 'Watch']], [
+        ['type' => BlockType::VIDEO->value, 'content' => ['source' => 'url', 'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'heading' => ['en' => 'Trailer']]],
+    ]);
+
+    $this->get('/watch')
+        ->assertOk()
+        ->assertSee('"@type":"VideoObject"', false)
+        ->assertSee('"embedUrl":"https://www.youtube.com/embed/dQw4w9WgXcQ"', false);
+});
+
 it('renders a noindex robots tag for a page-level noindex page only', function (): void {
     seoFeaturePage('indexable', ['title' => ['en' => 'Indexable']]);
     seoFeaturePage('private-page', ['title' => ['en' => 'Private'], 'metadata' => ['published_locales' => ['en'], 'noindex' => true]]);
