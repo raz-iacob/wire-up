@@ -183,7 +183,6 @@ return new class extends Component
                 type="image"
                 :crops="['default' => ['label' => __('Share image'), 'w' => 1200, 'h' => 630]]"
                 label="{{ __('Default share image') }}"
-                note="{{ __('Shown when a page is shared on social media and has no image of its own.') }}"
             />
 
             <flux:separator variant="subtle" />
@@ -191,7 +190,7 @@ return new class extends Component
             <flux:switch
                 wire:model="noindex"
                 :label="__('Discourage search engines from indexing this site')"
-                :description="__('Adds a noindex tag to every page and blocks crawlers in robots.txt. Ideal for staging or unfinished sites. It is up to search engines to honour this request.')"
+                :description="__('Adds a noindex tag to every page and blocks crawlers in robots.txt. It is up to search engines to honour this request.')"
             />
 
             <div>
@@ -201,13 +200,23 @@ return new class extends Component
             </div>
         </div>
 
-        <div class="md:sticky md:top-8 md:col-span-2" x-data="{
+        <div class="md:sticky md:top-20 md:col-span-2" x-data="{
             faviconUrl() {
                 const f = $wire.favicon
                 if (! f) return null
                 const c = f.crop && f.crop.default
                 if (c && f.source) {
                     const opts = `w=${c.w || 512},h=${c.h || 512},crop=${c.crop_w || 0}-${c.crop_h || 0}-${c.crop_x || 0}-${c.crop_y || 0},q=${c.q || 80},fm=${c.fm || 'png'}`
+                    return `/img/${opts}/${f.source}`
+                }
+                return f.preview || null
+            },
+            ogImageUrl() {
+                const f = $wire.default_og_image
+                if (! f) return null
+                const c = f.crop && f.crop.default
+                if (c && f.source) {
+                    const opts = `w=${c.w || 1200},h=${c.h || 630},crop=${c.crop_w || 0}-${c.crop_h || 0}-${c.crop_x || 0}-${c.crop_y || 0},q=${c.q || 80},fm=${c.fm || 'jpg'}`
                     return `/img/${opts}/${f.source}`
                 }
                 return f.preview || null
@@ -227,6 +236,21 @@ return new class extends Component
                 </div>
                 <flux:heading class="text-xl! text-blue-700 dark:text-blue-400" x-text="$wire.title[$wire.locale] || '{{ __('Website title') }}'"></flux:heading>
                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400" x-text="$wire.description[$wire.locale] || '{{ __('Your site tagline goes here.') }}'"></flux:text>
+            </div>
+
+            <flux:text class="mt-6 mb-3">{{ __('And how it appears when shared on social media.') }}</flux:text>
+            <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+                <div class="aspect-[1200/630] bg-zinc-100 dark:bg-zinc-700">
+                    <img x-cloak x-show="ogImageUrl()" :src="ogImageUrl()" alt="" class="size-full object-cover" />
+                    <div x-show="! ogImageUrl()" class="flex size-full items-center justify-center">
+                        <flux:icon icon="photo" class="text-zinc-400" />
+                    </div>
+                </div>
+                <div class="border-t border-zinc-200 dark:border-zinc-700 px-4 py-3">
+                    <flux:text class="text-xs uppercase text-zinc-400">{{ str(config('app.url'))->after('://') }}</flux:text>
+                    <flux:heading class="truncate text-sm!" x-text="$wire.title[$wire.locale] || '{{ __('Website title') }}'"></flux:heading>
+                    <flux:text class="truncate text-xs text-zinc-500 dark:text-zinc-400" x-text="$wire.description[$wire.locale] || '{{ __('Your site tagline goes here.') }}'"></flux:text>
+                </div>
             </div>
         </div>
     </form>
