@@ -10,7 +10,7 @@
     "devDependencies": {
         "@playwright/test": "^1.61.1",
         "@tailwindcss/vite": "^4.3.1",
-        "@tiptap/core": "^2.27.2",
+        "@tiptap/core": "^3.27.1",
         "concurrently": "^10.0.3",
         "laravel-vite-plugin": "^3.1.0",
         "npm-check-updates": "^22.2.7",
