@@ -8,7 +8,7 @@
         "test:lint": "prettier --check resources/"
     },
     "devDependencies": {
-        "@playwright/test": "^1.61.0",
+        "@playwright/test": "^1.61.1",
         "@tailwindcss/vite": "^4.3.1",
         "@tiptap/core": "^2.27.2",
         "concurrently": "^10.0.3",
