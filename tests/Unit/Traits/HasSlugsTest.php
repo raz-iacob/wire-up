@@ -228,6 +228,50 @@ it('queries by slug with forSlug scope', function (): void {
         ->and($testPageFr->id)->toBe($page2->id);
 });
 
+it('namespaces slugs by base path so different namespaces can share a slug', function (): void {
+    Schema::create('products', function ($table): void {
+        $table->id();
+        $table->string('title');
+        $table->timestamps();
+    });
+
+    $product = new #[Table(name: 'products')] class extends Model
+    {
+        use HasFactory, HasSlugs;
+
+        protected static function boot(): void
+        {
+            parent::boot();
+            self::bootHasSlugs();
+        }
+
+        protected static function booted(): void
+        {
+            Relation::morphMap(['products' => self::class]);
+        }
+
+        protected function slugBasePath(): string
+        {
+            return 'products';
+        }
+    };
+
+    $page = Page::factory()->create(['title' => ['en' => 'Shoes']]);
+    $page->setSlugs();
+
+    $record = $product->create(['title' => 'Shoes']);
+    $record->setSlugs();
+
+    expect($page->slug)->toBe('shoes')
+        ->and($record->slug)->toBe('shoes');
+
+    $this->assertDatabaseHas('slugs', ['slug' => 'shoes', 'base_path' => '', 'locale' => 'en']);
+    $this->assertDatabaseHas('slugs', ['slug' => 'shoes', 'base_path' => 'products', 'locale' => 'en']);
+
+    expect(Page::query()->forSlug('shoes')->first()->id)->toBe($page->id)
+        ->and($product->newQuery()->forSlug('shoes')->first()->id)->toBe($record->id);
+});
+
 it('throws exception when slug attribute does not exist', function (): void {
     Schema::create('posts', function ($table): void {
         $table->id();

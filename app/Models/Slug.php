@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 /**
  * @property-read int $id
  * @property-read string $slug
+ * @property-read string $base_path
  * @property-read string $locale
  * @property-read int $sluggable_id
  * @property-read string $sluggable_type
@@ -34,6 +35,7 @@ final class Slug extends Model
         return [
             'id' => 'integer',
             'slug' => 'string',
+            'base_path' => 'string',
             'locale' => 'string',
             'sluggable_id' => 'integer',
             'sluggable_type' => 'string',

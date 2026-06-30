@@ -75,6 +75,11 @@ trait HasSlugs
         return ['title'];
     }
 
+    protected function slugBasePath(): string
+    {
+        return '';
+    }
+
     /**
      * @return Attribute<string, null>
      */
@@ -112,6 +117,7 @@ trait HasSlugs
             ['locale' => $locale],
             [
                 'slug' => $slug,
+                'base_path' => $this->slugBasePath(),
                 'sluggable_id' => $this->id,
                 'sluggable_type' => $this->getMorphClass(),
             ]
@@ -127,6 +133,7 @@ trait HasSlugs
             Slug::query()
                 ->where('locale', $locale)
                 ->where('slug', $slug)
+                ->where('base_path', $this->slugBasePath())
                 ->where(function ($q): void {
                     $q->where('sluggable_id', '!=', $this->id)
                         ->orWhere('sluggable_type', '!=', $this->getMorphClass());
@@ -144,11 +151,14 @@ trait HasSlugs
      * @param  Builder<static>  $query
      */
     #[Scope]
-    protected function forSlug(Builder $query, string $slug, ?string $locale = null): void
+    protected function forSlug(Builder $query, string $slug, ?string $locale = null, ?string $basePath = null): void
     {
-        $query->with(['slugs'])->whereHas('slugs', function (Builder $query) use ($slug, $locale): void {
+        $basePath ??= $this->slugBasePath();
+
+        $query->with(['slugs'])->whereHas('slugs', function (Builder $query) use ($slug, $locale, $basePath): void {
             $query->where('slug', $slug)
-                ->where('locale', $locale ?? app()->getLocale());
+                ->where('locale', $locale ?? app()->getLocale())
+                ->where('base_path', $basePath);
         });
     }
 

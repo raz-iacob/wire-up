@@ -15,6 +15,7 @@ test('to array', function (): void {
         ->toBe([
             'id',
             'slug',
+            'base_path',
             'locale',
             'sluggable_type',
             'sluggable_id',
@@ -64,6 +65,26 @@ it('enforces unique constraint on slug and locale combination', function (): voi
         'slug' => 'unique-slug',
         'locale' => $locale->code,
     ]))->toThrow(QueryException::class);
+});
+
+it('allows the same slug and locale under different base paths', function (): void {
+    $locale = Locale::query()->first();
+
+    $page = Slug::factory()->create([
+        'slug' => 'shoes',
+        'base_path' => '',
+        'locale' => $locale->code,
+    ]);
+
+    $record = Slug::factory()->create([
+        'slug' => 'shoes',
+        'base_path' => 'products',
+        'locale' => $locale->code,
+    ]);
+
+    expect($page->slug)->toBe($record->slug)
+        ->and($page->locale)->toBe($record->locale)
+        ->and($page->base_path)->not->toBe($record->base_path);
 });
 
 it('allows same slug for different locales', function (): void {

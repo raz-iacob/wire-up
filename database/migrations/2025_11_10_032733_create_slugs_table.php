@@ -13,12 +13,13 @@ return new class extends Migration
         Schema::create('slugs', function (Blueprint $table): void {
             $table->id();
             $table->string('slug');
+            $table->string('base_path')->default('');
             $table->string('locale', 6);
             $table->morphs('sluggable');
             $table->timestamps();
 
             $table->foreign('locale')->references('code')->on('locales')->onDelete('cascade');
-            $table->unique(['slug', 'locale'], 'slugs_unique');
+            $table->unique(['base_path', 'slug', 'locale'], 'slugs_unique');
         });
     }
 };

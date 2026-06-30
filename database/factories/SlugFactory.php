@@ -22,6 +22,7 @@ final class SlugFactory extends Factory
     {
         return [
             'slug' => Str::slug(fake()->words(3, true)),
+            'base_path' => '',
             'locale' => fn () => Locale::query()->inRandomOrder()->first()->code,
             'sluggable_id' => fn () => Page::factory()->create()->id,
             'sluggable_type' => Page::class,

@@ -154,6 +154,7 @@ return new class extends Component
             $isLive = in_array($locale, $this->publishedLocales, true);
 
             $slugUnique = Rule::unique('slugs', 'slug')->where('locale', $locale)
+                ->where('base_path', '')
                 ->where(function (Builder $query): void {
                     $query->whereNot(function (Builder $q): void {
                         $q->where('sluggable_id', $this->page->id)
