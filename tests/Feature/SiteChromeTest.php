@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
@@ -117,7 +117,7 @@ it('overlays a transparent header', function (): void {
 });
 
 it('skips menu items whose page is missing or unpublished', function (): void {
-    $draft = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $draft = Page::factory()->create(['status' => ContentStatus::DRAFT]);
 
     setSiteMetadata(['menus' => menusPayload(['header' => ['en' => [
         ['type' => 'page', 'appearance' => 'link', 'target' => '_self', 'label' => 'Hidden draft', 'page_id' => $draft->id, 'url' => ''],
@@ -131,7 +131,7 @@ it('skips menu items whose page is missing or unpublished', function (): void {
 });
 
 it('renders the published page menu item with its localized url', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $page = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'get-started']);
 
     setSiteMetadata(['menus' => menusPayload(['header' => ['en' => [

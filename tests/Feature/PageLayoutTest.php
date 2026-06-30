@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Page;
 use App\Models\Settings;
 
@@ -10,7 +10,7 @@ function publishPageWithLayout(string $slug, array $layout): Page
 {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en'], 'layout' => $layout],
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         'title' => ucfirst($slug),
     ]);

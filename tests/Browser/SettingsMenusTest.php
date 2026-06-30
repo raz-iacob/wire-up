@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
@@ -26,7 +26,7 @@ it('renders the menus screen and reactively shows an added item with no js error
 });
 
 it('shows the page-picker placeholder for a new item instead of a phantom first page', function () use ($findComponent): void {
-    Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
 
     $this->actingAsAdmin();
 

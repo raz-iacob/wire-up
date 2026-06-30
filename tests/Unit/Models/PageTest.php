@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Page;
 
 test('to array', function (): void {
@@ -22,7 +22,7 @@ test('to array', function (): void {
 it('has proper default status', function (): void {
     $page = Page::factory()->create();
 
-    expect($page->status)->toBe(PageStatus::DRAFT)
+    expect($page->status)->toBe(ContentStatus::DRAFT)
         ->and($page->published_at)->toBeNull();
 });
 
@@ -38,9 +38,9 @@ it('can have metadata', function (): void {
 });
 
 test('status enum casting works', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::PUBLISHED]);
+    $page = Page::factory()->create(['status' => ContentStatus::PUBLISHED]);
 
-    expect($page->status)->toBeInstanceOf(PageStatus::class)
+    expect($page->status)->toBeInstanceOf(ContentStatus::class)
         ->and($page->status->value)->toBe('published');
 });
 
@@ -49,19 +49,19 @@ it('can find pages by published scope', function (): void {
     Page::query()->delete();
 
     $draft = Page::factory()->create([
-        'status' => PageStatus::DRAFT,
+        'status' => ContentStatus::DRAFT,
         'published_at' => null,
     ]);
     $published = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $scheduled = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->addDay(),
     ]);
     $private = Page::factory()->create([
-        'status' => PageStatus::PRIVATE,
+        'status' => ContentStatus::PRIVATE,
         'published_at' => now()->subDay(),
     ]);
 
@@ -78,20 +78,20 @@ it('can find pages by published scope', function (): void {
 
 it('computes status correctly', function (): void {
     $draft = Page::factory()->create([
-        'status' => PageStatus::DRAFT,
+        'status' => ContentStatus::DRAFT,
     ]);
 
     $published = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
 
     $scheduled = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->addDay(),
     ]);
 
-    expect($draft->computed_status)->toBe(PageStatus::DRAFT)
-        ->and($published->computed_status)->toBe(PageStatus::PUBLISHED)
-        ->and($scheduled->computed_status)->toBe(PageStatus::SCHEDULED);
+    expect($draft->computed_status)->toBe(ContentStatus::DRAFT)
+        ->and($published->computed_status)->toBe(ContentStatus::PUBLISHED)
+        ->and($scheduled->computed_status)->toBe(ContentStatus::SCHEDULED);
 });

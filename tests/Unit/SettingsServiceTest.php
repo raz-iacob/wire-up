@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
@@ -19,7 +19,7 @@ function headerMenu(array $items): SettingsService
 
 function publishedPage(string $slug): Page
 {
-    $page = Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $page = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
     $page->slugs()->create(['locale' => 'en', 'slug' => $slug]);
 
     return $page->load('slugs');
@@ -110,7 +110,7 @@ it('passes through a custom link item', function (): void {
 });
 
 it('skips items whose page is missing or unpublished', function (): void {
-    $draft = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $draft = Page::factory()->create(['status' => ContentStatus::DRAFT]);
 
     $menu = headerMenu([
         ['type' => 'page', 'appearance' => 'link', 'target' => '_self', 'label' => 'Draft', 'page_id' => $draft->id, 'url' => ''],
@@ -149,7 +149,7 @@ it('skips malformed (non-array) menu entries', function (): void {
 });
 
 it('skips a page item whose page has no slug for the current locale', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $page = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
 
     $menu = headerMenu([
         ['type' => 'page', 'appearance' => 'link', 'target' => '_self', 'label' => 'No slug', 'page_id' => $page->id, 'url' => ''],
@@ -461,7 +461,7 @@ it('uses the configured page as the homepage when set', function (): void {
 });
 
 it('falls back to the seeded home page when the configured homepage is not published', function (): void {
-    $draft = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $draft = Page::factory()->create(['status' => ContentStatus::DRAFT]);
     Settings::set(['home_page_id' => $draft->id]);
 
     expect((new SettingsService)->homePage()->slug)->toBe('home');

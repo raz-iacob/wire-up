@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Page;
 
 it('expands accordion items and hides the chevron in plus-minus mode', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         'title' => 'Services',
     ]);
@@ -44,7 +44,7 @@ it('expands accordion items and hides the chevron in plus-minus mode', function 
 it('keeps the chevron visible and themed when an item is open', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         'title' => 'Faq',
     ]);

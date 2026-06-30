@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 
@@ -10,7 +10,7 @@ function publishPage(string $slug, array $attributes = []): Page
 {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         ...$attributes,
     ]);
@@ -45,7 +45,7 @@ it('renders the published page title and description', function (): void {
 });
 
 it('returns 404 for a draft page', function (): void {
-    publishPage('secret', ['status' => PageStatus::DRAFT, 'published_at' => null]);
+    publishPage('secret', ['status' => ContentStatus::DRAFT, 'published_at' => null]);
 
     $this->get(route('page', 'secret'))->assertNotFound();
 });

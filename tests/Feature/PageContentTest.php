@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\BlockType;
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Page;
 use App\Models\Settings;
 
@@ -11,7 +11,7 @@ function publishPageWithBlocks(string $slug, array $blocks): Page
 {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         'title' => ucfirst($slug),
     ]);
@@ -1308,7 +1308,7 @@ it('injects site-wide custom css into every page head', function (): void {
 it('renders a page with no blocks without error', function (): void {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         'title' => 'Empty',
     ]);

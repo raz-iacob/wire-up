@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Page;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -55,10 +55,10 @@ final readonly class UpdatePageAction
     private function handlePublication(array $attributes): array
     {
         return match ($attributes['status'] ?? 'draft') {
-            PageStatus::PUBLISHED => ['status' => PageStatus::PUBLISHED->value, 'published_at' => now()],
-            PageStatus::SCHEDULED => ['status' => PageStatus::PUBLISHED->value, 'published_at' => $attributes['published_at']],
-            PageStatus::PRIVATE => ['status' => PageStatus::PRIVATE->value, 'published_at' => null],
-            default => ['status' => PageStatus::DRAFT->value, 'published_at' => null],
+            ContentStatus::PUBLISHED => ['status' => ContentStatus::PUBLISHED->value, 'published_at' => now()],
+            ContentStatus::SCHEDULED => ['status' => ContentStatus::PUBLISHED->value, 'published_at' => $attributes['published_at']],
+            ContentStatus::PRIVATE => ['status' => ContentStatus::PRIVATE->value, 'published_at' => null],
+            default => ['status' => ContentStatus::DRAFT->value, 'published_at' => null],
         };
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
@@ -255,7 +255,7 @@ it('removes a menu item from the current locale once confirmed', function (): vo
 });
 
 it('persists header and footer menus per locale to metadata', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $page = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
 
     $this->actingAsAdmin();
 
@@ -270,7 +270,7 @@ it('persists header and footer menus per locale to metadata', function (): void 
 });
 
 it('strips ui-only keys when saving', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $page = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
 
     $this->actingAsAdmin();
 
@@ -294,7 +294,7 @@ it('validates type, appearance and target are known values', function (): void {
 });
 
 it('requires a label', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $page = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
 
     $this->actingAsAdmin();
 

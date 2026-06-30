@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Settings;
@@ -10,7 +10,7 @@ use App\Models\Settings;
 it('shows the homepage badge and makes the slug readonly in the editor', function (): void {
     $page = Page::factory()->create([
         'title' => 'Home Landing',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'home-landing']);
@@ -29,7 +29,7 @@ it('shows the homepage badge and makes the slug readonly in the editor', functio
 it('derives the text-image block header title from the heading, not the body', function (): void {
     $page = Page::factory()->create([
         'title' => 'Title Page',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'title-page']);
@@ -62,7 +62,7 @@ it('derives the text-image block header title from the heading, not the body', f
 it('derives the location block header title from the heading', function (): void {
     $page = Page::factory()->create([
         'title' => 'Location Page',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'location-page']);
@@ -91,7 +91,7 @@ it('derives the location block header title from the heading', function (): void
 it('toggles a raw HTML source view on rich text editors and round-trips edits', function (): void {
     $page = Page::factory()->create([
         'title' => 'Source Page',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'source-page']);
@@ -131,7 +131,7 @@ it('toggles a raw HTML source view on rich text editors and round-trips edits', 
 it('registers an inline badge mark and applies chosen colours in the editor', function (): void {
     $page = Page::factory()->create([
         'title' => 'Badge Page',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'badge-editor']);
@@ -175,7 +175,7 @@ it('registers an inline badge mark and applies chosen colours in the editor', fu
 it('gives every editor the same toolbar with links and badges', function (): void {
     $page = Page::factory()->create([
         'title' => 'Toolbar Page',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'toolbar-page']);
@@ -200,7 +200,7 @@ it('gives every editor the same toolbar with links and badges', function (): voi
 it('strips formatting from pasted content but keeps paragraphs, lists and links', function (): void {
     $page = Page::factory()->create([
         'title' => 'Paste Page',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'paste-page']);
@@ -239,7 +239,7 @@ it('reorders testimonial items with saved avatars then saves without errors', fu
 
     $page = Page::factory()->create([
         'title' => 'Testimonials Save',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'testimonials-save']);
@@ -285,7 +285,7 @@ it('reorders feature cards with saved images then saves without errors', functio
 
     $page = Page::factory()->create([
         'title' => 'Feature Save',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'feature-save']);
@@ -330,7 +330,7 @@ it('reorders sponsors with saved logos then saves without errors', function (): 
 
     $page = Page::factory()->create([
         'title' => 'Sponsors Save',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'sponsors-save']);
@@ -374,7 +374,7 @@ it('saves a per-item media photo selected through the media library', function (
 
     $page = Page::factory()->create([
         'title' => 'Team Save',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'team-photo-save']);
@@ -422,7 +422,7 @@ it('saves a per-item media photo selected through the media library', function (
 it('renders and toggles collapsible accordion items in the editor', function (): void {
     $page = Page::factory()->create([
         'title' => 'Accordion Editor',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'accordion-editor']);
@@ -454,7 +454,7 @@ it('renders and toggles collapsible accordion items in the editor', function ():
 it('keeps block items collapsed on load and opens only a newly added one', function (): void {
     $page = Page::factory()->create([
         'title' => 'Sponsors Collapse',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'sponsors-collapse']);

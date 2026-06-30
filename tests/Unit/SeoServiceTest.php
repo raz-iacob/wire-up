@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Enums\BlockType;
+use App\Enums\ContentStatus;
 use App\Enums\MediaType;
-use App\Enums\PageStatus;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Settings;
@@ -13,7 +13,7 @@ use App\Services\SeoService;
 function seoUnitPage(array $blocks = [], array $attributes = []): Page
 {
     $page = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         ...$attributes,
     ]);

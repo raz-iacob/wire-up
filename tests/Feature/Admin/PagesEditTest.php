@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\ContentStatus;
 use App\Enums\MediaType;
-use App\Enums\PageStatus;
 use App\Models\Locale;
 use App\Models\Media;
 use App\Models\Page;
@@ -51,7 +51,7 @@ it('redirects guests away from pages edit', function (): void {
 
 it('populates form with page data on mount', function (): void {
     $page = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
 
@@ -59,27 +59,27 @@ it('populates form with page data on mount', function (): void {
 
     $response = Livewire::test('pages::admin.pages-edit', ['page' => $page]);
 
-    $response->assertSet('status', PageStatus::PUBLISHED)
+    $response->assertSet('status', ContentStatus::PUBLISHED)
         ->assertSet('published_at', $page->published_at)
         ->assertSet('page.id', $page->id);
 });
 
 it('can update page basic information', function (): void {
     $page = Page::factory()->create([
-        'status' => PageStatus::DRAFT,
+        'status' => ContentStatus::DRAFT,
     ]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.pages-edit', ['page' => $page])
-        ->set('status', PageStatus::PUBLISHED)
+        ->set('status', ContentStatus::PUBLISHED)
         ->set('title.en', 'Updated Title')
         ->set('slugs.en', 'updated-slug')
         ->call('update');
 
     $this->assertDatabaseHas('pages', [
         'id' => $page->id,
-        'status' => PageStatus::PUBLISHED->value,
+        'status' => ContentStatus::PUBLISHED->value,
     ]);
 
     $this->assertDatabaseHas('translations', [
@@ -92,12 +92,12 @@ it('can update page basic information', function (): void {
 });
 
 it('persists the per-page noindex flag into metadata', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.pages-edit', ['page' => $page])
-        ->set('status', PageStatus::PUBLISHED)
+        ->set('status', ContentStatus::PUBLISHED)
         ->set('title.en', 'Hidden Page')
         ->set('slugs.en', 'hidden-page')
         ->set('noindex', true)
@@ -147,7 +147,7 @@ it('does not require title or slug for languages that are not live', function ()
     Locale::query()->where('code', 'fr')->update(['active' => true]);
     cache()->forget('site-locales');
 
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
 
     $this->actingAsAdmin();
 
@@ -163,7 +163,7 @@ it('requires title and slug for live languages', function (): void {
     Locale::query()->where('code', 'fr')->update(['active' => true]);
     cache()->forget('site-locales');
 
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
 
     $this->actingAsAdmin();
 
@@ -181,7 +181,7 @@ it('switches to the locale that has a validation error on save', function (): vo
     Locale::query()->where('code', 'fr')->update(['active' => true]);
     cache()->forget('site-locales');
 
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
 
     $this->actingAsAdmin();
 
@@ -196,12 +196,12 @@ it('switches to the locale that has a validation error on save', function (): vo
 });
 
 it('requires a scheduled date when status is scheduled', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.pages-edit', ['page' => $page])
-        ->set('status', PageStatus::SCHEDULED)
+        ->set('status', ContentStatus::SCHEDULED)
         ->set('published_at')
         ->set('title.en', 'Scheduled')
         ->set('slugs.en', 'scheduled')
@@ -210,12 +210,12 @@ it('requires a scheduled date when status is scheduled', function (): void {
 });
 
 it('rejects a scheduled date that is not in the future', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.pages-edit', ['page' => $page])
-        ->set('status', PageStatus::SCHEDULED)
+        ->set('status', ContentStatus::SCHEDULED)
         ->set('published_at', now()->subDay())
         ->set('title.en', 'Scheduled')
         ->set('slugs.en', 'scheduled')
@@ -240,40 +240,40 @@ it('validates slug uniqueness', function (): void {
 
 it('can change page status to published', function (): void {
     $page = Page::factory()->create([
-        'status' => PageStatus::DRAFT,
+        'status' => ContentStatus::DRAFT,
     ]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.pages-edit', ['page' => $page])
-        ->set('status', PageStatus::PUBLISHED)
+        ->set('status', ContentStatus::PUBLISHED)
         ->set('title.en', 'Published Page')
         ->set('slugs.en', 'published-page')
         ->call('update');
 
     $page->refresh();
 
-    expect($page->status)->toBe(PageStatus::PUBLISHED)
+    expect($page->status)->toBe(ContentStatus::PUBLISHED)
         ->and($page->published_at)->not->toBeNull();
 });
 
 it('can change page status to private', function (): void {
     $page = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now(),
     ]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.pages-edit', ['page' => $page])
-        ->set('status', PageStatus::PRIVATE)
+        ->set('status', ContentStatus::PRIVATE)
         ->set('title.en', 'Private Page')
         ->set('slugs.en', 'private-page')
         ->call('update');
 
     $page->refresh();
 
-    expect($page->status)->toBe(PageStatus::PRIVATE)
+    expect($page->status)->toBe(ContentStatus::PRIVATE)
         ->and($page->published_at)->toBeNull();
 });
 
@@ -307,7 +307,7 @@ it('hydrates og_image from existing media on mount', function (): void {
 });
 
 it('persists og_image caption metadata on update', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
     $media = Media::factory()->create(['type' => MediaType::IMAGE]);
 
     $this->actingAsAdmin();
@@ -327,7 +327,7 @@ it('persists og_image caption metadata on update', function (): void {
 });
 
 it('persists a single (non-list) og_image item from a single-select selector', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
     $media = Media::factory()->create(['type' => MediaType::IMAGE]);
 
     $this->actingAsAdmin();
@@ -343,7 +343,7 @@ it('persists a single (non-list) og_image item from a single-select selector', f
 });
 
 it('clears og_image when the single selection is removed (null)', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
     $media = Media::factory()->create(['type' => MediaType::IMAGE]);
     $page->syncMediaForRole('og_image', 'en', [['id' => $media->id]]);
 
@@ -360,7 +360,7 @@ it('clears og_image when the single selection is removed (null)', function (): v
 });
 
 it('persists selected og_image media on update', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
     $media = Media::factory()->create(['type' => MediaType::IMAGE]);
 
     $this->actingAsAdmin();
@@ -401,13 +401,13 @@ it('can schedule a page for future publication', function (): void {
     $futureDate = now()->addDays(7);
 
     $page = Page::factory()->create([
-        'status' => PageStatus::DRAFT,
+        'status' => ContentStatus::DRAFT,
     ]);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.pages-edit', ['page' => $page])
-        ->set('status', PageStatus::SCHEDULED)
+        ->set('status', ContentStatus::SCHEDULED)
         ->set('published_at', $futureDate)
         ->set('title.en', 'Scheduled Page')
         ->set('slugs.en', 'scheduled-page')
@@ -415,7 +415,7 @@ it('can schedule a page for future publication', function (): void {
 
     $page->refresh();
 
-    expect($page->status)->toBe(PageStatus::PUBLISHED)
+    expect($page->status)->toBe(ContentStatus::PUBLISHED)
         ->and($page->published_at->timestamp)->toBe($futureDate->timestamp);
 });
 
@@ -440,7 +440,7 @@ it('defaults published locales to empty for a page without metadata', function (
 });
 
 it('persists published locales to page metadata on update', function (): void {
-    $page = Page::factory()->create(['status' => PageStatus::DRAFT]);
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
 
     $this->actingAsAdmin();
 
@@ -456,7 +456,7 @@ it('persists published locales to page metadata on update', function (): void {
 
 it('preserves existing metadata when updating published locales', function (): void {
     $page = Page::factory()->create([
-        'status' => PageStatus::DRAFT,
+        'status' => ContentStatus::DRAFT,
         'metadata' => ['custom_flag' => 'wide'],
     ]);
 
@@ -488,7 +488,7 @@ it('rejects published locales that are not active site locales', function (): vo
 it('marks the page as the homepage in the editor', function (): void {
     $page = Page::factory()->create([
         'title' => 'Home Landing',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
     Settings::set(['home_page_id' => $page->id]);

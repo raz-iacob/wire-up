@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\BlockType;
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Page;
 
 it('submits the contact form and shows the inline success state', function (): void {
@@ -11,7 +11,7 @@ it('submits the contact form and shows the inline success state', function (): v
 
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         'title' => 'Contact us',
     ]);

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\BlockType;
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
@@ -12,7 +12,7 @@ function seoFeaturePage(string $slug, array $attributes = [], array $blocks = []
 {
     $page = Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         ...$attributes,
     ]);
@@ -32,7 +32,7 @@ function seoFeaturePage(string $slug, array $attributes = [], array $blocks = []
 
 it('lists published pages in the sitemap and omits drafts', function (): void {
     seoFeaturePage('about', ['title' => ['en' => 'About Us']]);
-    seoFeaturePage('draft-page', ['status' => PageStatus::DRAFT, 'published_at' => null]);
+    seoFeaturePage('draft-page', ['status' => ContentStatus::DRAFT, 'published_at' => null]);
 
     $this->get('/sitemap.xml')
         ->assertOk()
@@ -128,7 +128,7 @@ it('emits hreflang alternates in the sitemap for a multi-locale site', function 
 it('skips published pages with no slug in the llms exports', function (): void {
     Page::factory()->create([
         'metadata' => ['published_locales' => ['en']],
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         'title' => ['en' => 'Slugless Page'],
     ]);

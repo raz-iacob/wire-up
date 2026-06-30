@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Flux\Flux;
 use App\Models\Page;
 use Livewire\Component;
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Traits\WithSorting;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
@@ -69,8 +69,8 @@ return new class extends Component
     {
         $paginator = Page::query()
             ->when($this->status, function (Builder $query, string $status): Builder {
-                if ($status === PageStatus::SCHEDULED->value) {
-                    return $query->where('status', PageStatus::PUBLISHED)
+                if ($status === ContentStatus::SCHEDULED->value) {
+                    return $query->where('status', ContentStatus::PUBLISHED)
                         ->where('published_at', '>', now());
                 }
 
@@ -121,7 +121,7 @@ return new class extends Component
                     <flux:menu.submenu heading="{{ __('Status') }}">
                         <flux:menu.radio.group wire:model.live="status" heading="{{ __('Status') }}">
                             <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
-                            @foreach(PageStatus::cases() as $status)
+                            @foreach(ContentStatus::cases() as $status)
                             <flux:menu.radio value="{{ $status->value }}">{{ $status->label() }}</flux:menu.radio>
                             @endforeach
                         </flux:menu.radio.group>

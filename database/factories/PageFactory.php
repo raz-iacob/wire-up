@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Page;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,7 +20,7 @@ final class PageFactory extends Factory
     {
         return [
             'metadata' => ['published_locales' => [config()->string('app.default_locale', 'en')]],
-            'status' => PageStatus::DRAFT,
+            'status' => ContentStatus::DRAFT,
             'published_at' => null,
         ];
     }

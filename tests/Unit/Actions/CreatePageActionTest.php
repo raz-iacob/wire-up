@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\CreatePageAction;
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Page;
 
 it('may create a page', function (): void {
@@ -18,7 +18,7 @@ it('may create a page', function (): void {
     expect($page)->toBeInstanceOf(Page::class)
         ->and($page->title)->toBe('Test Page')
         ->and($page->title)->toBe('Test Page')
-        ->and($page->status)->toBe(PageStatus::DRAFT)
+        ->and($page->status)->toBe(ContentStatus::DRAFT)
         ->and($page->published_at)->toBeNull()
         ->and($page->slug)->toBe('test-page');
 });

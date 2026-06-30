@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('pages', function (Blueprint $table): void {
             $table->id();
             $table->json('metadata')->nullable()->comment('Includes styles, restrictions, and other metadata');
-            $table->string('status')->default(PageStatus::DRAFT);
+            $table->string('status')->default(ContentStatus::DRAFT);
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
 
@@ -33,7 +33,7 @@ return new class extends Migration
 
         $pageId = DB::table('pages')->insertGetId([
             'metadata' => json_encode(['layout' => 'default', 'published_locales' => ['en']]),
-            'status' => PageStatus::PUBLISHED,
+            'status' => ContentStatus::PUBLISHED,
             'published_at' => now(),
             'created_at' => now(),
             'updated_at' => now(),

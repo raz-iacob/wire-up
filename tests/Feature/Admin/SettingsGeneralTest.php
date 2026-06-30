@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
@@ -148,7 +148,7 @@ it('defaults the homepage to the seeded home page on mount', function (): void {
 
 it('persists the chosen homepage', function (): void {
     $page = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
 

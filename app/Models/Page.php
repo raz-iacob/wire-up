@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Traits\HasBlocks;
 use App\Traits\HasMedia;
 use App\Traits\HasSlugs;
@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int $id
  * @property-read array<string, mixed>|null $metadata
  * @property-read array<int, string> $published_locales
- * @property-read PageStatus $status
+ * @property-read ContentStatus $status
  * @property-read CarbonImmutable|null $published_at
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
@@ -88,7 +88,7 @@ final class Page extends Model
         return [
             'id' => 'integer',
             'metadata' => 'array',
-            'status' => PageStatus::class,
+            'status' => ContentStatus::class,
             'published_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
@@ -149,13 +149,13 @@ final class Page extends Model
     }
 
     /**
-     * @return Attribute<PageStatus, null>
+     * @return Attribute<ContentStatus, null>
      */
     protected function computedStatus(): Attribute
     {
-        return Attribute::get(function (): PageStatus {
-            if ($this->status === PageStatus::PUBLISHED && $this->published_at?->isFuture()) {
-                return PageStatus::SCHEDULED;
+        return Attribute::get(function (): ContentStatus {
+            if ($this->status === ContentStatus::PUBLISHED && $this->published_at?->isFuture()) {
+                return ContentStatus::SCHEDULED;
             }
 
             return $this->status;
@@ -168,7 +168,7 @@ final class Page extends Model
     #[Scope]
     protected function published(Builder $query): void
     {
-        $query->where('status', PageStatus::PUBLISHED)
+        $query->where('status', ContentStatus::PUBLISHED)
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now());
     }

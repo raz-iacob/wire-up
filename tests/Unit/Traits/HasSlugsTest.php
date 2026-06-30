@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Traits\HasSlugs;
@@ -108,7 +108,7 @@ it('generates slugs from enum cased attributes', function (): void {
         use HasFactory, HasSlugs;
 
         protected $casts = [
-            'status' => PageStatus::class,
+            'status' => ContentStatus::class,
         ];
 
         protected static function boot(): void
@@ -132,7 +132,7 @@ it('generates slugs from enum cased attributes', function (): void {
 
     $post = $model->create([
         'title' => 'Test',
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
     ]);
 
     $post->setSlugs();

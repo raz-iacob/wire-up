@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Page;
 use App\Models\Settings;
 
@@ -19,7 +19,7 @@ it('renders a toggleable sidebar menu without javascript errors', function (): v
     ]]]);
 
     $page = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
         'metadata' => ['published_locales' => ['en'], 'layout' => ['sidebar' => ['menus' => ['docs-nav']]]],
         'title' => 'Handbook',

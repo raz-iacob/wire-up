@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\BlockType;
-use App\Enums\PageStatus;
+use App\Enums\ContentStatus;
 use App\Models\Block;
 use App\Models\Page;
 use App\Services\BlockSchema;
@@ -14,7 +14,7 @@ use App\Services\BlockSchema;
 function schemaBlock(string $type, array $content): Block
 {
     $page = Page::factory()->create([
-        'status' => PageStatus::PUBLISHED,
+        'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),
     ]);
 
