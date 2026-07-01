@@ -10,7 +10,8 @@
     $items = $menu['items'][$locale] ?? [];
 @endphp
 
-<section class="py-6" wire:key="menu-{{ $menu['key'] }}" x-data="{ design: false }">
+<section wire:key="menu-{{ $menu['key'] }}" x-data="{ design: false }"
+    @class([ 'pb-6' => $menu['builtin'], 'py-6' => ! $menu['builtin']])>
     <div class="flex items-center justify-between gap-3 mb-2">
         @if ($menu['builtin'])
             <div class="flex items-center gap-3">
