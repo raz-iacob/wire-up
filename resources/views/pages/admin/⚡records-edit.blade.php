@@ -148,6 +148,7 @@ return new class extends Component
 
         $this->normalizeMoneyInput();
         $this->normalizeBlockAnchors();
+        $this->applyPrefills();
 
         [$rules, $messages, $attributes] = $this->validationRules();
 
@@ -230,7 +231,9 @@ return new class extends Component
 
             $rules["title.$locale"] = $isLive ? ['required', 'string', 'min:3'] : ['nullable', 'string'];
             $rules["description.$locale"] = ['nullable', 'string', 'max:160'];
-            $rules["slugs.$locale"] = $isLive ? ['required', 'string', 'min:3', $slugUnique] : ['nullable', 'string', $slugUnique];
+            $rules["slugs.$locale"] = $isLive
+                ? ['required', 'string', 'min:3', 'regex:/^[a-z0-9-]+$/', $slugUnique]
+                : ['nullable', 'string', 'regex:/^[a-z0-9-]+$/', $slugUnique];
 
             $attributes["title.$locale"] = (string) __('title');
             $attributes["slugs.$locale"] = (string) __('web address');
@@ -247,6 +250,7 @@ return new class extends Component
             'published_at.after' => __('The scheduled date must be in the future.'),
             'media.*.*.required' => __('Add at least one item.'),
             'media.*.*.min' => __('Add at least one item.'),
+            'slugs.*.regex' => __('Web addresses can only use lowercase letters, numbers and hyphens.'),
         ];
 
         return [$rules, $messages, $attributes];
@@ -310,6 +314,37 @@ return new class extends Component
 
         $rules["data.$key"] = [...($required ? ['required'] : ['nullable']), ...$typeRules];
         $attributes["data.$key"] = $label;
+    }
+
+    private function applyPrefills(): void
+    {
+        foreach ($this->recordType->fields as $field) {
+            $target = $field['prefills'] ?? null;
+
+            if ($target !== 'title' && $target !== 'description') {
+                continue;
+            }
+
+            $key = $field['key'];
+            $translatable = (bool) ($field['translatable'] ?? false);
+
+            foreach (array_keys($this->activeLocales) as $locale) {
+                $source = $translatable ? ($this->data[$key][$locale] ?? '') : ($this->data[$key] ?? '');
+                $source = is_string($source) ? mb_trim($source) : '';
+
+                if ($source === '') {
+                    continue;
+                }
+
+                if ($target === 'title' && mb_trim((string) ($this->title[$locale] ?? '')) === '') {
+                    $this->title[$locale] = $source;
+                }
+
+                if ($target === 'description' && mb_trim((string) ($this->description[$locale] ?? '')) === '') {
+                    $this->description[$locale] = \Illuminate\Support\Str::limit(strip_tags($source), 160, '');
+                }
+            }
+        }
     }
 
     private function normalizeMoneyInput(): void

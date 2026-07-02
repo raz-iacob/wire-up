@@ -57,7 +57,9 @@ final class RecordTypePresets
             'icon' => 'shopping-bag',
             'name' => 'Products',
             'fields' => [
-                self::field('price', FieldType::MONEY, 'Price', ['column' => true, 'sortable' => true]),
+                ...self::contentFields(),
+                self::field('current_price', FieldType::MONEY, 'Current price', ['column' => true, 'sortable' => true]),
+                self::field('regular_price', FieldType::MONEY, 'Regular price'),
                 self::field('sku', FieldType::TEXT, 'SKU', ['translatable' => false, 'searchable' => true, 'column' => true]),
                 self::field('gallery', FieldType::MEDIA_GALLERY, 'Gallery'),
             ],
@@ -75,7 +77,7 @@ final class RecordTypePresets
             'icon' => 'wrench-screwdriver',
             'name' => 'Services',
             'fields' => [
-                self::field('summary', FieldType::TEXTAREA, 'Summary'),
+                ...self::contentFields(),
             ],
         ];
     }
@@ -91,7 +93,7 @@ final class RecordTypePresets
             'icon' => 'newspaper',
             'name' => 'Blog posts',
             'fields' => [
-                self::field('excerpt', FieldType::TEXTAREA, 'Excerpt'),
+                ...self::contentFields(),
             ],
         ];
     }
@@ -107,6 +109,7 @@ final class RecordTypePresets
             'icon' => 'calendar-days',
             'name' => 'Events',
             'fields' => [
+                ...self::contentFields(),
                 self::field('starts_at', FieldType::DATETIME, 'Starts', ['column' => true, 'sortable' => true]),
                 self::field('ends_at', FieldType::DATETIME, 'Ends'),
                 self::field('location', FieldType::TEXT, 'Location', ['translatable' => false]),
@@ -125,8 +128,8 @@ final class RecordTypePresets
             'icon' => 'users',
             'name' => 'Team members',
             'fields' => [
+                ...self::contentFields(),
                 self::field('role', FieldType::TEXT, 'Role', ['column' => true]),
-                self::field('bio', FieldType::RICH_TEXT, 'Bio'),
                 self::field('photo', FieldType::PHOTO, 'Photo'),
             ],
         ];
@@ -143,8 +146,8 @@ final class RecordTypePresets
             'icon' => 'rectangle-group',
             'name' => 'Projects',
             'fields' => [
+                ...self::contentFields(),
                 self::field('client', FieldType::TEXT, 'Client', ['translatable' => false, 'column' => true]),
-                self::field('summary', FieldType::TEXTAREA, 'Summary'),
                 self::field('gallery', FieldType::MEDIA_GALLERY, 'Gallery'),
                 self::field('link', FieldType::URL, 'Link', ['translatable' => false]),
             ],
@@ -162,6 +165,7 @@ final class RecordTypePresets
             'icon' => 'briefcase',
             'name' => 'Jobs',
             'fields' => [
+                ...self::contentFields(),
                 self::field('location', FieldType::TEXT, 'Location', ['translatable' => false, 'column' => true]),
                 self::field('department', FieldType::TEXT, 'Department', ['column' => true]),
                 self::field('employment_type', FieldType::SELECT, 'Employment type', [
@@ -169,8 +173,18 @@ final class RecordTypePresets
                     'column' => true,
                     'options' => ['Full-time', 'Part-time', 'Contract', 'Internship'],
                 ]),
-                self::field('description', FieldType::RICH_TEXT, 'Description'),
             ],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function contentFields(): array
+    {
+        return [
+            self::field('heading', FieldType::TEXT, 'Title', ['prefills' => 'title']),
+            self::field('overview', FieldType::RICH_TEXT, 'Description', ['prefills' => 'description']),
         ];
     }
 
@@ -199,6 +213,7 @@ final class RecordTypePresets
             'searchable' => false,
             'help' => '',
             'options' => [],
+            'prefills' => null,
         ], $overrides);
     }
 }

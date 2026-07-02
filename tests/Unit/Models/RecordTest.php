@@ -64,3 +64,25 @@ it('reads noindex from metadata', function (): void {
     expect(Record::factory()->make(['metadata' => ['noindex' => true]])->isNoindex())->toBeTrue()
         ->and(Record::factory()->make(['metadata' => []])->isNoindex())->toBeFalse();
 });
+
+it('builds a namespaced url from its slug prefix', function (): void {
+    $type = RecordType::factory()->create(['slug_prefix' => 'projects']);
+    $record = Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Big Build']]);
+    $record->setSlugs();
+
+    expect($record->getUrl())->toBe(url('projects/big-build'));
+});
+
+it('resolves shared and translatable field values from data', function (): void {
+    $record = Record::factory()->make([
+        'data' => [
+            'price' => 42,
+            'headline' => ['en' => 'English', 'fr' => 'French'],
+        ],
+    ]);
+
+    expect($record->fieldValue('price', false))->toBe(42)
+        ->and($record->fieldValue('headline', true))->toBe('English')
+        ->and($record->fieldValue('missing', false))->toBeNull()
+        ->and($record->fieldValue('price', true))->toBeNull();
+});

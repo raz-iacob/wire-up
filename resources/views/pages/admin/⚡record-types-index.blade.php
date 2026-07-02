@@ -120,6 +120,7 @@ return new class extends Component
             'searchable' => false,
             'help' => '',
             'options' => '',
+            'prefills' => null,
             'open' => true,
         ];
     }
@@ -330,6 +331,7 @@ return new class extends Component
             'searchable' => (bool) ($field['searchable'] ?? false),
             'help' => $field['help'] ?? '',
             'options' => implode("\n", $field['options'] ?? []),
+            'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
             'open' => false,
         ];
     }
@@ -351,6 +353,7 @@ return new class extends Component
             'searchable' => (bool) ($field['searchable'] ?? false),
             'help' => (string) ($field['help'] ?? ''),
             'options' => $this->parseOptions((string) ($field['options'] ?? '')),
+            'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
         ], $fields);
     }
 
@@ -403,6 +406,7 @@ return new class extends Component
             $rules["types.$index.fields.*.type"] = ['required', Rule::in(FieldType::values())];
             $rules["types.$index.fields.*.help"] = ['nullable', 'string', 'max:500'];
             $rules["types.$index.fields.*.options"] = ['nullable', 'string'];
+            $rules["types.$index.fields.*.prefills"] = ['nullable', Rule::in(['title', 'description'])];
         }
 
         return $rules;

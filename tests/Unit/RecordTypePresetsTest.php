@@ -33,8 +33,8 @@ it('applies sensible field defaults to presets', function (): void {
         ->all();
 
     $product = $fieldsByKey('product');
-    expect($product['price']['column'])->toBeTrue()
-        ->and($product['price']['sortable'])->toBeTrue()
+    expect($product['current_price']['column'])->toBeTrue()
+        ->and($product['current_price']['sortable'])->toBeTrue()
         ->and($product['sku']['translatable'])->toBeFalse()
         ->and($product['sku']['searchable'])->toBeTrue();
 

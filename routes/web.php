@@ -63,6 +63,10 @@ Route::get('llms-full.txt', fn (): Response => response(
 ))->name('llms-full');
 
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
+    Route::livewire('{recordType}/{slug}', 'pages::record')
+        ->where('recordType', '(?!admin/)[^/]+')
+        ->name('record');
+
     Route::livewire('{slug}', 'pages::page')
         ->where('slug', '^(?!admin).*')
         ->middleware(RedirectHomepageSlug::class)

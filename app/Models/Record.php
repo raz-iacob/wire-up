@@ -69,9 +69,41 @@ final class Record extends Model
         return $this->belongsTo(RecordType::class);
     }
 
+    public function getUrl(?string $locale = null): string
+    {
+        $this->loadMissing('recordType');
+
+        return route('record', [$this->recordType->slug_prefix, $this->getSlug($locale)]);
+    }
+
     public function isNoindex(): bool
     {
         return (bool) ($this->metadata['noindex'] ?? false);
+    }
+
+    public function fieldValue(string $key, bool $translatable): mixed
+    {
+        $value = $this->data[$key] ?? null;
+
+        if (! $translatable) {
+            return $value;
+        }
+
+        return is_array($value) ? ($value[app()->getLocale()] ?? null) : null;
+    }
+
+    /**
+     * @return array<int, Media>
+     */
+    public function fieldMedia(string $key, bool $translatable): array
+    {
+        $locale = $translatable ? app()->getLocale() : resolve('localization')->getDefaultLocale();
+
+        return $this->media
+            ->filter(fn (Media $media): bool => $media->pivot->role === $key && $media->pivot->locale === $locale)
+            ->sortBy(fn (Media $media): int => (int) $media->pivot->position)
+            ->values()
+            ->all();
     }
 
     /**

@@ -206,13 +206,16 @@ return new class extends Component
 
             $rules["title.$locale"] = $isLive ? ['required', 'string', 'min:3'] : ['nullable', 'string'];
             $rules["description.$locale"] = ['nullable', 'string', 'max:160'];
-            $rules["slugs.$locale"] = $isLive ? ['required', 'string', 'min:3', $slugUnique] : ['nullable', 'string', $slugUnique];
+            $rules["slugs.$locale"] = $isLive
+                ? ['required', 'string', 'min:3', 'regex:/^[a-z0-9-]+$/', $slugUnique]
+                : ['nullable', 'string', 'regex:/^[a-z0-9-]+$/', $slugUnique];
         }
 
         $messages = [
             'publishedLocales.*.in' => __('Choose a language that is enabled in your site settings.'),
             'published_at.required' => __('Choose a date to schedule this page.'),
             'published_at.after' => __('The scheduled date must be in the future.'),
+            'slugs.*.regex' => __('Web addresses can only use lowercase letters, numbers and hyphens.'),
         ];
 
         $attributes = [

@@ -99,6 +99,72 @@ it('can update the record title, status, slug and custom data', function (): voi
         ->and($record->getSlug('en'))->toBe('renamed-widget');
 });
 
+it('rejects a slug containing a slash or invalid characters', function (): void {
+    $type = typeWithFields();
+    $record = makeRecord($type);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->set('status', ContentStatus::PUBLISHED)
+        ->set('title.en', 'Sneaky')
+        ->set('slugs.en', 'foo/bar')
+        ->set('data.summary.en', 'x')
+        ->call('update')
+        ->assertHasErrors(['slugs.en' => 'regex']);
+});
+
+function typeWithPrefillFields(): RecordType
+{
+    return RecordType::factory()->create([
+        'name' => 'Products',
+        'slug_prefix' => 'products',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'label' => ['en' => 'Title'], 'required' => false, 'translatable' => true, 'column' => false, 'sortable' => false, 'searchable' => false, 'help' => '', 'options' => [], 'prefills' => 'title'],
+            ['key' => 'overview', 'type' => 'rich-text', 'label' => ['en' => 'Description'], 'required' => false, 'translatable' => true, 'column' => false, 'sortable' => false, 'searchable' => false, 'help' => '', 'options' => [], 'prefills' => 'description'],
+        ],
+    ]);
+}
+
+it('prefills empty SEO title and description from content fields on save', function (): void {
+    $type = typeWithPrefillFields();
+    $record = makeRecord($type);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->set('status', ContentStatus::PUBLISHED)
+        ->set('title.en', '')
+        ->set('description.en', '')
+        ->set('data.heading.en', 'Fall Sneakers')
+        ->set('data.overview.en', '<p>Comfortable <strong>casual</strong> shoes.</p>')
+        ->set('slugs.en', 'fall-sneakers')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $record->refresh();
+
+    expect($record->title)->toBe('Fall Sneakers')
+        ->and($record->description)->toBe('Comfortable casual shoes.');
+});
+
+it('does not overwrite a manually entered SEO title', function (): void {
+    $type = typeWithPrefillFields();
+    $record = makeRecord($type);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->set('status', ContentStatus::PUBLISHED)
+        ->set('title.en', 'Custom SEO Title')
+        ->set('data.heading.en', 'Fall Sneakers')
+        ->set('slugs.en', 'fall-sneakers')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($record->refresh()->title)->toBe('Custom SEO Title');
+});
+
 it('namespaces the slug under the type prefix', function (): void {
     $type = typeWithFields();
     $record = makeRecord($type);

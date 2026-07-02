@@ -128,6 +128,19 @@ it('validates required fields', function (): void {
         ->assertHasErrors(['title.en' => 'required']);
 });
 
+it('rejects a slug containing a slash or invalid characters', function (): void {
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('status', ContentStatus::PUBLISHED)
+        ->set('title.en', 'Sneaky')
+        ->set('slugs.en', 'foo/bar')
+        ->call('update')
+        ->assertHasErrors(['slugs.en' => 'regex']);
+});
+
 it('cycles to the next active locale on change-locale', function (): void {
     Locale::query()->where('code', 'fr')->update(['active' => true]);
     cache()->forget('site-locales');
