@@ -25,11 +25,23 @@ return new class extends Component
 
     public string $contact_email = '';
 
+    public string $currency = '';
+
     public function mount(): void
     {
         $this->languages = Locale::query()->active()->orderBy('name')->pluck('code')->all();
         $this->home_page_id = SettingsService::current()->homePageId();
         $this->contact_email = is_string(config('site.contact_email')) ? config()->string('site.contact_email') : '';
+        $this->currency = SettingsService::current()->currency();
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    #[Computed]
+    public function currencies(): array
+    {
+        return config()->array('currencies');
     }
 
     /**
@@ -63,6 +75,7 @@ return new class extends Component
             'languages.*' => ['string', Rule::exists('locales', 'code')],
             'home_page_id' => ['required', 'integer', Rule::exists('pages', 'id')],
             'contact_email' => ['nullable', 'email', 'max:255'],
+            'currency' => ['required', 'string', Rule::in(array_keys($this->currencies()))],
         ], [
             'contact_email.email' => __('Enter a valid email address for form submissions.'),
         ], [
@@ -88,6 +101,7 @@ return new class extends Component
         $action->handle([
             'home_page_id' => $validated['home_page_id'],
             'contact_email' => $validated['contact_email'] ?? '',
+            'currency' => $validated['currency'],
         ]);
 
         Flux::toast(__('Settings have been updated.'), variant: 'success');
@@ -138,6 +152,19 @@ return new class extends Component
                 :placeholder="__('you@example.com')"
                 :description="__('Where form submissions are emailed when a form has no recipient of its own.')"
             />
+
+            <flux:select
+                variant="listbox"
+                searchable
+                wire:model="currency"
+                :label="__('Currency')"
+                :placeholder="__('Select a currency…')"
+                :description="__('Used to format money fields across your site.')"
+            >
+                @foreach ($this->currencies as $code => $meta)
+                    <flux:select.option :value="$code">{{ $code }} — {{ $meta['name'] }} ({{ $meta['symbol'] }})</flux:select.option>
+                @endforeach
+            </flux:select>
 
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary" icon="check">

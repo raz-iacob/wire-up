@@ -57,7 +57,7 @@ final class RecordTypePresets
             'icon' => 'shopping-bag',
             'name' => 'Products',
             'fields' => [
-                self::field('price', FieldType::NUMBER, 'Price', ['column' => true, 'sortable' => true]),
+                self::field('price', FieldType::MONEY, 'Price', ['column' => true, 'sortable' => true]),
                 self::field('sku', FieldType::TEXT, 'SKU', ['translatable' => false, 'searchable' => true, 'column' => true]),
                 self::field('gallery', FieldType::MEDIA_GALLERY, 'Gallery'),
             ],

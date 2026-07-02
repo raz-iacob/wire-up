@@ -10,6 +10,7 @@ it('exposes all field type values in order', function (): void {
         'textarea',
         'rich-text',
         'number',
+        'money',
         'date',
         'datetime',
         'boolean',
@@ -60,4 +61,24 @@ it('knows which types are media and galleries', function (): void {
         ->and(FieldType::TEXT->isMedia())->toBeFalse()
         ->and(FieldType::MEDIA_GALLERY->isGallery())->toBeTrue()
         ->and(FieldType::PHOTO->isGallery())->toBeFalse();
+});
+
+it('marks single-line input types as compact', function (): void {
+    expect(FieldType::TEXT->isCompact())->toBeTrue()
+        ->and(FieldType::NUMBER->isCompact())->toBeTrue()
+        ->and(FieldType::MONEY->isCompact())->toBeTrue()
+        ->and(FieldType::DATE->isCompact())->toBeTrue()
+        ->and(FieldType::DATETIME->isCompact())->toBeTrue()
+        ->and(FieldType::SELECT->isCompact())->toBeTrue()
+        ->and(FieldType::TEXTAREA->isCompact())->toBeFalse()
+        ->and(FieldType::RICH_TEXT->isCompact())->toBeFalse()
+        ->and(FieldType::BOOLEAN->isCompact())->toBeFalse()
+        ->and(FieldType::URL->isCompact())->toBeFalse()
+        ->and(FieldType::PHOTO->isCompact())->toBeFalse()
+        ->and(FieldType::MEDIA_GALLERY->isCompact())->toBeFalse();
+});
+
+it('resolves an admin view path per type', function (): void {
+    expect(FieldType::TEXT->adminView())->toBe('components.admin.fields.text')
+        ->and(FieldType::MEDIA_GALLERY->adminView())->toBe('components.admin.fields.media-gallery');
 });

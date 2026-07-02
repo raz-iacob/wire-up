@@ -1,4 +1,9 @@
-@props(['name' => 'slugs', 'locale' => app()->getLocale(), 'multiLocale' => false, 'label' => null, 'required' => false, 'readonly' => false, 'note' => ''])
+@props(['name' => 'slugs', 'locale' => app()->getLocale(), 'multiLocale' => false, 'label' => null, 'required' => false, 'readonly' => false, 'note' => '', 'basePath' => ''])
+
+@php
+    $localeSegment = $locale !== config()->string('app.locale') ? $locale.'/' : '';
+    $pathPrefix = $localeSegment.($basePath !== '' ? $basePath.'/' : '');
+@endphp
 
 <flux:field wire:key="{{ $name }}-{{ $locale }}">
     <div class="flex items-center gap-3">
@@ -17,11 +22,11 @@
         @endif
     </div>
     <flux:input.group>
-        <flux:input.group.prefix>{{ config('app.url') }}/{{ $locale !== config()->string('app.locale') ? $locale .'/' : '' }}</flux:input.group.prefix>
+        <flux:input.group.prefix>{{ config('app.url') }}/{{ $pathPrefix }}</flux:input.group.prefix>
         <flux:input wire:model.lazy="{{ $name }}.{{ $locale }}" :required="$required" :readonly="$readonly" x-on:input="$el.value = $el.value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-{2,}/g, '-')">
             <x-slot name="iconTrailing">
                 <flux:button size="sm" variant="ghost" icon="arrow-up-right" class="-mr-1" type="button"
-                    x-on:click.prevent="window.open('{{ config('app.url') }}/{{ $locale !== config()->string('app.locale') ? $locale .'/' : '' }}' + $wire.{{ $name }}.{{ $locale }}, '_blank')"
+                    x-on:click.prevent="window.open('{{ config('app.url') }}/{{ $pathPrefix }}' + $wire.{{ $name }}.{{ $locale }}, '_blank')"
                 />
             </x-slot>
         </flux:input>

@@ -16,6 +16,23 @@ final class SettingsService
      */
     public const array BUILTIN_MENUS = ['header', 'footer'];
 
+    /**
+     * @var array<string, string>
+     */
+    private const array REGION_CURRENCY = [
+        'US' => 'USD', 'GB' => 'GBP', 'CA' => 'CAD', 'AU' => 'AUD', 'NZ' => 'NZD',
+        'CH' => 'CHF', 'JP' => 'JPY', 'CN' => 'CNY', 'HK' => 'HKD', 'SG' => 'SGD',
+        'IN' => 'INR', 'ID' => 'IDR', 'MY' => 'MYR', 'TH' => 'THB', 'VN' => 'VND',
+        'KR' => 'KRW', 'PH' => 'PHP', 'TR' => 'TRY', 'RU' => 'RUB', 'UA' => 'UAH',
+        'PL' => 'PLN', 'CZ' => 'CZK', 'HU' => 'HUF', 'RO' => 'RON', 'BG' => 'BGN',
+        'DK' => 'DKK', 'NO' => 'NOK', 'SE' => 'SEK', 'IL' => 'ILS', 'SA' => 'SAR',
+        'AE' => 'AED', 'ZA' => 'ZAR', 'MX' => 'MXN', 'BR' => 'BRL', 'NG' => 'NGN',
+        'DE' => 'EUR', 'FR' => 'EUR', 'ES' => 'EUR', 'IT' => 'EUR', 'NL' => 'EUR',
+        'PT' => 'EUR', 'GR' => 'EUR', 'FI' => 'EUR', 'IE' => 'EUR', 'AT' => 'EUR',
+        'BE' => 'EUR', 'EE' => 'EUR', 'LV' => 'EUR', 'LT' => 'EUR', 'SK' => 'EUR',
+        'SI' => 'EUR', 'HR' => 'EUR',
+    ];
+
     public static function current(): self
     {
         return new self;
@@ -76,6 +93,15 @@ final class SettingsService
             'sticky' => (bool) ($display['sticky'] ?? false),
             'mobile' => in_array($display['mobile'] ?? null, ['collapse', 'hide', 'toggle'], true) ? $display['mobile'] : 'collapse',
         ];
+    }
+
+    public static function deduceCurrency(): string
+    {
+        $localization = resolve('localization');
+        $regional = $localization->getActiveLocales()[$localization->getDefaultLocale()]['regional'] ?? null;
+        $region = is_string($regional) ? str($regional)->after('-')->upper()->value() : '';
+
+        return self::REGION_CURRENCY[$region] ?? 'USD';
     }
 
     /**
@@ -152,6 +178,36 @@ final class SettingsService
     public function noindex(): bool
     {
         return (bool) config('site.noindex', false);
+    }
+
+    public function currency(): string
+    {
+        $code = config('site.currency');
+
+        if (is_string($code) && $code !== '' && config()->has("currencies.$code")) {
+            return $code;
+        }
+
+        return self::deduceCurrency();
+    }
+
+    public function currencySymbol(): string
+    {
+        return config()->string('currencies.'.$this->currency().'.symbol', $this->currency());
+    }
+
+    public function currencyDecimals(): int
+    {
+        return config()->integer('currencies.'.$this->currency().'.decimals', 2);
+    }
+
+    public function formatMoney(int|float|string|null $amount): string
+    {
+        if (! is_numeric($amount)) {
+            return '';
+        }
+
+        return $this->currencySymbol().number_format((float) $amount, $this->currencyDecimals(), '.', ',');
     }
 
     public function googleAnalyticsId(): string

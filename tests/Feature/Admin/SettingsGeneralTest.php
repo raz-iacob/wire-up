@@ -137,6 +137,33 @@ it('validates that the form submissions email is a valid email address', functio
         ->assertSee('Enter a valid email address for form submissions.');
 });
 
+it('hydrates the deduced currency on mount', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-general')
+        ->assertSet('currency', 'USD');
+});
+
+it('persists the chosen currency', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-general')
+        ->set('currency', 'EUR')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('currency'))->toBe('EUR');
+});
+
+it('rejects an unknown currency', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-general')
+        ->set('currency', 'ZZZ')
+        ->call('update')
+        ->assertHasErrors(['currency']);
+});
+
 it('defaults the homepage to the seeded home page on mount', function (): void {
     $this->actingAsAdmin();
 

@@ -7,14 +7,12 @@ namespace App\Models;
 use App\Enums\ContentStatus;
 use App\Traits\HasBlocks;
 use App\Traits\HasMedia;
+use App\Traits\HasPublishing;
 use App\Traits\HasSlugs;
 use App\Traits\HasTranslations;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Database\Factories\PageFactory;
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,7 +35,7 @@ use Illuminate\Database\Eloquent\Model;
 final class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
-    use HasBlocks, HasFactory, HasMedia, HasSlugs, HasTranslations;
+    use HasBlocks, HasFactory, HasMedia, HasPublishing, HasSlugs, HasTranslations;
 
     /**
      * @param  array<string, mixed>  $layout
@@ -133,57 +131,6 @@ final class Page extends Model
     protected function translatedAttributes(): array
     {
         return ['title', 'description'];
-    }
-
-    /**
-     * @return Attribute<array<int, string>, never>
-     */
-    protected function publishedLocales(): Attribute
-    {
-        return Attribute::get(function (): array {
-            /** @var array<int, string> $locales */
-            $locales = $this->metadata['published_locales'] ?? [];
-
-            return $locales;
-        });
-    }
-
-    /**
-     * @return Attribute<ContentStatus, null>
-     */
-    protected function computedStatus(): Attribute
-    {
-        return Attribute::get(function (): ContentStatus {
-            if ($this->status === ContentStatus::PUBLISHED && $this->published_at?->isFuture()) {
-                return ContentStatus::SCHEDULED;
-            }
-
-            return $this->status;
-        });
-    }
-
-    /**
-     * @param  Builder<Page>  $query
-     */
-    #[Scope]
-    protected function published(Builder $query): void
-    {
-        $query->where('status', ContentStatus::PUBLISHED)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', now());
-    }
-
-    /**
-     * @param  Builder<Page>  $query
-     */
-    #[Scope]
-    protected function publishedInLocale(Builder $query, ?string $locale = null): void
-    {
-        $query->published();
-
-        if (count(resolve('localization')->getActiveLocales()) > 1) {
-            $query->whereJsonContains('metadata->published_locales', $locale ?? app()->getLocale());
-        }
     }
 
     private static function backgroundImageUrl(mixed $image): ?string

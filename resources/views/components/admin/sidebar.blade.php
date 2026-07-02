@@ -14,13 +14,12 @@
     <flux:sidebar.nav>
         <flux:sidebar.item icon="squares-2x2" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate.hover>{{ __('Dashboard') }}</flux:sidebar.item>
         <flux:sidebar.item icon="cursor-arrow-ripple" :href="route('admin.pages-index')" :current="request()->routeIs('admin.pages-*')" wire:navigate.hover>{{ __('Pages') }}</flux:sidebar.item>
+        <livewire:admin.sidebar-nav />
         <flux:sidebar.item icon="inbox" :href="route('admin.inbox-index')" :current="request()->routeIs('admin.inbox-*')" :badge="$unreadSubmissions > 0 ? $unreadSubmissions : null" wire:navigate.hover>{{ __('Inbox') }}</flux:sidebar.item>
         <flux:sidebar.item icon="users" :href="route('admin.users-index')" :current="request()->routeIs('admin.users-*')" wire:navigate.hover>{{ __('Users') }}</flux:sidebar.item>
         <flux:sidebar.item icon="photo" class="cursor-pointer" x-on:click="Livewire.dispatch('select-media', { target: 'media-gallery', type: null, max: 50, media: null })">{{ __('Media') }}</flux:sidebar.item>
         <flux:sidebar.item icon="cog-6-tooth" :href="route('admin.settings-general')" :current="request()->routeIs('admin.settings-*')" wire:navigate.hover>{{ __('Settings') }}</flux:sidebar.item>
-    </flux:sidebar.nav>   
-
-    <livewire:admin.sidebar-nav />
+    </flux:sidebar.nav>
 
     <flux:spacer />
 

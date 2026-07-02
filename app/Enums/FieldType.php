@@ -10,6 +10,7 @@ enum FieldType: string
     case TEXTAREA = 'textarea';
     case RICH_TEXT = 'rich-text';
     case NUMBER = 'number';
+    case MONEY = 'money';
     case DATE = 'date';
     case DATETIME = 'datetime';
     case BOOLEAN = 'boolean';
@@ -36,6 +37,7 @@ enum FieldType: string
             self::TEXTAREA => __('Text area'),
             self::RICH_TEXT => __('Rich text'),
             self::NUMBER => __('Number'),
+            self::MONEY => __('Money'),
             self::DATE => __('Date'),
             self::DATETIME => __('Date & time'),
             self::BOOLEAN => __('Toggle'),
@@ -56,6 +58,7 @@ enum FieldType: string
             self::TEXTAREA => 'bars-4',
             self::RICH_TEXT => 'document-text',
             self::NUMBER => 'hashtag',
+            self::MONEY => 'banknotes',
             self::DATE => 'calendar',
             self::DATETIME => 'clock',
             self::BOOLEAN => 'check-circle',
@@ -76,6 +79,7 @@ enum FieldType: string
             self::TEXTAREA => __('Multiple lines of plain text.'),
             self::RICH_TEXT => __('Formatted text with headings, links and lists.'),
             self::NUMBER => __('A numeric value.'),
+            self::MONEY => __('A monetary amount in the site currency.'),
             self::DATE => __('A calendar date.'),
             self::DATETIME => __('A date together with a time.'),
             self::BOOLEAN => __('An on/off switch.'),
@@ -125,5 +129,18 @@ enum FieldType: string
     public function isGallery(): bool
     {
         return $this === self::MEDIA_GALLERY;
+    }
+
+    public function isCompact(): bool
+    {
+        return match ($this) {
+            self::TEXT, self::NUMBER, self::MONEY, self::DATE, self::DATETIME, self::SELECT => true,
+            default => false,
+        };
+    }
+
+    public function adminView(): string
+    {
+        return "components.admin.fields.{$this->value}";
     }
 }
