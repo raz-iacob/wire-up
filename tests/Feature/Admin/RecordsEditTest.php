@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\CreateCategoryAction;
 use App\Actions\CreateRecordAction;
 use App\Enums\ContentStatus;
 use App\Models\Media;
@@ -164,6 +165,58 @@ it('strips money formatting and stores a numeric value', function (): void {
         ->assertHasNoErrors();
 
     expect($record->refresh()->data['price'])->toBe(1234.56);
+});
+
+it('loads the record existing categories on mount', function (): void {
+    $type = RecordType::factory()->create(['slug_prefix' => 'products']);
+    $record = makeRecord($type);
+    $category = resolve(CreateCategoryAction::class)->handle(['name' => ['en' => 'Cat']]);
+    $record->categories()->attach($category);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->assertSet('categories', [(string) $category->id]);
+});
+
+it('syncs selected categories on save', function (): void {
+    $type = RecordType::factory()->create(['slug_prefix' => 'products']);
+    $record = makeRecord($type);
+    $first = resolve(CreateCategoryAction::class)->handle(['name' => ['en' => 'A']]);
+    $second = resolve(CreateCategoryAction::class)->handle(['name' => ['en' => 'B']]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->set('status', ContentStatus::DRAFT)
+        ->set('title.en', 'Titled')
+        ->set('categories', [$first->id, $second->id])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($record->refresh()->categories()->pluck('categories.id')->all())
+        ->toEqualCanonicalizing([$first->id, $second->id]);
+});
+
+it('creates a category on the fly and attaches it on save', function (): void {
+    $type = RecordType::factory()->create(['slug_prefix' => 'products']);
+    $record = makeRecord($type);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->set('status', ContentStatus::DRAFT)
+        ->set('title.en', 'Titled')
+        ->set('categorySearch', 'Handmade')
+        ->call('createCategory')
+        ->assertSet('categorySearch', '')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $record->refresh()->load('categories');
+
+    expect($record->categories)->toHaveCount(1)
+        ->and($record->categories->first()->name)->toBe('Handmade');
 });
 
 it('can attach a media field value', function (): void {

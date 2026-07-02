@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\CreateCategoryAction;
 use App\Enums\ContentStatus;
 use App\Enums\MediaType;
 use App\Models\Locale;
@@ -578,4 +579,53 @@ it('persists the per-page sidebar selection to metadata', function (): void {
     expect($page->fresh()->metadata['layout']['sidebar'])->toMatchArray([
         'menus' => ['docs-nav'],
     ]);
+});
+
+it('loads the page existing categories on mount', function (): void {
+    $page = Page::factory()->create();
+    $category = resolve(CreateCategoryAction::class)->handle(['name' => ['en' => 'Cat']]);
+    $page->categories()->attach($category);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('categories', [(string) $category->id]);
+});
+
+it('syncs selected categories on save', function (): void {
+    $page = Page::factory()->create();
+    $first = resolve(CreateCategoryAction::class)->handle(['name' => ['en' => 'A']]);
+    $second = resolve(CreateCategoryAction::class)->handle(['name' => ['en' => 'B']]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'Titled')
+        ->set('slugs.en', 'titled-page')
+        ->set('categories', [$first->id, $second->id])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($page->refresh()->categories()->pluck('categories.id')->all())
+        ->toEqualCanonicalizing([$first->id, $second->id]);
+});
+
+it('creates a category on the fly and attaches it to the page on save', function (): void {
+    $page = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $page])
+        ->set('title.en', 'Titled')
+        ->set('slugs.en', 'titled-page')
+        ->set('categorySearch', 'Handmade')
+        ->call('createCategory')
+        ->assertSet('categorySearch', '')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $page->refresh()->load('categories');
+
+    expect($page->categories)->toHaveCount(1)
+        ->and($page->categories->first()->name)->toBe('Handmade');
 });

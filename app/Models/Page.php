@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\ContentStatus;
 use App\Traits\HasBlocks;
+use App\Traits\HasCategories;
 use App\Traits\HasMedia;
 use App\Traits\HasPublishing;
 use App\Traits\HasSlugs;
@@ -31,11 +32,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read Collection<int, Slug> $slugs
  * @property-read string $slug
  * @property-read Collection<int, Block> $blocks
+ * @property-read Collection<int, Category> $categories
  */
 final class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
-    use HasBlocks, HasFactory, HasMedia, HasPublishing, HasSlugs, HasTranslations;
+    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasSlugs, HasTranslations;
 
     /**
      * @param  array<string, mixed>  $layout

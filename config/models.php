@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Category;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Record;
@@ -20,5 +21,6 @@ return [
         'page' => Page::class,
         'media' => Media::class,
         'record' => Record::class,
+        'category' => Category::class,
     ],
 ];

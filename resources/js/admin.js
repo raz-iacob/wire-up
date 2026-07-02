@@ -27,6 +27,21 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
         return JSON.stringify(rest);
     };
     let initialState = getState();
+    let userEdited = false;
+
+    // Controls like rich-text editors, input masks and entangled comboboxes
+    // normalize their bound value shortly after load, drifting the state without
+    // a real edit. Re-baseline once the page settles — unless the user has already
+    // typed/changed something — so that drift isn't mistaken for unsaved changes.
+    const markEdited = (e) => {
+        if (e.isTrusted) userEdited = true;
+    };
+    el.addEventListener("input", markEdited, true);
+    el.addEventListener("change", markEdited, true);
+
+    const rebaseline = setTimeout(() => {
+        if (!userEdited) initialState = getState();
+    }, 600);
 
     const isDirty = () => getState() !== initialState;
 
@@ -41,6 +56,7 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
 
             onRender(() => {
                 initialState = getState();
+                userEdited = false;
             });
         });
     });
@@ -61,6 +77,9 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
 
     // Clean up when component is torn down
     cleanup(() => {
+        clearTimeout(rebaseline);
+        el.removeEventListener("input", markEdited, true);
+        el.removeEventListener("change", markEdited, true);
         window.removeEventListener("beforeunload", handleBeforeUnload);
         document.removeEventListener("livewire:navigate", handleNavigate);
     });

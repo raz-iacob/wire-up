@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\ContentStatus;
 use App\Traits\HasBlocks;
+use App\Traits\HasCategories;
 use App\Traits\HasMedia;
 use App\Traits\HasPublishing;
 use App\Traits\HasSlugs;
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read RecordType $recordType
+ * @property-read Collection<int, Category> $categories
  * @property-read Collection<int, Translation> $translations
  * @property-read string $title
  * @property-read string $description
@@ -40,7 +42,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class Record extends Model
 {
     /** @use HasFactory<RecordFactory> */
-    use HasBlocks, HasFactory, HasMedia, HasPublishing, HasSlugs, HasTranslations;
+    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasSlugs, HasTranslations;
 
     /**
      * @return array<string, string>

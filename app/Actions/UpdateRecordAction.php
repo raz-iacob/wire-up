@@ -18,7 +18,7 @@ final readonly class UpdateRecordAction
     {
         DB::transaction(function () use ($record, $attributes): void {
             $record->update([
-                ...Arr::except($attributes, ['slugs', 'status', 'blocks', 'media']),
+                ...Arr::except($attributes, ['slugs', 'status', 'blocks', 'media', 'categories']),
                 ...$this->handlePublication($attributes),
             ]);
 
@@ -28,6 +28,10 @@ final readonly class UpdateRecordAction
 
             if (isset($attributes['blocks'])) {
                 $record->updateBlocks($attributes['blocks']);
+            }
+
+            if (isset($attributes['categories'])) {
+                $record->categories()->sync($attributes['categories']);
             }
 
             if (is_array($attributes['media'] ?? null)) {

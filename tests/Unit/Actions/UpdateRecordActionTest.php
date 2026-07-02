@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\CreateRecordAction;
 use App\Actions\UpdateRecordAction;
 use App\Enums\ContentStatus;
+use App\Models\Category;
 use App\Models\Media;
 use App\Models\RecordType;
 
@@ -31,6 +32,26 @@ it('updates data, slug, blocks and media', function (): void {
         ->and($record->getSlug('en'))->toBe('renamed')
         ->and($record->blocks)->toHaveCount(1)
         ->and($record->media)->toHaveCount(1);
+});
+
+it('syncs categories on update', function (): void {
+    $type = RecordType::factory()->create();
+    $record = resolve(CreateRecordAction::class)->handle($type, ['title' => 'Item']);
+    $first = Category::factory()->create();
+    $second = Category::factory()->create();
+
+    resolve(UpdateRecordAction::class)->handle($record, [
+        'categories' => [$first->id, $second->id],
+    ]);
+
+    expect($record->refresh()->categories()->pluck('categories.id')->all())
+        ->toEqualCanonicalizing([$first->id, $second->id]);
+
+    resolve(UpdateRecordAction::class)->handle($record, [
+        'categories' => [$second->id],
+    ]);
+
+    expect($record->refresh()->categories()->pluck('categories.id')->all())->toBe([$second->id]);
 });
 
 it('applies the publication status on update', function (ContentStatus $input, string $expectedStatus, bool $hasDate): void {

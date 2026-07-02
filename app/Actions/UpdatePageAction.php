@@ -19,7 +19,7 @@ final readonly class UpdatePageAction
         DB::transaction(function () use ($page, $attributes): void {
 
             $page->update([
-                ...Arr::except($attributes, ['slugs', 'status', 'og_image', 'blocks']),
+                ...Arr::except($attributes, ['slugs', 'status', 'og_image', 'blocks', 'categories']),
                 ...$this->handlePublication($attributes),
             ]);
 
@@ -33,6 +33,10 @@ final readonly class UpdatePageAction
 
             if (isset($attributes['og_image'])) {
                 $this->syncMedia($page, 'og_image', $attributes['og_image']);
+            }
+
+            if (isset($attributes['categories'])) {
+                $page->categories()->sync($attributes['categories']);
             }
 
         });

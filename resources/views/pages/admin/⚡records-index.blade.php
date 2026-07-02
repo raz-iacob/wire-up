@@ -262,12 +262,12 @@ return new class extends Component
                 <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection" wire:click="sort('title')">{{ __('Title') }}</flux:table.column>
                 @foreach($this->columnFields as $field)
                     @php($fieldSortable = (bool) ($field['sortable'] ?? false) && ! (\App\Enums\FieldType::tryFrom($field['type'])?->isMedia() ?? false))
-                    <flux:table.column
-                        :sortable="$fieldSortable"
-                        :sorted="$fieldSortable && $sortBy === $field['key']"
-                        :direction="$sortDirection"
-                        wire:click="{{ $fieldSortable ? "sort('{$field['key']}')" : '' }}"
-                    >{{ $field['label'][app()->getLocale()] ?? \Illuminate\Support\Arr::first($field['label']) ?? $field['key'] }}</flux:table.column>
+                    @php($fieldLabel = $field['label'][app()->getLocale()] ?? \Illuminate\Support\Arr::first($field['label']) ?? $field['key'])
+                    @if ($fieldSortable)
+                        <flux:table.column sortable :sorted="$sortBy === $field['key']" :direction="$sortDirection" wire:click="sort('{{ $field['key'] }}')">{{ $fieldLabel }}</flux:table.column>
+                    @else
+                        <flux:table.column>{{ $fieldLabel }}</flux:table.column>
+                    @endif
                 @endforeach
                 @if($this->hasMultipleActiveLocales())
                 <flux:table.column>{{ __('Languages') }}</flux:table.column>

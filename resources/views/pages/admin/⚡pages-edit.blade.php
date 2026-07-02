@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Actions\CreateCategoryAction;
 use App\Actions\UpdatePageAction;
 use App\Enums\BlockType;
 use App\Enums\ContentStatus;
+use App\Models\Category;
 use App\Models\Media;
 use App\Models\Page;
 use App\Services\SettingsService;
@@ -13,6 +15,7 @@ use App\Traits\HasContentEditor;
 use Flux\Flux;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -60,14 +63,22 @@ return new class extends Component
      */
     public array $slugs = [];
 
+    /**
+     * @var array<int, string>
+     */
+    public array $categories = [];
+
+    public string $categorySearch = '';
+
     public bool $showPreview = false;
 
     public ?string $previewToken = null;
 
     public function mount(Page $page): void
     {
-        $page->load('translations', 'media', 'blocks');
+        $page->load('translations', 'media', 'blocks', 'categories');
         $this->page = $page;
+        $this->categories = $page->categories->pluck('id')->map(fn (int $id): string => (string) $id)->all();
         $this->blocks = $this->withBlockDefaults($page->getBlocksArray());
         $this->status = $page->computed_status;
         $this->published_at = $page->published_at;
@@ -114,6 +125,35 @@ return new class extends Component
         return $this->page->media;
     }
 
+    public function createCategory(CreateCategoryAction $action): void
+    {
+        $name = mb_trim($this->categorySearch);
+
+        if ($name === '') {
+            return;
+        }
+
+        $category = $action->handle(['name' => [$this->locale => $name]]);
+
+        $this->categories[] = (string) $category->id;
+        $this->categorySearch = '';
+
+        unset($this->categoryOptions);
+    }
+
+    /**
+     * @return EloquentCollection<int, Category>
+     */
+    #[Computed]
+    public function categoryOptions(): EloquentCollection
+    {
+        return Category::query()
+            ->with('translations')
+            ->get()
+            ->sortBy(fn (Category $category): string => $category->name)
+            ->values();
+    }
+
     public function update(UpdatePageAction $action): void
     {
         $this->og_image = $this->normalizeMediaInput($this->og_image);
@@ -148,6 +188,8 @@ return new class extends Component
             'layout.sidebar' => ['array'],
             'layout.sidebar.menus' => ['array'],
             'layout.sidebar.menus.*' => ['string'],
+            'categories' => ['array'],
+            'categories.*' => ['integer', Rule::exists('categories', 'id')],
         ];
 
         foreach (array_keys($this->activeLocales) as $locale) {
@@ -190,9 +232,10 @@ return new class extends Component
         }
 
         $action->handle($this->page, [
-            ...Arr::except($validated, ['publishedLocales', 'blocks', 'layout', 'noindex']),
+            ...Arr::except($validated, ['publishedLocales', 'blocks', 'layout', 'noindex', 'categories']),
             'blocks' => $this->blocks,
             'og_image' => $this->og_image,
+            'categories' => array_map(intval(...), $this->categories),
             'metadata' => [
                 ...($this->page->metadata ?? []),
                 'published_locales' => array_values($validated['publishedLocales'] ?? []),
@@ -529,6 +572,32 @@ return new class extends Component
                         </flux:accordion.content>
                     </flux:accordion.item>
                 @endif
+
+                <flux:accordion.item>
+                    <flux:accordion.heading>
+                        <div class="flex items-center justify-between">
+                            {{ __('Categories') }}
+                            <flux:text>
+                                <span x-cloak x-show="$wire.categories.length === 0">{{ __('Not set') }}</span>
+                                <span x-cloak x-show="$wire.categories.length > 0"><span x-text="$wire.categories.length"></span> {{ __('selected') }}</span>
+                            </flux:text>
+                        </div>
+                    </flux:accordion.heading>
+
+                    <flux:accordion.content class="mt-3">
+                        <flux:pillbox wire:model="categories" variant="combobox" multiple :placeholder="__('Add a category…')">
+                            <x-slot name="input">
+                                <flux:pillbox.input wire:model="categorySearch" :placeholder="__('Add a category…')" />
+                            </x-slot>
+                            @foreach ($this->categoryOptions as $categoryOption)
+                                <flux:pillbox.option :value="$categoryOption->id" wire:key="cat-opt-{{ $categoryOption->id }}">{{ $categoryOption->name }}</flux:pillbox.option>
+                            @endforeach
+                            <flux:pillbox.option.create wire:click="createCategory" min-length="2">
+                                {{ __('Create') }} "<span wire:text="categorySearch"></span>"
+                            </flux:pillbox.option.create>
+                        </flux:pillbox>
+                    </flux:accordion.content>
+                </flux:accordion.item>
             </flux:accordion>
 
             <flux:button wire:click="preview" icon="eye" variant="filled" class="w-full">
