@@ -269,9 +269,15 @@ return new class extends Component
             return is_array($this->media) ? $this->media : [];
         }
 
-        return is_array($this->media) && $this->isMediaItem($this->media)
-            ? [$this->media]
-            : [];
+        if (is_array($this->media) && $this->isMediaItem($this->media)) {
+            return [$this->media];
+        }
+
+        if (is_array($this->media) && array_is_list($this->media) && $this->isMediaItem($this->media[0] ?? null)) {
+            return [$this->media[0]];
+        }
+
+        return [];
     }
 
     #[Computed]

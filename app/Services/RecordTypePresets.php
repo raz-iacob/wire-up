@@ -78,6 +78,7 @@ final class RecordTypePresets
             'name' => 'Services',
             'fields' => [
                 ...self::contentFields(),
+                self::field('photo', FieldType::PHOTO, 'Photo'),
             ],
         ];
     }
@@ -94,6 +95,7 @@ final class RecordTypePresets
             'name' => 'Blog posts',
             'fields' => [
                 ...self::contentFields(),
+                self::field('photo', FieldType::PHOTO, 'Photo'),
             ],
         ];
     }
@@ -113,6 +115,7 @@ final class RecordTypePresets
                 self::field('starts_at', FieldType::DATETIME, 'Starts', ['column' => true, 'sortable' => true]),
                 self::field('ends_at', FieldType::DATETIME, 'Ends'),
                 self::field('location', FieldType::TEXT, 'Location', ['translatable' => false]),
+                self::field('photo', FieldType::PHOTO, 'Photo'),
             ],
         ];
     }
@@ -148,7 +151,6 @@ final class RecordTypePresets
             'fields' => [
                 ...self::contentFields(),
                 self::field('client', FieldType::TEXT, 'Client', ['translatable' => false, 'column' => true]),
-                self::field('gallery', FieldType::MEDIA_GALLERY, 'Gallery'),
                 self::field('link', FieldType::URL, 'Link', ['translatable' => false]),
             ],
         ];
@@ -166,13 +168,9 @@ final class RecordTypePresets
             'name' => 'Jobs',
             'fields' => [
                 ...self::contentFields(),
-                self::field('location', FieldType::TEXT, 'Location', ['translatable' => false, 'column' => true]),
-                self::field('department', FieldType::TEXT, 'Department', ['column' => true]),
-                self::field('employment_type', FieldType::SELECT, 'Employment type', [
-                    'translatable' => false,
-                    'column' => true,
-                    'options' => ['Full-time', 'Part-time', 'Contract', 'Internship'],
-                ]),
+                self::field('location', FieldType::TEXT, 'Location', ['translatable' => false]),
+                self::field('department', FieldType::TEXT, 'Department'),
+                self::field('employment_type', FieldType::TEXT, 'Employment type', ['column' => true]),
             ],
         ];
     }

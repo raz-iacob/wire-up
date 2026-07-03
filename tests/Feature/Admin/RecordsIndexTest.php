@@ -47,6 +47,18 @@ it('redirects guests away from records index', function (): void {
         ->assertRedirectToRoute('login');
 });
 
+it('shows a View link to the public record url', function (): void {
+    $type = productType();
+    $record = resolve(CreateRecordAction::class)->handle($type, ['title' => 'Blue Widget']);
+    $slug = $record->slugs()->where('locale', 'en')->value('slug');
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->assertSee('View')
+        ->assertSee(route('record', ['products', $slug]));
+});
+
 it('lists records of the type with a custom column value', function (): void {
     $type = productType();
     resolve(CreateRecordAction::class)->handle($type, ['title' => 'Blue Widget', 'data' => ['price' => 42]]);

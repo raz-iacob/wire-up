@@ -123,6 +123,131 @@ it('uses the record title as the product heading when the heading field is empty
         ->assertSee('Fallback Name');
 });
 
+it('renders the team member layout with photo, role and bio', function (): void {
+    Storage::fake(config('filesystems.media'));
+
+    $type = RecordType::factory()->create([
+        'key' => 'team-member',
+        'slug_prefix' => 'team',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'label' => ['en' => 'Title'], 'translatable' => true, 'prefills' => 'title'],
+            ['key' => 'overview', 'type' => 'rich-text', 'label' => ['en' => 'Description'], 'translatable' => true, 'prefills' => 'description'],
+            ['key' => 'role', 'type' => 'text', 'label' => ['en' => 'Role'], 'translatable' => true],
+            ['key' => 'photo', 'type' => 'photo', 'label' => ['en' => 'Photo'], 'translatable' => false],
+        ],
+    ]);
+
+    $record = publishRecord($type, 'ava-thompson', [
+        'title' => ['en' => 'Ava Thompson'],
+        'data' => ['heading' => ['en' => 'Ava Thompson'], 'role' => ['en' => 'Lead Designer'], 'overview' => ['en' => '<p>Ava leads our design practice.</p>']],
+    ]);
+
+    $photo = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $record->media()->attach($photo->id, ['role' => 'photo', 'locale' => 'en', 'position' => 0]);
+
+    $this->get(route('record', ['recordType' => 'team', 'slug' => 'ava-thompson']))
+        ->assertOk()
+        ->assertSee('Ava Thompson')
+        ->assertSee('Lead Designer')
+        ->assertSee('Ava leads our design practice');
+});
+
+it('renders the project layout with client, overview and link host', function (): void {
+    $type = RecordType::factory()->create([
+        'key' => 'project',
+        'slug_prefix' => 'projects',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'label' => ['en' => 'Title'], 'translatable' => true, 'prefills' => 'title'],
+            ['key' => 'overview', 'type' => 'rich-text', 'label' => ['en' => 'Description'], 'translatable' => true, 'prefills' => 'description'],
+            ['key' => 'client', 'type' => 'text', 'label' => ['en' => 'Client'], 'translatable' => false],
+            ['key' => 'link', 'type' => 'url', 'label' => ['en' => 'Link'], 'translatable' => false],
+        ],
+    ]);
+
+    publishRecord($type, 'grandview-kids', [
+        'title' => ['en' => 'Grandview Kids Rebrand'],
+        'data' => [
+            'heading' => ['en' => 'Grandview Kids Rebrand'],
+            'overview' => ['en' => '<p>A full digital rebrand.</p>'],
+            'client' => 'Grandview Kids',
+            'link' => 'https://www.example.com/case',
+        ],
+    ]);
+
+    $this->get(route('record', ['recordType' => 'projects', 'slug' => 'grandview-kids']))
+        ->assertOk()
+        ->assertSee('Grandview Kids Rebrand')
+        ->assertSee('Grandview Kids')
+        ->assertSee('A full digital rebrand')
+        ->assertSee('example.com');
+});
+
+it('renders the event layout with photo, date, location and overview', function (): void {
+    Storage::fake(config('filesystems.media'));
+
+    $type = RecordType::factory()->create([
+        'key' => 'event',
+        'slug_prefix' => 'events',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'label' => ['en' => 'Title'], 'translatable' => true, 'prefills' => 'title'],
+            ['key' => 'overview', 'type' => 'rich-text', 'label' => ['en' => 'Description'], 'translatable' => true, 'prefills' => 'description'],
+            ['key' => 'starts_at', 'type' => 'datetime', 'label' => ['en' => 'Starts'], 'translatable' => false],
+            ['key' => 'ends_at', 'type' => 'datetime', 'label' => ['en' => 'Ends'], 'translatable' => false],
+            ['key' => 'location', 'type' => 'text', 'label' => ['en' => 'Location'], 'translatable' => false],
+            ['key' => 'photo', 'type' => 'photo', 'label' => ['en' => 'Photo'], 'translatable' => false],
+        ],
+    ]);
+
+    $record = publishRecord($type, 'summer-launch', [
+        'title' => ['en' => 'Summer Launch'],
+        'data' => [
+            'heading' => ['en' => 'Summer Launch'],
+            'overview' => ['en' => '<p>An evening unveiling the collection.</p>'],
+            'starts_at' => '2026-08-15 18:00:00',
+            'ends_at' => '2026-08-15 21:00:00',
+            'location' => 'The Warehouse, Toronto',
+        ],
+    ]);
+
+    $photo = Media::factory()->create(['type' => MediaType::IMAGE]);
+    $record->media()->attach($photo->id, ['role' => 'photo', 'locale' => 'en', 'position' => 0]);
+
+    $this->get(route('record', ['recordType' => 'events', 'slug' => 'summer-launch']))
+        ->assertOk()
+        ->assertSee('Summer Launch')
+        ->assertSee('August 15, 2026')
+        ->assertSee('The Warehouse, Toronto')
+        ->assertSee('An evening unveiling the collection');
+});
+
+it('renders a photo in the default layout when the type has one', function (): void {
+    Storage::fake(config('filesystems.media'));
+
+    $type = RecordType::factory()->create([
+        'key' => 'service',
+        'slug_prefix' => 'services',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'label' => ['en' => 'Title'], 'translatable' => true, 'prefills' => 'title'],
+            ['key' => 'overview', 'type' => 'rich-text', 'label' => ['en' => 'Description'], 'translatable' => true, 'prefills' => 'description'],
+            ['key' => 'photo', 'type' => 'photo', 'label' => ['en' => 'Photo'], 'translatable' => false],
+        ],
+    ]);
+
+    $record = publishRecord($type, 'web-design', [
+        'title' => ['en' => 'Web Design'],
+        'data' => ['heading' => ['en' => 'Web Design'], 'overview' => ['en' => '<p>We build fast sites.</p>']],
+    ]);
+
+    $photo = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'media/service-photo.jpg']);
+    $record->media()->attach($photo->id, ['role' => 'photo', 'locale' => 'en', 'position' => 0]);
+
+    $this->get(route('record', ['recordType' => 'services', 'slug' => 'web-design']))
+        ->assertOk()
+        ->assertSee('Web Design')
+        ->assertSee('We build fast sites')
+        ->assertSee('media/service-photo.jpg');
+});
+
 it('returns 404 for a draft record', function (): void {
     publishRecord(recordType(), 'hidden', ['status' => ContentStatus::DRAFT, 'published_at' => null]);
 

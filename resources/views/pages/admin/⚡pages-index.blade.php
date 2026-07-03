@@ -180,7 +180,7 @@ return new class extends Component
                             <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
                             <flux:menu>
                                 <flux:menu.item icon="eye" href="{{ url($row->slug) }}" target="_blank">
-                                    {{ __('Preview') }}
+                                    {{ __('View') }}
                                 </flux:menu.item>
                                 <flux:menu.item icon="pencil" href="{{ route('admin.pages-edit', $row->id) }}">
                                     {{ __('Edit') }}

@@ -15,6 +15,7 @@
 
     $photo = \Illuminate\Support\Arr::first($record->fieldMedia('photo', false));
     $heading = $record->fieldValue('heading', true) ?: $record->title;
+    $role = (string) ($record->fieldValue('role', true) ?? '');
     $overview = (string) ($record->fieldValue('overview', true) ?? '');
 @endphp
 
@@ -28,14 +29,17 @@
             @endif
 
             <div @class(['flex flex-col gap-5', 'mt-6 min-w-0 flex-1 md:mt-0' => $photo])>
-                <h1 class="tracking-tight text-(length:--wire-heading-size)">{{ $heading }}</h1>
+                <div class="flex flex-col gap-1">
+                    <h1 class="tracking-tight text-(length:--wire-heading-size)">{{ $heading }}</h1>
+                    @if (mb_trim($role) !== '')
+                        <span class="font-medium text-(--wire-accent)">{{ $role }}</span>
+                    @endif
+                </div>
 
                 @if (strip_tags($overview) !== '')
                     <div class="max-w-none leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 *:first:mt-0 *:last:mb-0">
                         {!! $overview !!}
                     </div>
-                @elseif ($record->description !== '')
-                    <p class="leading-relaxed">{{ $record->description }}</p>
                 @endif
             </div>
         </div>

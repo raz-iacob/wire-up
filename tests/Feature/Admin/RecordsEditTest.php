@@ -165,6 +165,16 @@ it('does not overwrite a manually entered SEO title', function (): void {
     expect($record->refresh()->title)->toBe('Custom SEO Title');
 });
 
+it('keeps a single-image selection when the value is normalized to a one-item list', function (): void {
+    $item = ['id' => 5, 'filename' => 'headshot.jpg'];
+
+    $component = Livewire::test('admin.media-selector', ['multiple' => false, 'name' => 'photo'])->instance();
+
+    $component->media = [$item];
+
+    expect($component->selectedItems())->toBe([$item]);
+});
+
 it('namespaces the slug under the type prefix', function (): void {
     $type = typeWithFields();
     $record = makeRecord($type);

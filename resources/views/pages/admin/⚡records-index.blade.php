@@ -82,7 +82,7 @@ return new class extends Component
 
         $paginator = Record::query()
             ->where('record_type_id', $this->recordType->id)
-            ->with('translations')
+            ->with(['translations', 'slugs'])
             ->when($this->hasMediaColumns(), fn (Builder $query): Builder => $query->with('media'))
             ->when($this->status, function (Builder $query, string $status): Builder {
                 if ($status === ContentStatus::SCHEDULED->value) {
@@ -310,6 +310,12 @@ return new class extends Component
                         <flux:dropdown class="flex justify-end">
                             <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
                             <flux:menu>
+                                @if ($row->slug !== '')
+                                    <flux:menu.item icon="eye" href="{{ route('record', [$recordType->slug_prefix, $row->slug]) }}" target="_blank">
+                                        {{ __('View') }}
+                                    </flux:menu.item>
+                                @endif
+
                                 <flux:menu.item icon="pencil" href="{{ route('admin.records-edit', [$this->recordType, $row]) }}">
                                     {{ __('Edit') }}
                                 </flux:menu.item>
