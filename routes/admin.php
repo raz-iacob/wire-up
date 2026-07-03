@@ -16,6 +16,7 @@ Route::livewire('pages/{page}/preview/{token}', 'pages::admin.page-preview')->na
 
 Route::livewire('records/{recordType}', 'pages::admin.records-index')->name('records-index');
 Route::livewire('records/{recordType}/{record}/edit', 'pages::admin.records-edit')->name('records-edit');
+Route::livewire('records/{recordType}/{record}/preview/{token}', 'pages::admin.record-preview')->name('records-preview');
 
 Route::livewire('categories', 'pages::admin.categories-index')->name('categories-index');
 Route::livewire('categories/{category}/edit', 'pages::admin.categories-edit')->name('categories-edit');

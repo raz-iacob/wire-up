@@ -165,6 +165,38 @@ it('does not overwrite a manually entered SEO title', function (): void {
     expect($record->refresh()->title)->toBe('Custom SEO Title');
 });
 
+it('previews unsaved record changes without persisting or mutating them', function (): void {
+    $type = RecordType::factory()->create([
+        'key' => 'service',
+        'slug_prefix' => 'services',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'label' => ['en' => 'Title'], 'required' => false, 'translatable' => true, 'column' => false, 'sortable' => false, 'searchable' => false, 'help' => '', 'options' => [], 'prefills' => 'title'],
+            ['key' => 'price', 'type' => 'money', 'label' => ['en' => 'Price'], 'required' => false, 'translatable' => false, 'column' => false, 'sortable' => false, 'searchable' => false, 'help' => '', 'options' => [], 'prefills' => null],
+        ],
+    ]);
+
+    $record = makeRecord($type, 'Original Name');
+
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->set('data.heading.en', 'Unsaved Preview Name')
+        ->set('data.price', '1,999.00')
+        ->call('preview')
+        ->assertSet('showPreview', true)
+        ->assertSet('data.price', '1,999.00');
+
+    $token = $component->get('previewToken');
+
+    expect($token)->toBeString()->not->toBe('');
+
+    $this->get(route('admin.records-preview', ['recordType' => $type, 'record' => $record, 'token' => $token]))
+        ->assertOk()
+        ->assertSee('Unsaved Preview Name');
+
+    expect($record->fresh()->data['heading']['en'] ?? null)->not->toBe('Unsaved Preview Name');
+});
+
 it('keeps a single-image selection when the value is normalized to a one-item list', function (): void {
     $item = ['id' => 5, 'filename' => 'headshot.jpg'];
 

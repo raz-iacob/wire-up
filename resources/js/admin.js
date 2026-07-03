@@ -20,9 +20,11 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
 
     // `locale` is a view-only toggle (which language is being edited) on translated
     // forms — it must not count toward the dirty state, or merely switching the
-    // editing language would trigger the unsaved-changes warning.
+    // editing language would trigger the unsaved-changes warning. `showPreview` and
+    // `previewToken` are transient preview UI state and likewise never count as edits.
     const getState = () => {
-        const { locale, ...rest } = component.ephemeral ?? {};
+        const { locale, showPreview, previewToken, ...rest } =
+            component.ephemeral ?? {};
 
         return JSON.stringify(rest);
     };
@@ -57,6 +59,20 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
             onRender(() => {
                 initialState = getState();
                 userEdited = false;
+            });
+        });
+    });
+
+    // Opening the preview is a server round-trip (it caches a snapshot) that can
+    // nudge normalized/masked field values on re-render — that must not register as
+    // an unsaved edit. If the form was clean when preview was requested, re-baseline
+    // once it renders; if it was already dirty (real edits), leave the warning intact.
+    component.$wire.interceptMessage("preview", ({ onSuccess }) => {
+        const wasDirty = isDirty();
+
+        onSuccess(({ onRender }) => {
+            onRender(() => {
+                if (!wasDirty) initialState = getState();
             });
         });
     });

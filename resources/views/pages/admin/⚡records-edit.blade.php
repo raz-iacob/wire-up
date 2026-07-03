@@ -19,6 +19,8 @@ use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
@@ -67,6 +69,10 @@ return new class extends Component
     public string $categorySearch = '';
 
     public bool $noindex = false;
+
+    public bool $showPreview = false;
+
+    public ?string $previewToken = null;
 
     public function mount(RecordType $recordType, Record $record): void
     {
@@ -182,6 +188,38 @@ return new class extends Component
         $this->record->refresh()->load('translations', 'media', 'blocks', 'slugs');
 
         Flux::toast(__('Changes saved.'), variant: 'success');
+    }
+
+    public function preview(): void
+    {
+        $originalData = $this->data;
+        $this->normalizeMoneyInput();
+        $data = $this->cleanData();
+        $this->data = $originalData;
+
+        $media = [];
+        foreach ($this->media as $role => $localized) {
+            $media[$role] = $this->normalizeMediaInput($localized);
+        }
+
+        $this->previewToken = (string) Str::uuid();
+
+        Cache::put($this->previewCacheKey($this->previewToken), [
+            'record_id' => $this->record->id,
+            'locale' => $this->locale,
+            'title' => $this->title[$this->locale] ?? '',
+            'description' => $this->description[$this->locale] ?? '',
+            'data' => $data,
+            'blocks' => array_values($this->blocks),
+            'media' => $media,
+        ], now()->addMinutes(30));
+
+        $this->showPreview = true;
+    }
+
+    private function previewCacheKey(string $token): string
+    {
+        return "record-preview:{$this->record->id}:".auth()->id().":{$token}";
     }
 
     /**
@@ -667,6 +705,10 @@ return new class extends Component
                 </flux:accordion.item>
             </flux:accordion>
 
+            <flux:button wire:click="preview" icon="eye" variant="filled" class="w-full">
+                {{ __('Preview') }}
+            </flux:button>
+
             <div class="grid grid-cols-2 gap-4">
                 <flux:button type="submit" variant="primary" icon="check">
                     {{ __('Update') }}
@@ -682,6 +724,35 @@ return new class extends Component
         </flux:card>
     </div>
 </form>
+
+@if ($showPreview)
+    <div
+        class="fixed inset-0 z-50 flex flex-col bg-zinc-100 dark:bg-zinc-900"
+        x-data="{ device: 'desktop', widths: { desktop: '100%', tablet: '768px', mobile: '375px' } }">
+        <div class="flex items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 py-2">
+            <flux:button size="sm" variant="subtle" icon="x-mark" wire:click="$set('showPreview', false)">
+                {{ __('Close') }}
+            </flux:button>
+
+            <div class="flex items-center gap-1">
+                <flux:button size="sm" variant="subtle" icon="computer-desktop" x-on:click="device = 'desktop'" x-bind:data-active="device === 'desktop'" class="data-[active=true]:text-accent" :tooltip="__('Desktop')" />
+                <flux:button size="sm" variant="subtle" icon="device-tablet" x-on:click="device = 'tablet'" x-bind:data-active="device === 'tablet'" class="data-[active=true]:text-accent" :tooltip="__('Tablet')" />
+                <flux:button size="sm" variant="subtle" icon="device-phone-mobile" x-on:click="device = 'mobile'" x-bind:data-active="device === 'mobile'" class="data-[active=true]:text-accent" :tooltip="__('Mobile')" />
+            </div>
+
+            <flux:text size="sm" class="hidden sm:block">{{ __('Preview') }}</flux:text>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4">
+            <div class="mx-auto h-full transition-[width] duration-200" x-bind:style="'width: ' + widths[device]">
+                <iframe
+                    src="{{ route('admin.records-preview', ['recordType' => $recordType, 'record' => $record, 'token' => $previewToken]) }}"
+                    class="w-full h-full rounded-lg border border-zinc-200 dark:border-white/10 bg-white shadow-sm"
+                    title="{{ __('Record preview') }}"></iframe>
+            </div>
+        </div>
+    </div>
+@endif
 </div>
 
 @script
