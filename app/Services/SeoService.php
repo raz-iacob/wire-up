@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Page;
+use App\Models\Record;
 use Illuminate\Database\Eloquent\Collection;
 
 final class SeoService
@@ -23,7 +24,7 @@ final class SeoService
         return url()->current();
     }
 
-    public function description(?Page $page, string $stored): string
+    public function description(Page|Record|null $content, string $stored): string
     {
         $stored = mb_trim($stored);
 
@@ -31,8 +32,8 @@ final class SeoService
             return $stored;
         }
 
-        if ($page instanceof Page) {
-            $excerpt = $page->textExcerpt(160);
+        if ($content !== null) {
+            $excerpt = $content->textExcerpt(160);
 
             if ($excerpt !== '') {
                 return $excerpt;
@@ -42,21 +43,21 @@ final class SeoService
         return SettingsService::current()->description();
     }
 
-    public function robots(?Page $page): string
+    public function robots(Page|Record|null $content): string
     {
-        if (SettingsService::current()->noindex() || $page?->isNoindex()) {
+        if (SettingsService::current()->noindex() || $content?->isNoindex()) {
             return 'noindex, nofollow';
         }
 
         return 'index, follow, max-image-preview:large';
     }
 
-    public function ogImageUrl(?Page $page): ?string
+    public function ogImageUrl(Page|Record|null $content): ?string
     {
-        if ($page instanceof Page) {
-            $page->loadMissing('media');
+        if ($content !== null) {
+            $content->loadMissing('media');
 
-            $image = $page->image('og_image', 'desktop', ['w' => 1200, 'h' => 630], false);
+            $image = $content->image('og_image', 'desktop', ['w' => 1200, 'h' => 630], false);
 
             if (is_string($image) && $image !== '') {
                 return $image;
@@ -69,13 +70,13 @@ final class SeoService
     /**
      * @return array<string, string>
      */
-    public function hreflangAlternates(?Page $page): array
+    public function hreflangAlternates(Page|Record|null $content): array
     {
-        if (! $this->isMultilocale() || ! $page instanceof Page) {
+        if (! $this->isMultilocale() || $content === null) {
             return [];
         }
 
-        $alternates = $this->localeUrls($page);
+        $alternates = $this->localeUrls($content);
 
         if ($alternates !== []) {
             $default = $this->localization()->getDefaultLocale();
@@ -88,7 +89,7 @@ final class SeoService
     /**
      * @return array<string, mixed>
      */
-    public function jsonLd(?Page $page): array
+    public function jsonLd(Page|Record|null $content): array
     {
         $settings = SettingsService::current();
         $home = route('home');
@@ -122,49 +123,56 @@ final class SeoService
             ],
         ];
 
-        if ($page instanceof Page) {
+        if ($content !== null) {
             $url = $this->canonicalUrl();
-            $description = $this->description($page, $page->description);
+            $title = $content->title;
+            $description = $this->description($content, $content->description);
+            $image = $this->ogImageUrl($content);
 
             $webpage = [
                 '@type' => 'WebPage',
                 '@id' => $url.'#webpage',
                 'url' => $url,
-                'name' => $page->title,
+                'name' => $title,
                 'inLanguage' => app()->getLocale(),
                 'isPartOf' => ['@id' => $home.'#website'],
-                'dateModified' => $page->updated_at->toAtomString(),
+                'dateModified' => $content->updated_at->toAtomString(),
             ];
 
             if ($description !== '') {
                 $webpage['description'] = $description;
             }
 
-            $image = $this->ogImageUrl($page);
             if ($image !== null) {
                 $webpage['primaryImageOfPage'] = $image;
             }
 
             $graph[] = $webpage;
 
-            if ($page->id !== $this->homeId()) {
+            if (! $this->isHome($content)) {
                 $graph[] = [
                     '@type' => 'BreadcrumbList',
                     'itemListElement' => [
                         ['@type' => 'ListItem', 'position' => 1, 'name' => __('Home'), 'item' => $home],
-                        ['@type' => 'ListItem', 'position' => 2, 'name' => $page->title, 'item' => $url],
+                        ['@type' => 'ListItem', 'position' => 2, 'name' => $title, 'item' => $url],
                     ],
                 ];
             }
 
-            $page->loadMissing('blocks');
+            if ($content instanceof Record) {
+                $recordSchema = new RecordSchema($home.'#organization', $image);
+                $graph = [...$graph, ...$recordSchema->nodes($content, $url, $description)];
+            }
+
             $blockSchema = new BlockSchema(
-                $page->title !== '' ? $page->title : $name,
+                $title !== '' ? $title : $name,
                 $home.'#organization',
-                $this->ogImageUrl($page),
+                $image,
             );
 
-            foreach ($page->blocks as $block) {
+            $content->loadMissing('blocks');
+
+            foreach ($content->blocks as $block) {
                 $graph = [...$graph, ...$blockSchema->nodes($block, app()->getLocale())];
             }
         }
@@ -184,9 +192,9 @@ final class SeoService
 
         $body = '';
 
-        foreach ($this->publishedPages() as $page) {
-            $alternates = $this->localeUrls($page);
-            $lastmod = $page->updated_at->toAtomString();
+        foreach ([...$this->publishedPages(), ...$this->publishedRecords()] as $content) {
+            $alternates = $this->localeUrls($content);
+            $lastmod = $content->updated_at->toAtomString();
 
             foreach ($alternates as $url) {
                 $body .= '<url><loc>'.$this->xml($url).'</loc><lastmod>'.$lastmod.'</lastmod>';
@@ -227,6 +235,24 @@ final class SeoService
 
                 $lines[] = '- ['.$title.']('.$url.')'.($description !== '' ? ': '.$description : '');
             }
+
+            foreach ($this->publishedRecords(withBlocks: true)->groupBy(fn (Record $record): string => $record->recordType->name) as $group => $records) {
+                $lines[] = '';
+                $lines[] = '## '.$group;
+                $lines[] = '';
+
+                foreach ($records as $record) {
+                    $url = $this->primaryUrl($record);
+
+                    if ($url === '') {
+                        continue;
+                    }
+
+                    $description = $this->description($record, $record->description);
+
+                    $lines[] = '- ['.$record->title.']('.$url.')'.($description !== '' ? ': '.$description : '');
+                }
+            }
         }
 
         return implode("\n", $lines)."\n";
@@ -238,19 +264,19 @@ final class SeoService
         $lines = $this->llmsHeader($settings);
 
         if (! $settings->noindex()) {
-            foreach ($this->publishedPages(withBlocks: true) as $page) {
-                $url = $this->primaryUrl($page);
+            $fallbackTitle = $settings->title() ?: config()->string('app.name');
+
+            foreach ([...$this->publishedPages(withBlocks: true), ...$this->publishedRecords(withBlocks: true)] as $content) {
+                $url = $this->primaryUrl($content);
 
                 if ($url === '') {
                     continue;
                 }
 
-                $title = $page->title !== '' ? $page->title : ($settings->title() ?: config()->string('app.name'));
-
-                $lines[] = '# '.$title;
+                $lines[] = '# '.($content->title !== '' ? $content->title : $fallbackTitle);
                 $lines[] = $url;
                 $lines[] = '';
-                $lines[] = $page->plainText();
+                $lines[] = $content->plainText();
                 $lines[] = '';
                 $lines[] = '---';
                 $lines[] = '';
@@ -279,17 +305,17 @@ final class SeoService
     /**
      * @return array<string, string>
      */
-    private function localeUrls(Page $page): array
+    private function localeUrls(Page|Record $content): array
     {
-        $page->loadMissing('slugs');
+        $content->loadMissing('slugs');
 
-        $isHome = $page->id === $this->homeId();
+        $isHome = $this->isHome($content);
         $urls = [];
 
-        foreach ($this->localesForPage($page) as $locale) {
+        foreach ($this->localesForContent($content) as $locale) {
             $url = $isHome
                 ? $this->localization()->getLocalizedURL(route('home'), $locale)
-                : ($page->getSlug($locale) !== '' ? $this->localization()->getLocalizedURL($page->getUrl($locale), $locale) : '');
+                : ($content->getSlug($locale) !== '' ? $this->localization()->getLocalizedURL($content->getUrl($locale), $locale) : '');
 
             if ($url !== '') {
                 $urls[$locale] = $url;
@@ -299,15 +325,20 @@ final class SeoService
         return $urls;
     }
 
-    private function primaryUrl(Page $page): string
+    private function primaryUrl(Page|Record $content): string
     {
-        if ($page->id === $this->homeId()) {
+        if ($this->isHome($content)) {
             return route('home');
         }
 
-        $page->loadMissing('slugs');
+        $content->loadMissing('slugs');
 
-        return $page->getSlug() !== '' ? $page->getUrl() : '';
+        return $content->getSlug() !== '' ? $content->getUrl() : '';
+    }
+
+    private function isHome(Page|Record $content): bool
+    {
+        return $content instanceof Page && $content->id === $this->homeId();
     }
 
     /**
@@ -329,15 +360,33 @@ final class SeoService
     }
 
     /**
+     * @return Collection<int, Record>
+     */
+    private function publishedRecords(bool $withBlocks = false): Collection
+    {
+        $with = ['recordType', 'slugs', 'translations'];
+        if ($withBlocks) {
+            $with[] = 'blocks';
+        }
+
+        return Record::query()
+            ->published()
+            ->with($with)
+            ->get()
+            ->reject(fn (Record $record): bool => $record->isNoindex())
+            ->values();
+    }
+
+    /**
      * @return array<int, string>
      */
-    private function localesForPage(Page $page): array
+    private function localesForContent(Page|Record $content): array
     {
         if (! $this->isMultilocale()) {
             return [$this->localization()->getDefaultLocale()];
         }
 
-        return array_values(array_intersect($this->activeCodes(), $page->published_locales));
+        return array_values(array_intersect($this->activeCodes(), $content->published_locales));
     }
 
     /**

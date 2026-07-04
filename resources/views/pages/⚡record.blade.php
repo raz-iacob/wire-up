@@ -38,7 +38,7 @@ return new class extends Component
             ->layoutData([
                 'description' => $this->record->description,
                 'siteLayout' => Page::normalizeLayout([]),
-                'page' => null,
+                'page' => $this->record,
             ]);
     }
 };

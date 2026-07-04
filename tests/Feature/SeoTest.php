@@ -6,7 +6,11 @@ use App\Enums\BlockType;
 use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
+use App\Models\Record;
+use App\Models\RecordType;
 use App\Models\Settings;
+use App\Models\User;
+use App\Services\RecordTypePresets;
 
 function seoFeaturePage(string $slug, array $attributes = [], array $blocks = []): Page
 {
@@ -28,6 +32,40 @@ function seoFeaturePage(string $slug, array $attributes = [], array $blocks = []
     }
 
     return $page->refresh();
+}
+
+function seoFeatureRecord(string $presetKey, array $data = [], array $attributes = [], array $blocks = []): Record
+{
+    /** @var array<string, mixed> $preset */
+    $preset = RecordTypePresets::find($presetKey);
+
+    $type = RecordType::factory()->create([
+        'key' => $preset['key'],
+        'slug_prefix' => $preset['slug_prefix'],
+        'name' => $preset['name'],
+        'fields' => $preset['fields'],
+    ]);
+
+    $record = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'data' => $data,
+        'metadata' => ['published_locales' => ['en']],
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        ...$attributes,
+    ]);
+
+    $record->setSlugs();
+
+    foreach (array_values($blocks) as $position => $block) {
+        $record->blocks()->create([
+            'type' => $block['type'],
+            'position' => $position,
+            'content' => $block['content'],
+        ]);
+    }
+
+    return $record->refresh();
 }
 
 it('lists published pages in the sitemap and omits drafts', function (): void {
@@ -193,4 +231,139 @@ it('renders a noindex robots tag for a page-level noindex page only', function (
         ->assertOk()
         ->assertSee('content="index, follow', false)
         ->assertDontSee('noindex', false);
+});
+
+it('lists published records in the sitemap and omits drafts and noindexed records', function (): void {
+    seoFeatureRecord('product', ['heading' => ['en' => 'Piftie']], ['title' => ['en' => 'Piftie']]);
+    seoFeatureRecord('service', [], ['title' => ['en' => 'Draft Service'], 'status' => ContentStatus::DRAFT, 'published_at' => null]);
+    seoFeatureRecord('event', [], ['title' => ['en' => 'Hidden Event'], 'metadata' => ['published_locales' => ['en'], 'noindex' => true]]);
+
+    $this->get('/sitemap.xml')
+        ->assertOk()
+        ->assertSee('/products/piftie', false)
+        ->assertDontSee('/services/', false)
+        ->assertDontSee('/events/', false);
+});
+
+it('lists records grouped by type in llms.txt and dumps their content in llms-full.txt', function (): void {
+    seoFeatureRecord('product', [
+        'heading' => ['en' => 'Piftie'],
+        'overview' => ['en' => '<p>A handmade delight.</p>'],
+    ], ['title' => ['en' => 'Piftie'], 'description' => ['en' => 'The finest piftie.']]);
+
+    $this->get('/llms.txt')
+        ->assertOk()
+        ->assertSee('## Products')
+        ->assertSee('Piftie')
+        ->assertSee('/products/piftie')
+        ->assertSee('The finest piftie.');
+
+    $this->get('/llms-full.txt')
+        ->assertOk()
+        ->assertSee('A handmade delight.');
+});
+
+it('emits per-record canonical, robots and WebPage JSON-LD on a published record', function (): void {
+    seoFeatureRecord('service', [
+        'heading' => ['en' => 'Consulting'],
+    ], ['title' => ['en' => 'Consulting'], 'description' => ['en' => 'We advise.']]);
+
+    $this->get('/services/consulting')
+        ->assertOk()
+        ->assertSee('<link rel="canonical"', false)
+        ->assertSee('<meta property="og:title" content="Consulting">', false)
+        ->assertSee('<meta property="og:description" content="We advise.">', false)
+        ->assertSee('"@type":"WebPage"', false)
+        ->assertSee('"@type":"Service"', false)
+        ->assertSee('content="index, follow', false);
+});
+
+it('emits Product structured data with an Offer for a product record', function (): void {
+    seoFeatureRecord('product', [
+        'heading' => ['en' => 'Piftie'],
+        'current_price' => '19.99',
+        'regular_price' => '29.99',
+        'sku' => 'PIF-001',
+    ], ['title' => ['en' => 'Piftie']]);
+
+    $html = (string) $this->get('/products/piftie')->assertOk()->getContent();
+    expect(preg_match('#<script type="application/ld\+json">(.*?)</script>#s', $html, $m))->toBe(1);
+
+    /** @var array{'@graph': array<int, array<string, mixed>>} $data */
+    $data = json_decode($m[1], true, flags: JSON_THROW_ON_ERROR);
+    $product = array_first(array_filter($data['@graph'], fn (array $n): bool => $n['@type'] === 'Product'));
+
+    expect($product)->toMatchArray(['@type' => 'Product', 'sku' => 'PIF-001'])
+        ->and($product['offers'])->toMatchArray(['@type' => 'Offer', 'price' => '19.99']);
+});
+
+it('emits Event structured data with dates and location for an event record', function (): void {
+    seoFeatureRecord('event', [
+        'heading' => ['en' => 'Launch Party'],
+        'starts_at' => '2026-08-01 18:00:00',
+        'ends_at' => '2026-08-01 22:00:00',
+        'location' => 'Amsterdam',
+    ], ['title' => ['en' => 'Launch Party']]);
+
+    $html = (string) $this->get('/events/launch-party')->assertOk()->getContent();
+    preg_match('#<script type="application/ld\+json">(.*?)</script>#s', $html, $m);
+
+    /** @var array{'@graph': array<int, array<string, mixed>>} $data */
+    $data = json_decode($m[1], true, flags: JSON_THROW_ON_ERROR);
+    $event = array_first(array_filter($data['@graph'], fn (array $n): bool => $n['@type'] === 'Event'));
+
+    expect($event['@type'])->toBe('Event')
+        ->and($event)->toHaveKeys(['startDate', 'endDate'])
+        ->and($event['location'])->toMatchArray(['@type' => 'Place', 'name' => 'Amsterdam']);
+});
+
+it('emits Person structured data with a job title for a team member record', function (): void {
+    seoFeatureRecord('team-member', [
+        'heading' => ['en' => 'Jane Doe'],
+        'role' => ['en' => 'Founder'],
+    ], ['title' => ['en' => 'Jane Doe']]);
+
+    $html = (string) $this->get('/team/jane-doe')->assertOk()->getContent();
+    preg_match('#<script type="application/ld\+json">(.*?)</script>#s', $html, $m);
+
+    /** @var array{'@graph': array<int, array<string, mixed>>} $data */
+    $data = json_decode($m[1], true, flags: JSON_THROW_ON_ERROR);
+    $person = array_first(array_filter($data['@graph'], fn (array $n): bool => $n['@type'] === 'Person'));
+
+    expect($person)->toMatchArray(['@type' => 'Person', 'name' => 'Jane Doe', 'jobTitle' => 'Founder']);
+});
+
+it('renders a noindex robots tag for a page-level noindex record', function (): void {
+    seoFeatureRecord('service', ['heading' => ['en' => 'Secret']], [
+        'title' => ['en' => 'Secret'],
+        'metadata' => ['published_locales' => ['en'], 'noindex' => true],
+    ]);
+
+    $this->actingAs(User::factory()->create(['admin' => true]));
+
+    $this->get('/services/secret')
+        ->assertOk()
+        ->assertSee('<meta name="robots" content="noindex, nofollow">', false);
+});
+
+it('skips published records with no slug in the llms index', function (): void {
+    /** @var array<string, mixed> $preset */
+    $preset = RecordTypePresets::find('service');
+
+    $type = RecordType::factory()->create([
+        'key' => $preset['key'],
+        'slug_prefix' => $preset['slug_prefix'],
+        'name' => $preset['name'],
+        'fields' => $preset['fields'],
+    ]);
+
+    Record::factory()->create([
+        'record_type_id' => $type->id,
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'metadata' => ['published_locales' => ['en']],
+        'title' => ['en' => 'Slugless Record'],
+    ]);
+
+    $this->get('/llms.txt')->assertOk()->assertDontSee('Slugless Record');
 });

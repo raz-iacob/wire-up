@@ -9,6 +9,7 @@ use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
 use App\Traits\HasMedia;
 use App\Traits\HasPublishing;
+use App\Traits\HasSeo;
 use App\Traits\HasSlugs;
 use App\Traits\HasTranslations;
 use Carbon\CarbonImmutable;
@@ -42,7 +43,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class Record extends Model
 {
     /** @use HasFactory<RecordFactory> */
-    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasSlugs, HasTranslations;
+    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasSeo, HasSlugs, HasTranslations;
 
     /**
      * @return array<string, string>
@@ -76,9 +77,19 @@ final class Record extends Model
         return route('record', [$this->recordType->slug_prefix, $this->getSlug($locale)]);
     }
 
-    public function isNoindex(): bool
+    public function plainText(?string $locale = null): string
     {
-        return (bool) ($this->metadata['noindex'] ?? false);
+        $locale ??= app()->getLocale();
+        $this->loadMissing('blocks');
+
+        $overview = data_get($this->data, "overview.{$locale}");
+        $parts = [is_string($overview) ? html_entity_decode(strip_tags($overview), ENT_QUOTES | ENT_HTML5, 'UTF-8') : ''];
+
+        foreach ($this->blocks as $block) {
+            $parts[] = $block->plainText($locale);
+        }
+
+        return (string) str(collect($parts)->filter()->implode(' '))->squish();
     }
 
     public function fieldValue(string $key, bool $translatable): mixed

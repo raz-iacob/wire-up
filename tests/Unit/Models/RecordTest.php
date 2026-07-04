@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\BlockType;
 use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Record;
@@ -106,4 +107,32 @@ it('resolves shared and translatable field values from data', function (): void 
         ->and($record->fieldValue('headline', true))->toBe('English')
         ->and($record->fieldValue('missing', false))->toBeNull()
         ->and($record->fieldValue('price', true))->toBeNull();
+});
+
+it('harvests plain text from the overview field and blocks', function (): void {
+    $record = Record::factory()->create([
+        'data' => ['overview' => ['en' => '<p>Handmade &amp; local.</p>']],
+    ]);
+
+    $record->blocks()->create([
+        'type' => BlockType::RICH_TEXT->value,
+        'position' => 0,
+        'content' => ['body' => ['en' => '<p>Built to last.</p>']],
+    ]);
+
+    expect($record->plainText())->toBe('Handmade & local. Built to last.');
+});
+
+it('limits the excerpt to the requested length', function (): void {
+    $record = Record::factory()->create([
+        'data' => ['overview' => ['en' => str_repeat('word ', 60)]],
+    ]);
+
+    expect(mb_strlen($record->textExcerpt(20)))->toBeLessThanOrEqual(20);
+});
+
+it('returns an empty string when a record has no textual content', function (): void {
+    $record = Record::factory()->create(['data' => []]);
+
+    expect($record->plainText())->toBe('');
 });
