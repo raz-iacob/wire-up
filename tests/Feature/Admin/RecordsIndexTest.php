@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\CreateRecordAction;
+use App\Models\Record;
 use App\Models\RecordType;
 use App\Models\User;
 use Livewire\Livewire;
@@ -57,6 +58,24 @@ it('shows a View link to the public record url', function (): void {
     Livewire::test('pages::admin.records-index', ['recordType' => $type])
         ->assertSee('View')
         ->assertSee(route('record', ['products', $slug]));
+});
+
+it('duplicates a record via the modal with an editable title', function (): void {
+    $type = productType();
+    $record = resolve(CreateRecordAction::class)->handle($type, ['title' => 'Blue Widget']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->assertSee('Duplicate')
+        ->call('duplicate', $record->id)
+        ->assertSet('duplicateTitle', 'Copy of Blue Widget')
+        ->set('duplicateTitle', 'My Custom Copy')
+        ->call('confirmDuplicate')
+        ->assertRedirect();
+
+    expect(Record::query()->where('record_type_id', $type->id)->count())->toBe(2)
+        ->and(Record::query()->whereTranslationLike('title', 'My Custom Copy')->exists())->toBeTrue();
 });
 
 it('lists records of the type with a custom column value', function (): void {

@@ -12,16 +12,23 @@ return new class extends Component
 {
     public Record $record;
 
+    public bool $unpublished = false;
+
     public function mount(string $recordType, string $slug): void
     {
         $type = RecordType::query()->where('slug_prefix', $recordType)->firstOrFail();
 
-        $this->record = Record::query()
+        $query = Record::query()
             ->where('record_type_id', $type->id)
             ->with(['recordType', 'blocks', 'media', 'translations', 'slugs', 'categories'])
-            ->forSlug($slug, null, $type->slug_prefix)
-            ->publishedInLocale()
-            ->firstOrFail();
+            ->forSlug($slug, null, $type->slug_prefix);
+
+        if (auth()->user()?->admin) {
+            $this->record = $query->firstOrFail();
+            $this->unpublished = ! $this->record->isLiveInLocale();
+        } else {
+            $this->record = $query->publishedInLocale()->firstOrFail();
+        }
     }
 
     public function render(): View
@@ -44,4 +51,8 @@ return new class extends Component
     ], ['record' => $record])
 
     <x-site.page-content :page="$record" />
+
+    @if ($unpublished)
+        <x-site.unpublished-notice :message="__('This record is not published')" />
+    @endif
 </div>

@@ -50,6 +50,25 @@ it('returns 404 for a draft page', function (): void {
     $this->get(route('page', 'secret'))->assertNotFound();
 });
 
+it('lets an admin preview a draft page with an unpublished notice', function (): void {
+    publishPage('secret', ['status' => ContentStatus::DRAFT, 'published_at' => null, 'title' => 'Secret Page']);
+
+    $this->actingAsAdmin()
+        ->get(route('page', 'secret'))
+        ->assertOk()
+        ->assertSee('Secret Page')
+        ->assertSee('This page is not published');
+});
+
+it('does not show the unpublished notice on a live page', function (): void {
+    publishPage('live', ['title' => 'Live Page']);
+
+    $this->actingAsAdmin()
+        ->get(route('page', 'live'))
+        ->assertOk()
+        ->assertDontSee('This page is not published');
+});
+
 it('returns 404 for a scheduled page whose publish date is in the future', function (): void {
     publishPage('coming-soon', ['published_at' => now()->addWeek()]);
 

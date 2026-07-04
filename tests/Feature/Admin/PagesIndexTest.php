@@ -21,6 +21,25 @@ it('can render the pages index screen', function (): void {
         ->assertSeeLivewire('pages::admin.pages-index');
 });
 
+it('duplicates a page via the modal with an editable title', function (): void {
+    $page = Page::factory()->create(['title' => 'About']);
+
+    $this->actingAsAdmin();
+
+    $before = Page::query()->count();
+
+    Livewire::test('pages::admin.pages-index')
+        ->assertSee('Duplicate')
+        ->call('duplicate', $page->id)
+        ->assertSet('duplicateTitle', 'Copy of About')
+        ->set('duplicateTitle', 'About Copy')
+        ->call('confirmDuplicate')
+        ->assertRedirect();
+
+    expect(Page::query()->count())->toBe($before + 1)
+        ->and(Page::query()->whereTranslationLike('title', 'About Copy')->exists())->toBeTrue();
+});
+
 it('redirects authenticated non-admin users away from pages index', function (): void {
     $user = User::factory()->create([
         'active' => true,

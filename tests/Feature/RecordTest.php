@@ -254,6 +254,17 @@ it('returns 404 for a draft record', function (): void {
     $this->get(route('record', ['recordType' => 'products', 'slug' => 'hidden']))->assertNotFound();
 });
 
+it('lets an admin preview an unpublished record with a notice', function (): void {
+    $type = recordType();
+    publishRecord($type, 'draft-widget', ['status' => ContentStatus::DRAFT, 'published_at' => null, 'title' => ['en' => 'Draft Widget']]);
+
+    $this->actingAsAdmin()
+        ->get(route('record', ['recordType' => 'products', 'slug' => 'draft-widget']))
+        ->assertOk()
+        ->assertSee('Draft Widget')
+        ->assertSee('This record is not published');
+});
+
 it('returns 404 for a scheduled record with a future publish date', function (): void {
     publishRecord(recordType(), 'soon', ['published_at' => now()->addWeek()]);
 

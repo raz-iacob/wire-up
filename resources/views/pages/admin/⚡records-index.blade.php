@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\CreateRecordAction;
 use App\Actions\DeleteRecordAction;
+use App\Actions\DuplicateRecordAction;
 use App\Enums\ContentStatus;
 use App\Enums\FieldType;
 use App\Models\Record;
@@ -34,6 +35,10 @@ return new class extends Component
 
     public ?int $selectedId = null;
 
+    public ?int $duplicateId = null;
+
+    public string $duplicateTitle = '';
+
     public int $perPage = 20;
 
     public function mount(RecordType $recordType): void
@@ -52,6 +57,31 @@ return new class extends Component
         ]);
 
         $this->redirect(route('admin.records-edit', [$this->recordType, $record]));
+    }
+
+    public function duplicate(int $id): void
+    {
+        $record = Record::query()
+            ->where('record_type_id', $this->recordType->id)
+            ->findOrFail($id);
+
+        $this->duplicateId = $id;
+        $this->duplicateTitle = 'Copy of '.$record->title;
+
+        Flux::modal('duplicate')->show();
+    }
+
+    public function confirmDuplicate(DuplicateRecordAction $action): void
+    {
+        $this->validate(['duplicateTitle' => ['required', 'string', 'max:255']]);
+
+        $record = Record::query()
+            ->where('record_type_id', $this->recordType->id)
+            ->findOrFail($this->duplicateId);
+
+        $copy = $action->handle($record, mb_trim($this->duplicateTitle));
+
+        $this->redirect(route('admin.records-edit', [$this->recordType, $copy]));
     }
 
     public function confirmDelete(int $id): void
@@ -316,6 +346,10 @@ return new class extends Component
                                     </flux:menu.item>
                                 @endif
 
+                                <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $row->id }})">
+                                    {{ __('Duplicate') }}
+                                </flux:menu.item>
+
                                 <flux:menu.item icon="pencil" href="{{ route('admin.records-edit', [$this->recordType, $row]) }}">
                                     {{ __('Edit') }}
                                 </flux:menu.item>
@@ -340,6 +374,20 @@ return new class extends Component
             <div class="flex mt-6">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary">{{ __('Create') }}</flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    <flux:modal name="duplicate" class="md:w-96">
+        <form wire:submit="confirmDuplicate" class="space-y-6">
+            <flux:heading size="lg">{{ __('Duplicate :name', ['name' => \Illuminate\Support\Str::singular($recordType->name)]) }}</flux:heading>
+            <flux:input wire:model="duplicateTitle" label="{{ __('Title') }}" autofocus />
+            <div class="flex gap-3">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="primary" icon="document-duplicate">{{ __('Duplicate') }}</flux:button>
             </div>
         </form>
     </flux:modal>

@@ -11,6 +11,7 @@ use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use App\Actions\CreatePageAction;
 use App\Actions\DeletePageAction;
+use App\Actions\DuplicatePageAction;
 use App\Services\SettingsService;
 use Livewire\Attributes\Computed;
 use Illuminate\Contracts\View\View;
@@ -31,6 +32,10 @@ return new class extends Component
 
     public ?int $selectedId = null;
 
+    public ?int $duplicateId = null;
+
+    public string $duplicateTitle = '';
+
     public int $perPage = 20;
 
     public function create(CreatePageAction $action): void
@@ -44,6 +49,25 @@ return new class extends Component
         ]);
 
         $this->redirect(route('admin.pages-edit', $page->id));
+    }
+
+    public function duplicate(int $id): void
+    {
+        $page = Page::query()->findOrFail($id);
+
+        $this->duplicateId = $id;
+        $this->duplicateTitle = 'Copy of '.$page->title;
+
+        Flux::modal('duplicate')->show();
+    }
+
+    public function confirmDuplicate(DuplicatePageAction $action): void
+    {
+        $this->validate(['duplicateTitle' => ['required', 'string', 'max:255']]);
+
+        $copy = $action->handle(Page::query()->findOrFail($this->duplicateId), mb_trim($this->duplicateTitle));
+
+        $this->redirect(route('admin.pages-edit', $copy->id));
     }
 
     public function confirmDelete(int $id): void
@@ -182,6 +206,9 @@ return new class extends Component
                                 <flux:menu.item icon="eye" href="{{ url($row->slug) }}" target="_blank">
                                     {{ __('View') }}
                                 </flux:menu.item>
+                                <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $row->id }})">
+                                    {{ __('Duplicate') }}
+                                </flux:menu.item>
                                 <flux:menu.item icon="pencil" href="{{ route('admin.pages-edit', $row->id) }}">
                                     {{ __('Edit') }}
                                 </flux:menu.item>
@@ -206,6 +233,20 @@ return new class extends Component
             <div class="flex mt-6">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary">{{ __('Create') }}</flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    <flux:modal name="duplicate" class="md:w-96">
+        <form wire:submit="confirmDuplicate" class="space-y-6">
+            <flux:heading size="lg">{{ __('Duplicate page') }}</flux:heading>
+            <flux:input wire:model="duplicateTitle" label="{{ __('Title') }}" autofocus />
+            <div class="flex gap-3">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="primary" icon="document-duplicate">{{ __('Duplicate') }}</flux:button>
             </div>
         </form>
     </flux:modal>

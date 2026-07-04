@@ -11,6 +11,21 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 trait HasPublishing
 {
+    public function isLiveInLocale(?string $locale = null): bool
+    {
+        if ($this->status !== ContentStatus::PUBLISHED
+            || $this->published_at === null
+            || $this->published_at->isFuture()) {
+            return false;
+        }
+
+        if (count(resolve('localization')->getActiveLocales()) <= 1) {
+            return true;
+        }
+
+        return in_array($locale ?? app()->getLocale(), $this->published_locales, true);
+    }
+
     /**
      * @return Attribute<array<int, string>, never>
      */

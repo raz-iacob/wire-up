@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\ContentStatus;
+use App\Models\Locale;
 use App\Models\Record;
 use App\Models\RecordType;
 
@@ -58,6 +59,26 @@ it('reports computed status and the published scope', function (): void {
     expect($future->computed_status)->toBe(ContentStatus::SCHEDULED)
         ->and($published->computed_status)->toBe(ContentStatus::PUBLISHED)
         ->and(Record::query()->published()->pluck('id')->all())->toBe([$published->id]);
+});
+
+it('reports live status per locale when multilingual', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $record = Record::factory()->create([
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'metadata' => ['published_locales' => ['en']],
+    ]);
+
+    expect($record->isLiveInLocale('en'))->toBeTrue()
+        ->and($record->isLiveInLocale('fr'))->toBeFalse();
+});
+
+it('is not live when it is a draft', function (): void {
+    $record = Record::factory()->create(['status' => ContentStatus::DRAFT, 'published_at' => null]);
+
+    expect($record->isLiveInLocale())->toBeFalse();
 });
 
 it('reads noindex from metadata', function (): void {
