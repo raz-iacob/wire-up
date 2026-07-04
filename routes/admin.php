@@ -29,7 +29,7 @@ Route::livewire('users/{user}/edit', 'pages::admin.users-edit')->name('users-edi
 
 Route::redirect('settings', 'admin/settings/general');
 Route::livewire('settings/general', 'pages::admin.settings-general')->name('settings-general');
-Route::livewire('settings/content-types', 'pages::admin.record-types-index')->name('record-types-index');
+Route::livewire('settings/content-types', 'pages::admin.settings-content-types')->name('settings-content-types');
 Route::livewire('settings/identity', 'pages::admin.settings-identity')->name('settings-identity');
 Route::livewire('settings/design', 'pages::admin.settings-design')->name('settings-design');
 Route::livewire('settings/menus', 'pages::admin.settings-menus')->name('settings-menus');

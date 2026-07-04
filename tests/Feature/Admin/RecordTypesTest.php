@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Record;
 use App\Models\RecordType;
 use App\Models\User;
 use Livewire\Livewire;
@@ -9,26 +10,26 @@ use Livewire\Livewire;
 it('renders the content types screen for admins', function (): void {
     $this->actingAsAdmin();
 
-    $this->get(route('admin.record-types-index'))
+    $this->get(route('admin.settings-content-types'))
         ->assertOk()
-        ->assertSeeLivewire('pages::admin.record-types-index');
+        ->assertSeeLivewire('pages::admin.settings-content-types');
 });
 
 it('redirects guests away from the content types screen', function (): void {
-    $this->get(route('admin.record-types-index'))->assertRedirect(route('login'));
+    $this->get(route('admin.settings-content-types'))->assertRedirect(route('login'));
 });
 
 it('redirects non-admins away from the content types screen', function (): void {
     $this->actingAs(User::factory()->create(['active' => true, 'admin' => false]));
 
-    $this->get(route('admin.record-types-index'))->assertRedirectToRoute('home');
+    $this->get(route('admin.settings-content-types'))->assertRedirectToRoute('home');
 });
 
 it('hydrates existing types on mount', function (): void {
     $this->actingAsAdmin();
     RecordType::factory()->create(['name' => 'Product', 'slug_prefix' => 'products']);
 
-    $component = Livewire::test('pages::admin.record-types-index');
+    $component = Livewire::test('pages::admin.settings-content-types');
 
     expect($component->get('types'))->toHaveCount(1)
         ->and($component->get('types.0.slug_prefix'))->toBe('products');
@@ -37,7 +38,7 @@ it('hydrates existing types on mount', function (): void {
 it('adds preset and custom rows in memory without persisting', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.record-types-index')
+    Livewire::test('pages::admin.settings-content-types')
         ->call('addPreset', 'product')
         ->assertCount('types', 1)
         ->call('addCustom')
@@ -49,13 +50,14 @@ it('adds preset and custom rows in memory without persisting', function (): void
 it('saves new preset and custom types on update', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.record-types-index')
+    Livewire::test('pages::admin.settings-content-types')
         ->call('addPreset', 'product')
         ->call('addCustom')
         ->set('types.1.name', 'Gadget')
         ->set('types.1.slug_prefix', 'gadgets')
         ->call('update')
-        ->assertHasNoErrors();
+        ->assertHasNoErrors()
+        ->assertDispatched('content-types-updated');
 
     $this->assertDatabaseHas('record_types', ['key' => 'product', 'slug_prefix' => 'products']);
     $this->assertDatabaseHas('record_types', ['slug_prefix' => 'gadgets']);
@@ -65,7 +67,7 @@ it('updates an existing type on update', function (): void {
     $this->actingAsAdmin();
     $type = RecordType::factory()->create(['slug_prefix' => 'old', 'name' => 'Old']);
 
-    Livewire::test('pages::admin.record-types-index')
+    Livewire::test('pages::admin.settings-content-types')
         ->set('types.0.name', 'New')
         ->set('types.0.slug_prefix', 'new')
         ->call('update')
@@ -79,7 +81,7 @@ it('rejects reserved and duplicate URL prefixes on update', function (string $pr
     $this->actingAsAdmin();
     RecordType::factory()->create(['slug_prefix' => 'products']);
 
-    Livewire::test('pages::admin.record-types-index')
+    Livewire::test('pages::admin.settings-content-types')
         ->call('addCustom')
         ->set('types.1.name', 'Thing')
         ->set('types.1.slug_prefix', $prefix)
@@ -93,7 +95,7 @@ it('rejects reserved and duplicate URL prefixes on update', function (string $pr
 it('rejects two new types sharing a URL prefix', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.record-types-index')
+    Livewire::test('pages::admin.settings-content-types')
         ->call('addCustom')
         ->set('types.0.name', 'One')
         ->set('types.0.slug_prefix', 'dup')
@@ -110,7 +112,7 @@ it('adds, removes and reorders fields', function (): void {
     $this->actingAsAdmin();
     RecordType::factory()->create(['fields' => []]);
 
-    $component = Livewire::test('pages::admin.record-types-index');
+    $component = Livewire::test('pages::admin.settings-content-types');
     $key = $component->get('types.0._key');
 
     $component->call('addField', $key, 'text');
@@ -131,7 +133,7 @@ it('rejects duplicate and reserved field keys on update', function (array $field
     $this->actingAsAdmin();
     RecordType::factory()->create(['slug_prefix' => 'items', 'name' => 'Item']);
 
-    $component = Livewire::test('pages::admin.record-types-index');
+    $component = Livewire::test('pages::admin.settings-content-types');
 
     $rows = array_map(fn (array $field): array => [...$field, '_key' => uniqid('', true)], $fields);
 
@@ -159,7 +161,7 @@ it('persists reordered positions on update', function (): void {
     $first = RecordType::factory()->create(['position' => 0]);
     $second = RecordType::factory()->create(['position' => 1]);
 
-    $component = Livewire::test('pages::admin.record-types-index');
+    $component = Livewire::test('pages::admin.settings-content-types');
     $firstKey = $component->get('types.0._key');
 
     $component->call('reorderTypes', $firstKey, 1)->call('update')->assertHasNoErrors();
@@ -168,11 +170,11 @@ it('persists reordered positions on update', function (): void {
         ->and($second->fresh()->position)->toBe(0);
 });
 
-it('deletes a removed type on update and drops unsaved rows', function (): void {
+it('deletes a saved type immediately on confirm and drops unsaved rows', function (): void {
     $this->actingAsAdmin();
     $type = RecordType::factory()->create();
 
-    $component = Livewire::test('pages::admin.record-types-index');
+    $component = Livewire::test('pages::admin.settings-content-types');
     $savedKey = $component->get('types.0._key');
 
     $component->call('addCustom');
@@ -180,11 +182,28 @@ it('deletes a removed type on update and drops unsaved rows', function (): void 
 
     $component->call('confirmRemove', $unsavedKey)->call('removeType');
     expect($component->get('types'))->toHaveCount(1);
-
-    $component->call('confirmRemove', $savedKey)->call('removeType');
-    expect($component->get('types'))->toHaveCount(0);
     $this->assertModelExists($type);
 
-    $component->call('update')->assertHasNoErrors();
+    $component->call('confirmRemove', $savedKey)->call('removeType')
+        ->assertDispatched('content-types-updated');
+    expect($component->get('types'))->toHaveCount(0);
     $this->assertModelMissing($type);
+
+    $component->call('update')->assertHasNoErrors();
+});
+
+it('blocks removing a content type that still has records', function (): void {
+    $this->actingAsAdmin();
+    $type = RecordType::factory()->create();
+    Record::factory()->create(['record_type_id' => $type->id]);
+
+    $component = Livewire::test('pages::admin.settings-content-types');
+    $key = $component->get('types.0._key');
+
+    $component->call('confirmRemove', $key);
+    expect($component->get('removeRecordCount'))->toBe(1);
+
+    $component->call('removeType');
+    expect($component->get('types'))->toHaveCount(1);
+    $this->assertModelExists($type);
 });

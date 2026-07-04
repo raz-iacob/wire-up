@@ -21,3 +21,13 @@ it('renders nothing when there are no record types', function (): void {
     Livewire::test('admin.sidebar-nav')
         ->assertDontSee(__('Content'));
 });
+
+it('refreshes the nav when content types change', function (): void {
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('admin.sidebar-nav')->assertDontSee('Products');
+
+    RecordType::factory()->create(['name' => 'Products', 'slug_prefix' => 'products']);
+
+    $component->dispatch('content-types-updated')->assertSee('Products');
+});

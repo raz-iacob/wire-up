@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\RecordType;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 return new class extends Component
@@ -16,6 +17,12 @@ return new class extends Component
     public function recordTypes(): Collection
     {
         return RecordType::query()->orderBy('position')->get();
+    }
+
+    #[On('content-types-updated')]
+    public function refreshTypes(): void
+    {
+        unset($this->recordTypes);
     }
 };
 ?>

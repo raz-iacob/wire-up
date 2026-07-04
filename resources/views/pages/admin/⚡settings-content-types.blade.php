@@ -25,14 +25,11 @@ return new class extends Component
      */
     public array $types = [];
 
-    /**
-     * @var array<int, int>
-     */
-    public array $originalIds = [];
-
     public int $seq = 0;
 
     public ?string $removeKey = null;
+
+    public int $removeRecordCount = 0;
 
     public function mount(): void
     {
@@ -43,8 +40,6 @@ return new class extends Component
             ->get()
             ->map(fn (RecordType $type): array => $this->hydrateType($type, $locale))
             ->all();
-
-        $this->originalIds = $this->currentIds();
     }
 
     /**
@@ -171,7 +166,7 @@ return new class extends Component
         array_splice($this->types, max(0, min($position, count($this->types))), 0, [$moved]);
     }
 
-    public function update(CreateRecordTypeAction $create, UpdateRecordTypeAction $update, DeleteRecordTypeAction $delete): void
+    public function update(CreateRecordTypeAction $create, UpdateRecordTypeAction $update): void
     {
         if ($this->types !== []) {
             try {
@@ -186,11 +181,7 @@ return new class extends Component
 
         $locale = resolve('localization')->getDefaultLocale();
 
-        DB::transaction(function () use ($create, $update, $delete, $locale): void {
-            foreach (array_diff($this->originalIds, $this->currentIds()) as $id) {
-                $delete->handle(RecordType::query()->findOrFail($id));
-            }
-
+        DB::transaction(function () use ($create, $update, $locale): void {
             foreach ($this->types as $position => $row) {
                 $attributes = [
                     'slug_prefix' => $row['slug_prefix'],
@@ -211,7 +202,7 @@ return new class extends Component
             }
         });
 
-        $this->originalIds = $this->currentIds();
+        $this->dispatch('content-types-updated');
 
         Flux::toast(__('Content types updated.'), variant: 'success');
     }
@@ -219,31 +210,40 @@ return new class extends Component
     public function confirmRemove(string $typeKey): void
     {
         $this->removeKey = $typeKey;
+        $index = $this->typeIndex($typeKey);
+        $id = $index !== null ? $this->types[$index]['id'] : null;
+
+        $this->removeRecordCount = $id !== null
+            ? RecordType::query()->findOrFail($id)->records()->count()
+            : 0;
+
         Flux::modal('confirm-delete-type')->show();
     }
 
-    public function removeType(): void
+    public function removeType(DeleteRecordTypeAction $delete): void
     {
+        if ($this->removeRecordCount > 0) {
+            return;
+        }
+
         $index = $this->typeIndex((string) $this->removeKey);
 
         if ($index !== null) {
+            $id = $this->types[$index]['id'];
+
+            if ($id !== null) {
+                $delete->handle(RecordType::query()->findOrFail($id));
+                $this->dispatch('content-types-updated');
+                Flux::toast(__('Content type deleted.'), variant: 'success');
+            }
+
             unset($this->types[$index]);
             $this->types = array_values($this->types);
         }
 
         $this->removeKey = null;
+        $this->removeRecordCount = 0;
         Flux::modal('confirm-delete-type')->close();
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    private function currentIds(): array
-    {
-        return array_values(array_filter(array_map(
-            fn (array $type): ?int => $type['id'],
-            $this->types,
-        )));
     }
 
     private function assertUniquePrefixes(): void
@@ -534,14 +534,24 @@ return new class extends Component
 
     <flux:modal name="confirm-delete-type" class="md:w-96">
         <div class="space-y-6">
-            <flux:heading size="lg">{{ __('Delete content type?') }}</flux:heading>
-            <flux:text>{{ __('The type and its blueprint are removed. Existing records of this type are not affected by this screen yet.') }}</flux:text>
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
-                </flux:modal.close>
-                <flux:button wire:click="removeType" variant="danger">{{ __('Delete') }}</flux:button>
-            </div>
+            @if ($removeRecordCount > 0)
+                <flux:heading size="lg">{{ __('Type in use') }}</flux:heading>
+                <flux:text>{{ trans_choice('Delete its :count record before removing this type.|Delete its :count records before removing this type.', $removeRecordCount, ['count' => $removeRecordCount]) }}</flux:text>
+                <div class="flex justify-end">
+                    <flux:modal.close>
+                        <flux:button variant="ghost">{{ __('Close') }}</flux:button>
+                    </flux:modal.close>
+                </div>
+            @else
+                <flux:heading size="lg">{{ __('Delete content type?') }}</flux:heading>
+                <flux:text>{{ __('The type and its blueprint are removed. This cannot be undone.') }}</flux:text>
+                <div class="flex justify-end gap-2">
+                    <flux:modal.close>
+                        <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                    </flux:modal.close>
+                    <flux:button wire:click="removeType" variant="danger">{{ __('Delete') }}</flux:button>
+                </div>
+            @endif
         </div>
     </flux:modal>
 </x-admin.settings-layout>
