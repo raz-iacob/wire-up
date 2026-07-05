@@ -599,10 +599,19 @@ it('converts an uploaded heic image to jpeg', function (): void {
 
     $bytes = (string) Storage::disk(config('filesystems.media'))->get($media->source);
     expect(new finfo(FILEINFO_MIME_TYPE)->buffer($bytes))->toBe('image/jpeg');
-})->skip(
-    fn (): bool => ! extension_loaded('imagick') || (new Imagick)->queryFormats('HEIC') === [],
-    'Imagick HEIC support is not available in this environment',
-);
+})->skip(function (): bool {
+    if (! extension_loaded('imagick')) {
+        return true;
+    }
+
+    try {
+        new Imagick(base_path('tests/Fixtures/sample.heic'))->clear();
+
+        return false;
+    } catch (Throwable) {
+        return true;
+    }
+}, 'Imagick cannot decode HEIC in this environment');
 
 it('skips a heic upload that cannot be converted without crashing', function (): void {
     $file = UploadedFile::fake()->createWithContent('broken.heic', (string) file_get_contents(base_path('tests/Fixtures/invalid.heic')));
