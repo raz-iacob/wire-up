@@ -56,7 +56,7 @@ it('returns 404 when the record does not belong to the type', function (): void 
 it('redirects non-admins away from records edit', function (): void {
     $type = typeWithFields();
     $record = makeRecord($type);
-    $user = User::factory()->create(['active' => true, 'admin' => false]);
+    $user = User::factory()->create(['active' => true, 'role' => 'member']);
 
     $this->actingAs($user)
         ->fromRoute('home')

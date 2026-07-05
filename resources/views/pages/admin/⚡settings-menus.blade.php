@@ -201,6 +201,8 @@ return new class extends Component
 
     public function update(UpdateSettingsAction $action): void
     {
+        $this->authorize('settings.edit');
+
         try {
             $this->validate($this->rules(), $this->validationMessages(), $this->validationAttributeNames());
         } catch (ValidationException $e) {

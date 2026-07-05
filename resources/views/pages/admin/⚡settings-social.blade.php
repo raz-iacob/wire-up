@@ -32,6 +32,8 @@ return new class extends Component
 
     public function update(UpdateSettingsAction $action): void
     {
+        $this->authorize('settings.edit');
+
         $rules = [
             'variant' => ['required', Rule::in(array_keys(config()->array('social.icon_variants')))],
         ];

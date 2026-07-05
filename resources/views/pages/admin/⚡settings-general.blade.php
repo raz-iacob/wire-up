@@ -70,6 +70,8 @@ return new class extends Component
 
     public function update(UpdateSettingsAction $action): void
     {
+        $this->authorize('settings.edit');
+
         $validated = $this->validate([
             'languages' => ['required', 'array', 'min:1'],
             'languages.*' => ['string', Rule::exists('locales', 'code')],

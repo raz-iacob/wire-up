@@ -18,7 +18,7 @@ it('can render the category edit screen', function (): void {
 
 it('redirects authenticated non-admin users away from category edit', function (): void {
     $category = resolve(CreateCategoryAction::class)->handle(['name' => ['en' => 'Featured']]);
-    $user = User::factory()->create(['active' => true, 'admin' => false]);
+    $user = User::factory()->create(['active' => true, 'role' => 'member']);
 
     $this->actingAs($user)
         ->fromRoute('home')

@@ -16,7 +16,7 @@ it('can render the categories screen', function (): void {
 });
 
 it('redirects authenticated non-admin users away from categories', function (): void {
-    $user = User::factory()->create(['active' => true, 'admin' => false]);
+    $user = User::factory()->create(['active' => true, 'role' => 'member']);
 
     $this->actingAs($user)
         ->fromRoute('home')

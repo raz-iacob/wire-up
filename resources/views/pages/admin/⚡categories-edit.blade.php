@@ -27,6 +27,8 @@ return new class extends Component
 
     public function mount(Category $category): void
     {
+        $this->authorize('categories.edit');
+
         $category->load('translations');
 
         $this->category = $category;
@@ -46,6 +48,8 @@ return new class extends Component
 
     public function update(UpdateCategoryAction $action): void
     {
+        $this->authorize('categories.edit');
+
         $default = resolve('localization')->getDefaultLocale();
 
         $rules = ["name.$default" => ['required', 'string', 'max:255']];

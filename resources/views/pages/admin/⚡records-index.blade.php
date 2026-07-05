@@ -43,11 +43,15 @@ return new class extends Component
 
     public function mount(RecordType $recordType): void
     {
+        $this->authorize('records.'.$recordType->key.'.view');
+
         $this->recordType = $recordType;
     }
 
     public function create(CreateRecordAction $action): void
     {
+        $this->authorize('records.'.$this->recordType->key.'.create');
+
         $this->validate([
             'title' => ['required', 'string', 'max:255'],
         ]);
@@ -73,6 +77,8 @@ return new class extends Component
 
     public function confirmDuplicate(DuplicateRecordAction $action): void
     {
+        $this->authorize('records.'.$this->recordType->key.'.create');
+
         $this->validate(['duplicateTitle' => ['required', 'string', 'max:255']]);
 
         $record = Record::query()
@@ -92,6 +98,8 @@ return new class extends Component
 
     public function delete(int $id, DeleteRecordAction $action): void
     {
+        $this->authorize('records.'.$this->recordType->key.'.delete');
+
         $record = Record::query()
             ->where('record_type_id', $this->recordType->id)
             ->findOrFail($id);
@@ -263,9 +271,11 @@ return new class extends Component
 <div>
     <div class="space-y-6 md:space-y-8">
         <div class="flex items-center gap-3">
-            <flux:modal.trigger name="add-new">
-                <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
-            </flux:modal.trigger>
+            @can('records.'.$recordType->key.'.create')
+                <flux:modal.trigger name="add-new">
+                    <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+                </flux:modal.trigger>
+            @endcan
 
             <flux:dropdown position="bottom" align="start">
                 <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
@@ -346,18 +356,24 @@ return new class extends Component
                                     </flux:menu.item>
                                 @endif
 
-                                <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $row->id }})">
-                                    {{ __('Duplicate') }}
-                                </flux:menu.item>
+                                @can('records.'.$recordType->key.'.create')
+                                    <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $row->id }})">
+                                        {{ __('Duplicate') }}
+                                    </flux:menu.item>
+                                @endcan
 
-                                <flux:menu.item icon="pencil" href="{{ route('admin.records-edit', [$this->recordType, $row]) }}">
-                                    {{ __('Edit') }}
-                                </flux:menu.item>
+                                @can('records.'.$recordType->key.'.edit')
+                                    <flux:menu.item icon="pencil" href="{{ route('admin.records-edit', [$this->recordType, $row]) }}">
+                                        {{ __('Edit') }}
+                                    </flux:menu.item>
+                                @endcan
 
-                                <flux:menu.separator />
-                                <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">
-                                    {{ __('Delete') }}
-                                </flux:menu.item>
+                                @can('records.'.$recordType->key.'.delete')
+                                    <flux:menu.separator />
+                                    <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">
+                                        {{ __('Delete') }}
+                                    </flux:menu.item>
+                                @endcan
                             </flux:menu>
                         </flux:dropdown>
                     </flux:table.cell>

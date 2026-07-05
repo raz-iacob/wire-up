@@ -76,6 +76,8 @@ return new class extends Component
 
     public function mount(RecordType $recordType, Record $record): void
     {
+        $this->authorize('records.'.$recordType->key.'.edit');
+
         abort_unless($record->record_type_id === $recordType->id, 404);
 
         $record->load('translations', 'media', 'blocks', 'slugs', 'categories');

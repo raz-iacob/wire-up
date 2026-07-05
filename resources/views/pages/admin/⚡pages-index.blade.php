@@ -40,6 +40,8 @@ return new class extends Component
 
     public function create(CreatePageAction $action): void
     {
+        $this->authorize('pages.create');
+
         $this->validate([
             'title' => ['required', 'string', 'max:255'],
         ]);
@@ -63,6 +65,8 @@ return new class extends Component
 
     public function confirmDuplicate(DuplicatePageAction $action): void
     {
+        $this->authorize('pages.create');
+
         $this->validate(['duplicateTitle' => ['required', 'string', 'max:255']]);
 
         $copy = $action->handle(Page::query()->findOrFail($this->duplicateId), mb_trim($this->duplicateTitle));
@@ -78,6 +82,8 @@ return new class extends Component
 
     public function delete(int $id, DeletePageAction $action): void
     {
+        $this->authorize('pages.delete');
+
         $page = Page::query()->findOrFail($id);
         $action->handle($page);
 
@@ -134,9 +140,11 @@ return new class extends Component
 <div>
     <div class="space-y-6 md:space-y-8">
         <div class="flex items-center gap-3">
-            <flux:modal.trigger name="add-new">
-                <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
-            </flux:modal.trigger>
+            @can('pages.create')
+                <flux:modal.trigger name="add-new">
+                    <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+                </flux:modal.trigger>
+            @endcan
 
             <flux:dropdown position="bottom" align="start">
                 <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
@@ -206,17 +214,23 @@ return new class extends Component
                                 <flux:menu.item icon="eye" href="{{ url($row->slug) }}" target="_blank">
                                     {{ __('View') }}
                                 </flux:menu.item>
-                                <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $row->id }})">
-                                    {{ __('Duplicate') }}
-                                </flux:menu.item>
-                                <flux:menu.item icon="pencil" href="{{ route('admin.pages-edit', $row->id) }}">
-                                    {{ __('Edit') }}
-                                </flux:menu.item>
+                                @can('pages.create')
+                                    <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $row->id }})">
+                                        {{ __('Duplicate') }}
+                                    </flux:menu.item>
+                                @endcan
+                                @can('pages.edit')
+                                    <flux:menu.item icon="pencil" href="{{ route('admin.pages-edit', $row->id) }}">
+                                        {{ __('Edit') }}
+                                    </flux:menu.item>
+                                @endcan
 
-                                <flux:menu.separator />
-                                <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">
-                                    {{ __('Delete') }}
-                                </flux:menu.item>
+                                @can('pages.delete')
+                                    <flux:menu.separator />
+                                    <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">
+                                        {{ __('Delete') }}
+                                    </flux:menu.item>
+                                @endcan
                             </flux:menu>
                         </flux:dropdown>
                     </flux:table.cell>

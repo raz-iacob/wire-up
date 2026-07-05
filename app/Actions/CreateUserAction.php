@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,7 @@ final readonly class CreateUserAction
     public function handle(array $attributes, #[SensitiveParameter] string $password): User
     {
         $user = User::query()->create([
+            'role_id' => Role::query()->where('key', 'member')->value('id'),
             ...$attributes,
             'password' => Hash::make($password),
         ]);

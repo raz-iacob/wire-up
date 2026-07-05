@@ -59,6 +59,8 @@ return new class extends Component
 
     public function update(UpdateSettingsAction $action): void
     {
+        $this->authorize('settings.edit');
+
         /** @var array<string, array<int, mixed>> */
         $rules = [
             'favicon' => ['nullable', 'array'],

@@ -32,7 +32,7 @@ it('can render the records index screen', function (): void {
 
 it('redirects authenticated non-admin users away from records index', function (): void {
     $type = productType();
-    $user = User::factory()->create(['active' => true, 'admin' => false]);
+    $user = User::factory()->create(['active' => true, 'role' => 'member']);
 
     $this->actingAs($user)
         ->fromRoute('home')

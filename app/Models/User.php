@@ -10,6 +10,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -24,7 +25,8 @@ use Illuminate\Support\Str;
  * @property-read string|null $photo
  * @property-read string|null $stripe_id
  * @property-read array<string, mixed>|null $metadata
- * @property-read bool $admin
+ * @property-read int|null $role_id
+ * @property-read Role|null $role
  * @property-read bool $active
  * @property-read string $locale
  * @property-read CarbonInterface|null $last_seen_at
@@ -60,7 +62,7 @@ final class User extends Authenticatable implements MustVerifyEmail
             'photo' => 'string',
             'stripe_id' => 'string',
             'metadata' => 'json',
-            'admin' => 'boolean',
+            'role_id' => 'integer',
             'active' => 'boolean',
             'locale' => 'string',
             'last_seen_at' => 'datetime',
@@ -70,6 +72,24 @@ final class User extends Authenticatable implements MustVerifyEmail
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Role, $this>
+     */
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function canAccessAdmin(): bool
+    {
+        return $this->role?->canAccessAdmin() ?? false;
+    }
+
+    public function hasAbility(string $ability): bool
+    {
+        return $this->role?->hasAbility($ability) ?? false;
     }
 
     /**

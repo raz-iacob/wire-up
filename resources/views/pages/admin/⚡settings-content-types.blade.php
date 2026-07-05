@@ -168,6 +168,8 @@ return new class extends Component
 
     public function update(CreateRecordTypeAction $create, UpdateRecordTypeAction $update): void
     {
+        $this->authorize('settings.edit');
+
         if ($this->types !== []) {
             try {
                 $this->validate($this->rules(), $this->messages(), $this->validationAttributes());
@@ -222,6 +224,8 @@ return new class extends Component
 
     public function removeType(DeleteRecordTypeAction $delete): void
     {
+        $this->authorize('settings.edit');
+
         if ($this->removeRecordCount > 0) {
             return;
         }

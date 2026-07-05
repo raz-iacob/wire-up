@@ -43,7 +43,7 @@ it('duplicates a page via the modal with an editable title', function (): void {
 it('redirects authenticated non-admin users away from pages index', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $response = $this->actingAs($user)

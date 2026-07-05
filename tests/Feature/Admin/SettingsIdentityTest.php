@@ -22,7 +22,7 @@ it('can render the identity settings screen', function (): void {
 it('redirects authenticated non-admin users away from identity settings', function (): void {
     $nonAdmin = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $this->actingAs($nonAdmin)

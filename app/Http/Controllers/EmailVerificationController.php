@@ -13,7 +13,7 @@ final readonly class EmailVerificationController
 {
     public function update(EmailVerificationRequest $request, #[CurrentUser] User $user): RedirectResponse
     {
-        $routeName = $user->admin ? 'admin.dashboard' : 'home';
+        $routeName = $user->canAccessAdmin() ? 'admin.dashboard' : 'home';
 
         if ($user->hasVerifiedEmail()) {
             return redirect()->intended(route($routeName, absolute: false).'?verified=1');

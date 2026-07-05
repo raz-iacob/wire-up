@@ -22,7 +22,7 @@ it('redirects guests to /login', function (): void {
 it('redirects non-admin users to /', function (): void {
     $middleware = new OnlyAdmins;
     $request = Request::create('/admin/');
-    $request->setUserResolver(fn () => User::factory()->create(['admin' => false]));
+    $request->setUserResolver(fn () => User::factory()->create(['role' => 'member']));
 
     $response = $middleware->handle($request, fn (): ResponseFactory|Response => response('OK'));
 
@@ -33,7 +33,7 @@ it('redirects non-admin users to /', function (): void {
 it('allows admin users to proceed', function (): void {
     $middleware = new OnlyAdmins;
     $request = Request::create('/admin/');
-    $request->setUserResolver(fn () => User::factory()->create(['admin' => true]));
+    $request->setUserResolver(fn () => User::factory()->create(['role' => 'owner']));
 
     $response = $middleware->handle($request, fn (): ResponseFactory|Response => response('OK'));
 

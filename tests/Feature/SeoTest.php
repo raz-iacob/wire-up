@@ -339,7 +339,7 @@ it('renders a noindex robots tag for a page-level noindex record', function (): 
         'metadata' => ['published_locales' => ['en'], 'noindex' => true],
     ]);
 
-    $this->actingAs(User::factory()->create(['admin' => true]));
+    $this->actingAs(User::factory()->create(['role' => 'owner']));
 
     $this->get('/services/secret')
         ->assertOk()

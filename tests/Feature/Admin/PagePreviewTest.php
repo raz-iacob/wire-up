@@ -77,7 +77,7 @@ it('returns 404 when the token belongs to a different page', function (): void {
 });
 
 it('redirects non-admins away from the preview route', function (): void {
-    $nonAdmin = User::factory()->create(['active' => true, 'admin' => false]);
+    $nonAdmin = User::factory()->create(['active' => true, 'role' => 'member']);
 
     $this->actingAs($nonAdmin)
         ->get(route('admin.pages-preview', ['page' => $this->page, 'token' => 'any']))

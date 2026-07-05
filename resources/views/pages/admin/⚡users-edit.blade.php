@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 use App\Actions\UpdateUserAction;
 use App\Actions\UpdateUserPasswordAction;
+use App\Models\Role;
 use App\Models\User;
 use Flux\Flux;
+use Illuminate\Container\Attributes\CurrentUser;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 return new class extends Component
@@ -19,6 +24,8 @@ return new class extends Component
     public string $name = '';
 
     public string $email = '';
+
+    public ?int $roleId = null;
 
     public ?string $photo = null;
 
@@ -30,16 +37,28 @@ return new class extends Component
 
     public function mount(User $user): void
     {
+        $this->authorize('users.edit');
+
         $this->user = $user;
         $this->name = $user->name;
         $this->email = $user->email;
+        $this->roleId = $user->role_id;
         $this->active = $user->active;
         $this->photo = $user->photo_url;
     }
 
-    public function update(UpdateUserAction $action, UpdateUserPasswordAction $updatePassword): void
+    /** @return Collection<int, Role> */
+    #[Computed]
+    public function roles(): Collection
     {
-        $credentials = $this->validate([
+        return Role::query()->orderBy('id')->get();
+    }
+
+    public function update(#[CurrentUser] User $editor, UpdateUserAction $action, UpdateUserPasswordAction $updatePassword): void
+    {
+        $this->authorize('users.edit');
+
+        $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
 
             'email' => [
@@ -51,15 +70,38 @@ return new class extends Component
                 Rule::unique(User::class, 'email')->ignore($this->user->id),
             ],
 
+            'roleId' => ['required', Rule::exists('roles', 'id')],
+
             'active' => ['boolean'],
         ]);
 
-        if (is_null($this->photo) && $this->user->photo) {
-            Storage::disk('public')->delete($this->user->photo);
-            $credentials['photo'] = null;
+        $targetRole = Role::query()->findOrFail($validated['roleId']);
+
+        if ($this->user->is($editor) && $targetRole->id !== $this->user->role_id) {
+            $this->addError('roleId', __('You cannot change your own role.'));
+
+            return;
         }
 
-        $action->handle($this->user, $credentials);
+        if ($this->user->role?->bypass && ! $targetRole->bypass && $this->isLastSuperAdmin()) {
+            $this->addError('roleId', __('The site must keep at least one full-access role.'));
+
+            return;
+        }
+
+        $attributes = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role_id' => $validated['roleId'],
+            'active' => $validated['active'] ?? $this->active,
+        ];
+
+        if (is_null($this->photo) && $this->user->photo) {
+            Storage::disk('public')->delete($this->user->photo);
+            $attributes['photo'] = null;
+        }
+
+        $action->handle($this->user, $attributes);
 
         if ($this->password !== '' && $this->password !== '0') {
             $this->validate([
@@ -75,6 +117,14 @@ return new class extends Component
     public function removePhoto(): void
     {
         $this->photo = null;
+    }
+
+    private function isLastSuperAdmin(): bool
+    {
+        return User::query()
+            ->whereKeyNot($this->user->id)
+            ->whereHas('role', fn (Builder $query): Builder => $query->where('bypass', true))
+            ->doesntExist();
     }
 
     public function render(): View
@@ -146,6 +196,28 @@ return new class extends Component
 
                     <flux:accordion.content class="mt-3">
                         <flux:switch wire:model.live="active" label="{{ __('Allow this user to sign in') }}" align="left" />
+                    </flux:accordion.content>
+                </flux:accordion.item>
+
+                <flux:accordion.item>
+                    <flux:accordion.heading>
+                        <div class="flex items-center justify-between">
+                            {{ __('Role') }}
+                            <flux:text>{{ $this->roles->firstWhere('id', $roleId)?->name }}</flux:text>
+                        </div>
+                    </flux:accordion.heading>
+
+                    <flux:accordion.content class="mt-3">
+                        <flux:select
+                            variant="listbox"
+                            wire:model.live="roleId"
+                            :disabled="$user->id === auth()->id()"
+                            :description="$user->id === auth()->id() ? __('You cannot change your own role.') : null"
+                        >
+                            @foreach ($this->roles as $roleOption)
+                                <flux:select.option :value="$roleOption->id">{{ $roleOption->name }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
                     </flux:accordion.content>
                 </flux:accordion.item>
             </flux:accordion>

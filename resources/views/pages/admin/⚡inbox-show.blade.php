@@ -23,6 +23,8 @@ return new class extends Component
 
     public function delete(DeleteSubmissionAction $action): void
     {
+        $this->authorize('inbox.delete');
+
         $action->handle($this->submission);
 
         Flux::toast(__('Message deleted.'), variant: 'success');
@@ -140,9 +142,11 @@ return new class extends Component
                 <flux:button :href="route('admin.inbox-index')" wire:navigate icon="arrow-left">
                     {{ __('Back') }}
                 </flux:button>
-                <flux:modal.trigger name="delete-submission">
-                    <flux:button variant="danger" icon="trash" class="w-full">{{ __('Delete') }}</flux:button>
-                </flux:modal.trigger>
+                @can('inbox.delete')
+                    <flux:modal.trigger name="delete-submission">
+                        <flux:button variant="danger" icon="trash" class="w-full">{{ __('Delete') }}</flux:button>
+                    </flux:modal.trigger>
+                @endcan
             </div>
 
             <flux:text size="sm">

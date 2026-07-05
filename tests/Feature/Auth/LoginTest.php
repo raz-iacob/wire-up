@@ -21,7 +21,7 @@ it('can authenticate users using the login screen', function (): void {
         'email' => 'user@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
     $component = Livewire::test('pages::auth.login');
 
@@ -51,7 +51,7 @@ it('rejects login if user is inactive', function (): void {
     $user = User::factory()->create([
         'email' => 'inactive@example.com',
         'password' => bcrypt('secret'),
-        'admin' => true,
+        'role' => 'owner',
         'active' => false,
     ]);
 
@@ -70,7 +70,7 @@ it('allows login attempts when under rate limit threshold', function (): void {
         'email' => 'user@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $component = Livewire::test('pages::auth.login');
@@ -120,7 +120,7 @@ it('clears rate limiter on successful authentication', function (): void {
         'email' => 'user@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $throttleKey = mb_strtolower($user->email).'|127.0.0.1';
@@ -149,14 +149,14 @@ it('uses correct throttle key based on email and IP', function (): void {
         'email' => 'user1@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $user2 = User::factory()->create([
         'email' => 'user2@example.com',
         'password' => bcrypt('secret'),
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $throttleKey1 = mb_strtolower($user1->email).'|127.0.0.1';
@@ -183,7 +183,7 @@ it('uses correct throttle key based on email and IP', function (): void {
 it('redirects authenticated non-admin users away from login', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $response = $this->actingAs($user)
@@ -196,7 +196,7 @@ it('redirects authenticated non-admin users away from login', function (): void 
 it('redirects authenticated admin users away from login', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => true,
+        'role' => 'owner',
     ]);
 
     $response = $this->actingAs($user)

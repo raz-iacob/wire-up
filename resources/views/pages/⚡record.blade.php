@@ -23,7 +23,7 @@ return new class extends Component
             ->with(['recordType', 'blocks', 'media', 'translations', 'slugs', 'categories'])
             ->forSlug($slug, null, $type->slug_prefix);
 
-        if (auth()->user()?->admin) {
+        if (auth()->user()?->canAccessAdmin()) {
             $this->record = $query->firstOrFail();
             $this->unpublished = ! $this->record->isLiveInLocale();
         } else {

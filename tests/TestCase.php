@@ -15,7 +15,7 @@ abstract class TestCase extends BaseTestCase
             'email' => 'admin@example.com',
             'password' => bcrypt('secret'),
             'active' => true,
-            'admin' => true,
+            'role' => 'owner',
         ]);
 
         $this->actingAs($user);

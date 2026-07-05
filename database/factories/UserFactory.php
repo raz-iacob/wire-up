@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Role;
 use App\Models\User;
+use App\Services\RolePresets;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -33,7 +35,7 @@ final class UserFactory extends Factory
                 'address' => fake()->address(),
                 'birthday' => fake()->date(),
             ],
-            'admin' => fake()->boolean(),
+            'role_id' => Role::factory(),
             'active' => fake()->boolean(),
             'locale' => fake()->languageCode(),
             'last_seen_at' => fake()->optional(0.7)->dateTimeBetween('-1 year', 'now'),
@@ -43,10 +45,74 @@ final class UserFactory extends Factory
         ];
     }
 
+    public function configure(): self
+    {
+        return $this->afterMaking(function (User $user): void {
+            $key = $user->getAttributes()['role'] ?? null;
+
+            if (is_string($key)) {
+                $user->offsetUnset('role');
+                $user->setAttribute('role_id', $this->roleId($key));
+            }
+        });
+    }
+
     public function unverified(): self
     {
         return $this->state(fn (array $attributes): array => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function role(Role $role): self
+    {
+        return $this->for($role);
+    }
+
+    public function owner(): self
+    {
+        return $this->preset('owner');
+    }
+
+    public function admin(): self
+    {
+        return $this->preset('admin');
+    }
+
+    public function editor(): self
+    {
+        return $this->preset('editor');
+    }
+
+    public function author(): self
+    {
+        return $this->preset('author');
+    }
+
+    public function member(): self
+    {
+        return $this->preset('member');
+    }
+
+    private function roleId(string $key): int
+    {
+        $preset = RolePresets::find($key);
+
+        return Role::query()->firstOrCreate(
+            ['key' => $key],
+            [
+                'name' => $preset['name'],
+                'abilities' => $preset['abilities'],
+                'bypass' => $preset['bypass'],
+                'is_protected' => $preset['is_protected'],
+            ],
+        )->id;
+    }
+
+    private function preset(string $key): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'role_id' => $this->roleId($key),
         ]);
     }
 }

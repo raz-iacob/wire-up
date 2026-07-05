@@ -72,7 +72,7 @@ it('can render the menus settings screen', function (): void {
 });
 
 it('redirects authenticated non-admin users away from menus settings', function (): void {
-    $nonAdmin = User::factory()->create(['active' => true, 'admin' => false]);
+    $nonAdmin = User::factory()->create(['active' => true, 'role' => 'member']);
 
     $this->actingAs($nonAdmin)
         ->fromRoute('home')

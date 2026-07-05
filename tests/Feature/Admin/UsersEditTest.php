@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+
+beforeEach(fn () => $this->seed(RoleSeeder::class));
 
 it('can render the users edit screen', function (): void {
     $user = User::factory()->create([
@@ -24,7 +28,7 @@ it('can render the users edit screen', function (): void {
 it('redirects authenticated non-admin users away from users edit', function (): void {
     $nonAdmin = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $user = User::factory()->create();
@@ -46,7 +50,7 @@ it('redirects guests away from users edit', function (): void {
 });
 
 it('populates form with user data on mount', function (): void {
-    $user = User::factory()->create([
+    $user = User::factory()->editor()->create([
         'name' => 'Jane Smith',
         'email' => 'jane@example.com',
         'active' => false,
@@ -58,6 +62,7 @@ it('populates form with user data on mount', function (): void {
 
     $response->assertSet('name', 'Jane Smith')
         ->assertSet('email', 'jane@example.com')
+        ->assertSet('roleId', $user->role_id)
         ->assertSet('active', false)
         ->assertSet('user.id', $user->id);
 });
@@ -468,4 +473,62 @@ it('handles removing photo for user with null photo gracefully', function (): vo
 
     $user->refresh();
     expect($user->photo)->toBeNull();
+});
+
+it('can change another user\'s role', function (): void {
+    $this->actingAsAdmin();
+
+    $user = User::factory()->author()->create();
+    $editorRoleId = Role::query()->where('key', 'editor')->value('id');
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->set('roleId', $editorRoleId)
+        ->call('update');
+
+    $response->assertHasNoErrors();
+    expect($user->fresh()->role_id)->toBe($editorRoleId);
+});
+
+it('prevents a user from changing their own role', function (): void {
+    $user = User::factory()->admin()->create(['active' => true]);
+    $editorRoleId = Role::query()->where('key', 'editor')->value('id');
+
+    $this->actingAs($user);
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->set('roleId', $editorRoleId)
+        ->call('update');
+
+    $response->assertHasErrors(['roleId']);
+    expect($user->fresh()->role->key)->toBe('admin');
+});
+
+it('blocks demoting the only owner', function (): void {
+    $admin = User::factory()->admin()->create(['active' => true]);
+    $owner = User::factory()->owner()->create();
+    $adminRoleId = Role::query()->where('key', 'admin')->value('id');
+
+    $this->actingAs($admin);
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $owner])
+        ->set('roleId', $adminRoleId)
+        ->call('update');
+
+    $response->assertHasErrors(['roleId']);
+    expect($owner->fresh()->role->key)->toBe('owner');
+});
+
+it('allows demoting an owner when another owner exists', function (): void {
+    $owner = User::factory()->owner()->create();
+    $other = User::factory()->owner()->create(['active' => true]);
+    $adminRoleId = Role::query()->where('key', 'admin')->value('id');
+
+    $this->actingAs($other);
+
+    $response = Livewire::test('pages::admin.users-edit', ['user' => $owner])
+        ->set('roleId', $adminRoleId)
+        ->call('update');
+
+    $response->assertHasNoErrors();
+    expect($owner->fresh()->role->key)->toBe('admin');
 });

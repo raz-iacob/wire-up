@@ -59,6 +59,8 @@ return new class extends Component
 
     public function delete(DeleteSubmissionAction $action): void
     {
+        $this->authorize('inbox.delete');
+
         $submission = Submission::query()->find($this->selectedId);
 
         if ($submission !== null) {
@@ -160,10 +162,12 @@ return new class extends Component
                                         {{ __('Mark as read') }}
                                     </flux:menu.item>
                                 @endif
-                                <flux:menu.separator />
-                                <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">
-                                    {{ __('Delete') }}
-                                </flux:menu.item>
+                                @can('inbox.delete')
+                                    <flux:menu.separator />
+                                    <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">
+                                        {{ __('Delete') }}
+                                    </flux:menu.item>
+                                @endcan
                             </flux:menu>
                         </flux:dropdown>
                     </flux:table.cell>

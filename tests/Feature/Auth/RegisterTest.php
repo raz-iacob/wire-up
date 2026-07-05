@@ -126,7 +126,7 @@ it('requires matching password confirmation', function (): void {
 it('redirects authenticated non-admin users away from registration', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $response = $this->actingAs($user)
@@ -139,7 +139,7 @@ it('redirects authenticated non-admin users away from registration', function ()
 it('redirects authenticated admin users away from registration', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => true,
+        'role' => 'owner',
     ]);
 
     $response = $this->actingAs($user)

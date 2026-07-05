@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Models\Role;
 use App\Models\User;
 use App\Notifications\AdminInvite;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
+
+beforeEach(fn () => $this->seed(RoleSeeder::class));
 
 it('can render the users index screen', function (): void {
     $response = $this->actingAsAdmin()
@@ -19,7 +23,7 @@ it('can render the users index screen', function (): void {
 it('redirects authenticated non-admin users away from users index', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $response = $this->actingAs($user)
@@ -38,7 +42,7 @@ it('redirects guests away from users index', function (): void {
 
 it('displays users in the table', function (): void {
     $users = User::factory()->count(3)->create([
-        'admin' => false,
+        'role' => 'member',
         'active' => true,
     ]);
 
@@ -156,9 +160,12 @@ it('can invite a new user', function (): void {
 
     $this->actingAsAdmin();
 
+    $adminRoleId = Role::query()->where('key', 'admin')->value('id');
+
     $response = Livewire::test('pages::admin.users-index')
         ->set('name', 'New User')
         ->set('email', 'newuser@example.com')
+        ->set('roleId', $adminRoleId)
         ->call('create');
 
     $response->assertHasNoErrors();
@@ -166,7 +173,7 @@ it('can invite a new user', function (): void {
     $this->assertDatabaseHas('users', [
         'name' => 'New User',
         'email' => 'newuser@example.com',
-        'admin' => true,
+        'role_id' => $adminRoleId,
     ]);
 
     $newUser = User::query()->where('email', 'newuser@example.com')->first();
@@ -214,6 +221,21 @@ it('validates email uniqueness when inviting new user', function (): void {
         ->call('create');
 
     $response->assertHasErrors(['email']);
+});
+
+it('rejects inviting a user as a non-assignable member role', function (): void {
+    $this->actingAsAdmin();
+
+    $memberRoleId = Role::query()->where('key', 'member')->value('id');
+
+    $response = Livewire::test('pages::admin.users-index')
+        ->set('name', 'New User')
+        ->set('email', 'newuser@example.com')
+        ->set('roleId', $memberRoleId)
+        ->call('create');
+
+    $response->assertHasErrors(['roleId']);
+    $this->assertDatabaseMissing('users', ['email' => 'newuser@example.com']);
 });
 
 it('can toggle user status', function (): void {

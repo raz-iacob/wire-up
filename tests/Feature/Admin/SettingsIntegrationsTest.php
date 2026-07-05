@@ -15,7 +15,7 @@ it('can render the integrations settings screen', function (): void {
 });
 
 it('redirects authenticated non-admin users away from integrations settings', function (): void {
-    $nonAdmin = User::factory()->create(['active' => true, 'admin' => false]);
+    $nonAdmin = User::factory()->create(['active' => true, 'role' => 'member']);
 
     $this->actingAs($nonAdmin)
         ->fromRoute('home')

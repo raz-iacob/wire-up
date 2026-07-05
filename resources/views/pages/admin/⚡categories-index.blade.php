@@ -30,6 +30,8 @@ return new class extends Component
 
     public function create(CreateCategoryAction $action): void
     {
+        $this->authorize('categories.create');
+
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
         ]);
@@ -50,6 +52,8 @@ return new class extends Component
 
     public function delete(int $id, DeleteCategoryAction $action): void
     {
+        $this->authorize('categories.delete');
+
         $action->handle(Category::query()->findOrFail($id));
 
         $this->selectedId = null;
@@ -86,9 +90,11 @@ return new class extends Component
 <div>
     <div class="space-y-6 md:space-y-8">
         <div class="flex items-center gap-3">
-            <flux:modal.trigger name="add-new">
-                <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
-            </flux:modal.trigger>
+            @can('categories.create')
+                <flux:modal.trigger name="add-new">
+                    <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+                </flux:modal.trigger>
+            @endcan
 
             <div class="w-full md:w-52 sm:shrink-0">
                 <flux:input icon="magnifying-glass" wire:model.live="search" size="sm" placeholder="{{ __('Search...') }}" clearable />
@@ -117,9 +123,13 @@ return new class extends Component
                         <flux:dropdown class="flex justify-end">
                             <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
                             <flux:menu>
-                                <flux:menu.item icon="pencil" href="{{ route('admin.categories-edit', $row) }}">{{ __('Edit') }}</flux:menu.item>
-                                <flux:menu.separator />
-                                <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">{{ __('Delete') }}</flux:menu.item>
+                                @can('categories.edit')
+                                    <flux:menu.item icon="pencil" href="{{ route('admin.categories-edit', $row) }}">{{ __('Edit') }}</flux:menu.item>
+                                @endcan
+                                @can('categories.delete')
+                                    <flux:menu.separator />
+                                    <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">{{ __('Delete') }}</flux:menu.item>
+                                @endcan
                             </flux:menu>
                         </flux:dropdown>
                     </flux:table.cell>

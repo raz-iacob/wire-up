@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Actions\CreateUserAction;
+use App\Models\Role;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -40,7 +41,7 @@ final class CreateAdminUserCommand extends Command
         $user = $action->handle([
             'name' => $name,
             'email' => $email,
-            'admin' => true,
+            'role_id' => Role::query()->where('key', 'owner')->value('id'),
             'email_verified_at' => now(),
         ], $password);
 

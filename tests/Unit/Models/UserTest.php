@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 use App\Models\User;
 
+it('reports admin access from the role', function (): void {
+    expect(User::factory()->owner()->create()->canAccessAdmin())->toBeTrue();
+    expect(User::factory()->member()->create()->canAccessAdmin())->toBeFalse();
+});
+
+it('resolves abilities through the role and owner bypass', function (): void {
+    expect(User::factory()->editor()->create()->hasAbility('pages.view'))->toBeTrue();
+    expect(User::factory()->editor()->create()->hasAbility('users.edit'))->toBeFalse();
+    expect(User::factory()->owner()->create()->hasAbility('settings.edit'))->toBeTrue();
+    expect(User::factory()->member()->create()->hasAbility('pages.view'))->toBeFalse();
+});
+
 test('to array', function (): void {
     $user = User::factory()->create()->refresh();
 
@@ -15,7 +27,7 @@ test('to array', function (): void {
             'email_verified_at',
             'photo',
             'metadata',
-            'admin',
+            'role_id',
             'active',
             'locale',
             'last_seen_at',

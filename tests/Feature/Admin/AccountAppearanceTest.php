@@ -16,7 +16,7 @@ it('can render the account appearance screen', function (): void {
 it('redirects authenticated non-admin users away from account appearance', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $response = $this->actingAs($user)

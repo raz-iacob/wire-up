@@ -20,7 +20,7 @@ it('redirects guests away from the content types screen', function (): void {
 });
 
 it('redirects non-admins away from the content types screen', function (): void {
-    $this->actingAs(User::factory()->create(['active' => true, 'admin' => false]));
+    $this->actingAs(User::factory()->create(['active' => true, 'role' => 'member']));
 
     $this->get(route('admin.settings-content-types'))->assertRedirectToRoute('home');
 });

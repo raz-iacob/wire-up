@@ -27,6 +27,8 @@ return new class extends Component
 
     public function update(UpdateSettingsAction $action): void
     {
+        $this->authorize('settings.edit');
+
         $validated = $this->validate([
             'pexels_api_key' => ['nullable', 'string', 'max:255'],
             'google_analytics_id' => ['nullable', 'string', 'max:40', 'regex:/^G-[A-Z0-9]+$/'],

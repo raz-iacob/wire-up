@@ -93,6 +93,8 @@ return new class extends Component
 
     public function update(UpdateSettingsAction $action): void
     {
+        $this->authorize('settings.edit');
+
         $rules = [
             'theme' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.presets')), 'custom'])],
             'heading_font' => ['required', 'string', Rule::in(array_keys(config()->array('theme.fonts')))],

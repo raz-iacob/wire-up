@@ -17,7 +17,7 @@ final readonly class OnlyAdmins
     {
         return match (true) {
             ! $request->user() => redirect(route('login')),
-            ! $request->user()->admin => redirect(route('home')),
+            ! $request->user()->canAccessAdmin() => redirect(route('home')),
             default => $next($request),
         };
     }

@@ -76,6 +76,8 @@ return new class extends Component
 
     public function mount(Page $page): void
     {
+        $this->authorize('pages.edit');
+
         $page->load('translations', 'media', 'blocks', 'categories');
         $this->page = $page;
         $this->categories = $page->categories->pluck('id')->map(fn (int $id): string => (string) $id)->all();
@@ -127,6 +129,8 @@ return new class extends Component
 
     public function createCategory(CreateCategoryAction $action): void
     {
+        $this->authorize('categories.create');
+
         $name = mb_trim($this->categorySearch);
 
         if ($name === '') {
@@ -156,6 +160,8 @@ return new class extends Component
 
     public function update(UpdatePageAction $action): void
     {
+        $this->authorize('pages.edit');
+
         $this->og_image = $this->normalizeMediaInput($this->og_image);
         $this->normalizeBlockAnchors();
 

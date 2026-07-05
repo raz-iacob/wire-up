@@ -14,7 +14,7 @@ it('renders the inbox screen for admins', function (): void {
 });
 
 it('redirects non-admins away from the inbox', function (): void {
-    $nonAdmin = User::factory()->create(['active' => true, 'admin' => false]);
+    $nonAdmin = User::factory()->create(['active' => true, 'role' => 'member']);
 
     $this->actingAs($nonAdmin)
         ->fromRoute('home')

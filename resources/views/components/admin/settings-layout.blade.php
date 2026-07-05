@@ -11,6 +11,9 @@
         <flux:tab :href="route('admin.settings-design')" :selected="$current('admin.settings-design')" wire:navigate>{{ __('Design') }}</flux:tab>
         <flux:tab :href="route('admin.settings-menus')" :selected="$current('admin.settings-menus')" wire:navigate>{{ __('Menus') }}</flux:tab>
         <flux:tab :href="route('admin.settings-content-types')" :selected="$current('admin.settings-content-types')" wire:navigate>{{ __('Content Types') }}</flux:tab>
+        @can('roles.view')
+            <flux:tab :href="route('admin.settings-roles')" :selected="$current('admin.settings-roles')" wire:navigate>{{ __('Roles') }}</flux:tab>
+        @endcan
         <flux:tab :href="route('admin.settings-social')" :selected="$current('admin.settings-social')" wire:navigate>{{ __('Social') }}</flux:tab>
         <flux:tab :href="route('admin.settings-integrations')" :selected="$current('admin.settings-integrations')" wire:navigate>{{ __('Integrations') }}</flux:tab>
     </flux:tabs>

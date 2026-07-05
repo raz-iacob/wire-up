@@ -22,7 +22,7 @@ it('can render the account profile screen', function (): void {
 it('redirects authenticated non-admin users away from account profile', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $response = $this->actingAs($user)
@@ -43,7 +43,7 @@ it('allows admin users to update their profile information', function (): void {
     $user = User::factory()->create([
         'name' => 'Old Name',
         'email' => 'old@example.com',
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
     ]);
 
@@ -87,7 +87,7 @@ it('can resend email verification', function (): void {
     Notification::fake();
 
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
         'email_verified_at' => null,
     ]);
@@ -104,7 +104,7 @@ it('can resend email verification', function (): void {
 
 it('requires current password to delete account', function (): void {
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
     ]);
 
@@ -123,7 +123,7 @@ it('requires current password to delete account', function (): void {
 it('allows admin users to delete their account', function (): void {
     $user = User::factory()->create([
         'password' => Hash::make('secret'),
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
     ]);
 
@@ -144,7 +144,7 @@ it('can upload a profile photo', function (): void {
     Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
         'name' => 'John Doe',
         'photo' => null,
@@ -173,7 +173,7 @@ it('can replace an existing profile photo', function (): void {
     Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
         'photo' => 'users/1_old-photo.jpg',
     ]);
@@ -205,7 +205,7 @@ it('can delete current profile photo', function (): void {
     Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
         'photo' => null,
     ]);
@@ -266,7 +266,7 @@ it('can remove temporary uploaded photo before saving', function (): void {
     Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
         'photo' => null,
     ]);
@@ -292,7 +292,7 @@ it('can update profile with name and email while also uploading photo', function
     Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
         'name' => 'Old Name',
         'email' => 'old@example.com',
@@ -324,7 +324,7 @@ it('does not affect existing photo when updating profile without new photo', fun
     Storage::fake(config('filesystems.media'));
 
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
         'name' => 'Old Name',
         'photo' => 'users/1_existing.jpg',
@@ -349,7 +349,7 @@ it('does not affect existing photo when updating profile without new photo', fun
 
 it('handles delete current photo when no photo exists', function (): void {
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
         'photo' => null,
     ]);

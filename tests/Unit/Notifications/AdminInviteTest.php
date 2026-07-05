@@ -11,13 +11,13 @@ it('sends an invite notification', function (): void {
     $invitee = User::factory()->create([
         'name' => 'New Admin User',
         'email' => 'admin@example.com',
-        'admin' => true,
+        'role' => 'owner',
     ]);
 
     $inviter = User::factory()->create([
         'name' => 'Admin User',
         'email' => 'inviter@example.com',
-        'admin' => true,
+        'role' => 'owner',
     ]);
 
     $token = 'test-set-token';

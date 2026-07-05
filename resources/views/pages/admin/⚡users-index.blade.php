@@ -3,14 +3,17 @@
 declare(strict_types=1);
 
 use Flux\Flux;
+use App\Models\Role;
 use App\Models\User;
 use Livewire\Component;
 use App\Traits\WithSorting;
 use Livewire\Attributes\Url;
+use Illuminate\Validation\Rule;
 use Livewire\WithPagination;
 use App\Actions\UpdateUserAction;
 use Livewire\Attributes\Computed;
 use App\Actions\InviteAdminAction;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\View\View;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -20,7 +23,7 @@ return new class extends Component
 {
     use WithPagination, WithSorting;
 
-    #[Url(as: 'q', except: '')] 
+    #[Url(as: 'q', except: '')]
     public string $search = '';
 
     #[Url(as: 'status', except: '')]
@@ -30,16 +33,40 @@ return new class extends Component
 
     public string $email = '';
 
+    public ?int $roleId = null;
+
     public int $perPage = 20;
+
+    public function mount(): void
+    {
+        $roles = $this->assignableRoles();
+
+        $this->roleId = ($roles->firstWhere('key', 'editor') ?? $roles->first())?->id;
+    }
+
+    /** @return Collection<int, Role> */
+    #[Computed]
+    public function assignableRoles(): Collection
+    {
+        return Role::query()
+            ->where(fn (Builder $query): Builder => $query->where('bypass', true)->orWhere('abilities', '<>', '[]'))
+            ->orderBy('id')
+            ->get();
+    }
 
     public function create(#[CurrentUser] User $inviter, InviteAdminAction $action): void
     {
-        $this->validate([
+        $this->authorize('users.create');
+
+        $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'roleId' => ['required', Rule::in($this->assignableRoles()->pluck('id'))],
         ]);
 
-        $user = $action->handle($inviter, $this->name, $this->email);
+        $role = Role::query()->findOrFail($validated['roleId']);
+
+        $user = $action->handle($inviter, $this->name, $this->email, $role);
 
         Flux::modal('add-new')->close();
         Flux::toast(__('Invitation email sent to '.$user->email));
@@ -47,6 +74,8 @@ return new class extends Component
 
     public function toggleStatus(User $user, UpdateUserAction $action): void
     {
+        $this->authorize('users.edit');
+
         $action->handle($user, [
             'active' => ! $user->active,
         ]);
@@ -57,6 +86,7 @@ return new class extends Component
     public function users(): LengthAwarePaginator
     {
         return User::query()
+            ->with('role')
             ->when($this->status, fn (Builder $query, string $status): Builder => $query->where('active', $status === 'active'))
             ->when($this->search, fn (Builder $query, string $search): Builder => $query->whereAny(['name', 'email'], 'like', "%{$search}%"))
             ->orderBy($this->sortBy, $this->sortDirection)
@@ -74,9 +104,11 @@ return new class extends Component
 <div>
     <div class="space-y-6 md:space-y-8">
         <div class="flex items-center gap-3">
-            <flux:modal.trigger name="add-new">
-                <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
-            </flux:modal.trigger>
+            @can('users.create')
+                <flux:modal.trigger name="add-new">
+                    <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+                </flux:modal.trigger>
+            @endcan
 
             <flux:dropdown position="bottom" align="start">
                 <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
@@ -119,7 +151,7 @@ return new class extends Component
                         </a>
                     </flux:table.cell>
 
-                    <flux:table.cell class="whitespace-nowrap">{{ $row->admin ? __('Admin') : __('User') }}</flux:table.cell>
+                    <flux:table.cell class="whitespace-nowrap">{{ $row->role?->name }}</flux:table.cell>
 
                     <flux:table.cell>
                         <flux:badge color="{{ $row->active ? 'green' : 'zinc' }}" size="sm">
@@ -135,6 +167,7 @@ return new class extends Component
                         <flux:dropdown class="flex justify-end">
                             <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
                             <flux:menu>
+                                @can('users.edit')
                                 <flux:menu.item icon="pencil" href="{{ route('admin.users-edit', $row->id) }}" >
                                     {{ __('Edit') }}
                                 </flux:menu.item>
@@ -149,6 +182,7 @@ return new class extends Component
                                     {{ __('Enable') }}
                                 </flux:menu.item>
                                 @endif
+                                @endcan
                             </flux:menu>
                         </flux:dropdown>
                     </flux:table.cell>
@@ -163,6 +197,11 @@ return new class extends Component
         <form wire:submit="create" class="space-y-6">
             <flux:input wire:model="name" label="{{ __('Name') }}" badge="Required" autofocus />
             <flux:input wire:model="email" label="{{ __('Email') }}" badge="Required" />
+            <flux:select wire:model="roleId" label="{{ __('Role') }}" badge="Required">
+                @foreach ($this->assignableRoles as $assignable)
+                    <flux:select.option :value="$assignable->id">{{ $assignable->name }}</flux:select.option>
+                @endforeach
+            </flux:select>
             <div class="flex mt-6">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary">{{ __('Send Invite') }}</flux:button>

@@ -22,7 +22,7 @@ return new class() extends Migration
 
             $table->string('stripe_id')->nullable();
 
-            $table->boolean('admin')->default(false)->comment('Admin users can access the admin panel');
+            $table->foreignId('role_id')->nullable()->index()->comment('Authorization role; null and no-ability roles have no admin panel access');
             $table->boolean('active')->default(true);
             $table->string('locale', 6)->default('en');
 

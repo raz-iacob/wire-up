@@ -29,7 +29,7 @@ it('can render the pages edit screen', function (): void {
 it('redirects authenticated non-admin users away from pages edit', function (): void {
     $nonAdmin = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $page = Page::factory()->create();

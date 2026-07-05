@@ -30,13 +30,15 @@ return new class extends Component
 <div>
     @if ($this->recordTypes->isNotEmpty())
         @foreach ($this->recordTypes as $recordType)
-            <flux:sidebar.item
-                wire:key="record-type-{{ $recordType->id }}"
-                :icon="$recordType->icon"
-                :href="route('admin.records-index', $recordType)"
-                :current="request()->routeIs('admin.records-*') && request()->route('recordType')?->key === $recordType->key"
-                wire:navigate.hover
-            >{{ $recordType->name }}</flux:sidebar.item>
+            @can('records.'.$recordType->key.'.view')
+                <flux:sidebar.item
+                    wire:key="record-type-{{ $recordType->id }}"
+                    :icon="$recordType->icon"
+                    :href="route('admin.records-index', $recordType)"
+                    :current="request()->routeIs('admin.records-*') && request()->route('recordType')?->key === $recordType->key"
+                    wire:navigate.hover
+                >{{ $recordType->name }}</flux:sidebar.item>
+            @endcan
         @endforeach
     @endif
 </div>

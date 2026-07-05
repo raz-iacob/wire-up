@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectUsersTo(
-            fn (Request $request): string => $request->user()?->admin
+            fn (Request $request): string => $request->user()?->canAccessAdmin()
                 ? route('admin.dashboard')
                 : route('home')
         );

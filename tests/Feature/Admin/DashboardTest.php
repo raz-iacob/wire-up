@@ -24,7 +24,7 @@ it('shows a media gallery launcher in the sidebar', function (): void {
 it('redirects authenticated non-admin users away from dashboard', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $response = $this->actingAs($user)

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\URL;
 it('may verify email', function (): void {
     $user = User::factory()->create([
         'email_verified_at' => null,
-        'admin' => true,
+        'role' => 'owner',
     ]);
 
     $verificationUrl = URL::temporarySignedRoute(
@@ -28,7 +28,7 @@ it('may verify email', function (): void {
 it('redirects to dashboard if admin and already verified', function (): void {
     $user = User::factory()->create([
         'email_verified_at' => now(),
-        'admin' => true,
+        'role' => 'owner',
     ]);
 
     $verificationUrl = URL::temporarySignedRoute(
@@ -46,7 +46,7 @@ it('redirects to dashboard if admin and already verified', function (): void {
 it('redirects to home if already verified', function (): void {
     $user = User::factory()->create([
         'email_verified_at' => now(),
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $verificationUrl = URL::temporarySignedRoute(

@@ -18,7 +18,7 @@ it('can render the account password screen', function (): void {
 it('redirects authenticated non-admin users away from account password', function (): void {
     $user = User::factory()->create([
         'active' => true,
-        'admin' => false,
+        'role' => 'member',
     ]);
 
     $response = $this->actingAs($user)
@@ -37,7 +37,7 @@ it('redirects guests away from account password', function (): void {
 
 it('allows admin users to update their password', function (): void {
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
         'password' => Hash::make('old-password'),
     ]);
@@ -57,7 +57,7 @@ it('allows admin users to update their password', function (): void {
 
 it('requires current password to update password', function (): void {
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
     ]);
 
@@ -75,7 +75,7 @@ it('requires current password to update password', function (): void {
 
 it('requires matching password confirmation to update password', function (): void {
     $user = User::factory()->create([
-        'admin' => true,
+        'role' => 'owner',
         'active' => true,
     ]);
 
