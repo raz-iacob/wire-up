@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <x-site.head :title="isset($title) ? $title : null" />
+
+    <body class="min-h-screen bg-zinc-100 antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
+        <div class="flex min-h-dvh items-center justify-center p-6">
+            @php
+                $settings = resolve(App\Services\SettingsService::class);
+                $authImage = $settings->authImageUrl();
+                $panelStyle = $authImage ? "background-image: url('{$authImage}')" : '';
+            @endphp
+            <div class="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl md:grid-cols-2 dark:border-neutral-800 dark:bg-neutral-900">
+                <div
+                    class="relative hidden min-h-[26rem] flex-col bg-cover bg-center p-8 text-white md:flex {{ $settings->authImageSide() === 'right' ? 'md:order-last' : '' }}"
+                    style="{{ $panelStyle }}"
+                >
+                    <div class="absolute inset-0 {{ $authImage ? 'bg-neutral-900/40' : 'bg-neutral-900' }}"></div>
+                    <a href="/" class="relative z-20 flex items-center text-lg font-medium" wire:navigate>
+                        <livewire:shared.logo class="h-10 fill-current text-white" />
+                        <span class="sr-only">{{ config('app.name', 'WireUp') }}</span>
+                    </a>
+
+                    @php
+                        [$message, $author] = str(Illuminate\Foundation\Inspiring::quotes()->random())->explode('-');
+                    @endphp
+
+                    <div class="relative z-20 mt-auto">
+                        <blockquote class="space-y-2">
+                            <flux:heading size="lg">&ldquo;{{ trim($message) }}&rdquo;</flux:heading>
+                            <footer><flux:heading>{{ trim($author) }}</flux:heading></footer>
+                        </blockquote>
+                    </div>
+                </div>
+
+                <div class="p-8 sm:p-10">
+                    <div class="mx-auto flex w-full max-w-sm flex-col justify-center space-y-6">
+                        <a href="/" class="z-20 flex flex-col items-center gap-2 font-medium md:hidden" wire:navigate>
+                            <livewire:shared.logo class="h-9 text-black dark:text-white" />
+                            <span class="sr-only">{{ config('app.name', 'WireUp') }}</span>
+                        </a>
+                        {{ $slot }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        @fluxScripts
+    </body>
+</html>

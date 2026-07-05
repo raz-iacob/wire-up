@@ -130,6 +130,37 @@ it('rejects an unknown border width', function (): void {
         ->assertHasErrors(['border_width']);
 });
 
+it('persists the auth layout and image side', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('auth_layout', 'split-card')
+        ->set('auth_image_side', 'right')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('auth_layout'))->toBe('split-card')
+        ->and(Settings::get('auth_image_side'))->toBe('right');
+});
+
+it('rejects an unknown auth layout', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('auth_layout', 'nope')
+        ->call('update')
+        ->assertHasErrors(['auth_layout']);
+});
+
+it('rejects an unknown auth image side', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('auth_image_side', 'top')
+        ->call('update')
+        ->assertHasErrors(['auth_image_side']);
+});
+
 it('persists site-wide custom css, trimmed', function (): void {
     $this->actingAsAdmin();
 

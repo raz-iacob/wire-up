@@ -27,12 +27,15 @@ return new class extends Component
 
     public string $currency = '';
 
+    public bool $allow_registration = false;
+
     public function mount(): void
     {
         $this->languages = Locale::query()->active()->orderBy('name')->pluck('code')->all();
         $this->home_page_id = SettingsService::current()->homePageId();
         $this->contact_email = is_string(config('site.contact_email')) ? config()->string('site.contact_email') : '';
         $this->currency = SettingsService::current()->currency();
+        $this->allow_registration = SettingsService::current()->allowsRegistration();
     }
 
     /**
@@ -78,6 +81,7 @@ return new class extends Component
             'home_page_id' => ['required', 'integer', Rule::exists('pages', 'id')],
             'contact_email' => ['nullable', 'email', 'max:255'],
             'currency' => ['required', 'string', Rule::in(array_keys($this->currencies()))],
+            'allow_registration' => ['boolean'],
         ], [
             'contact_email.email' => __('Enter a valid email address for form submissions.'),
         ], [
@@ -104,6 +108,7 @@ return new class extends Component
             'home_page_id' => $validated['home_page_id'],
             'contact_email' => $validated['contact_email'] ?? '',
             'currency' => $validated['currency'],
+            'allow_registration' => $validated['allow_registration'] ?? false,
         ]);
 
         Flux::toast(__('Settings have been updated.'), variant: 'success');
@@ -167,6 +172,12 @@ return new class extends Component
                     <flux:select.option :value="$code">{{ $code }} — {{ $meta['name'] }} ({{ $meta['symbol'] }})</flux:select.option>
                 @endforeach
             </flux:select>
+
+            <flux:switch
+                wire:model="allow_registration"
+                :label="__('Allow sign-ups')"
+                :description="__('Let visitors create their own accounts. When off, the registration page is unavailable.')"
+            />
 
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary" icon="check">

@@ -50,6 +50,15 @@ return new class extends Component
 
     public bool $footer_transparent = false;
 
+    public string $auth_layout;
+
+    public string $auth_image_side;
+
+    /**
+     * @var array<string, mixed>|null
+     */
+    public ?array $auth_image = null;
+
     public string $custom_css = '';
 
     /**
@@ -85,10 +94,13 @@ return new class extends Component
         $this->header_nav_hover = is_string($meta['header_nav_hover'] ?? null) ? $meta['header_nav_hover'] : config()->string('theme.default_header_nav_hover');
         $this->footer_layout = is_string($meta['footer_layout'] ?? null) ? $meta['footer_layout'] : config()->string('theme.default_footer_layout');
         $this->footer_transparent = (bool) ($meta['footer_transparent'] ?? false);
+        $this->auth_layout = is_string($meta['auth_layout'] ?? null) ? $meta['auth_layout'] : config()->string('theme.default_auth_layout');
+        $this->auth_image_side = ($meta['auth_image_side'] ?? null) === 'right' ? 'right' : 'left';
         $this->custom_css = is_string($meta['custom_css'] ?? null) ? $meta['custom_css'] : '';
 
         $this->logo_header = is_array($meta['logo_header'] ?? null) ? $meta['logo_header'] : null;
         $this->logo_footer = is_array($meta['logo_footer'] ?? null) ? $meta['logo_footer'] : null;
+        $this->auth_image = is_array($meta['auth_image'] ?? null) ? $meta['auth_image'] : null;
     }
 
     public function update(UpdateSettingsAction $action): void
@@ -113,11 +125,15 @@ return new class extends Component
             'header_nav_hover' => ['required', 'string', Rule::in(array_keys(config()->array('theme.nav_hover_states')))],
             'footer_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.footer_layouts')))],
             'footer_transparent' => ['boolean'],
+            'auth_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.auth_layouts')))],
+            'auth_image_side' => ['required', 'string', Rule::in(['left', 'right'])],
             'custom_css' => ['nullable', 'string', 'max:50000'],
             'logo_header' => ['nullable', 'array'],
             'logo_header.id' => ['nullable', 'integer', 'exists:media,id'],
             'logo_footer' => ['nullable', 'array'],
             'logo_footer.id' => ['nullable', 'integer', 'exists:media,id'],
+            'auth_image' => ['nullable', 'array'],
+            'auth_image.id' => ['nullable', 'integer', 'exists:media,id'],
         ];
 
         foreach (array_keys(config()->array('theme.slots')) as $slot) {
@@ -126,7 +142,7 @@ return new class extends Component
 
         $validated = $this->validate($rules);
 
-        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent']);
+        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
         $metadata['custom_css'] = mb_trim((string) ($validated['custom_css'] ?? ''));
 
         if ($this->theme === 'custom') {
@@ -137,6 +153,7 @@ return new class extends Component
             ...$metadata,
             'logo_header' => $this->logo_header,
             'logo_footer' => $this->logo_footer,
+            'auth_image' => $this->auth_image,
         ]);
 
         Flux::toast(__('Design has been updated.'), variant: 'success');
@@ -649,6 +666,81 @@ return new class extends Component
                     :crops="['default' => ['label' => __('Footer logo')]]"
                     label="{{ __('Footer logo') }}"
                 />
+            </div>
+
+            <flux:separator variant="subtle" />
+
+            <div class="space-y-6">
+                <flux:heading size="sm">{{ __('Authentication') }}</flux:heading>
+
+                <flux:field>
+                    <flux:label>{{ __('Auth page layout') }}</flux:label>
+                    <flux:description>{{ __('Applies to the sign-in, register and password pages.') }}</flux:description>
+                    <div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        @foreach (config('theme.auth_layouts') as $key => $layout)
+                            <label class="group cursor-pointer">
+                                <input type="radio" wire:model="auth_layout" value="{{ $key }}" class="sr-only peer" />
+                                <div class="overflow-hidden rounded-lg border-2 transition peer-checked:border-zinc-900 dark:peer-checked:border-zinc-100 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500">
+                                    @if ($key === 'simple')
+                                        <svg viewBox="0 0 80 56" class="w-full" xmlns="http://www.w3.org/2000/svg">
+                                            <rect width="80" height="56" fill="#f4f4f5" class="dark:fill-zinc-800" />
+                                            <circle cx="40" cy="13" r="3" fill="#a1a1aa" />
+                                            <rect x="28" y="23" width="24" height="5" rx="1" fill="#d4d4d8" />
+                                            <rect x="28" y="32" width="24" height="5" rx="1" fill="#d4d4d8" />
+                                            <rect x="28" y="41" width="24" height="5" rx="1" fill="#18181b" />
+                                        </svg>
+                                    @elseif ($key === 'card')
+                                        <svg viewBox="0 0 80 56" class="w-full" xmlns="http://www.w3.org/2000/svg">
+                                            <rect width="80" height="56" fill="#e4e4e7" class="dark:fill-zinc-900" />
+                                            <rect x="22" y="8" width="36" height="40" rx="3" fill="#ffffff" stroke="#d4d4d8" class="dark:fill-zinc-800" />
+                                            <circle cx="40" cy="16" r="3" fill="#a1a1aa" />
+                                            <rect x="28" y="24" width="24" height="4" rx="1" fill="#e4e4e7" />
+                                            <rect x="28" y="31" width="24" height="4" rx="1" fill="#e4e4e7" />
+                                            <rect x="28" y="38" width="24" height="4" rx="1" fill="#18181b" />
+                                        </svg>
+                                    @elseif ($key === 'split')
+                                        <svg viewBox="0 0 80 56" class="w-full" xmlns="http://www.w3.org/2000/svg">
+                                            <rect width="80" height="56" fill="#ffffff" class="dark:fill-zinc-800" />
+                                            <rect x="0" y="0" width="40" height="56" fill="#a1a1aa" />
+                                            <path d="M4 42 L15 28 L24 42 Z" fill="#71717a" />
+                                            <circle cx="30" cy="18" r="4" fill="#d4d4d8" />
+                                            <rect x="48" y="22" width="26" height="5" rx="1" fill="#d4d4d8" />
+                                            <rect x="48" y="31" width="26" height="5" rx="1" fill="#d4d4d8" />
+                                            <rect x="48" y="40" width="26" height="5" rx="1" fill="#18181b" />
+                                        </svg>
+                                    @else
+                                        <svg viewBox="0 0 80 56" class="w-full" xmlns="http://www.w3.org/2000/svg">
+                                            <rect width="80" height="56" fill="#e4e4e7" class="dark:fill-zinc-900" />
+                                            <rect x="8" y="12" width="64" height="32" rx="3" fill="#ffffff" stroke="#d4d4d8" class="dark:fill-zinc-800" />
+                                            <rect x="11" y="15" width="26" height="26" rx="2" fill="#a1a1aa" />
+                                            <rect x="42" y="19" width="26" height="4" rx="1" fill="#e4e4e7" />
+                                            <rect x="42" y="26" width="26" height="4" rx="1" fill="#e4e4e7" />
+                                            <rect x="42" y="33" width="26" height="4" rx="1" fill="#18181b" />
+                                        </svg>
+                                    @endif
+                                </div>
+                                <div class="mt-1.5 text-center text-xs text-zinc-600 dark:text-zinc-400 peer-checked:font-semibold peer-checked:text-zinc-900 dark:peer-checked:text-zinc-100">
+                                    {{ $layout['label'] }}
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
+                </flux:field>
+
+                <div x-cloak x-show="['split', 'split-card'].includes($wire.auth_layout)" class="space-y-6">
+                    <livewire:admin.media-selector
+                        wire:model="auth_image"
+                        name="auth_image"
+                        type="image"
+                        :crops="['default' => ['label' => __('Side image')]]"
+                        label="{{ __('Side image') }}"
+                    />
+
+                    <flux:select variant="listbox" wire:model="auth_image_side" :label="__('Image position')">
+                        <flux:select.option value="left">{{ __('Left') }}</flux:select.option>
+                        <flux:select.option value="right">{{ __('Right') }}</flux:select.option>
+                    </flux:select>
+                </div>
             </div>
 
             <flux:separator variant="subtle" />

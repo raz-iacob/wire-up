@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Services\SettingsService;
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Lockout;
@@ -14,8 +15,6 @@ use Illuminate\Validation\ValidationException;
 
 return new class extends Component
 {
-    public string $layout = 'simple';
-
     public string $email = '';
 
     public string $password = '';
@@ -78,7 +77,7 @@ return new class extends Component
     {
         return $this->view()
             ->title(__('Log In'))
-            ->layout('layouts::auth.'.$this->layout);
+            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
     }
 };
 ?>
@@ -125,7 +124,7 @@ return new class extends Component
         </div>
     </form>
 
-    @if (Route::has('register'))
+    @if (config('site.allow_registration'))
         <div class="space-x-1 text-center text-sm text-zinc-600 rtl:space-x-reverse dark:text-zinc-400">
             <span>{{ __('Don\'t have an account?') }}</span>
             <flux:link :href="route('register')" wire:navigate>{{ __('Sign up') }}</flux:link>

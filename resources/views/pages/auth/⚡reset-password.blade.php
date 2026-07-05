@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\CreateUserPasswordAction;
+use App\Services\SettingsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rules\Password as RulesPassword;
@@ -12,8 +13,6 @@ use Livewire\Component;
 
 return new class extends Component
 {
-    public string $layout = 'simple';
-
     #[Locked]
     public string $token = '';
 
@@ -52,7 +51,7 @@ return new class extends Component
     {
         return $this->view()
             ->title(__('Reset Password'))
-            ->layout('layouts::auth.'.$this->layout);
+            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
     }
 };
 ?>

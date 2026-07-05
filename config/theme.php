@@ -268,4 +268,16 @@ return [
         'minimal' => ['label' => 'Minimal',   'description' => 'Copyright only, centered'],
     ],
 
+    'default_auth_layout' => 'simple',
+    'default_auth_image_side' => 'left',
+
+    'auth_layouts' => [
+        'simple' => ['label' => 'Simple', 'description' => 'Centered form'],
+        'card' => ['label' => 'Card',   'description' => 'Form inside a card'],
+        'split' => ['label' => 'Split',  'description' => 'Form beside a full-height image'],
+        'split-card' => ['label' => 'Split card', 'description' => 'Form and image inside a centered card'],
+    ],
+
+    'auth_image_layouts' => ['split', 'split-card'],
+
 ];

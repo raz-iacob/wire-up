@@ -64,6 +64,17 @@ it('persists the selected active languages', function (): void {
         ->and(Locale::query()->where('code', 'fr')->value('active'))->toBeFalse();
 });
 
+it('persists the sign-up toggle', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-general')
+        ->set('allow_registration', true)
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('allow_registration'))->toBeTrue();
+});
+
 it('keeps the default locale active even when it is deselected', function (): void {
     $this->actingAsAdmin();
 

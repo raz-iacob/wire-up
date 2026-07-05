@@ -15,6 +15,26 @@ it('returns localized text with fallback to the default locale', function (): vo
     expect($block->text('missing'))->toBe('');
 });
 
+it('resolves a cta linked to an auth page', function (): void {
+    config()->set('site.allow_registration', true);
+
+    $block = Block::factory()->create([
+        'content' => ['cta' => ['link' => ['type' => 'page', 'value' => 'auth:register']]],
+    ]);
+
+    expect($block->ctaUrl('cta'))->toBe(route('register'));
+});
+
+it('returns null for a cta linked to a disabled auth page', function (): void {
+    config()->set('site.allow_registration', false);
+
+    $block = Block::factory()->create([
+        'content' => ['cta' => ['link' => ['type' => 'page', 'value' => 'auth:register']]],
+    ]);
+
+    expect($block->ctaUrl('cta'))->toBeNull();
+});
+
 it('builds an image url from the stored source', function (): void {
     $block = Block::factory()->create([
         'content' => ['image' => ['source' => 'uploads/pic.jpg', 'crop' => []]],

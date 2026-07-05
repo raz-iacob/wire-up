@@ -356,7 +356,25 @@ return new class extends Component
                 $rules["$base.*.appearance"] = ['required', Rule::in(['link', 'button'])];
                 $rules["$base.*.target"] = ['required', Rule::in(['_self', '_blank'])];
                 $rules["$base.*.label"] = ['required', 'string', 'max:100'];
-                $rules["$base.*.page_id"] = ["required_if:$base.*.type,page", 'nullable', 'integer', 'exists:pages,id'];
+                $rules["$base.*.page_id"] = [
+                    "required_if:$base.*.type,page",
+                    'nullable',
+                    function (string $attribute, mixed $value, Closure $fail): void {
+                        if ($value === null || $value === '') {
+                            return;
+                        }
+
+                        if (in_array($value, array_keys(SettingsService::current()->authPageOptions()), true)) {
+                            return;
+                        }
+
+                        if (Page::query()->whereKey($value)->exists()) {
+                            return;
+                        }
+
+                        $fail(__('Select a valid page.'));
+                    },
+                ];
                 $rules["$base.*.url"] = ["required_if:$base.*.type,link", 'nullable', 'string', 'max:255', 'regex:/^(https?:\/\/\S+|\/\S*|#\S+)$/'];
                 $rules["$base.*.icon"] = ['nullable', 'string', Rule::in(config()->array('menu.icons'))];
                 $rules["$base.*.badge"] = ['nullable', 'string', 'max:20'];

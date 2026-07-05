@@ -16,6 +16,8 @@ final class SettingsService
      */
     public const array BUILTIN_MENUS = ['header', 'footer'];
 
+    public const string AUTH_LINK_PREFIX = 'auth:';
+
     /**
      * @var array<string, string>
      */
@@ -178,6 +180,57 @@ final class SettingsService
     public function noindex(): bool
     {
         return (bool) config('site.noindex', false);
+    }
+
+    public function allowsRegistration(): bool
+    {
+        return (bool) config('site.allow_registration', false);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function authPageOptions(): array
+    {
+        $options = ['auth:login' => __('Login')];
+
+        if ($this->allowsRegistration()) {
+            $options['auth:register'] = __('Register');
+        }
+
+        return $options;
+    }
+
+    public function resolveAuthLink(string $value): ?string
+    {
+        return match ($value) {
+            'auth:login' => route('login'),
+            'auth:register' => $this->allowsRegistration() ? route('register') : null,
+            default => null,
+        };
+    }
+
+    public function authLayout(): string
+    {
+        $layout = config('site.auth_layout');
+
+        if (is_string($layout) && config()->has('theme.auth_layouts.'.$layout)) {
+            return $layout;
+        }
+
+        return config()->string('theme.default_auth_layout');
+    }
+
+    public function authImageUrl(string $crop = 'default'): ?string
+    {
+        $item = config('site.auth_image');
+
+        return $this->imageUrl(is_array($item) ? $item : null, $crop, ['w' => 1200, 'q' => 80]);
+    }
+
+    public function authImageSide(): string
+    {
+        return config('site.auth_image_side') === 'right' ? 'right' : 'left';
     }
 
     public function currency(): string
@@ -692,10 +745,15 @@ final class SettingsService
         if ($type === 'link') {
             $url = is_string($item['url'] ?? null) && $item['url'] !== '' ? $item['url'] : null;
         } elseif ($type === 'page') {
-            $pageId = isset($item['page_id']) ? (int) $item['page_id'] : null;
-            $page = $pageId !== null ? $pages->get($pageId) : null;
-            if ($page instanceof Page && $page->slug !== '') {
-                $url = route('page', $page->slug);
+            $raw = is_scalar($item['page_id'] ?? null) ? (string) $item['page_id'] : '';
+
+            if (str_starts_with($raw, self::AUTH_LINK_PREFIX)) {
+                $url = $this->resolveAuthLink($raw);
+            } else {
+                $page = $raw !== '' ? $pages->get((int) $raw) : null;
+                if ($page instanceof Page && $page->slug !== '') {
+                    $url = route('page', $page->slug);
+                }
             }
         }
 

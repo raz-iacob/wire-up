@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 
+beforeEach(fn () => config()->set('site.allow_registration', true));
+
 it('renders registration page', function (): void {
     $response = $this->fromRoute('home')
         ->get(route('register'));
@@ -147,4 +149,10 @@ it('redirects authenticated admin users away from registration', function (): vo
         ->get(route('register'));
 
     $response->assertRedirectToRoute('admin.dashboard');
+});
+
+it('redirects guests away from registration when sign-ups are disabled', function (): void {
+    config()->set('site.allow_registration', false);
+
+    $this->get(route('register'))->assertRedirectToRoute('login');
 });

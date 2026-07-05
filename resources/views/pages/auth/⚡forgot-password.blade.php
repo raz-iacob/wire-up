@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Services\SettingsService;
 use Livewire\Component;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Password;
 
 return new class extends Component
 {
-    public string $layout = 'simple';
-
     public string $email = '';
 
     public function mount(): void
@@ -31,7 +30,7 @@ return new class extends Component
     {
         return $this->view()
             ->title(__('Forgot password'))
-            ->layout('layouts::auth.'.$this->layout);
+            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
     }
 };
 ?>

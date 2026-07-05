@@ -99,6 +99,9 @@
                             @foreach ($pages as $page)
                                 <flux:select.option :value="$page['id']">{{ $page['title'] }}</flux:select.option>
                             @endforeach
+                            @foreach (resolve(App\Services\SettingsService::class)->authPageOptions() as $authValue => $authLabel)
+                                <flux:select.option value="{{ $authValue }}">{{ $authLabel }}</flux:select.option>
+                            @endforeach
                         </flux:select>
                         <flux:error name="{{ $base }}.page_id" />
                     </flux:field>

@@ -498,3 +498,91 @@ it('returns null for an unknown color slot', function (): void {
 
     expect((new SettingsService)->color('not_a_slot'))->toBeNull();
 });
+
+it('reports whether public registration is allowed', function (): void {
+    Settings::set(['allow_registration' => true]);
+
+    expect((new SettingsService)->allowsRegistration())->toBeTrue();
+});
+
+it('defaults public registration to disabled', function (): void {
+    config()->set('site.allow_registration');
+
+    expect((new SettingsService)->allowsRegistration())->toBeFalse();
+});
+
+it('returns the configured auth layout', function (): void {
+    Settings::set(['auth_layout' => 'split']);
+
+    expect((new SettingsService)->authLayout())->toBe('split');
+});
+
+it('falls back to the default auth layout for an unknown value', function (): void {
+    Settings::set(['auth_layout' => 'nope']);
+
+    expect((new SettingsService)->authLayout())->toBe(config()->string('theme.default_auth_layout'));
+});
+
+it('builds the auth side image url when configured', function (): void {
+    Settings::set(['auth_image' => ['source' => 'images/auth.jpg']]);
+
+    expect((new SettingsService)->authImageUrl())
+        ->toBeString()
+        ->toContain('images/auth.jpg');
+});
+
+it('returns null when no auth side image is configured', function (): void {
+    config()->set('site.auth_image');
+
+    expect((new SettingsService)->authImageUrl())->toBeNull();
+});
+
+it('returns the configured auth image side', function (): void {
+    Settings::set(['auth_image_side' => 'right']);
+
+    expect((new SettingsService)->authImageSide())->toBe('right');
+});
+
+it('defaults the auth image side to left', function (): void {
+    config()->set('site.auth_image_side');
+
+    expect((new SettingsService)->authImageSide())->toBe('left');
+});
+
+it('offers register as a linkable auth page only when sign-ups are enabled', function (): void {
+    config()->set('site.allow_registration', false);
+    expect((new SettingsService)->authPageOptions())->toBe(['auth:login' => __('Login')]);
+
+    config()->set('site.allow_registration', true);
+    expect((new SettingsService)->authPageOptions())->toHaveKeys(['auth:login', 'auth:register']);
+});
+
+it('resolves auth link sentinels to their route urls', function (): void {
+    config()->set('site.allow_registration', true);
+
+    expect((new SettingsService)->resolveAuthLink('auth:login'))->toBe(route('login'))
+        ->and((new SettingsService)->resolveAuthLink('auth:register'))->toBe(route('register'))
+        ->and((new SettingsService)->resolveAuthLink('auth:unknown'))->toBeNull();
+
+    config()->set('site.allow_registration', false);
+    expect((new SettingsService)->resolveAuthLink('auth:register'))->toBeNull();
+});
+
+it('resolves an auth page menu item to its route url', function (): void {
+    $menu = headerMenu([
+        ['type' => 'page', 'appearance' => 'link', 'target' => '_self', 'label' => 'Sign in', 'page_id' => 'auth:login', 'url' => ''],
+    ])->menu('header');
+
+    expect($menu)->toHaveCount(1)
+        ->and($menu[0]['url'])->toBe(route('login'));
+});
+
+it('drops a register menu item when sign-ups are disabled', function (): void {
+    config()->set('site.allow_registration', false);
+
+    $menu = headerMenu([
+        ['type' => 'page', 'appearance' => 'link', 'target' => '_self', 'label' => 'Join', 'page_id' => 'auth:register', 'url' => ''],
+    ])->menu('header');
+
+    expect($menu)->toBeEmpty();
+});

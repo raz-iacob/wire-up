@@ -6,10 +6,16 @@
         <div
             class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 md:max-w-none md:grid-cols-2 md:px-0"
         >
+            @php
+                $settings = resolve(App\Services\SettingsService::class);
+                $authImage = $settings->authImageUrl();
+                $panelStyle = $authImage ? "background-image: url('{$authImage}')" : '';
+            @endphp
             <div
-                class="bg-muted relative hidden h-full flex-col p-10 text-white md:flex dark:border-e dark:border-neutral-800"
+                class="bg-muted relative hidden h-full flex-col bg-cover bg-center p-10 text-white md:flex dark:border-neutral-800 {{ $settings->authImageSide() === 'right' ? 'md:order-last dark:border-s' : 'dark:border-e' }}"
+                style="{{ $panelStyle }}"
             >
-                <div class="absolute inset-0 bg-neutral-900"></div>
+                <div class="absolute inset-0 {{ $authImage ? 'bg-neutral-900/50' : 'bg-neutral-900' }}"></div>
                 <a href="/" class="relative z-20 flex items-center text-lg font-medium" wire:navigate>
                     <livewire:shared.logo class="h-10 fill-current text-white" />
                     <span class="sr-only">{{ config('app.name', 'WireUp') }}</span>

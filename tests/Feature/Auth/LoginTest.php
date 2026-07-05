@@ -16,6 +16,14 @@ it('can render the login screen', function (): void {
         ->assertSeeLivewire('pages::auth.login');
 });
 
+it('renders every auth layout', function (string $layout): void {
+    config()->set('site.auth_layout', $layout);
+    config()->set('site.auth_image', ['source' => 'images/auth.jpg']);
+    config()->set('site.auth_image_side', 'right');
+
+    $this->get(route('login'))->assertOk();
+})->with(['simple', 'card', 'split', 'split-card']);
+
 it('can authenticate users using the login screen', function (): void {
     $user = User::factory()->create([
         'email' => 'user@example.com',

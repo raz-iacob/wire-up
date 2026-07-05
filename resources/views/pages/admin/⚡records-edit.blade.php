@@ -10,6 +10,7 @@ use App\Enums\FieldType;
 use App\Models\Category;
 use App\Models\Media;
 use App\Models\Page;
+use App\Services\SettingsService;
 use App\Models\Record;
 use App\Models\RecordType;
 use App\Traits\HasBlockBuilder;
@@ -463,12 +464,14 @@ return new class extends Component
     #[Computed]
     public function pageLinkOptions(): array
     {
-        return Page::query()
+        $pages = Page::query()
             ->with('translations')
             ->get()
             ->sortBy(fn (Page $page): string => $page->title)
             ->mapWithKeys(fn (Page $page): array => [$page->id => $page->title])
             ->all();
+
+        return $pages + SettingsService::current()->authPageOptions();
     }
 
     public function render(): View

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\BlockType;
+use App\Services\SettingsService;
 use Carbon\CarbonInterface;
 use Database\Factories\BlockFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -246,7 +247,9 @@ final class Block extends Model
 
         return match ($link['type'] ?? 'url') {
             'anchor' => '#'.mb_ltrim($value, '#'),
-            'page' => Page::query()->whereKey($value)->first()?->getUrl(),
+            'page' => str_starts_with($value, SettingsService::AUTH_LINK_PREFIX)
+                ? resolve(SettingsService::class)->resolveAuthLink($value)
+                : Page::query()->whereKey($value)->first()?->getUrl(),
             default => $value,
         };
     }

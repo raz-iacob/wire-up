@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\CreateUserAction;
 use App\Models\User;
+use App\Services\SettingsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -13,8 +14,6 @@ use Livewire\Component;
 
 return new class extends Component
 {
-    public string $layout = 'simple';
-
     public string $name = '';
 
     public string $email = '';
@@ -25,10 +24,15 @@ return new class extends Component
 
     public function mount(): void
     {
+        if (! resolve(SettingsService::class)->allowsRegistration()) {
+            $this->redirectRoute('login', navigate: true);
+        }
     }
 
     public function register(CreateUserAction $action): void
     {
+        abort_unless(resolve(SettingsService::class)->allowsRegistration(), 403);
+
         /** @var array<string, mixed> $credentials */
         $credentials = $this->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -51,7 +55,7 @@ return new class extends Component
     {
         return $this->view()
             ->title(__('Register'))
-            ->layout('layouts::auth.'.$this->layout);
+            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
     }
 };
 ?>
