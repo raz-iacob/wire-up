@@ -577,14 +577,14 @@ return new class extends Component
                     <flux:button icon="plus" variant="filled" wire:click="openBlockPicker">{{ __('Add block') }}</flux:button>
 
                     <flux:modal name="block-picker" class="w-full md:max-w-5xl">
-                        @php($pickerSearches = collect(\App\Enums\BlockType::cases())->map(fn (\App\Enums\BlockType $type): string => \Illuminate\Support\Str::lower($type->label().' '.$type->description()))->values())
+                        @php($pickerSearches = collect(\App\Enums\BlockType::sorted())->map(fn (\App\Enums\BlockType $type): string => \Illuminate\Support\Str::lower($type->label().' '.$type->description()))->values())
                         <div class="space-y-6" x-data="{ q: '' }" x-on:block-picker-opened.window="q = ''; $nextTick(() => { const i = $refs.blockSearch; (i?.tagName === 'INPUT' ? i : i?.querySelector('input'))?.focus() })">
                             <div class="space-y-4">
                                 <flux:heading size="lg">{{ __('Add a block') }}</flux:heading>
                                 <flux:input x-ref="blockSearch" x-model="q" icon="magnifying-glass" clearable placeholder="{{ __('Search blocks…') }}" />
                             </div>
                             <div class="grid content-start min-h-100 overflow-y-auto overscroll-contain p-1 md:h-[calc(100vh-20rem)] grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                                @foreach (\App\Enums\BlockType::cases() as $pickerType)
+                                @foreach (\App\Enums\BlockType::sorted() as $pickerType)
                                     <button type="button" wire:click="addBlock('{{ $pickerType->value }}')" x-show="q.trim() === '' || @js($pickerSearches[$loop->index]).includes(q.toLowerCase().trim())" class="flex h-fit flex-col gap-2 rounded-lg border border-zinc-200 dark:border-white/10 p-4 text-left transition hover:border-zinc-300 hover:bg-zinc-50 dark:hover:border-white/20 dark:hover:bg-white/5">
                                         <flux:icon name="{{ $pickerType->icon() }}" class="size-6 text-zinc-400" />
                                         <flux:heading size="sm">{{ $pickerType->label() }}</flux:heading>

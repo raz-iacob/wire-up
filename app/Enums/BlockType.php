@@ -18,6 +18,7 @@ enum BlockType: string
     case TESTIMONIALS = 'testimonials';
     case SPONSORS = 'sponsors';
     case FEATURE_CARDS = 'feature-cards';
+    case COLLECTION = 'collection';
     case BUTTONS = 'buttons';
     case AUDIO = 'audio';
     case DOWNLOADS = 'downloads';
@@ -37,6 +38,17 @@ enum BlockType: string
         return array_map(fn (self $type): string => $type->value, self::cases());
     }
 
+    /**
+     * @return array<int, self>
+     */
+    public static function sorted(): array
+    {
+        $cases = self::cases();
+        usort($cases, fn (self $a, self $b): int => $a->label() <=> $b->label());
+
+        return $cases;
+    }
+
     public function label(): string
     {
         return match ($this) {
@@ -50,6 +62,7 @@ enum BlockType: string
             self::TESTIMONIALS => __('Testimonials'),
             self::SPONSORS => __('Sponsors'),
             self::FEATURE_CARDS => __('Feature Cards'),
+            self::COLLECTION => __('Collection'),
             self::BUTTONS => __('Buttons'),
             self::AUDIO => __('Audio'),
             self::DOWNLOADS => __('Downloads'),
@@ -76,6 +89,7 @@ enum BlockType: string
             self::TESTIMONIALS => 'chat-bubble-left-right',
             self::SPONSORS => 'handshake',
             self::FEATURE_CARDS => 'squares-2x2',
+            self::COLLECTION => 'rectangle-stack',
             self::BUTTONS => 'cursor-arrow-rays',
             self::AUDIO => 'musical-note',
             self::DOWNLOADS => 'arrow-down-tray',
@@ -107,6 +121,7 @@ enum BlockType: string
             self::TESTIMONIALS => __('Customer quotes shown in a grid, carousel or single column.'),
             self::SPONSORS => __('Sponsor and partner logos shown in a grid, marquee or grouped by tier.'),
             self::FEATURE_CARDS => __('A responsive grid of cards, each with an image or icon, a title and a short description.'),
+            self::COLLECTION => __('Display records from a content type as a carousel, grid or list — by latest, category or a hand-picked set.'),
             self::BUTTONS => __('A row of call-to-action buttons linking to pages, sections or external URLs.'),
             self::AUDIO => __('An audio player for a single uploaded track or recording.'),
             self::DOWNLOADS => __('A list of downloadable files such as PDFs, documents or archives.'),
@@ -242,6 +257,25 @@ enum BlockType: string
                 'intro' => [],
                 'items' => [
                     ['id' => (string) Str::uuid(), 'image' => null, 'title' => [], 'body' => [], 'cta' => $cta],
+                ],
+            ],
+            self::COLLECTION => [
+                'recordTypeId' => null,
+                'source' => 'latest',
+                'recordIds' => [],
+                'categoryId' => null,
+                'limit' => 12,
+                'layout' => 'grid',
+                'columns' => 3,
+                'showImage' => true,
+                'perPage' => 6,
+                'pagination' => 'none',
+                'hasBackground' => false,
+                'heading' => [],
+                'button' => [
+                    'enabled' => false,
+                    'text' => [],
+                    'link' => ['type' => 'url', 'value' => '', 'newTab' => false],
                 ],
             ],
             self::BUTTONS => [

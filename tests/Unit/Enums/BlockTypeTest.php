@@ -22,8 +22,17 @@ it('derives admin and frontend view paths from the value', function (): void {
     expect(BlockType::ACCORDION->frontendView())->toBe('components.site.blocks.accordion');
 });
 
+it('sorts every case alphabetically by label', function (): void {
+    $labels = array_map(fn (BlockType $type): string => $type->label(), BlockType::sorted());
+    $expected = $labels;
+    sort($expected);
+
+    expect(BlockType::sorted())->toHaveCount(count(BlockType::cases()))
+        ->and($labels)->toBe($expected);
+});
+
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'buttons', 'audio', 'downloads', 'rich-text', 'stats', 'team', 'pricing', 'contact-form', 'spacer', 'divider']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'collection', 'buttons', 'audio', 'downloads', 'rich-text', 'stats', 'team', 'pricing', 'contact-form', 'spacer', 'divider']);
 });
 
 it('seeds the divider default content and has no anchor', function (): void {

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Enums\BlockType;
 use App\Enums\ContentStatus;
+use App\Enums\MediaType;
 use App\Models\Locale;
+use App\Models\Media;
 use App\Models\Record;
 use App\Models\RecordType;
 
@@ -135,4 +137,70 @@ it('returns an empty string when a record has no textual content', function (): 
     $record = Record::factory()->create(['data' => []]);
 
     expect($record->plainText())->toBe('');
+});
+
+it('builds a primary image url from the first image-bearing field', function (): void {
+    $type = RecordType::factory()->create([
+        'fields' => [['key' => 'photo', 'type' => 'photo', 'translatable' => false]],
+    ]);
+    $record = Record::factory()->create(['record_type_id' => $type->id]);
+    $image = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'media/pic.jpg']);
+    $record->media()->attach($image->id, ['role' => 'photo', 'locale' => 'en', 'position' => 0]);
+    $record->load('media', 'recordType');
+
+    expect($record->primaryImageUrl())->toContain('media/pic.jpg');
+});
+
+it('skips non-image fields and non-image media, and applies a stored crop', function (): void {
+    $type = RecordType::factory()->create([
+        'fields' => [
+            ['key' => 'headline', 'type' => 'text', 'translatable' => true],
+            ['key' => 'bogus', 'type' => 'not-a-real-type', 'translatable' => false],
+            ['key' => 'gallery', 'type' => 'media-gallery', 'translatable' => false],
+        ],
+    ]);
+    $record = Record::factory()->create(['record_type_id' => $type->id]);
+
+    $video = Media::factory()->create(['type' => MediaType::VIDEO, 'source' => 'media/clip.mp4']);
+    $image = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'media/hero.jpg']);
+    $record->media()->attach($video->id, ['role' => 'gallery', 'locale' => 'en', 'position' => 0]);
+    $record->media()->attach($image->id, ['role' => 'gallery', 'locale' => 'en', 'position' => 1, 'crop' => ['default' => ['crop_w' => 400, 'crop_h' => 300, 'crop_x' => 5, 'crop_y' => 10]]]);
+    $record->load('media', 'recordType');
+
+    expect($record->primaryImageUrl())
+        ->toContain('media/hero.jpg')
+        ->toContain('crop=400-300-5-10');
+});
+
+it('returns null for the primary image when the record has none', function (): void {
+    $type = RecordType::factory()->create([
+        'fields' => [['key' => 'photo', 'type' => 'photo', 'translatable' => false]],
+    ]);
+    $record = Record::factory()->create(['record_type_id' => $type->id])->load('media', 'recordType');
+
+    expect($record->primaryImageUrl())->toBeNull();
+});
+
+it('resolves the display heading and excerpt, with SEO fallbacks', function (): void {
+    $type = RecordType::factory()->create(['fields' => []]);
+
+    $rich = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'SEO Title'],
+        'description' => ['en' => 'SEO description.'],
+        'data' => ['heading' => ['en' => 'On-page Heading'], 'overview' => ['en' => '<p>Rich overview body.</p>']],
+    ]);
+
+    expect($rich->displayHeading())->toBe('On-page Heading')
+        ->and($rich->displayExcerpt())->toBe('Rich overview body.');
+
+    $bare = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Just Title'],
+        'description' => ['en' => 'Just a description.'],
+        'data' => [],
+    ]);
+
+    expect($bare->displayHeading())->toBe('Just Title')
+        ->and($bare->displayExcerpt())->toBe('Just a description.');
 });

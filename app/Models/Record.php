@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ContentStatus;
+use App\Enums\FieldType;
+use App\Enums\MediaType;
 use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
 use App\Traits\HasMedia;
@@ -92,6 +94,24 @@ final class Record extends Model
         return (string) str(collect($parts)->filter()->implode(' '))->squish();
     }
 
+    public function displayHeading(): string
+    {
+        $heading = $this->fieldValue('heading', true);
+
+        return is_string($heading) && mb_trim($heading) !== '' ? $heading : $this->title;
+    }
+
+    public function displayExcerpt(int $limit = 160): string
+    {
+        $overview = $this->fieldValue('overview', true);
+        $source = is_string($overview) && mb_trim($overview) !== '' ? $overview : $this->description;
+
+        return str(html_entity_decode(strip_tags((string) $source), ENT_QUOTES | ENT_HTML5, 'UTF-8'))
+            ->squish()
+            ->limit($limit)
+            ->value();
+    }
+
     public function fieldValue(string $key, bool $translatable): mixed
     {
         $value = $this->data[$key] ?? null;
@@ -115,6 +135,41 @@ final class Record extends Model
             ->sortBy(fn (Media $media): int => (int) $media->pivot->position)
             ->values()
             ->all();
+    }
+
+    public function primaryImageUrl(int $width = 800): ?string
+    {
+        $this->loadMissing('recordType', 'media');
+
+        foreach ($this->recordType->fields as $field) {
+            $type = FieldType::tryFrom((string) ($field['type'] ?? ''));
+
+            if ($type === null) {
+                continue;
+            }
+
+            if (! in_array(MediaType::IMAGE->value, $type->acceptsMedia(), true)) {
+                continue;
+            }
+
+            foreach ($this->fieldMedia((string) ($field['key'] ?? ''), (bool) ($field['translatable'] ?? false)) as $media) {
+                if ($media->type !== MediaType::IMAGE) {
+                    continue;
+                }
+
+                $cropSet = is_array($media->pivot->crop ?? null) ? $media->pivot->crop : [];
+                $crop = is_array($cropSet['default'] ?? null) ? $cropSet['default'] : [];
+                $options = ["w={$width}"];
+
+                if (($crop['crop_w'] ?? 0) > 0 && ($crop['crop_h'] ?? 0) > 0) {
+                    $options[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
+                }
+
+                return route('image.show', ['options' => implode(',', $options), 'path' => $media->source]);
+            }
+        }
+
+        return null;
     }
 
     /**
