@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\FieldType;
+use App\Enums\MediaType;
 use Carbon\CarbonInterface;
 use Database\Factories\RecordTypeFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -101,6 +102,18 @@ final class RecordType extends Model
         return array_any(
             $this->indexColumnFields(),
             fn (array $field): bool => (bool) (FieldType::tryFrom($field['type'])?->isMedia()),
+        );
+    }
+
+    public function hasImageField(): bool
+    {
+        return array_any(
+            $this->fields,
+            fn (array $field): bool => in_array(
+                MediaType::IMAGE->value,
+                FieldType::tryFrom((string) ($field['type'] ?? ''))?->acceptsMedia() ?? [],
+                true,
+            ),
         );
     }
 

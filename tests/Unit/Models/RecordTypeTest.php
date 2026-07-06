@@ -72,3 +72,15 @@ it('finds a field by key', function (): void {
     expect($type->fieldByKey('sku'))->toMatchArray(['key' => 'sku'])
         ->and($type->fieldByKey('missing'))->toBeNull();
 });
+
+it('detects an image-bearing field in the blueprint', function (): void {
+    $withPhoto = RecordType::factory()->create(['fields' => [['key' => 'photo', 'type' => 'photo']]]);
+    $withGallery = RecordType::factory()->create(['fields' => [['key' => 'g', 'type' => 'media-gallery']]]);
+    $textOnly = RecordType::factory()->create(['fields' => [['key' => 'name', 'type' => 'text']]]);
+    $videoOnly = RecordType::factory()->create(['fields' => [['key' => 'v', 'type' => 'video']]]);
+
+    expect($withPhoto->hasImageField())->toBeTrue()
+        ->and($withGallery->hasImageField())->toBeTrue()
+        ->and($textOnly->hasImageField())->toBeFalse()
+        ->and($videoOnly->hasImageField())->toBeFalse();
+});

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Actions\CreateRecordAction;
+use App\Enums\MediaType;
+use App\Models\Media;
 use App\Models\Record;
 use App\Models\RecordType;
 use App\Models\User;
@@ -58,6 +60,33 @@ it('shows a View link to the public record url', function (): void {
     Livewire::test('pages::admin.records-index', ['recordType' => $type])
         ->assertSee('View')
         ->assertSee(route('record', ['products', $slug]));
+});
+
+it('shows a thumbnail in the title cell when the type has an image field', function (): void {
+    $type = RecordType::factory()->create([
+        'slug_prefix' => 'gear',
+        'fields' => [['key' => 'photo', 'type' => 'photo', 'translatable' => false]],
+    ]);
+    $record = Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Widget']]);
+    $image = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'media/widget.jpg']);
+    $record->media()->attach($image->id, ['role' => 'photo', 'locale' => 'en', 'position' => 0]);
+
+    $thumbnail = Record::query()->with(['media', 'recordType'])->find($record->id)->primaryImageUrl(200);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->assertSee($thumbnail, false);
+});
+
+it('does not render thumbnails for a type without an image field', function (): void {
+    $type = productType();
+    resolve(CreateRecordAction::class)->handle($type, ['title' => 'Blue Widget']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->assertDontSee('object-cover');
 });
 
 it('duplicates a record via the modal with an editable title', function (): void {

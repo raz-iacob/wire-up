@@ -120,7 +120,8 @@ return new class extends Component
         $paginator = Record::query()
             ->where('record_type_id', $this->recordType->id)
             ->with(['translations', 'slugs'])
-            ->when($this->recordType->hasMediaColumns(), fn (Builder $query): Builder => $query->with('media'))
+            ->when($this->recordType->hasMediaColumns() || $this->recordType->hasImageField(), fn (Builder $query): Builder => $query->with('media'))
+            ->when($this->recordType->hasImageField(), fn (Builder $query): Builder => $query->with('recordType'))
             ->when($this->status, function (Builder $query, string $status): Builder {
                 if ($status === ContentStatus::SCHEDULED->value) {
                     return $query->where('status', ContentStatus::PUBLISHED)
@@ -223,7 +224,19 @@ return new class extends Component
                 @foreach ($this->records as $row)
                 <flux:table.row wire:key="{{ $row->id }}">
                     <flux:table.cell>
-                        <a href="{{ route('admin.records-edit', [$this->recordType, $row]) }}" class="flex items-center gap-2">
+                        <a href="{{ route('admin.records-edit', [$this->recordType, $row]) }}" class="flex items-center gap-3">
+                            @if($this->recordType->hasImageField())
+                            @php($thumbnail = $row->primaryImageUrl(200))
+                            <div class="size-9 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
+                                @if($thumbnail)
+                                    <img src="{{ $thumbnail }}" alt="" class="size-full object-cover" loading="lazy" />
+                                @else
+                                    <div class="flex size-full items-center justify-center text-zinc-300 dark:text-zinc-600">
+                                        <flux:icon name="photo" class="size-4" />
+                                    </div>
+                                @endif
+                            </div>
+                            @endif
                             <flux:text variant="strong" class="hover:underline">{{ $row->title !== '' ? $row->title : __('Untitled') }}</flux:text>
                         </a>
                     </flux:table.cell>
