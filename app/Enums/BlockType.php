@@ -268,6 +268,7 @@ enum BlockType: string
                 'layout' => 'grid',
                 'columns' => 3,
                 'showImage' => true,
+                'fields' => [],
                 'perPage' => 6,
                 'pagination' => 'none',
                 'hasBackground' => false,

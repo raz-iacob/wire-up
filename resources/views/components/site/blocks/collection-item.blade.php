@@ -1,10 +1,19 @@
-@props(['record', 'showImage' => true, 'layout' => 'grid'])
+@props(['record', 'showImage' => true, 'layout' => 'grid', 'fields' => []])
 
 @php
     $url = $record->getUrl();
     $heading = $record->displayHeading();
     $excerpt = $record->displayExcerpt();
     $image = $showImage ? $record->primaryImageUrl($layout === 'list' ? 400 : 900) : null;
+
+    $meta = [];
+    foreach ($fields as $field) {
+        $value = $record->columnValue($field);
+
+        if ($value !== '' && $value !== '—') {
+            $meta[] = $value;
+        }
+    }
 @endphp
 
 @if ($layout === 'list')
@@ -17,6 +26,9 @@
             @if ($excerpt !== '')
                 <p class="mt-1 leading-relaxed opacity-80">{{ $excerpt }}</p>
             @endif
+            @if ($meta !== [])
+                <p class="mt-2 font-medium">{{ implode(' · ', $meta) }}</p>
+            @endif
         </div>
     </a>
 @else
@@ -28,6 +40,9 @@
             <h3 class="text-lg font-semibold tracking-tight group-hover:text-(--wire-accent)">{{ $heading }}</h3>
             @if ($excerpt !== '')
                 <p class="leading-relaxed opacity-80">{{ $excerpt }}</p>
+            @endif
+            @if ($meta !== [])
+                <p class="mt-auto pt-1 font-medium">{{ implode(' · ', $meta) }}</p>
             @endif
         </div>
     </a>

@@ -84,3 +84,17 @@ it('detects an image-bearing field in the blueprint', function (): void {
         ->and($textOnly->hasImageField())->toBeFalse()
         ->and($videoOnly->hasImageField())->toBeFalse();
 });
+
+it('lists displayable fields excluding heading, overview and media', function (): void {
+    $type = RecordType::factory()->create([
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text'],
+            ['key' => 'overview', 'type' => 'rich-text'],
+            ['key' => 'current_price', 'type' => 'money'],
+            ['key' => 'sku', 'type' => 'text'],
+            ['key' => 'gallery', 'type' => 'media-gallery'],
+        ],
+    ]);
+
+    expect(array_column($type->displayableFields(), 'key'))->toBe(['current_price', 'sku']);
+});

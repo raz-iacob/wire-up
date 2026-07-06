@@ -105,6 +105,18 @@ final class RecordType extends Model
         );
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function displayableFields(): array
+    {
+        return array_values(array_filter(
+            $this->fields,
+            fn (array $field): bool => ! in_array($field['key'] ?? '', ['heading', 'overview'], true)
+                && ! (FieldType::tryFrom($field['type'] ?? '')?->isMedia() ?? false),
+        ));
+    }
+
     public function hasImageField(): bool
     {
         return array_any(

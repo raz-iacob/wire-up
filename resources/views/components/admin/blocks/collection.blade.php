@@ -10,6 +10,9 @@
 
     $recordTypes = \App\Models\RecordType::query()->orderBy('position')->get(['id', 'name']);
     $categories = \App\Models\Category::query()->with('translations')->get()->sortBy(fn ($category) => $category->name)->values();
+
+    $selectedType = $selectedTypeId ? \App\Models\RecordType::query()->find($selectedTypeId) : null;
+    $displayFields = $selectedType ? $selectedType->displayableFields() : [];
 @endphp
 
 <div class="flex flex-col gap-6">
@@ -58,6 +61,7 @@
         <flux:radio.group wire:model.live="{{ $c }}.layout" variant="segmented" label="{{ __('Layout') }}">
             <flux:radio value="grid" icon="squares-2x2" label="{{ __('Grid') }}" />
             <flux:radio value="list" icon="list-bullet" label="{{ __('List') }}" />
+            <flux:radio value="carousel" icon="view-columns" label="{{ __('Carousel') }}" />
         </flux:radio.group>
 
         <div x-show="{{ $b }}?.layout === 'grid'" x-cloak>
@@ -68,6 +72,14 @@
             </flux:radio.group>
         </div>
     </div>
+
+    @if ($selectedTypeId && $displayFields !== [])
+        <flux:pillbox wire:model="{{ $c }}.fields" multiple searchable label="{{ __('Extra fields to show') }}" placeholder="{{ __('Choose fields to display below the description…') }}">
+            @foreach ($displayFields as $field)
+                <flux:pillbox.option :value="$field['key']" :label="$selectedType->fieldLabel($field)" />
+            @endforeach
+        </flux:pillbox>
+    @endif
 
     <div class="flex flex-col gap-4">
         <flux:switch wire:model.live="{{ $c }}.showImage" label="{{ __('Show each record\'s image') }}" align="left" />
