@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Enums\ContentStatus;
+use App\Models\Record;
+use App\Models\RecordType;
+use App\Models\Submission;
 use App\Models\User;
+use Livewire\Livewire;
 
 it('can render the dashboard screen', function (): void {
     $response = $this->actingAsAdmin()
@@ -39,4 +44,47 @@ it('redirects guests away from dashboard', function (): void {
         ->get(route('admin.dashboard'));
 
     $response->assertRedirectToRoute('login');
+});
+
+it('shows content breakdown and recent activity', function (): void {
+    $type = RecordType::factory()->create([
+        'key' => 'product', 'slug_prefix' => 'products', 'name' => 'Products', 'fields' => [],
+    ]);
+    Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Live Widget'],
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'metadata' => ['published_locales' => ['en']],
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.dashboard')
+        ->assertOk()
+        ->assertSee('Products')
+        ->assertSee('Live Widget')
+        ->assertSee('Published items');
+});
+
+it('shows unread message count and latest messages', function (): void {
+    Submission::factory()->create(['name' => 'Ada Lovelace', 'read_at' => null]);
+    Submission::factory()->create(['name' => 'Alan Turing', 'read_at' => now()]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.dashboard')
+        ->assertSee('Ada Lovelace')
+        ->assertSee('Unread messages');
+});
+
+it('lists users who are currently online', function (): void {
+    User::factory()->create(['name' => 'Recently Active', 'last_seen_at' => now()->subMinutes(2)]);
+    User::factory()->create(['name' => 'Long Gone', 'last_seen_at' => now()->subDays(3)]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.dashboard')
+        ->assertSee('Recently Active')
+        ->assertDontSee('Long Gone');
 });
