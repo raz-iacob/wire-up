@@ -74,3 +74,22 @@ it('rejects an unknown appearance value', function (): void {
 
     expect(data_get($user->fresh()->metadata, 'appearance'))->not->toBe('neon');
 });
+
+it('seeds the stored appearance preference into local storage on admin pages', function (): void {
+    $user = User::factory()->owner()->create(['metadata' => ['appearance' => 'dark']]);
+
+    $this->actingAs($user)
+        ->get(route('admin.account-appearance'))
+        ->assertOk()
+        ->assertSee("localStorage.setItem('flux.appearance', preference)", false)
+        ->assertSee('"dark"', false);
+});
+
+it('does not seed local storage when no appearance preference is stored', function (): void {
+    $user = User::factory()->owner()->create(['metadata' => []]);
+
+    $this->actingAs($user)
+        ->get(route('admin.account-appearance'))
+        ->assertOk()
+        ->assertDontSee("localStorage.setItem('flux.appearance', preference)", false);
+});

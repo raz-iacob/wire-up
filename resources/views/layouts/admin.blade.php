@@ -29,6 +29,23 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet">
 
+        @php
+            $storedAppearance = data_get(auth()->user()?->metadata, 'appearance');
+            $storedAppearance = in_array($storedAppearance, ['light', 'dark', 'system'], true) ? $storedAppearance : null;
+        @endphp
+        @if ($storedAppearance)
+        <script>
+            (function () {
+                var preference = @json($storedAppearance);
+                if (preference === 'system') {
+                    localStorage.removeItem('flux.appearance');
+                } else {
+                    localStorage.setItem('flux.appearance', preference);
+                }
+            })();
+        </script>
+        @endif
+
         @fluxAppearance
 
         <title>{{ isset($title) ? "$title | " : '' }}{{ $siteName }}</title>
