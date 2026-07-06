@@ -139,6 +139,29 @@ trait HasBlockBuilder
         }
     }
 
+    /**
+     * @param  array<int, int|string>  $value
+     */
+    #[On('block-records-updated')]
+    public function syncBlockRecords(string $blockId, array $value): void
+    {
+        if (! isset($this->blocks[$blockId])) {
+            return;
+        }
+
+        $ids = [];
+
+        foreach ($value as $id) {
+            $id = (string) $id;
+
+            if (! in_array($id, $ids, true)) {
+                $ids[] = $id;
+            }
+        }
+
+        $this->blocks[$blockId]['content']['recordIds'] = $ids;
+    }
+
     public function addTestimonialItem(string $id): void
     {
         if (! isset($this->blocks[$id])) {

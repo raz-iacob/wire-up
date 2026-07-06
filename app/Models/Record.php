@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\ContentStatus;
 use App\Enums\FieldType;
 use App\Enums\MediaType;
+use App\Services\SettingsService;
 use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
 use App\Traits\HasMedia;
@@ -17,6 +18,8 @@ use App\Traits\HasTranslations;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Database\Factories\RecordFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -112,6 +115,39 @@ final class Record extends Model
             ->value();
     }
 
+    /**
+     * @param  array<string, mixed>  $field
+     */
+    public function columnValue(array $field): string
+    {
+        $type = FieldType::tryFrom($field['type']);
+        $key = $field['key'];
+        $locale = app()->getLocale();
+
+        if ($type?->isMedia()) {
+            return (string) $this->media
+                ->filter(fn (Media $media): bool => $media->pivot->role === $key)
+                ->count();
+        }
+
+        $value = ($field['translatable'] ?? false)
+            ? data_get($this->data, "{$key}.{$locale}")
+            : data_get($this->data, $key);
+
+        if ($value === null || $value === '') {
+            return '—';
+        }
+
+        return match ($type) {
+            FieldType::BOOLEAN => $value ? __('Yes') : __('No'),
+            FieldType::MONEY => SettingsService::current()->formatMoney(is_numeric($value) ? $value : null),
+            FieldType::DATE => str($value)->substr(0, 10)->value(),
+            FieldType::DATETIME => str($value)->replace('T', ' ')->substr(0, 16)->value(),
+            FieldType::RICH_TEXT => str(strip_tags((string) $value))->squish()->limit(60)->value(),
+            default => str((string) $value)->limit(60)->value(),
+        };
+    }
+
     public function fieldValue(string $key, bool $translatable): mixed
     {
         $value = $this->data[$key] ?? null;
@@ -170,6 +206,31 @@ final class Record extends Model
         }
 
         return null;
+    }
+
+    /**
+     * @param  Builder<Record>  $query
+     */
+    #[Scope]
+    protected function matchingSearch(Builder $query, string $search, RecordType $recordType): void
+    {
+        if ($search === '') {
+            return;
+        }
+
+        $locale = app()->getLocale();
+
+        $query->where(function (Builder $inner) use ($search, $recordType, $locale): void {
+            $inner->whereTranslationLike('title', $search);
+
+            foreach ($recordType->searchableFields() as $field) {
+                $path = ($field['translatable'] ?? false)
+                    ? "data->{$field['key']}->{$locale}"
+                    : "data->{$field['key']}";
+
+                $inner->orWhereLike($path, "%{$search}%");
+            }
+        });
     }
 
     /**

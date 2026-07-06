@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\FieldType;
 use Carbon\CarbonInterface;
 use Database\Factories\RecordTypeFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -55,5 +56,86 @@ final class RecordType extends Model
     public function isInUse(): bool
     {
         return $this->records()->exists();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function indexColumnFields(): array
+    {
+        return array_values(array_filter(
+            $this->fields,
+            fn (array $field): bool => (bool) ($field['column'] ?? false),
+        ));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function searchableFields(): array
+    {
+        return array_values(array_filter(
+            $this->fields,
+            fn (array $field): bool => (bool) ($field['searchable'] ?? false)
+                && ! (FieldType::tryFrom($field['type'])?->isMedia() ?? false),
+        ));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function sortableFieldKeys(): array
+    {
+        return array_values(array_map(
+            fn (array $field): string => $field['key'],
+            array_filter(
+                $this->fields,
+                fn (array $field): bool => (bool) ($field['sortable'] ?? false)
+                    && ! (FieldType::tryFrom($field['type'])?->isMedia() ?? false),
+            ),
+        ));
+    }
+
+    public function hasMediaColumns(): bool
+    {
+        return array_any(
+            $this->indexColumnFields(),
+            fn (array $field): bool => (bool) (FieldType::tryFrom($field['type'])?->isMedia()),
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
+     */
+    public function fieldLabel(array $field): string
+    {
+        $label = is_array($field['label'] ?? null) ? $field['label'] : [];
+        $localized = $label[app()->getLocale()] ?? null;
+
+        if (is_string($localized) && $localized !== '') {
+            return $localized;
+        }
+
+        foreach ($label as $value) {
+            if (is_string($value) && $value !== '') {
+                return $value;
+            }
+        }
+
+        return (string) ($field['key'] ?? '');
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function fieldByKey(string $key): ?array
+    {
+        foreach ($this->fields as $field) {
+            if (($field['key'] ?? null) === $key) {
+                return $field;
+            }
+        }
+
+        return null;
     }
 }

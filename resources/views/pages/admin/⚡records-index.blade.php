@@ -6,7 +6,6 @@ use App\Actions\CreateRecordAction;
 use App\Actions\DeleteRecordAction;
 use App\Actions\DuplicateRecordAction;
 use App\Enums\ContentStatus;
-use App\Enums\FieldType;
 use App\Models\Record;
 use App\Models\RecordType;
 use App\Traits\WithSorting;
@@ -121,7 +120,7 @@ return new class extends Component
         $paginator = Record::query()
             ->where('record_type_id', $this->recordType->id)
             ->with(['translations', 'slugs'])
-            ->when($this->hasMediaColumns(), fn (Builder $query): Builder => $query->with('media'))
+            ->when($this->recordType->hasMediaColumns(), fn (Builder $query): Builder => $query->with('media'))
             ->when($this->status, function (Builder $query, string $status): Builder {
                 if ($status === ContentStatus::SCHEDULED->value) {
                     return $query->where('status', ContentStatus::PUBLISHED)
@@ -130,24 +129,12 @@ return new class extends Component
 
                 return $query->where('status', $status);
             })
-            ->when($this->search, fn (Builder $query, string $search): Builder => $query->where(
-                function (Builder $inner) use ($search, $locale): void {
-                    $inner->whereTranslationLike('title', $search);
-
-                    foreach ($this->searchableFields() as $field) {
-                        $path = $field['translatable']
-                            ? "data->{$field['key']}->{$locale}"
-                            : "data->{$field['key']}";
-
-                        $inner->orWhereLike($path, "%{$search}%");
-                    }
-                }
-            ));
+            ->when($this->search, fn (Builder $query, string $search): Builder => $query->matchingSearch($search, $this->recordType));
 
         if ($this->sortBy === 'title') {
             $paginator->orderByTranslation('title', $this->sortDirection);
-        } elseif (in_array($this->sortBy, $this->sortableKeys(), true)) {
-            $field = $this->fieldByKey($this->sortBy);
+        } elseif (in_array($this->sortBy, $this->recordType->sortableFieldKeys(), true)) {
+            $field = $this->recordType->fieldByKey($this->sortBy);
             $path = ($field['translatable'] ?? false)
                 ? "data->{$this->sortBy}->{$locale}"
                 : "data->{$this->sortBy}";
@@ -166,98 +153,13 @@ return new class extends Component
     #[Computed]
     public function columnFields(): array
     {
-        return array_values(array_filter(
-            $this->recordType->fields,
-            fn (array $field): bool => (bool) ($field['column'] ?? false),
-        ));
+        return $this->recordType->indexColumnFields();
     }
 
     #[Computed]
     public function hasMultipleActiveLocales(): bool
     {
         return resolve('localization')->getActiveLocaleCodes()->count() > 1;
-    }
-
-    /**
-     * @param  array<string, mixed>  $field
-     */
-    public function displayValue(Record $record, array $field): string
-    {
-        $type = FieldType::tryFrom($field['type']);
-        $key = $field['key'];
-        $locale = app()->getLocale();
-
-        if ($type?->isMedia()) {
-            return (string) $record->media
-                ->filter(fn (\App\Models\Media $media): bool => $media->pivot->role === $key)
-                ->count();
-        }
-
-        $value = ($field['translatable'] ?? false)
-            ? data_get($record->data, "{$key}.{$locale}")
-            : data_get($record->data, $key);
-
-        if ($value === null || $value === '') {
-            return '—';
-        }
-
-        return match ($type) {
-            FieldType::BOOLEAN => $value ? __('Yes') : __('No'),
-            FieldType::MONEY => \App\Services\SettingsService::current()->formatMoney(is_numeric($value) ? $value : null),
-            FieldType::DATE => str($value)->substr(0, 10)->value(),
-            FieldType::DATETIME => str($value)->replace('T', ' ')->substr(0, 16)->value(),
-            FieldType::RICH_TEXT => str(strip_tags((string) $value))->squish()->limit(60)->value(),
-            default => str((string) $value)->limit(60)->value(),
-        };
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function searchableFields(): array
-    {
-        return array_values(array_filter(
-            $this->recordType->fields,
-            fn (array $field): bool => (bool) ($field['searchable'] ?? false)
-                && ! (FieldType::tryFrom($field['type'])?->isMedia() ?? false),
-        ));
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function sortableKeys(): array
-    {
-        return array_values(array_map(
-            fn (array $field): string => $field['key'],
-            array_filter(
-                $this->recordType->fields,
-                fn (array $field): bool => (bool) ($field['sortable'] ?? false)
-                    && ! (FieldType::tryFrom($field['type'])?->isMedia() ?? false),
-            ),
-        ));
-    }
-
-    private function hasMediaColumns(): bool
-    {
-        return array_any(
-            $this->columnFields(),
-            fn (array $field): bool => (bool) (FieldType::tryFrom($field['type'])?->isMedia()),
-        );
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    private function fieldByKey(string $key): ?array
-    {
-        foreach ($this->recordType->fields as $field) {
-            if ($field['key'] === $key) {
-                return $field;
-            }
-        }
-
-        return null;
     }
 
     public function render(): View
@@ -302,7 +204,7 @@ return new class extends Component
                 <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection" wire:click="sort('title')">{{ __('Title') }}</flux:table.column>
                 @foreach($this->columnFields as $field)
                     @php($fieldSortable = (bool) ($field['sortable'] ?? false) && ! (\App\Enums\FieldType::tryFrom($field['type'])?->isMedia() ?? false))
-                    @php($fieldLabel = $field['label'][app()->getLocale()] ?? \Illuminate\Support\Arr::first($field['label']) ?? $field['key'])
+                    @php($fieldLabel = $this->recordType->fieldLabel($field))
                     @if ($fieldSortable)
                         <flux:table.column sortable :sorted="$sortBy === $field['key']" :direction="$sortDirection" wire:click="sort('{{ $field['key'] }}')">{{ $fieldLabel }}</flux:table.column>
                     @else
@@ -327,7 +229,7 @@ return new class extends Component
                     </flux:table.cell>
 
                     @foreach($this->columnFields as $field)
-                    <flux:table.cell class="whitespace-nowrap">{{ $this->displayValue($row, $field) }}</flux:table.cell>
+                    <flux:table.cell class="whitespace-nowrap">{{ $row->columnValue($field) }}</flux:table.cell>
                     @endforeach
 
                     @if($this->hasMultipleActiveLocales())

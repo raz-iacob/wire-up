@@ -204,3 +204,105 @@ it('resolves the display heading and excerpt, with SEO fallbacks', function (): 
     expect($bare->displayHeading())->toBe('Just Title')
         ->and($bare->displayExcerpt())->toBe('Just a description.');
 });
+
+it('formats column values per field type', function (): void {
+    $type = RecordType::factory()->create();
+    $record = Record::factory()->make([
+        'record_type_id' => $type->id,
+        'data' => [
+            'flag' => true,
+            'price' => 1999,
+            'when' => '2026-07-06',
+            'at' => '2026-07-06T14:30:00',
+            'body' => '<p>Some <strong>rich</strong> text here.</p>',
+            'name' => 'Plain value',
+            'blank' => '',
+        ],
+    ]);
+
+    expect($record->columnValue(['key' => 'flag', 'type' => 'boolean']))->toBe('Yes')
+        ->and($record->columnValue(['key' => 'when', 'type' => 'date']))->toBe('2026-07-06')
+        ->and($record->columnValue(['key' => 'at', 'type' => 'datetime']))->toBe('2026-07-06 14:30')
+        ->and($record->columnValue(['key' => 'body', 'type' => 'rich-text']))->toBe('Some rich text here.')
+        ->and($record->columnValue(['key' => 'name', 'type' => 'text']))->toBe('Plain value')
+        ->and($record->columnValue(['key' => 'blank', 'type' => 'text']))->toBe('—')
+        ->and($record->columnValue(['key' => 'missing', 'type' => 'text']))->toBe('—');
+});
+
+it('reads translatable column values in the current locale', function (): void {
+    $type = RecordType::factory()->create();
+    $record = Record::factory()->make([
+        'record_type_id' => $type->id,
+        'data' => ['tagline' => ['en' => 'Hello there']],
+    ]);
+
+    expect($record->columnValue(['key' => 'tagline', 'type' => 'text', 'translatable' => true]))->toBe('Hello there');
+});
+
+it('matches records by title and searchable fields via the search scope', function (): void {
+    $type = RecordType::factory()->create([
+        'fields' => [
+            ['key' => 'sku', 'type' => 'text', 'searchable' => true],
+            ['key' => 'notes', 'type' => 'text'],
+        ],
+    ]);
+
+    $byTitle = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Wireless Keyboard'],
+        'data' => ['sku' => 'AAA-111', 'notes' => 'ignored'],
+    ]);
+
+    $bySku = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Mouse'],
+        'data' => ['sku' => 'ZZZ-keyboard', 'notes' => 'keyboard'],
+    ]);
+
+    $byNotesOnly = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Cable'],
+        'data' => ['sku' => 'CCC-333', 'notes' => 'keyboard cable'],
+    ]);
+
+    $ids = Record::query()
+        ->where('record_type_id', $type->id)
+        ->matchingSearch('keyboard', $type)
+        ->pluck('id')
+        ->all();
+
+    expect($ids)->toContain($byTitle->id)
+        ->and($ids)->toContain($bySku->id)
+        ->and($ids)->not->toContain($byNotesOnly->id);
+});
+
+it('returns all records when the search term is empty', function (): void {
+    $type = RecordType::factory()->create(['fields' => []]);
+    Record::factory()->count(3)->create(['record_type_id' => $type->id]);
+
+    expect(Record::query()->matchingSearch('', $type)->count())->toBe(3);
+});
+
+it('formats a money column value', function (): void {
+    $type = RecordType::factory()->create();
+    $record = Record::factory()->make([
+        'record_type_id' => $type->id,
+        'data' => ['price' => 1999],
+    ]);
+
+    expect($record->columnValue(['key' => 'price', 'type' => 'money']))->not->toBe('—')
+        ->and($record->columnValue(['key' => 'price', 'type' => 'money']))->toBeString();
+});
+
+it('counts attached media for a media column value', function (): void {
+    $type = RecordType::factory()->create();
+    $record = Record::factory()->create(['record_type_id' => $type->id]);
+    $image = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    $record->media()->attach($image->id, ['role' => 'gallery', 'locale' => 'en', 'position' => 0]);
+
+    $fresh = Record::query()->with('media')->find($record->id);
+
+    expect($fresh->columnValue(['key' => 'gallery', 'type' => 'media-gallery']))->toBe('1')
+        ->and($fresh->columnValue(['key' => 'photo', 'type' => 'photo']))->toBe('0');
+});

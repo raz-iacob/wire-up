@@ -10,9 +10,6 @@
 
     $recordTypes = \App\Models\RecordType::query()->orderBy('position')->get(['id', 'name']);
     $categories = \App\Models\Category::query()->with('translations')->get()->sortBy(fn ($category) => $category->name)->values();
-    $manualRecords = ($source === 'manual' && $selectedTypeId)
-        ? \App\Models\Record::query()->where('record_type_id', $selectedTypeId)->with('translations')->get()->sortBy(fn ($record) => $record->title)->values()
-        : collect();
 @endphp
 
 <div class="flex flex-col gap-6">
@@ -45,11 +42,13 @@
 
     <div x-show="{{ $b }}?.source === 'manual'" x-cloak>
         @if ($selectedTypeId)
-            <flux:pillbox wire:model="{{ $c }}.recordIds" multiple searchable label="{{ __('Records') }}" placeholder="{{ __('Pick records…') }}">
-                @foreach ($manualRecords as $record)
-                    <flux:pillbox.option :value="(string) $record->id" :label="$record->title !== '' ? $record->title : __('Untitled')" />
-                @endforeach
-            </flux:pillbox>
+            <flux:label class="mb-2 block">{{ __('Records') }}</flux:label>
+            <livewire:admin.blocks.record-picker
+                :block-id="$block['id']"
+                :record-type-id="(int) $selectedTypeId"
+                :value="data_get($content, 'recordIds', [])"
+                :max="30"
+                wire:key="record-picker-{{ $block['id'] }}-{{ $selectedTypeId }}" />
         @else
             <flux:text variant="subtle">{{ __('Choose a content type first.') }}</flux:text>
         @endif

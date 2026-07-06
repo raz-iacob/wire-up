@@ -158,6 +158,10 @@
         <livewire:admin.media-library />
         @endpersist
 
+        @persist('record-library')
+        <livewire:admin.record-library />
+        @endpersist
+
         @persist('toast')
         <flux:toast.group expanded position="bottom end">
             <flux:toast />
