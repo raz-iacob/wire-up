@@ -113,3 +113,48 @@ it('returns nothing for a category source with no category chosen', function ():
 
     expect((new RecordCollectionQuery)->resolve(['recordTypeId' => $type->id, 'source' => 'category', 'categoryId' => null]))->toBeEmpty();
 });
+
+it('paginates latest records newest-first by page', function (): void {
+    $type = collectionType();
+    $records = collect(range(1, 5))->map(fn (int $i): Record => publishedCollectionRecord($type, ['published_at' => now()->subDays(10 - $i)]));
+    $page1 = (new RecordCollectionQuery)->paginate(['recordTypeId' => $type->id, 'source' => 'latest'], 2, 1);
+    $page2 = (new RecordCollectionQuery)->paginate(['recordTypeId' => $type->id, 'source' => 'latest'], 2, 2);
+
+    expect($page1->total())->toBe(5)
+        ->and($page1->pluck('id')->all())->toBe([$records[4]->id, $records[3]->id])
+        ->and($page2->pluck('id')->all())->toBe([$records[2]->id, $records[1]->id])
+        ->and($page1->hasMorePages())->toBeTrue();
+});
+
+it('paginates hand-picked records in order across pages', function (): void {
+    $type = collectionType();
+    $a = publishedCollectionRecord($type);
+    $b = publishedCollectionRecord($type);
+    $c = publishedCollectionRecord($type);
+
+    $content = ['recordTypeId' => $type->id, 'source' => 'manual', 'recordIds' => [(string) $c->id, (string) $a->id, (string) $b->id]];
+
+    $page1 = (new RecordCollectionQuery)->paginate($content, 2, 1);
+    $page2 = (new RecordCollectionQuery)->paginate($content, 2, 2);
+
+    expect($page1->total())->toBe(3)
+        ->and($page1->pluck('id')->all())->toBe([$c->id, $a->id])
+        ->and($page2->pluck('id')->all())->toBe([$b->id])
+        ->and($page2->hasMorePages())->toBeFalse();
+});
+
+it('returns an empty paginator when no record type is set', function (): void {
+    $paginator = (new RecordCollectionQuery)->paginate([], 6, 1);
+
+    expect($paginator->total())->toBe(0)
+        ->and($paginator->isEmpty())->toBeTrue();
+});
+
+it('returns an empty paginator for a category source with no category', function (): void {
+    $type = collectionType();
+    publishedCollectionRecord($type);
+
+    $paginator = (new RecordCollectionQuery)->paginate(['recordTypeId' => $type->id, 'source' => 'category', 'categoryId' => null], 6, 1);
+
+    expect($paginator->total())->toBe(0);
+});

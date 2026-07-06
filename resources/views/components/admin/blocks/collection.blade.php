@@ -73,6 +73,18 @@
         </div>
     </div>
 
+    <div x-show="['grid','list'].includes({{ $b }}?.layout)" x-cloak class="grid md:grid-cols-2 gap-4">
+        <flux:select wire:model.live="{{ $c }}.pagination" variant="listbox" label="Pagination">
+            <flux:select.option value="none">{{ __('None') }}</flux:select.option>
+            <flux:select.option value="paged">{{ __('Navigation') }}</flux:select.option>
+            <flux:select.option value="infinite">{{ __('Infinite scrolling') }}</flux:select.option>
+        </flux:select>
+
+        <div x-show="{{ $b }}?.pagination && {{ $b }}?.pagination !== 'none'" x-cloak>
+            <flux:input type="number" min="1" max="48" wire:model.live="{{ $c }}.perPage" label="{{ __('Per page') }}" />
+        </div>
+    </div>
+
     @if ($selectedTypeId && $displayFields !== [])
         <flux:pillbox wire:model="{{ $c }}.fields" multiple searchable label="{{ __('Extra fields to show') }}" placeholder="{{ __('Choose fields to display below the description…') }}">
             @foreach ($displayFields as $field)

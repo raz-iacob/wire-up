@@ -117,6 +117,25 @@ final class RecordType extends Model
         ));
     }
 
+    /**
+     * @param  array<int, string>  $keys
+     * @return array<int, array<string, mixed>>
+     */
+    public function pickFields(array $keys): array
+    {
+        $fields = [];
+
+        foreach ($keys as $key) {
+            $field = $this->fieldByKey($key);
+
+            if ($field !== null && ! (FieldType::tryFrom($field['type'] ?? '')?->isMedia() ?? false)) {
+                $fields[] = $field;
+            }
+        }
+
+        return $fields;
+    }
+
     public function hasImageField(): bool
     {
         return array_any(
