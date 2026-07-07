@@ -52,36 +52,55 @@ it('persists and trims the custom head and body code on update', function (): vo
     Livewire::test('pages::admin.settings-integrations')
         ->set('head_scripts', "  <script>fbq('init')</script>  ")
         ->set('body_scripts', '  <script>chat()</script>  ')
-        ->call('update')
+        ->call('updateCustomCode')
         ->assertHasNoErrors();
 
     expect(Settings::get('head_scripts'))->toBe("<script>fbq('init')</script>")
         ->and(Settings::get('body_scripts'))->toBe('<script>chat()</script>');
 });
 
-it('persists the credentials on update', function (): void {
+it('connects pexels by persisting the api key', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
         ->set('pexels_api_key', 'new-pexels-key')
-        ->set('google_analytics_id', 'G-NEW0001')
-        ->call('update')
+        ->call('connectPexels')
         ->assertHasNoErrors();
 
-    expect(Settings::get('pexels_api_key'))->toBe('new-pexels-key')
-        ->and(Settings::get('google_analytics_id'))->toBe('G-NEW0001');
+    expect(Settings::get('pexels_api_key'))->toBe('new-pexels-key');
 });
 
-it('allows clearing the credentials', function (): void {
+it('connects google analytics by persisting the measurement id', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('google_analytics_id', 'G-NEW0001')
+        ->call('connectGoogleAnalytics')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('google_analytics_id'))->toBe('G-NEW0001');
+});
+
+it('requires an api key to connect pexels', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('pexels_api_key', '')
+        ->call('connectPexels')
+        ->assertHasErrors(['pexels_api_key']);
+});
+
+it('disconnects an integration by clearing its credential', function (): void {
     Settings::set(['pexels_api_key' => 'existing', 'google_analytics_id' => 'G-EXIST01']);
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('pexels_api_key', '')
-        ->set('google_analytics_id', '')
-        ->call('update')
-        ->assertHasNoErrors();
+        ->call('disconnect', 'pexels')
+        ->assertHasNoErrors()
+        ->assertSet('pexels_api_key', '')
+        ->call('disconnect', 'google-analytics')
+        ->assertSet('google_analytics_id', '');
 
     expect(Settings::get('pexels_api_key'))->toBe('')
         ->and(Settings::get('google_analytics_id'))->toBe('');
@@ -92,7 +111,7 @@ it('validates the google analytics id format', function (): void {
 
     Livewire::test('pages::admin.settings-integrations')
         ->set('google_analytics_id', 'UA-12345')
-        ->call('update')
+        ->call('connectGoogleAnalytics')
         ->assertHasErrors(['google_analytics_id'])
         ->assertSee('Enter a valid Google Analytics measurement ID, like G-XXXXXXXXXX.');
 });

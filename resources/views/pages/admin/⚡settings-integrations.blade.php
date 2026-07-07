@@ -25,27 +25,74 @@ return new class extends Component
         $this->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
     }
 
-    public function update(UpdateSettingsAction $action): void
+    public function connectPexels(UpdateSettingsAction $action): void
     {
         $this->authorize('settings.edit');
 
         $validated = $this->validate([
-            'pexels_api_key' => ['nullable', 'string', 'max:255'],
-            'google_analytics_id' => ['nullable', 'string', 'max:40', 'regex:/^G-[A-Z0-9]+$/'],
-            'head_scripts' => ['nullable', 'string', 'max:50000'],
-            'body_scripts' => ['nullable', 'string', 'max:50000'],
+            'pexels_api_key' => ['required', 'string', 'max:255'],
+        ], [], [
+            'pexels_api_key' => __('Pexels API key'),
+        ]);
+
+        $action->handle(['pexels_api_key' => $validated['pexels_api_key']]);
+
+        Flux::modal('integration-pexels')->close();
+        Flux::toast(__('Pexels connected.'), variant: 'success');
+    }
+
+    public function connectGoogleAnalytics(UpdateSettingsAction $action): void
+    {
+        $this->authorize('settings.edit');
+
+        $validated = $this->validate([
+            'google_analytics_id' => ['required', 'string', 'max:40', 'regex:/^G-[A-Z0-9]+$/'],
         ], [
             'google_analytics_id.regex' => __('Enter a valid Google Analytics measurement ID, like G-XXXXXXXXXX.'),
         ], [
-            'pexels_api_key' => __('Pexels API key'),
             'google_analytics_id' => __('Google Analytics measurement ID'),
+        ]);
+
+        $action->handle(['google_analytics_id' => $validated['google_analytics_id']]);
+
+        Flux::modal('integration-google-analytics')->close();
+        Flux::toast(__('Google Analytics connected.'), variant: 'success');
+    }
+
+    public function disconnect(string $integration, UpdateSettingsAction $action): void
+    {
+        $this->authorize('settings.edit');
+
+        $field = match ($integration) {
+            'pexels' => 'pexels_api_key',
+            'google-analytics' => 'google_analytics_id',
+            default => null,
+        };
+
+        if ($field === null) {
+            return;
+        }
+
+        $this->{$field} = '';
+        $action->handle([$field => '']);
+
+        Flux::modal('integration-'.$integration)->close();
+        Flux::toast(__('Disconnected.'), variant: 'success');
+    }
+
+    public function updateCustomCode(UpdateSettingsAction $action): void
+    {
+        $this->authorize('settings.edit');
+
+        $validated = $this->validate([
+            'head_scripts' => ['nullable', 'string', 'max:50000'],
+            'body_scripts' => ['nullable', 'string', 'max:50000'],
+        ], [], [
             'head_scripts' => __('custom head code'),
             'body_scripts' => __('custom body code'),
         ]);
 
         $action->handle([
-            'pexels_api_key' => $validated['pexels_api_key'] ?? '',
-            'google_analytics_id' => $validated['google_analytics_id'] ?? '',
             'head_scripts' => mb_trim((string) ($validated['head_scripts'] ?? '')),
             'body_scripts' => mb_trim((string) ($validated['body_scripts'] ?? '')),
         ]);
@@ -63,26 +110,107 @@ return new class extends Component
 ?>
 
 <x-admin.settings-layout>
-    <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-start">
-        <div class="space-y-10 md:col-span-3">
-            <flux:input
-                wire:model="pexels_api_key"
-                type="password"
-                viewable
-                :label="__('Pexels API key')"
-                :placeholder="__('Paste your Pexels API key…')"
-                :description="__('Enables searching and importing photos and videos from Pexels in the media library. Create a free key at pexels.com/api.')"
-            />
+    <div class="space-y-10">
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            @php($pexelsConnected = $pexels_api_key !== '')
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
+                        <svg viewBox="0 0 32 32" class="size-7" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="32" height="32" rx="6" fill="#05A081" />
+                            <path fill="#fff" d="M12.6 8.8h4.6c3 0 5.1 2 5.1 4.9s-2.1 4.9-5.1 4.9h-2.1v4.6h-2.5V8.8Zm2.5 2.3v5.2h1.9c1.6 0 2.7-1 2.7-2.6s-1.1-2.6-2.7-2.6h-1.9Z" />
+                        </svg>
+                    </div>
+                    <flux:modal.trigger name="integration-pexels">
+                        <flux:button size="sm" :variant="$pexelsConnected ? 'primary' : 'outline'" :icon="$pexelsConnected ? 'check' : null">
+                            {{ $pexelsConnected ? __('Connected') : __('Connect') }}
+                        </flux:button>
+                    </flux:modal.trigger>
+                </div>
 
-            <flux:input
-                wire:model="google_analytics_id"
-                :label="__('Google Analytics measurement ID')"
-                placeholder="G-XXXXXXXXXX"
-                :description="__('Adds the Google Analytics tracking snippet to your public site. Find this ID in your GA4 property’s data stream settings.')"
-            />
+                <div class="space-y-1">
+                    <flux:heading size="lg">Pexels</flux:heading>
+                    <flux:text>{{ __('Search and import free photos and videos in the media library.') }}</flux:text>
+                </div>
+            </flux:card>
 
-            <flux:separator variant="subtle" />
+            @php($gaConnected = $google_analytics_id !== '')
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
+                        <svg viewBox="0 0 32 32" class="size-7" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="20" y="4" width="8" height="24" rx="4" fill="#F9AB00" />
+                            <rect x="11" y="12" width="8" height="16" rx="4" fill="#E37400" />
+                            <circle cx="7" cy="24.5" r="3.5" fill="#E37400" />
+                        </svg>
+                    </div>
+                    <flux:modal.trigger name="integration-google-analytics">
+                        <flux:button size="sm" :variant="$gaConnected ? 'primary' : 'outline'" :icon="$gaConnected ? 'check' : null">
+                            {{ $gaConnected ? __('Connected') : __('Connect') }}
+                        </flux:button>
+                    </flux:modal.trigger>
+                </div>
 
+                <div class="space-y-1">
+                    <flux:heading size="lg">{{ __('Google Analytics') }}</flux:heading>
+                    <flux:text>{{ __('Add Google Analytics tracking to your public site.') }}</flux:text>
+                </div>
+            </flux:card>
+        </div>
+
+        <flux:modal name="integration-pexels" class="w-full md:max-w-lg">
+            <form wire:submit="connectPexels" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Connect Pexels') }}</flux:heading>
+                    <flux:text class="mt-2">{{ __('Enables searching and importing photos and videos from Pexels in the media library. Create a free key at pexels.com/api.') }}</flux:text>
+                </div>
+
+                <flux:input
+                    wire:model="pexels_api_key"
+                    type="password"
+                    viewable
+                    :label="__('Pexels API key')"
+                    :placeholder="__('Paste your Pexels API key…')"
+                />
+
+                <div class="flex items-center justify-between gap-4">
+                    @if ($pexels_api_key !== '')
+                        <flux:button variant="subtle" wire:click="disconnect('pexels')">{{ __('Disconnect') }}</flux:button>
+                    @else
+                        <span></span>
+                    @endif
+                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+
+        <flux:modal name="integration-google-analytics" class="w-full md:max-w-lg">
+            <form wire:submit="connectGoogleAnalytics" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Connect Google Analytics') }}</flux:heading>
+                    <flux:text class="mt-2">{{ __('Adds the Google Analytics tracking snippet to your public site. Find this ID in your GA4 property’s data stream settings.') }}</flux:text>
+                </div>
+
+                <flux:input
+                    wire:model="google_analytics_id"
+                    :label="__('Google Analytics measurement ID')"
+                    placeholder="G-XXXXXXXXXX"
+                />
+
+                <div class="flex items-center justify-between gap-4">
+                    @if ($google_analytics_id !== '')
+                        <flux:button variant="subtle" wire:click="disconnect('google-analytics')">{{ __('Disconnect') }}</flux:button>
+                    @else
+                        <span></span>
+                    @endif
+                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+
+        <flux:separator variant="subtle" />
+
+        <form wire:submit="updateCustomCode" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="max-w-3xl space-y-6">
             <div class="space-y-3">
                 <flux:heading size="sm">{{ __('Custom code') }}</flux:heading>
                 <flux:text>{{ __('Paste tracking pixels, analytics or other third-party snippets. Code is added as-is to every page on your public site, so only add code from sources you trust.') }}</flux:text>
@@ -131,8 +259,8 @@ return new class extends Component
                     {{ __('Update') }}
                 </flux:button>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </x-admin.settings-layout>
 
 @section('header-content')
