@@ -278,7 +278,7 @@ return new class extends Component
 
         <flux:separator variant="subtle" />
 
-        <form wire:submit="updateCustomCode" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="max-w-3xl space-y-6">
+        <form wire:submit="updateCustomCode" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" data-warn-dirty-ignore="pexels_api_key,google_analytics_id,google_maps_api_key" class="max-w-3xl space-y-6">
             <div class="space-y-3">
                 <flux:heading size="sm">{{ __('Custom code') }}</flux:heading>
                 <flux:text>{{ __('Paste tracking pixels, analytics or other third-party snippets. Code is added as-is to every page on your public site, so only add code from sources you trust.') }}</flux:text>

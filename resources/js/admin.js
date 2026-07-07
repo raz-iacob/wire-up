@@ -22,9 +22,21 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
     // forms — it must not count toward the dirty state, or merely switching the
     // editing language would trigger the unsaved-changes warning. `showPreview` and
     // `previewToken` are transient preview UI state and likewise never count as edits.
+    // A form may name further properties to ignore via `data-warn-dirty-ignore` — used
+    // for fields owned by sibling save actions (e.g. integration credentials saved from
+    // their own modals) that persist immediately and so are never part of this form.
+    const ignored = new Set([
+        "locale",
+        "showPreview",
+        "previewToken",
+        ...(el.getAttribute("data-warn-dirty-ignore") ?? "")
+            .split(",")
+            .map((key) => key.trim())
+            .filter(Boolean),
+    ]);
     const getState = () => {
-        const { locale, showPreview, previewToken, ...rest } =
-            component.ephemeral ?? {};
+        const rest = { ...(component.ephemeral ?? {}) };
+        ignored.forEach((key) => delete rest[key]);
 
         return JSON.stringify(rest);
     };
