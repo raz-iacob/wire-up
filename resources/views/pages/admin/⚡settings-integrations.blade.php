@@ -13,6 +13,8 @@ return new class extends Component
 
     public string $google_analytics_id = '';
 
+    public string $google_maps_api_key = '';
+
     public string $head_scripts = '';
 
     public string $body_scripts = '';
@@ -21,6 +23,7 @@ return new class extends Component
     {
         $this->pexels_api_key = is_string(config('site.pexels_api_key')) ? config()->string('site.pexels_api_key') : '';
         $this->google_analytics_id = is_string(config('site.google_analytics_id')) ? config()->string('site.google_analytics_id') : '';
+        $this->google_maps_api_key = is_string(config('site.google_maps_api_key')) ? config()->string('site.google_maps_api_key') : '';
         $this->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
         $this->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
     }
@@ -59,6 +62,22 @@ return new class extends Component
         Flux::toast(__('Google Analytics connected.'), variant: 'success');
     }
 
+    public function connectGoogleMaps(UpdateSettingsAction $action): void
+    {
+        $this->authorize('settings.edit');
+
+        $validated = $this->validate([
+            'google_maps_api_key' => ['required', 'string', 'max:255'],
+        ], [], [
+            'google_maps_api_key' => __('Google Maps API key'),
+        ]);
+
+        $action->handle(['google_maps_api_key' => $validated['google_maps_api_key']]);
+
+        Flux::modal('integration-google-maps')->close();
+        Flux::toast(__('Google Maps connected.'), variant: 'success');
+    }
+
     public function disconnect(string $integration, UpdateSettingsAction $action): void
     {
         $this->authorize('settings.edit');
@@ -66,6 +85,7 @@ return new class extends Component
         $field = match ($integration) {
             'pexels' => 'pexels_api_key',
             'google-analytics' => 'google_analytics_id',
+            'google-maps' => 'google_maps_api_key',
             default => null,
         };
 
@@ -156,6 +176,28 @@ return new class extends Component
                     <flux:text>{{ __('Add Google Analytics tracking to your public site.') }}</flux:text>
                 </div>
             </flux:card>
+
+            @php($mapsConnected = $google_maps_api_key !== '')
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
+                        <svg viewBox="0 0 24 24" class="size-7" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#EA4335" d="M12 2c-3.9 0-7 3.1-7 7 0 4.9 7 13 7 13s7-8.1 7-13c0-3.9-3.1-7-7-7z" />
+                            <circle cx="12" cy="9" r="2.6" fill="#fff" />
+                        </svg>
+                    </div>
+                    <flux:modal.trigger name="integration-google-maps">
+                        <flux:button size="sm" :variant="$mapsConnected ? 'primary' : 'outline'" :icon="$mapsConnected ? 'check' : null">
+                            {{ $mapsConnected ? __('Connected') : __('Connect') }}
+                        </flux:button>
+                    </flux:modal.trigger>
+                </div>
+
+                <div class="space-y-1">
+                    <flux:heading size="lg">{{ __('Google Maps') }}</flux:heading>
+                    <flux:text>{{ __('Use the official Maps Embed API for location blocks.') }}</flux:text>
+                </div>
+            </flux:card>
         </div>
 
         <flux:modal name="integration-pexels" class="w-full md:max-w-lg">
@@ -200,6 +242,32 @@ return new class extends Component
                 <div class="flex items-center justify-between gap-4">
                     @if ($google_analytics_id !== '')
                         <flux:button variant="subtle" wire:click="disconnect('google-analytics')">{{ __('Disconnect') }}</flux:button>
+                    @else
+                        <span></span>
+                    @endif
+                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+
+        <flux:modal name="integration-google-maps" class="w-full md:max-w-lg">
+            <form wire:submit="connectGoogleMaps" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Connect Google Maps') }}</flux:heading>
+                    <flux:text class="mt-2">{{ __('Uses the Google Maps Embed API for location blocks. Enable the Maps Embed API and create a key in the Google Cloud console.') }}</flux:text>
+                </div>
+
+                <flux:input
+                    wire:model="google_maps_api_key"
+                    type="password"
+                    viewable
+                    :label="__('Google Maps API key')"
+                    :placeholder="__('Paste your Google Maps API key…')"
+                />
+
+                <div class="flex items-center justify-between gap-4">
+                    @if ($google_maps_api_key !== '')
+                        <flux:button variant="subtle" wire:click="disconnect('google-maps')">{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
                     @endif

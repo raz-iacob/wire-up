@@ -33,6 +33,7 @@ it('hydrates the saved credentials and custom code on mount', function (): void 
     Settings::set([
         'pexels_api_key' => 'saved-pexels-key',
         'google_analytics_id' => 'G-SAVED01',
+        'google_maps_api_key' => 'saved-maps-key',
         'head_scripts' => '<script>head()</script>',
         'body_scripts' => '<script>body()</script>',
     ]);
@@ -42,6 +43,7 @@ it('hydrates the saved credentials and custom code on mount', function (): void 
     Livewire::test('pages::admin.settings-integrations')
         ->assertSet('pexels_api_key', 'saved-pexels-key')
         ->assertSet('google_analytics_id', 'G-SAVED01')
+        ->assertSet('google_maps_api_key', 'saved-maps-key')
         ->assertSet('head_scripts', '<script>head()</script>')
         ->assertSet('body_scripts', '<script>body()</script>');
 });
@@ -81,6 +83,26 @@ it('connects google analytics by persisting the measurement id', function (): vo
     expect(Settings::get('google_analytics_id'))->toBe('G-NEW0001');
 });
 
+it('connects google maps by persisting the api key', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('google_maps_api_key', 'AIzaMapsKey123')
+        ->call('connectGoogleMaps')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('google_maps_api_key'))->toBe('AIzaMapsKey123');
+});
+
+it('requires an api key to connect google maps', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('google_maps_api_key', '')
+        ->call('connectGoogleMaps')
+        ->assertHasErrors(['google_maps_api_key']);
+});
+
 it('requires an api key to connect pexels', function (): void {
     $this->actingAsAdmin();
 
@@ -91,7 +113,11 @@ it('requires an api key to connect pexels', function (): void {
 });
 
 it('disconnects an integration by clearing its credential', function (): void {
-    Settings::set(['pexels_api_key' => 'existing', 'google_analytics_id' => 'G-EXIST01']);
+    Settings::set([
+        'pexels_api_key' => 'existing',
+        'google_analytics_id' => 'G-EXIST01',
+        'google_maps_api_key' => 'existing-maps',
+    ]);
 
     $this->actingAsAdmin();
 
@@ -100,10 +126,13 @@ it('disconnects an integration by clearing its credential', function (): void {
         ->assertHasNoErrors()
         ->assertSet('pexels_api_key', '')
         ->call('disconnect', 'google-analytics')
-        ->assertSet('google_analytics_id', '');
+        ->assertSet('google_analytics_id', '')
+        ->call('disconnect', 'google-maps')
+        ->assertSet('google_maps_api_key', '');
 
     expect(Settings::get('pexels_api_key'))->toBe('')
-        ->and(Settings::get('google_analytics_id'))->toBe('');
+        ->and(Settings::get('google_analytics_id'))->toBe('')
+        ->and(Settings::get('google_maps_api_key'))->toBe('');
 });
 
 it('validates the google analytics id format', function (): void {

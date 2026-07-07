@@ -13,7 +13,12 @@
 
     $mapRaw = mb_trim((string) ($content['map'] ?? ''));
     $isUrl = str_starts_with($mapRaw, 'http');
-    $mapSrc = $isUrl ? $mapRaw : 'https://www.google.com/maps?q='.urlencode($mapRaw).'&output=embed';
+    $mapsKey = \App\Services\SettingsService::current()->googleMapsApiKey();
+    $mapSrc = match (true) {
+        $isUrl => $mapRaw,
+        $mapsKey !== '' => 'https://www.google.com/maps/embed/v1/place?key='.urlencode($mapsKey).'&q='.urlencode($mapRaw),
+        default => 'https://www.google.com/maps?q='.urlencode($mapRaw).'&output=embed',
+    };
 
     $dirQuery = $isUrl ? $address : $mapRaw;
     $dirUrl = $dirQuery !== '' ? 'https://www.google.com/maps/search/?api=1&query='.urlencode($dirQuery) : null;

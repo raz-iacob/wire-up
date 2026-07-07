@@ -270,6 +270,13 @@ final class SettingsService
         return is_string($id) ? $id : '';
     }
 
+    public function googleMapsApiKey(): string
+    {
+        $key = config('site.google_maps_api_key');
+
+        return is_string($key) ? $key : '';
+    }
+
     public function logoUrl(string $role, string $crop = 'default', int $maxHeight = 320): ?string
     {
         $item = config('site.'.$role);

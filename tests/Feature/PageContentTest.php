@@ -441,6 +441,22 @@ it('renders a location block with an embedded map and contact details', function
         ->assertSee('<ul><li><strong>Mon</strong> 9–5</li></ul>', false);
 });
 
+it('renders the location map through the embed api when a google maps key is configured', function (): void {
+    Settings::set(['google_maps_api_key' => 'AIzaTESTKEY']);
+
+    publishPageWithBlocks('loc-key', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'map' => '123 Main St, Springfield',
+        ]],
+    ]);
+
+    $this->get(route('page', 'loc-key'))
+        ->assertOk()
+        ->assertSee('maps/embed/v1/place', false)
+        ->assertSee('key=AIzaTESTKEY', false)
+        ->assertDontSee('output=embed', false);
+});
+
 it('shows the location directions button only when enabled, labelled and linkable', function (): void {
     publishPageWithBlocks('loc-dir', [
         ['id' => 'new-1', 'type' => 'location', 'content' => [
