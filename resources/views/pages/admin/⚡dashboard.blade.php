@@ -197,8 +197,11 @@ return new class extends Component
             <flux:heading size="xl">{{ __('Welcome back, :name', ['name' => auth()->user()->name]) }}</flux:heading>
             <flux:subheading>{{ __("Here's what's happening across your site.") }}</flux:subheading>
         </div>
-        <div class="w-full sm:w-64">
-            <flux:date-picker mode="range" wire:model.live="datesFilter" presets="last7Days last30Days last3Months last6Months allTime" :max="now()->format('Y-m-d')" />
+        <div class="flex w-full items-center gap-3 sm:w-auto">
+            <flux:icon.loading wire:loading wire:target="datesFilter" class="size-5 shrink-0 text-zinc-400" />
+            <div class="ml-4 w-full sm:w-64">
+                <flux:date-picker mode="range" wire:model.live="datesFilter" presets="today yesterday thisWeek last7Days thisMonth last30Days last3Months last6Months yearToDate allTime" :max="now()->format('Y-m-d')" />
+            </div>
         </div>
     </div>
 

@@ -11,6 +11,7 @@
 
     <flux:sidebar.nav>
         <flux:sidebar.item icon="squares-2x2" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate.hover>{{ __('Dashboard') }}</flux:sidebar.item>
+        <livewire:admin.sidebar-analytics />
         @can('inbox.view')
             @php($unreadSubmissions = \App\Models\Submission::query()->unread()->count())
             <flux:sidebar.item icon="inbox" :href="route('admin.inbox-index')" :current="request()->routeIs('admin.inbox-*')" :badge="$unreadSubmissions > 0 ? $unreadSubmissions : null" wire:navigate.hover>{{ __('Inbox') }}</flux:sidebar.item>

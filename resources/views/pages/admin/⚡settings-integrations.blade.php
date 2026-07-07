@@ -13,6 +13,10 @@ return new class extends Component
 
     public string $google_analytics_id = '';
 
+    public string $google_analytics_property_id = '';
+
+    public string $google_analytics_credentials = '';
+
     public string $google_maps_api_key = '';
 
     public string $head_scripts = '';
@@ -23,6 +27,8 @@ return new class extends Component
     {
         $this->pexels_api_key = is_string(config('site.pexels_api_key')) ? config()->string('site.pexels_api_key') : '';
         $this->google_analytics_id = is_string(config('site.google_analytics_id')) ? config()->string('site.google_analytics_id') : '';
+        $this->google_analytics_property_id = is_string(config('site.google_analytics_property_id')) ? config()->string('site.google_analytics_property_id') : '';
+        $this->google_analytics_credentials = is_string(config('site.google_analytics_credentials')) ? config()->string('site.google_analytics_credentials') : '';
         $this->google_maps_api_key = is_string(config('site.google_maps_api_key')) ? config()->string('site.google_maps_api_key') : '';
         $this->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
         $this->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
@@ -50,13 +56,38 @@ return new class extends Component
 
         $validated = $this->validate([
             'google_analytics_id' => ['required', 'string', 'max:40', 'regex:/^G-[A-Z0-9]+$/'],
+            'google_analytics_property_id' => ['nullable', 'string', 'max:20', 'regex:/^\d+$/', 'required_with:google_analytics_credentials'],
+            'google_analytics_credentials' => ['nullable', 'string', 'max:10000', 'required_with:google_analytics_property_id', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! is_string($value) || $value === '') {
+                    return;
+                }
+
+                $decoded = json_decode($value, true);
+                $email = is_array($decoded) ? ($decoded['client_email'] ?? null) : null;
+                $key = is_array($decoded) ? ($decoded['private_key'] ?? null) : null;
+
+                if (! is_string($email) || $email === '' || ! is_string($key) || $key === '') {
+                    $fail(__('Paste the full service account JSON key file.'));
+                }
+            }],
         ], [
             'google_analytics_id.regex' => __('Enter a valid Google Analytics measurement ID, like G-XXXXXXXXXX.'),
+            'google_analytics_property_id.regex' => __('Enter the numeric GA4 property ID, like 123456789.'),
+            'google_analytics_property_id.required_with' => __('Add the property ID to enable analytics reports.'),
+            'google_analytics_credentials.required_with' => __('Add the service account JSON to enable analytics reports.'),
         ], [
             'google_analytics_id' => __('Google Analytics measurement ID'),
+            'google_analytics_property_id' => __('GA4 property ID'),
+            'google_analytics_credentials' => __('service account JSON'),
         ]);
 
-        $action->handle(['google_analytics_id' => $validated['google_analytics_id']]);
+        $action->handle([
+            'google_analytics_id' => $validated['google_analytics_id'],
+            'google_analytics_property_id' => mb_trim((string) ($validated['google_analytics_property_id'] ?? '')),
+            'google_analytics_credentials' => mb_trim((string) ($validated['google_analytics_credentials'] ?? '')),
+        ]);
+
+        $this->dispatch('integrations-updated');
 
         Flux::modal('integration-google-analytics')->close();
         Flux::toast(__('Google Analytics connected.'), variant: 'success');
@@ -82,19 +113,24 @@ return new class extends Component
     {
         $this->authorize('settings.edit');
 
-        $field = match ($integration) {
-            'pexels' => 'pexels_api_key',
-            'google-analytics' => 'google_analytics_id',
-            'google-maps' => 'google_maps_api_key',
-            default => null,
+        $fields = match ($integration) {
+            'pexels' => ['pexels_api_key'],
+            'google-analytics' => ['google_analytics_id', 'google_analytics_property_id', 'google_analytics_credentials'],
+            'google-maps' => ['google_maps_api_key'],
+            default => [],
         };
 
-        if ($field === null) {
+        if ($fields === []) {
             return;
         }
 
-        $this->{$field} = '';
-        $action->handle([$field => '']);
+        foreach ($fields as $field) {
+            $this->{$field} = '';
+        }
+
+        $action->handle(array_fill_keys($fields, ''));
+
+        $this->dispatch('integrations-updated');
 
         Flux::modal('integration-'.$integration)->close();
         Flux::toast(__('Disconnected.'), variant: 'success');
@@ -239,6 +275,32 @@ return new class extends Component
                     placeholder="G-XXXXXXXXXX"
                 />
 
+                <flux:separator variant="subtle" />
+
+                <div class="space-y-4">
+                    <div>
+                        <flux:heading size="sm">{{ __('Analytics reports') }}</flux:heading>
+                        @php($serviceAccountsLink = '<a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener noreferrer" class="underline">'.__('Google Cloud console').'</a>')
+                        @php($dataApiLink = '<a href="https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com" target="_blank" rel="noopener noreferrer" class="underline">'.__('Analytics Data API').'</a>')
+                        <flux:text class="mt-1">{!! __('Optional. Shows visitor stats in the admin. Create a service account key in the :console, enable the :api, and add the account as a viewer of your GA4 property.', ['console' => $serviceAccountsLink, 'api' => $dataApiLink]) !!}</flux:text>
+                    </div>
+
+                    <flux:input
+                        wire:model="google_analytics_property_id"
+                        :label="__('GA4 property ID')"
+                        placeholder="123456789"
+                        :description="__('In Google Analytics under Admin → Property details.')"
+                    />
+
+                    <flux:textarea
+                        wire:model="google_analytics_credentials"
+                        rows="5"
+                        class="font-mono text-sm"
+                        :label="__('Service account JSON')"
+                        :placeholder="__('Paste the JSON key file…')"
+                    />
+                </div>
+
                 <div class="flex items-center justify-between gap-4">
                     @if ($google_analytics_id !== '')
                         <flux:button variant="subtle" wire:click="disconnect('google-analytics')">{{ __('Disconnect') }}</flux:button>
@@ -278,7 +340,7 @@ return new class extends Component
 
         <flux:separator variant="subtle" />
 
-        <form wire:submit="updateCustomCode" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" data-warn-dirty-ignore="pexels_api_key,google_analytics_id,google_maps_api_key" class="max-w-3xl space-y-6">
+        <form wire:submit="updateCustomCode" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" data-warn-dirty-ignore="pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key" class="max-w-3xl space-y-6">
             <div class="space-y-3">
                 <flux:heading size="sm">{{ __('Custom code') }}</flux:heading>
                 <flux:text>{{ __('Paste tracking pixels, analytics or other third-party snippets. Code is added as-is to every page on your public site, so only add code from sources you trust.') }}</flux:text>

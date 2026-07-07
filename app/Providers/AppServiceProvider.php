@@ -68,6 +68,18 @@ final class AppServiceProvider extends ServiceProvider
         if (is_string($pexelsKey) && $pexelsKey !== '') {
             config()->set('services.pexels.key', $pexelsKey);
         }
+
+        $analyticsPropertyId = config('site.google_analytics_property_id');
+
+        if (is_string($analyticsPropertyId) && $analyticsPropertyId !== '') {
+            config()->set('services.google_analytics.property_id', $analyticsPropertyId);
+        }
+
+        $analyticsCredentials = config('site.google_analytics_credentials');
+
+        if (is_string($analyticsCredentials) && $analyticsCredentials !== '') {
+            config()->set('services.google_analytics.credentials', $analyticsCredentials);
+        }
     }
 
     private function configureModels(): void
