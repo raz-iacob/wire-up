@@ -8,9 +8,11 @@ use App\Models\User;
 
 final readonly class UpdateUserLastAccessAction
 {
+    private const int STALE_AFTER_MINUTES = 1;
+
     public function handle(User $user, ?string $userAgent, ?string $ip = null): void
     {
-        if (is_null($user->last_seen_at) || $user->last_seen_at->diffInMinutes(now()) > 30) {
+        if (is_null($user->last_seen_at) || $user->last_seen_at->diffInMinutes(now()) > self::STALE_AFTER_MINUTES) {
             $user->update([
                 'last_seen_at' => now(),
                 'last_ip' => $ip,
