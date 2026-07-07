@@ -12,6 +12,7 @@ use App\Traits\HasPublishing;
 use App\Traits\HasSeo;
 use App\Traits\HasSlugs;
 use App\Traits\HasTranslations;
+use App\Traits\HasUserstamps;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Database\Factories\PageFactory;
@@ -34,11 +35,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read string $slug
  * @property-read Collection<int, Block> $blocks
  * @property-read Collection<int, Category> $categories
+ * @property-read User|null $creator
+ * @property-read User|null $editor
  */
 final class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
-    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasSeo, HasSlugs, HasTranslations;
+    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
 
     /**
      * @param  array<string, mixed>  $layout
@@ -91,6 +94,8 @@ final class Page extends Model
             'metadata' => 'array',
             'status' => ContentStatus::class,
             'published_at' => 'datetime',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

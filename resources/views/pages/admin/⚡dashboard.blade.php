@@ -6,6 +6,7 @@ use App\Models\Media;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Role;
 use App\Models\Submission;
 use App\Models\User;
 use Carbon\CarbonInterface;
@@ -108,13 +109,13 @@ return new class extends Component
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, array{title: string, type: string, updated: CarbonInterface, url: string, status: \App\Enums\ContentStatus}>
+     * @return array<int, array{title: string, type: string, updated: CarbonInterface, url: string, status: \App\Enums\ContentStatus, editor: string|null}>
      */
     #[Computed]
-    public function recentActivity(): \Illuminate\Support\Collection
+    public function recentActivity(): array
     {
         $records = Record::query()
-            ->with('recordType')
+            ->with(['recordType', 'editor'])
             ->latest('updated_at')
             ->limit(8)
             ->get()
@@ -124,9 +125,12 @@ return new class extends Component
                 'updated' => $record->updated_at,
                 'url' => route('admin.records-edit', [$record->recordType, $record]),
                 'status' => $record->computed_status,
-            ]);
+                'editor' => $record->editor?->name,
+            ])
+            ->all();
 
         $pages = Page::query()
+            ->with('editor')
             ->latest('updated_at')
             ->limit(8)
             ->get()
@@ -136,9 +140,25 @@ return new class extends Component
                 'updated' => $page->updated_at,
                 'url' => route('admin.pages-edit', $page),
                 'status' => $page->computed_status,
-            ]);
+                'editor' => $page->editor?->name,
+            ])
+            ->all();
 
-        return $records->concat($pages)->sortByDesc('updated')->take(8)->values();
+        $items = [...$records, ...$pages];
+
+        usort($items, fn (array $a, array $b): int => $b['updated'] <=> $a['updated']);
+
+        return array_slice($items, 0, 8);
+    }
+
+    #[Computed]
+    public function hasMultipleStaff(): bool
+    {
+        $staffRoleIds = Role::query()->get()
+            ->filter(fn (Role $role): bool => $role->canAccessAdmin())
+            ->pluck('id');
+
+        return User::query()->whereIn('role_id', $staffRoleIds)->count() > 1;
     }
 
     /**
@@ -264,7 +284,7 @@ return new class extends Component
 
             <flux:card class="space-y-4">
                 <flux:heading size="lg">{{ __('Recent activity') }}</flux:heading>
-                @if ($this->recentActivity->isEmpty())
+                @if (empty($this->recentActivity))
                     <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('Nothing edited yet.') }}</flux:text>
                 @else
                     <div class="divide-y divide-zinc-100 dark:divide-white/5">
@@ -272,7 +292,9 @@ return new class extends Component
                             <a href="{{ $item['url'] }}" wire:navigate wire:key="activity-{{ $loop->index }}" class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
                                 <div class="min-w-0 flex-1">
                                     <flux:heading size="sm" class="truncate">{{ $item['title'] }}</flux:heading>
-                                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ $item['type'] }} · {{ $item['updated']?->diffForHumans() }}</flux:text>
+                                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                        {{ $item['type'] }} · {{ $item['updated']?->diffForHumans() }}@if ($this->hasMultipleStaff && $item['editor']) · {{ __('by :name', ['name' => $item['editor']]) }}@endif
+                                    </flux:text>
                                 </div>
                                 <flux:badge size="sm" :color="$item['status']->color()">{{ $item['status']->label() }}</flux:badge>
                             </a>

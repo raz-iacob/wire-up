@@ -18,6 +18,8 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->string('status')->default(ContentStatus::DRAFT->value);
             $table->timestamp('published_at')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             $table->index(['record_type_id', 'status', 'published_at']);

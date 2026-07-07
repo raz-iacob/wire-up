@@ -88,3 +88,28 @@ it('lists users who are currently online', function (): void {
         ->assertSee('Recently Active')
         ->assertDontSee('Long Gone');
 });
+
+it('shows who edited an item in recent activity when multiple staff exist', function (): void {
+    $type = RecordType::factory()->create(['key' => 'product', 'slug_prefix' => 'products', 'fields' => []]);
+    $editor = User::factory()->create(['name' => 'Grace Hopper', 'role' => 'owner', 'active' => true]);
+    User::factory()->create(['name' => 'View Admin', 'role' => 'owner', 'active' => true]);
+
+    $this->actingAs($editor);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Team Item']]);
+
+    Livewire::test('pages::admin.dashboard')
+        ->assertSee('Team Item')
+        ->assertSee('by Grace Hopper');
+});
+
+it('hides the editor in recent activity when only one staff user exists', function (): void {
+    $type = RecordType::factory()->create(['key' => 'product', 'slug_prefix' => 'products', 'fields' => []]);
+    $admin = User::factory()->create(['name' => 'Solo Admin', 'role' => 'owner', 'active' => true]);
+
+    $this->actingAs($admin);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Solo Item']]);
+
+    Livewire::test('pages::admin.dashboard')
+        ->assertSee('Solo Item')
+        ->assertDontSee('by Solo Admin');
+});

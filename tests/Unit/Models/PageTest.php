@@ -14,6 +14,8 @@ test('to array', function (): void {
             'metadata',
             'status',
             'published_at',
+            'created_by',
+            'updated_by',
             'created_at',
             'updated_at',
         ]);

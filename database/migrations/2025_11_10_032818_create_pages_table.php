@@ -18,6 +18,8 @@ return new class extends Migration
             $table->json('metadata')->nullable()->comment('Includes styles, restrictions, and other metadata');
             $table->string('status')->default(ContentStatus::DRAFT);
             $table->timestamp('published_at')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             $table->index(['status', 'published_at']);
