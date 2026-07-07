@@ -49,6 +49,8 @@ it('deletes old files and displays summary', function (): void {
     File::put($oldFile2, str_repeat('b', 2048));
     File::put($recentFile, str_repeat('c', 512));
 
+    $this->travelTo(now()->addMinute());
+
     $this->artisan(CleanTempUploadsCommand::class, ['--older-than' => 0])
         ->assertExitCode(0);
 
@@ -91,6 +93,8 @@ it('calculates file size correctly', function (): void {
     $content = str_repeat('x', 1024 * 1024 * 2);
     File::put($largeFile, $content);
 
+    $this->travelTo(now()->addMinute());
+
     $this->artisan(CleanTempUploadsCommand::class, ['--older-than' => 0])
         ->assertExitCode(0);
 
@@ -124,6 +128,8 @@ it('handles files with various extensions', function (): void {
         File::put($this->tempPath.'/'.$filename, 'test content');
     }
 
+    $this->travelTo(now()->addMinute());
+
     $this->artisan(CleanTempUploadsCommand::class, ['--older-than' => 0])
         ->assertExitCode(0);
 
@@ -142,6 +148,8 @@ it('handles non-numeric older-than option', function (): void {
     $file = $this->tempPath.'/test.txt';
     File::put($file, 'content');
 
+    $this->travelTo(now()->addMinute());
+
     $this->artisan(CleanTempUploadsCommand::class, ['--older-than' => 'abc'])
         ->assertExitCode(0);
 
@@ -157,6 +165,8 @@ it('works with subdirectories', function (): void {
 
     File::put($file1, 'root content');
     File::put($file2, 'sub content');
+
+    $this->travelTo(now()->addMinute());
 
     $this->artisan(CleanTempUploadsCommand::class, ['--older-than' => 0])
         ->assertExitCode(0);
