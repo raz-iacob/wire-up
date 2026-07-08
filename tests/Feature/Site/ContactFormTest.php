@@ -9,6 +9,7 @@ use App\Models\Settings;
 use App\Models\Submission;
 use App\Notifications\SubmissionReceived;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -95,6 +96,26 @@ it('persists and emails a successful submission', function (): void {
         SubmissionReceived::class,
         fn (SubmissionReceived $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notifiable->routes['mail'] === ['owner@example.com'],
     );
+});
+
+it('posts the submission to the slack webhook when configured', function (): void {
+    config()->set('services.slack.webhook_url', 'https://hooks.slack.com/services/T0/B0/xyz');
+    Http::fake(['hooks.slack.com/*' => Http::response('ok')]);
+
+    $component = contactForm(contactBlock(['formName' => 'Massage enquiry']))
+        ->set('name', 'Ada Lovelace')
+        ->set('email', 'ada@example.com')
+        ->set('message', 'Hello there');
+
+    test()->travel(5)->seconds();
+
+    $component->call('submit')
+        ->assertHasNoErrors()
+        ->assertSet('sent', true);
+
+    Http::assertSent(fn ($request): bool => (string) $request->url() === 'https://hooks.slack.com/services/T0/B0/xyz'
+        && $request['text'] === 'New submission from Massage enquiry'
+        && str_contains(json_encode($request['blocks']) ?: '', 'Ada Lovelace'));
 });
 
 it('routes to multiple block recipients', function (): void {

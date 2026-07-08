@@ -7,6 +7,7 @@ namespace App\Notifications;
 use App\Models\Submission;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -24,6 +25,10 @@ final class SubmissionReceived extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
+        if ($notifiable instanceof AnonymousNotifiable && $notifiable->routes !== []) {
+            return array_keys($notifiable->routes);
+        }
+
         return ['mail'];
     }
 
@@ -47,6 +52,44 @@ final class SubmissionReceived extends Notification implements ShouldQueue
         }
 
         return $mail;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSlackWebhook(): array
+    {
+        $lines = array_map(
+            fn (array $row): string => '*'.$this->slackEscape($row['label']).':* '.$this->slackEscape($row['value']),
+            $this->rows(),
+        );
+
+        $message = is_string($this->submission->message) ? mb_trim($this->submission->message) : '';
+
+        $blocks = [
+            ['type' => 'header', 'text' => ['type' => 'plain_text', 'text' => $this->subject(), 'emoji' => true]],
+        ];
+
+        if ($lines !== []) {
+            $blocks[] = ['type' => 'section', 'text' => ['type' => 'mrkdwn', 'text' => implode("\n", $lines)]];
+        }
+
+        if ($message !== '') {
+            $blocks[] = ['type' => 'section', 'text' => ['type' => 'mrkdwn', 'text' => '>'.str_replace("\n", "\n>", $this->slackEscape($message))]];
+        }
+
+        $blocks[] = ['type' => 'actions', 'elements' => [[
+            'type' => 'button',
+            'text' => ['type' => 'plain_text', 'text' => __('View in inbox'), 'emoji' => true],
+            'url' => route('admin.inbox-show', $this->submission),
+        ]]];
+
+        return ['text' => $this->subject(), 'blocks' => $blocks];
+    }
+
+    private function slackEscape(string $value): string
+    {
+        return str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], $value);
     }
 
     private function subject(): string

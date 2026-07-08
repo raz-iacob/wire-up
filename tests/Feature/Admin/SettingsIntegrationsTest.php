@@ -36,6 +36,7 @@ it('hydrates the saved credentials and custom code on mount', function (): void 
         'google_analytics_property_id' => '987654321',
         'google_analytics_credentials' => '{"client_email":"saved@example.com","private_key":"saved-key"}',
         'google_maps_api_key' => 'saved-maps-key',
+        'slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/saved',
         'head_scripts' => '<script>head()</script>',
         'body_scripts' => '<script>body()</script>',
     ]);
@@ -48,6 +49,7 @@ it('hydrates the saved credentials and custom code on mount', function (): void 
         ->assertSet('google_analytics_property_id', '987654321')
         ->assertSet('google_analytics_credentials', '{"client_email":"saved@example.com","private_key":"saved-key"}')
         ->assertSet('google_maps_api_key', 'saved-maps-key')
+        ->assertSet('slack_webhook_url', 'https://hooks.slack.com/services/T0/B0/saved')
         ->assertSet('head_scripts', '<script>head()</script>')
         ->assertSet('body_scripts', '<script>body()</script>');
 });
@@ -169,6 +171,30 @@ it('requires an api key to connect google maps', function (): void {
         ->assertHasErrors(['google_maps_api_key']);
 });
 
+it('connects slack by persisting the webhook url', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('slack_webhook_url', '  https://hooks.slack.com/services/T0/B0/xyz  ')
+        ->call('connectSlack')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('slack_webhook_url'))->toBe('https://hooks.slack.com/services/T0/B0/xyz');
+});
+
+it('rejects webhook urls that are not slack incoming webhooks', function (string $url, string $rule): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('slack_webhook_url', $url)
+        ->call('connectSlack')
+        ->assertHasErrors(['slack_webhook_url' => $rule]);
+})->with([
+    'empty' => ['', 'required'],
+    'not a url' => ['not-a-url', 'url'],
+    'not a slack webhook' => ['https://example.com/webhook', 'regex'],
+]);
+
 it('requires an api key to connect pexels', function (): void {
     $this->actingAsAdmin();
 
@@ -185,6 +211,7 @@ it('disconnects an integration by clearing its credential', function (): void {
         'google_analytics_property_id' => '987654321',
         'google_analytics_credentials' => '{"client_email":"a@b.c","private_key":"k"}',
         'google_maps_api_key' => 'existing-maps',
+        'slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/existing',
     ]);
 
     $this->actingAsAdmin();
@@ -199,13 +226,16 @@ it('disconnects an integration by clearing its credential', function (): void {
         ->assertSet('google_analytics_credentials', '')
         ->assertDispatched('integrations-updated')
         ->call('disconnect', 'google-maps')
-        ->assertSet('google_maps_api_key', '');
+        ->assertSet('google_maps_api_key', '')
+        ->call('disconnect', 'slack')
+        ->assertSet('slack_webhook_url', '');
 
     expect(Settings::get('pexels_api_key'))->toBe('')
         ->and(Settings::get('google_analytics_id'))->toBe('')
         ->and(Settings::get('google_analytics_property_id'))->toBe('')
         ->and(Settings::get('google_analytics_credentials'))->toBe('')
-        ->and(Settings::get('google_maps_api_key'))->toBe('');
+        ->and(Settings::get('google_maps_api_key'))->toBe('')
+        ->and(Settings::get('slack_webhook_url'))->toBe('');
 });
 
 it('validates the google analytics id format', function (): void {
@@ -233,6 +263,23 @@ it('falls back to the env pexels key when none is saved', function (): void {
     new AppServiceProvider(app())->boot();
 
     expect(config('services.pexels.key'))->toBe('env-pexels-key');
+});
+
+it('bridges the saved slack webhook into the services config at boot', function (): void {
+    Settings::set(['slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/db']);
+
+    new AppServiceProvider(app())->boot();
+
+    expect(config('services.slack.webhook_url'))->toBe('https://hooks.slack.com/services/T0/B0/db');
+});
+
+it('falls back to the env slack webhook when none is saved', function (): void {
+    Settings::set(['slack_webhook_url' => '']);
+    config()->set('services.slack.webhook_url', 'https://hooks.slack.com/services/T0/B0/env');
+
+    new AppServiceProvider(app())->boot();
+
+    expect(config('services.slack.webhook_url'))->toBe('https://hooks.slack.com/services/T0/B0/env');
 });
 
 it('bridges the saved analytics credentials into the services config at boot', function (): void {

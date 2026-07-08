@@ -80,6 +80,12 @@ final class AppServiceProvider extends ServiceProvider
         if (is_string($analyticsCredentials) && $analyticsCredentials !== '') {
             config()->set('services.google_analytics.credentials', $analyticsCredentials);
         }
+
+        $slackWebhookUrl = config('site.slack_webhook_url');
+
+        if (is_string($slackWebhookUrl) && $slackWebhookUrl !== '') {
+            config()->set('services.slack.webhook_url', $slackWebhookUrl);
+        }
     }
 
     private function configureModels(): void

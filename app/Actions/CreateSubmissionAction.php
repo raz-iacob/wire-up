@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Models\Submission;
 use App\Notifications\SubmissionReceived;
+use App\Services\SlackWebhookChannel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
@@ -22,6 +23,12 @@ final readonly class CreateSubmissionAction
 
             if ($recipients !== []) {
                 Notification::route('mail', $recipients)->notify(new SubmissionReceived($submission));
+            }
+
+            $webhookUrl = config('services.slack.webhook_url');
+
+            if (is_string($webhookUrl) && $webhookUrl !== '') {
+                Notification::route(SlackWebhookChannel::class, $webhookUrl)->notify(new SubmissionReceived($submission));
             }
 
             return $submission;

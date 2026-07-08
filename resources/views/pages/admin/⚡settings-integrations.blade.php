@@ -19,6 +19,8 @@ return new class extends Component
 
     public string $google_maps_api_key = '';
 
+    public string $slack_webhook_url = '';
+
     public string $head_scripts = '';
 
     public string $body_scripts = '';
@@ -30,6 +32,7 @@ return new class extends Component
         $this->google_analytics_property_id = is_string(config('site.google_analytics_property_id')) ? config()->string('site.google_analytics_property_id') : '';
         $this->google_analytics_credentials = is_string(config('site.google_analytics_credentials')) ? config()->string('site.google_analytics_credentials') : '';
         $this->google_maps_api_key = is_string(config('site.google_maps_api_key')) ? config()->string('site.google_maps_api_key') : '';
+        $this->slack_webhook_url = is_string(config('site.slack_webhook_url')) ? config()->string('site.slack_webhook_url') : '';
         $this->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
         $this->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
     }
@@ -109,6 +112,27 @@ return new class extends Component
         Flux::toast(__('Google Maps connected.'), variant: 'success');
     }
 
+    public function connectSlack(UpdateSettingsAction $action): void
+    {
+        $this->authorize('settings.edit');
+
+        $this->slack_webhook_url = mb_trim($this->slack_webhook_url);
+
+        $validated = $this->validate([
+            'slack_webhook_url' => ['required', 'string', 'max:500', 'url', 'regex:#^https://hooks\.slack\.com/#'],
+        ], [
+            'slack_webhook_url.url' => __('Enter a valid Slack incoming webhook URL.'),
+            'slack_webhook_url.regex' => __('Enter a valid Slack incoming webhook URL, like https://hooks.slack.com/services/…'),
+        ], [
+            'slack_webhook_url' => __('Slack webhook URL'),
+        ]);
+
+        $action->handle(['slack_webhook_url' => $validated['slack_webhook_url']]);
+
+        Flux::modal('integration-slack')->close();
+        Flux::toast(__('Slack connected.'), variant: 'success');
+    }
+
     public function disconnect(string $integration, UpdateSettingsAction $action): void
     {
         $this->authorize('settings.edit');
@@ -117,6 +141,7 @@ return new class extends Component
             'pexels' => ['pexels_api_key'],
             'google-analytics' => ['google_analytics_id', 'google_analytics_property_id', 'google_analytics_credentials'],
             'google-maps' => ['google_maps_api_key'],
+            'slack' => ['slack_webhook_url'],
             default => [],
         };
 
@@ -234,6 +259,30 @@ return new class extends Component
                     <flux:text>{{ __('Use the official Maps Embed API for location blocks.') }}</flux:text>
                 </div>
             </flux:card>
+
+            @php($slackConnected = $slack_webhook_url !== '')
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
+                        <svg viewBox="0 0 122.8 122.8" class="size-6" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#E01E5A" d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" />
+                            <path fill="#36C5F0" d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" />
+                            <path fill="#2EB67D" d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" />
+                            <path fill="#ECB22E" d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" />
+                        </svg>
+                    </div>
+                    <flux:modal.trigger name="integration-slack">
+                        <flux:button size="sm" :variant="$slackConnected ? 'primary' : 'outline'" :icon="$slackConnected ? 'check' : null">
+                            {{ $slackConnected ? __('Connected') : __('Connect') }}
+                        </flux:button>
+                    </flux:modal.trigger>
+                </div>
+
+                <div class="space-y-1">
+                    <flux:heading size="lg">Slack</flux:heading>
+                    <flux:text>{{ __('Get a Slack message when someone submits a form.') }}</flux:text>
+                </div>
+            </flux:card>
         </div>
 
         <flux:modal name="integration-pexels" class="w-full md:max-w-lg">
@@ -338,9 +387,34 @@ return new class extends Component
             </form>
         </flux:modal>
 
+        <flux:modal name="integration-slack" class="w-full md:max-w-lg">
+            <form wire:submit="connectSlack" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Connect Slack') }}</flux:heading>
+                    @php($slackWebhooksLink = '<a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noopener noreferrer" class="underline">'.__('incoming webhook').'</a>')
+                    <flux:text class="mt-2">{!! __('Posts a message with the submitted details every time a form is filled in. Create an :webhook in your Slack workspace — you pick the channel there — and paste the URL.', ['webhook' => $slackWebhooksLink]) !!}</flux:text>
+                </div>
+
+                <flux:input
+                    wire:model="slack_webhook_url"
+                    :label="__('Slack webhook URL')"
+                    placeholder="https://hooks.slack.com/services/…"
+                />
+
+                <div class="flex items-center justify-between gap-4">
+                    @if ($slack_webhook_url !== '')
+                        <flux:button variant="subtle" wire:click="disconnect('slack')">{{ __('Disconnect') }}</flux:button>
+                    @else
+                        <span></span>
+                    @endif
+                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+
         <flux:separator variant="subtle" />
 
-        <form wire:submit="updateCustomCode" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" data-warn-dirty-ignore="pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key" class="max-w-3xl space-y-6">
+        <form wire:submit="updateCustomCode" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" data-warn-dirty-ignore="pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key,slack_webhook_url" class="max-w-3xl space-y-6">
             <div class="space-y-3">
                 <flux:heading size="sm">{{ __('Custom code') }}</flux:heading>
                 <flux:text>{{ __('Paste tracking pixels, analytics or other third-party snippets. Code is added as-is to every page on your public site, so only add code from sources you trust.') }}</flux:text>

@@ -13,11 +13,16 @@ return new class extends Component
     {
         //
     }
+
+    public function configured(): bool
+    {
+        return resolve(GoogleAnalyticsDataService::class)->configured();
+    }
 };
 ?>
 
 <div>
-    @if (app(GoogleAnalyticsDataService::class)->configured())
+    @if ($this->configured())
         <flux:sidebar.item icon="chart-bar" :href="route('admin.analytics')" :current="request()->routeIs('admin.analytics')" wire:navigate.hover>{{ __('Analytics') }}</flux:sidebar.item>
     @endif
 </div>
