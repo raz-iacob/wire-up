@@ -58,7 +58,7 @@
             "@php artisan migrate --force",
             "npm install",
             "npm run build",
-            "@php artisan wireup:create-admin-user"
+            "@php artisan wireup:admin"
         ],
         "refacto": "rector",
         "dev": [

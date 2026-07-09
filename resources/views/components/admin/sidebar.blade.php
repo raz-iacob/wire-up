@@ -34,7 +34,8 @@
 
     <flux:spacer />
 
+    @inject('wireupUpdates', 'App\Services\UpdateService')
     <flux:text class="text-xs" variant="subtle">
-        {{ __('Made with') }} <a href="https://wire-up.dev" target="_blank">Wire-Up</a>
+        {{ __('Made with') }} <a href="https://wire-up.dev" target="_blank">Wire-Up</a>@if ($wireupUpdates->currentVersion() !== null) {{ $wireupUpdates->currentVersion() }}@endif
     </flux:text>
 </flux:sidebar>

@@ -88,6 +88,53 @@ composer test:lint
 
 ## Deployment
 
+### Server installation
+
+Requirements on the server: PHP 8.5, Composer, Node.js 22+, git, MySQL.
+
+1. Add a **deploy key** (read-only SSH key) to the GitHub repository and clone it:
+
+    ```bash
+    git clone git@github.com:raz-iacob/wire-up.git
+    cd wire-up
+    ```
+
+2. Place your Flux UI Pro credentials in `auth.json` (gitignored):
+
+    ```json
+    {
+        "http-basic": {
+            "composer.fluxui.dev": {
+                "username": "your-email",
+                "password": "your-license-key"
+            }
+        }
+    }
+    ```
+
+3. Create `.env` from `.env.example` with production values (see [Environment Configuration](#environment-configuration)).
+
+4. Install PHP dependencies and run the installer:
+
+    ```bash
+    composer install --no-dev
+    php artisan wireup:install
+    ```
+
+    The installer generates the app key if missing, migrates the database, links storage, builds the frontend, caches the app, and creates the first admin user.
+
+5. Add the scheduler cron entry and a supervised queue worker (required for e-mail/Slack notifications):
+
+    ```cron
+    * * * * * cd /path/to/wire-up && php artisan schedule:run >> /dev/null 2>&1
+    ```
+
+    ```bash
+    php artisan queue:work --tries=3
+    ```
+
+Releases are git tags (`v0.x.y`). `php artisan wireup:check` reports the installed and latest versions (also runs daily via the scheduler).
+
 ### Production Build
 
 ```bash

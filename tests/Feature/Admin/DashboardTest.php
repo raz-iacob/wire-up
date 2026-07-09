@@ -7,6 +7,9 @@ use App\Models\Record;
 use App\Models\RecordType;
 use App\Models\Submission;
 use App\Models\User;
+use App\Services\UpdateService;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 it('can render the dashboard screen', function (): void {
@@ -16,6 +19,28 @@ it('can render the dashboard screen', function (): void {
 
     $response->assertOk()
         ->assertSeeLivewire('pages::admin.dashboard');
+});
+
+it('shows the installed version in the sidebar footer', function (): void {
+    config()->set('wireup.version_file', storage_path('framework/testing/wireup-'.Str::random(8).'/version'));
+    resolve(UpdateService::class)->writeCurrentVersion('v1.2.3');
+
+    $this->actingAsAdmin()
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee('v1.2.3');
+
+    File::deleteDirectory(dirname((string) config('wireup.version_file')));
+});
+
+it('omits the version from the sidebar footer when unknown', function (): void {
+    config()->set('wireup.version_file', storage_path('framework/testing/wireup-'.Str::random(8).'/missing'));
+
+    $this->actingAsAdmin()
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee(__('Made with'))
+        ->assertDontSee('v1.2.3');
 });
 
 it('shows a media gallery launcher in the sidebar', function (): void {
