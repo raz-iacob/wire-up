@@ -153,18 +153,6 @@ npm ci && npm run build && php artisan optimize && php artisan up
 
 **Release routine:** add a `## vX.Y.Z` section to `CHANGELOG.md`, commit, tag (`git tag vX.Y.Z`), push with tags.
 
-### Production Build
-
-```bash
-# Build assets for production
-npm run build
-
-# Optimize application
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
 > **Pexels media library integration:** Add a free Pexels API key (from [pexels.com/api](https://www.pexels.com/api/)) under **Settings → Integrations** in the admin to enable the integration. Editors can then search Pexels photos and videos directly from the media picker and import them into the library. When no key is set, the Pexels option is hidden. Per the [Pexels API Guidelines](https://www.pexels.com/api/documentation/#guidelines), photographer attribution and a link back to Pexels are shown in the picker, and the photographer/source details are stored with each imported asset (in `media.metadata`) so credit can be surfaced wherever the media is used.
 
 ## SEO & AI discoverability
