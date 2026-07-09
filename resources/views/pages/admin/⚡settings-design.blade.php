@@ -22,6 +22,10 @@ return new class extends Component
 
     public string $body_font;
 
+    public string $heading_font_custom = '';
+
+    public string $body_font_custom = '';
+
     public string $heading_size;
 
     public string $body_size;
@@ -80,6 +84,8 @@ return new class extends Component
         $this->colors = $this->resolvePalette($this->theme, $meta);
         $this->heading_font = $meta['heading_font'] ?? config()->string('theme.default_font');
         $this->body_font = $meta['body_font'] ?? config()->string('theme.default_font');
+        $this->heading_font_custom = $meta['heading_font_custom'] ?? '';
+        $this->body_font_custom = $meta['body_font_custom'] ?? '';
         $this->heading_size = $meta['heading_size'] ?? config()->string('theme.default_heading_size');
         $this->body_size = $meta['body_size'] ?? config()->string('theme.default_body_size');
         $this->radius = $meta['radius'] ?? config()->string('theme.default_radius');
@@ -109,8 +115,10 @@ return new class extends Component
 
         $rules = [
             'theme' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.presets')), 'custom'])],
-            'heading_font' => ['required', 'string', Rule::in(array_keys(config()->array('theme.fonts')))],
-            'body_font' => ['required', 'string', Rule::in(array_keys(config()->array('theme.fonts')))],
+            'heading_font' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.fonts')), 'custom'])],
+            'body_font' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.fonts')), 'custom'])],
+            'heading_font_custom' => ['nullable', 'string', 'max:60', 'regex:/^[A-Za-z0-9 ]+$/', 'required_if:heading_font,custom'],
+            'body_font_custom' => ['nullable', 'string', 'max:60', 'regex:/^[A-Za-z0-9 ]+$/', 'required_if:body_font,custom'],
             'heading_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.heading_sizes')))],
             'body_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.body_sizes')))],
             'radius' => ['required', 'string', Rule::in(array_keys(config()->array('theme.radii')))],
@@ -140,9 +148,16 @@ return new class extends Component
             $rules["colors.$slot"] = ['required_if:theme,custom', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
         }
 
-        $validated = $this->validate($rules);
+        $validated = $this->validate($rules, [
+            'heading_font_custom.required_if' => __('Enter the Google font name for the heading.'),
+            'body_font_custom.required_if' => __('Enter the Google font name for the body.'),
+            'heading_font_custom.regex' => __('Use only letters, numbers and spaces for the font name.'),
+            'body_font_custom.regex' => __('Use only letters, numbers and spaces for the font name.'),
+        ]);
 
-        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
+        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_font_custom', 'body_font_custom', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
+        $metadata['heading_font_custom'] = mb_trim((string) ($validated['heading_font_custom'] ?? ''));
+        $metadata['body_font_custom'] = mb_trim((string) ($validated['body_font_custom'] ?? ''));
         $metadata['custom_css'] = mb_trim((string) ($validated['custom_css'] ?? ''));
 
         if ($this->theme === 'custom') {
@@ -218,7 +233,7 @@ return new class extends Component
 
     $googleFamilies = collect($fonts)->pluck('google')->filter()->unique()->values();
     $previewFontsUrl = $googleFamilies->isEmpty() ? null : 'https://fonts.googleapis.com/css2?'
-        .$googleFamilies->map(fn (string $f): string => 'family='.str_replace(' ', '+', $f).':wght@400;500;600;700')->implode('&')
+        .$googleFamilies->map(fn (string $f): string => 'family='.str_replace(' ', '+', $f))->implode('&')
         .'&display=swap';
 @endphp
 
@@ -240,8 +255,9 @@ return new class extends Component
                     ? this.presetPalettes[$wire.theme]
                     : ($wire.colors || {})
             },
-            get headingFont() { return this.fonts[$wire.heading_font] || 'sans-serif' },
-            get bodyFont() { return this.fonts[$wire.body_font] || 'sans-serif' },
+            customStack(name) { return name && name.trim() ? '\'' + name.trim() + '\', sans-serif' : 'sans-serif' },
+            get headingFont() { return $wire.heading_font === 'custom' ? this.customStack($wire.heading_font_custom) : (this.fonts[$wire.heading_font] || 'sans-serif') },
+            get bodyFont() { return $wire.body_font === 'custom' ? this.customStack($wire.body_font_custom) : (this.fonts[$wire.body_font] || 'sans-serif') },
             get headingSize() { return (parseFloat(this.headingSizes[$wire.heading_size] || '1.5rem') * 0.6).toFixed(3) + 'rem' },
             get bodySize() { return (parseFloat(this.bodySizes[$wire.body_size] || '0.875rem') * 0.6).toFixed(3) + 'rem' },
             get radius() { return this.radii[$wire.radius] || '0.5rem' },
@@ -260,7 +276,19 @@ return new class extends Component
             get logoPreviewClass() { return (({ sm: 'h-3', md: 'h-4', lg: 'h-6' })[$wire.header_logo_size] || 'h-4') + ' w-auto object-contain' },
             get navPreviewSize() { return ({ sm: 'text-[9px]', md: 'text-[10px]', lg: 'text-[11px]' })[$wire.header_nav_size] || 'text-[10px]' },
             get copyrightSize() { return (parseFloat(this.bodySize) * 0.75).toFixed(3) + 'rem' },
-        }">
+        }"
+        x-effect="
+            const fams = new Set();
+            if ($wire.heading_font === 'custom' && $wire.heading_font_custom.trim()) fams.add($wire.heading_font_custom.trim());
+            if ($wire.body_font === 'custom' && $wire.body_font_custom.trim()) fams.add($wire.body_font_custom.trim());
+            let link = document.getElementById('design-preview-custom-fonts');
+            if (! fams.size) { if (link) link.remove(); }
+            else {
+                const href = 'https://fonts.googleapis.com/css2?' + [...fams].map(f => 'family=' + f.replace(/ +/g, '+')).join('&') + '&display=swap';
+                if (! link) { link = document.createElement('link'); link.id = 'design-preview-custom-fonts'; link.rel = 'stylesheet'; document.head.appendChild(link); }
+                if (link.getAttribute('href') !== href) link.setAttribute('href', href);
+            }
+        ">
 
         <div class="order-2 md:col-span-2 md:sticky md:top-4">
             <flux:text class="mb-6">{{ __('Design the look of your public site — colours, fonts, and shape.') }}</flux:text>
@@ -463,21 +491,33 @@ return new class extends Component
 
             <flux:separator variant="subtle" />
 
+            <div class="space-y-6">
+                <flux:select variant="listbox" searchable wire:model="heading_font" label="{{ __('Heading font') }}">
+                    @foreach ($fonts as $key => $font)
+                        <flux:select.option value="{{ $key }}">
+                            <span style="font-family: {{ $font['stack'] }}">{{ $font['label'] }}</span>
+                        </flux:select.option>
+                    @endforeach
+                    <flux:select.option value="custom">{{ __('Custom') }}</flux:select.option>
+                </flux:select>
+                <div x-show="$wire.heading_font === 'custom'" x-cloak>
+                    <flux:input wire:model="heading_font_custom" label="{{ __('Custom Google font') }}" placeholder="{{ __('e.g. Zilla Slab') }}" :description:trailing="__('Exact Google Fonts family name.')" />
+                </div>
+
+                <flux:select variant="listbox" searchable wire:model="body_font" label="{{ __('Body font') }}">
+                    @foreach ($fonts as $key => $font)
+                        <flux:select.option value="{{ $key }}">
+                            <span style="font-family: {{ $font['stack'] }}">{{ $font['label'] }}</span>
+                        </flux:select.option>
+                    @endforeach
+                    <flux:select.option value="custom">{{ __('Custom') }}</flux:select.option>
+                </flux:select>
+                <div x-show="$wire.body_font === 'custom'" x-cloak>
+                    <flux:input wire:model="body_font_custom" label="{{ __('Custom Google font') }}" placeholder="{{ __('e.g. Zilla Slab') }}" :description="__('Exact Google Fonts family name.')" />
+                </div>
+            </div>
+
             <div class="grid sm:grid-cols-2 gap-6">
-                <flux:select variant="listbox" wire:model="heading_font" label="{{ __('Heading font') }}">
-                    @foreach ($fonts as $key => $font)
-                        <flux:select.option value="{{ $key }}">
-                            <span style="font-family: {{ $font['stack'] }}">{{ $font['label'] }}</span>
-                        </flux:select.option>
-                    @endforeach
-                </flux:select>
-                <flux:select variant="listbox" wire:model="body_font" label="{{ __('Body font') }}">
-                    @foreach ($fonts as $key => $font)
-                        <flux:select.option value="{{ $key }}">
-                            <span style="font-family: {{ $font['stack'] }}">{{ $font['label'] }}</span>
-                        </flux:select.option>
-                    @endforeach
-                </flux:select>
                 <flux:select variant="listbox" wire:model="heading_size" label="{{ __('Heading size') }}">
                     @foreach (array_keys(config('theme.heading_sizes')) as $key)
                         <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>

@@ -432,6 +432,62 @@ it('builds a google fonts url for the chosen fonts', function (): void {
         ->toContain('family=Inter');
 });
 
+it('builds a google fonts url from a custom font family', function (): void {
+    Settings::set(['heading_font' => 'custom', 'heading_font_custom' => 'Zilla Slab', 'body_font' => 'inter']);
+
+    expect((new SettingsService)->googleFontsUrl())
+        ->toBeString()
+        ->toContain('family=Zilla+Slab')
+        ->toContain('family=Inter');
+});
+
+it('emits the custom font stack in the theme css', function (): void {
+    Settings::set(['heading_font' => 'custom', 'heading_font_custom' => 'Zilla Slab']);
+
+    expect((new SettingsService)->themeCss())
+        ->toContain('--wire-heading-font:"Zilla Slab", sans-serif');
+});
+
+it('ignores a custom font with no family name', function (): void {
+    Settings::set(['heading_font' => 'custom', 'heading_font_custom' => '', 'body_font' => 'system']);
+
+    expect((new SettingsService)->googleFontsUrl())->toBeNull()
+        ->and((new SettingsService)->themeCss())->not->toContain('--wire-heading-font');
+});
+
+it('persists a custom google font on update', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('heading_font', 'custom')
+        ->set('heading_font_custom', 'Zilla Slab')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('heading_font'))->toBe('custom')
+        ->and(Settings::get('heading_font_custom'))->toBe('Zilla Slab');
+});
+
+it('requires a family name when a custom font is chosen', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('heading_font', 'custom')
+        ->set('heading_font_custom', '')
+        ->call('update')
+        ->assertHasErrors(['heading_font_custom']);
+});
+
+it('rejects an invalid custom font name', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('body_font', 'custom')
+        ->set('body_font_custom', 'Zilla<script>')
+        ->call('update')
+        ->assertHasErrors(['body_font_custom']);
+});
+
 it('builds no google fonts url for system fonts', function (): void {
     Settings::set(['heading_font' => 'system', 'body_font' => 'system']);
 

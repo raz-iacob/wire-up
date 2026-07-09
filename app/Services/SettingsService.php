@@ -412,10 +412,8 @@ final class SettingsService
             $root[] = "--wire-border-width:$borderWidth";
         }
 
-        $headingFontKey = (string) config('site.heading_font', '') ?: config()->string('theme.default_font');
-        $bodyFontKey = (string) config('site.body_font', '') ?: config()->string('theme.default_font');
-        $headingStack = config()->string("theme.fonts.$headingFontKey.stack", '');
-        $bodyStack = config()->string("theme.fonts.$bodyFontKey.stack", '');
+        $headingStack = $this->fontFor('heading')['stack'];
+        $bodyStack = $this->fontFor('body')['stack'];
         if ($headingStack !== '') {
             $root[] = "--wire-heading-font:$headingStack";
         }
@@ -477,9 +475,17 @@ final class SettingsService
     public function googleFontsUrl(): ?string
     {
         $families = [];
-        foreach (['heading_font', 'body_font'] as $slot) {
-            $font = (string) config('site.'.$slot, '');
-            $family = config()->string("theme.fonts.$font.google", '');
+        foreach (['heading', 'body'] as $slot) {
+            $key = (string) config("site.{$slot}_font", '');
+
+            if ($key === '') {
+                continue;
+            }
+
+            $family = $key === 'custom'
+                ? mb_trim((string) config("site.{$slot}_font_custom", ''))
+                : config()->string("theme.fonts.$key.google", '');
+
             if ($family !== '') {
                 $families[$family] = $family;
             }
@@ -572,6 +578,27 @@ final class SettingsService
         return array_key_exists($variant, config()->array('social.icon_variants'))
             ? $variant
             : config()->string('social.default_icon_variant', 'solid');
+    }
+
+    /**
+     * @return array{stack: string, google: string}
+     */
+    private function fontFor(string $slot): array
+    {
+        $key = (string) config("site.{$slot}_font", '') ?: config()->string('theme.default_font');
+
+        if ($key === 'custom') {
+            $custom = mb_trim((string) config("site.{$slot}_font_custom", ''));
+
+            return $custom === ''
+                ? ['stack' => '', 'google' => '']
+                : ['stack' => '"'.$custom.'", sans-serif', 'google' => $custom];
+        }
+
+        return [
+            'stack' => config()->string("theme.fonts.$key.stack", ''),
+            'google' => config()->string("theme.fonts.$key.google", ''),
+        ];
     }
 
     private function localeValue(mixed $value): string
