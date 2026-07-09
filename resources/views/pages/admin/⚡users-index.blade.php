@@ -102,7 +102,7 @@ return new class extends Component
 };
 ?>
 <div>
-    <div class="space-y-6 md:space-y-8">
+    <div class="space-y-6">
         <div class="flex items-center gap-3">
             @can('users.create')
                 <flux:modal.trigger name="add-new">
@@ -142,11 +142,11 @@ return new class extends Component
                 @foreach ($this->users as $row)
                 <flux:table.row wire:key="{{ $row->id }}">
                     <flux:table.cell>
-                        <a href="{{ route('admin.users-edit', $row->id) }}" class="flex items-center gap-3">
+                        <a href="{{ route('admin.users-edit', $row->id) }}" class="flex min-w-0 items-center gap-3">
                             <flux:avatar :src="$row->photo_url" :name="$row->name" />
-                            <div>
-                                <flux:text variant="strong" class="hover:underline">{{ $row->name }}</flux:text>
-                                <flux:text>{{ $row->email }}</flux:text>
+                            <div class="min-w-0">
+                                <flux:text variant="strong" class="truncate hover:underline">{{ $row->name }}</flux:text>
+                                <flux:text class="truncate">{{ $row->email }}</flux:text>
                             </div>
                         </a>
                     </flux:table.cell>

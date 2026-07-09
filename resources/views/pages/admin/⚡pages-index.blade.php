@@ -138,7 +138,7 @@ return new class extends Component
 };
 ?>
 <div>
-    <div class="space-y-6 md:space-y-8">
+    <div class="space-y-6">
         <div class="flex items-center gap-3">
             @can('pages.create')
                 <flux:modal.trigger name="add-new">
@@ -181,9 +181,9 @@ return new class extends Component
                 @foreach ($this->pages as $row)
                 <flux:table.row wire:key="{{ $row->id }}">
                     <flux:table.cell>
-                        <div class="flex items-center justify-between gap-2">
-                            <a href="{{ route('admin.pages-edit', $row->id) }}" class="flex items-center gap-2">
-                                <flux:text variant="strong" class="hover:underline">{{ $row->title }}</flux:text>
+                        <div class="flex min-w-0 items-center justify-between gap-2">
+                            <a href="{{ route('admin.pages-edit', $row->id) }}" class="flex min-w-0 items-center gap-2">
+                                <flux:text variant="strong" class="truncate hover:underline">{{ $row->title }}</flux:text>
                             </a>
                             @if ($row->id === $this->homePageId)
                             <flux:badge size="sm" class="md:mr-6">{{ __('Homepage') }}</flux:badge>

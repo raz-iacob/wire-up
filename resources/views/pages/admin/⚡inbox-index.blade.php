@@ -94,7 +94,7 @@ return new class extends Component
 };
 ?>
 <div>
-    <div class="space-y-6 md:space-y-8">
+    <div class="space-y-6">
         <div class="flex items-center gap-3">
             <flux:dropdown position="bottom" align="start">
                 <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
@@ -134,15 +134,15 @@ return new class extends Component
                         @endunless
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell class="truncate">
                         <a href="{{ route('admin.inbox-show', $row->id) }}" wire:navigate>
-                            <flux:text :variant="$row->isRead() ? 'default' : 'strong'" class="hover:underline">{{ $row->name ?: __('Unknown') }}</flux:text>
+                            <flux:text :variant="$row->isRead() ? 'default' : 'strong'" class="truncate hover:underline">{{ $row->name ?: __('Unknown') }}</flux:text>
                         </a>
                     </flux:table.cell>
 
-                    <flux:table.cell class="whitespace-nowrap">{{ $row->email ?: '—' }}</flux:table.cell>
+                    <flux:table.cell class="truncate">{{ $row->email ?: '—' }}</flux:table.cell>
 
-                    <flux:table.cell class="whitespace-nowrap">{{ $row->form_name ?: '—' }}</flux:table.cell>
+                    <flux:table.cell class="truncate">{{ $row->form_name ?: '—' }}</flux:table.cell>
 
                     <flux:table.cell class="whitespace-nowrap">{{ $row->created_at?->format('M d, Y H:i') }}</flux:table.cell>
 

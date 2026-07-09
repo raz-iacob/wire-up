@@ -88,7 +88,7 @@ return new class extends Component
 };
 ?>
 <div>
-    <div class="space-y-6 md:space-y-8">
+    <div class="space-y-6">
         <div class="flex items-center gap-3">
             @can('categories.create')
                 <flux:modal.trigger name="add-new">
@@ -101,7 +101,7 @@ return new class extends Component
             </div>
         </div>
 
-        <flux:table class="md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->categories" container:class="max-h-[calc(100dvh-12rem)]">
+        <flux:table class="md:table-fixed md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->categories" container:class="max-h-[calc(100dvh-12rem)]">
             <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
                 <flux:table.column sortable :sorted="$sortBy === 'name'" :direction="$sortDirection" wire:click="sort('name')">{{ __('Name') }}</flux:table.column>
                 <flux:table.column class="w-24">{{ __('Used') }}</flux:table.column>
@@ -113,8 +113,8 @@ return new class extends Component
                 @foreach ($this->categories as $row)
                 <flux:table.row wire:key="{{ $row->id }}">
                     <flux:table.cell>
-                        <a href="{{ route('admin.categories-edit', $row) }}" wire:navigate class="flex items-center gap-2">
-                            <flux:text variant="strong" class="hover:underline">{{ $row->name !== '' ? $row->name : __('Untitled') }}</flux:text>
+                        <a href="{{ route('admin.categories-edit', $row) }}" wire:navigate class="flex min-w-0 items-center gap-2">
+                            <flux:text variant="strong" class="truncate hover:underline">{{ $row->name !== '' ? $row->name : __('Untitled') }}</flux:text>
                         </a>
                     </flux:table.cell>
                     <flux:table.cell>{{ $row->records_count + $row->pages_count }}</flux:table.cell>

@@ -172,7 +172,7 @@ return new class extends Component
 };
 ?>
 <div>
-    <div class="space-y-6 md:space-y-8">
+    <div class="space-y-6">
         <div class="flex items-center gap-3">
             @can('records.'.$recordType->key.'.create')
                 <flux:modal.trigger name="add-new">
@@ -200,9 +200,9 @@ return new class extends Component
             </div>
         </div>
 
-        <flux:table class="md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->records" container:class="max-h-[calc(100dvh-12rem)]">
+        <flux:table class="md:table-fixed md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->records" container:class="max-h-[calc(100dvh-12rem)]">
             <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
-                <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection" wire:click="sort('title')">{{ __('Title') }}</flux:table.column>
+                <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection" wire:click="sort('title')" class="w-[28rem]">{{ __('Title') }}</flux:table.column>
                 @foreach($this->columnFields as $field)
                     @php($fieldSortable = (bool) ($field['sortable'] ?? false) && ! (\App\Enums\FieldType::tryFrom($field['type'])?->isMedia() ?? false))
                     @php($fieldLabel = $this->recordType->fieldLabel($field))
@@ -224,7 +224,7 @@ return new class extends Component
                 @foreach ($this->records as $row)
                 <flux:table.row wire:key="{{ $row->id }}">
                     <flux:table.cell>
-                        <a href="{{ route('admin.records-edit', [$this->recordType, $row]) }}" class="flex items-center gap-3">
+                        <a href="{{ route('admin.records-edit', [$this->recordType, $row]) }}" class="flex min-w-0 items-center gap-3">
                             @if($this->recordType->hasImageField())
                             @php($thumbnail = $row->primaryImageUrl(200))
                             <div class="size-9 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
@@ -237,7 +237,7 @@ return new class extends Component
                                 @endif
                             </div>
                             @endif
-                            <flux:text variant="strong" class="hover:underline">{{ $row->title !== '' ? $row->title : __('Untitled') }}</flux:text>
+                            <flux:text variant="strong" class="truncate hover:underline">{{ $row->title !== '' ? $row->title : __('Untitled') }}</flux:text>
                         </a>
                     </flux:table.cell>
 
