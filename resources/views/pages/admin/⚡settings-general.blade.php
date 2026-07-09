@@ -83,9 +83,9 @@ return new class extends Component
             'currency' => ['required', 'string', Rule::in(array_keys($this->currencies()))],
             'allow_registration' => ['boolean'],
         ], [
-            'contact_email.email' => __('Enter a valid email address for form submissions.'),
+            'contact_email.email' => __('Enter a valid communication email address.'),
         ], [
-            'contact_email' => __('form submissions email'),
+            'contact_email' => __('communication email'),
         ]);
 
         $codes = array_values(array_unique($validated['languages']));
@@ -139,6 +139,16 @@ return new class extends Component
                 @endforeach
             </flux:select>
 
+            <flux:input
+                wire:model="contact_email"
+                type="email"
+                :label="__('Communication email')"
+                :placeholder="__('you@example.com')"
+                :description="__('Where system notifications and form submissions without a recipient of their own are sent.')"
+            />
+
+            <flux:separator />
+
             <flux:pillbox
                 wire:model="languages"
                 multiple
@@ -151,14 +161,6 @@ return new class extends Component
                     <flux:pillbox.option :value="$localeOption->code" :label="$localeOption->endonym ? $localeOption->name.' ('.$localeOption->endonym.')' : $localeOption->name" />
                 @endforeach
             </flux:pillbox>
-
-            <flux:input
-                wire:model="contact_email"
-                type="email"
-                :label="__('Form submissions email')"
-                :placeholder="__('you@example.com')"
-                :description="__('Where form submissions are emailed when a form has no recipient of its own.')"
-            />
 
             <flux:select
                 variant="listbox"
@@ -173,8 +175,11 @@ return new class extends Component
                 @endforeach
             </flux:select>
 
+            <flux:separator />
+
             <flux:switch
                 wire:model="allow_registration"
+                align="left"
                 :label="__('Allow sign-ups')"
                 :description="__('Let visitors create their own accounts. When off, the registration page is unavailable.')"
             />

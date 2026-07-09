@@ -510,7 +510,7 @@ return new class extends Component
                     @endif
 
                     <flux:dropdown>
-                        <flux:button type="button" icon="plus" icon-trailing="chevron-down">{{ __('Add') }}</flux:button>
+                        <flux:button type="button" size="sm" icon="plus" icon-trailing="chevron-down">{{ __('Add') }}</flux:button>
 
                         <flux:menu>
                             @foreach ($this->availablePresets as $preset)

@@ -147,7 +147,7 @@ it('reveals a hidden error by switching to its locale and expanding the item', f
         ->assertScript("Array.from(document.querySelectorAll('input')).some(i => i.value === 'nope' && i.offsetParent !== null)", true);
 });
 
-it('keeps the menus nav pill selected after the editing locale changes', function () use ($findComponent): void {
+it('keeps the menus sidebar item current after the editing locale changes', function () use ($findComponent): void {
     Locale::query()->where('code', 'nl')->update(['active' => true]);
     cache()->forget('site-locales');
 
@@ -156,16 +156,16 @@ it('keeps the menus nav pill selected after the editing locale changes', functio
     $page = visit(route('admin.settings-menus'));
     $page->wait(0.4);
 
-    $menuPillSelected = "Array.from(document.querySelectorAll('[data-flux-tab][data-selected]')).some(e => e.textContent.trim() === 'Menus')";
+    $menuItemCurrent = "Array.from(document.querySelectorAll('a[data-current]')).some(e => e.textContent.trim() === 'Menus')";
 
-    $page->assertScript($menuPillSelected, true);
+    $page->assertScript($menuItemCurrent, true);
 
     $page->script("$findComponent.\$wire.dispatch('change-locale'); void 0");
     $page->wait(0.6);
 
     $page->assertNoJavascriptErrors()
         ->assertScript("$findComponent.\$wire.get('locale')", 'nl')
-        ->assertScript($menuPillSelected, true);
+        ->assertScript($menuItemCurrent, true);
 });
 
 it('keeps each item\'s field values matched to its row after a drag reorder', function () use ($findComponent): void {

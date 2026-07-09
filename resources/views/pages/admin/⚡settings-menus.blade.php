@@ -477,7 +477,7 @@ return new class extends Component
 
             {{-- Custom menus --}}
             <div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 mb-2">
                     <flux:label>{{ __('Custom menus') }}</flux:label>
                     @if ($multiLocale)
                         <x-admin.locale-switcher :locale="$locale" />
@@ -488,11 +488,13 @@ return new class extends Component
                     @forelse ($customMenus as $i => $menu)
                         <x-admin.menu-builder-section :menu="$menu" :index="$i" :locale="$locale" :pages="$pages" :multi-locale="$multiLocale" />
                     @empty
-                        <flux:text>{{ __('No custom menus yet. Add your first one below.') }}</flux:text>
+                        <div class="mt-4">
+                            <flux:text>{{ __('No custom menus yet. Add your first one below.') }}</flux:text>
+                        </div>
                     @endforelse
                 </div>
 
-                <flux:button type="button" icon="plus" wire:click="addMenu">
+                <flux:button type="button" size="sm" icon="plus" wire:click="addMenu" class="mt-6">
                     {{ __('Add menu') }}
                 </flux:button>
             </div>

@@ -567,8 +567,8 @@ return new class extends Component
                     </flux:field>
 
                     <div class="grid sm:grid-cols-2 gap-4">
-                        <flux:switch wire:model="header_transparent" label="{{ __('Transparent background') }}" description="{{ __('Header sits over the page content.') }}" />
-                        <flux:switch wire:model="header_sticky" label="{{ __('Sticky header') }}" description="{{ __('Header stays fixed at the top on scroll.') }}" />
+                        <flux:switch wire:model="header_transparent" align="left" label="{{ __('Transparent background') }}" description="{{ __('Header sits over the page content.') }}" />
+                        <flux:switch wire:model="header_sticky" align="left" label="{{ __('Sticky header') }}" description="{{ __('Header stays fixed at the top on scroll.') }}" />
                     </div>
 
                     <div class="grid sm:grid-cols-2 gap-4">
@@ -643,7 +643,7 @@ return new class extends Component
                     </flux:field>
 
                     <div>
-                        <flux:switch wire:model="footer_transparent" label="{{ __('Transparent background') }}" description="{{ __('Footer sits over the page content.') }}" />
+                        <flux:switch wire:model="footer_transparent" align="left" label="{{ __('Transparent background') }}" description="{{ __('Footer sits over the page content.') }}" />
                     </div>
                 </div>
             </div>

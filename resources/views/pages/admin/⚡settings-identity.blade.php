@@ -191,6 +191,7 @@ return new class extends Component
 
             <flux:switch
                 wire:model="noindex"
+                align="left"
                 :label="__('Discourage search engines from indexing this site')"
                 :description="__('Adds a noindex tag to every page and blocks crawlers in robots.txt. It is up to search engines to honour this request.')"
             />

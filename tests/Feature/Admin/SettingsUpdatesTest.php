@@ -274,6 +274,36 @@ it('shows an update badge on the settings sidebar item when a release is availab
         ->and(str_contains($with, '>1<'))->toBeTrue();
 });
 
+it('shows an update dot on the collapsed settings group when a release is available', function (): void {
+    $this->actingAsAdmin();
+
+    $without = Livewire::test('admin.sidebar-settings')->html();
+
+    seedAvailableUpdate();
+
+    $with = Livewire::test('admin.sidebar-settings')->html();
+
+    expect(str_contains($without, 'bg-red-500'))->toBeFalse()
+        ->and(str_contains($with, 'bg-red-500'))->toBeTrue();
+});
+
+it('shows an update callout on the dashboard when a release is available', function (): void {
+    seedAvailableUpdate();
+
+    $this->actingAsAdmin()
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee('Update available: v1.0.0')
+        ->assertSee('Review and update');
+});
+
+it('hides the dashboard update callout when up to date', function (): void {
+    $this->actingAsAdmin()
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertDontSee('Update available: v1.0.0');
+});
+
 it('refreshes the settings sidebar badge after a check', function (): void {
     $this->actingAsAdmin();
 

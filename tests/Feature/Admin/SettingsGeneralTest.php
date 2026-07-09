@@ -118,7 +118,7 @@ it('invalidates the site-locales cache so the active set reflects the change', f
     expect(resolve('localization')->getActiveLocaleCodes()->all())->toContain('nl');
 });
 
-it('hydrates the form submissions email on mount', function (): void {
+it('hydrates the communication email on mount', function (): void {
     Settings::set(['contact_email' => 'owner@example.com']);
 
     $this->actingAsAdmin();
@@ -127,7 +127,7 @@ it('hydrates the form submissions email on mount', function (): void {
         ->assertSet('contact_email', 'owner@example.com');
 });
 
-it('persists the form submissions email on update', function (): void {
+it('persists the communication email on update', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-general')
@@ -138,14 +138,14 @@ it('persists the form submissions email on update', function (): void {
     expect(Settings::get('contact_email'))->toBe('hello@example.com');
 });
 
-it('validates that the form submissions email is a valid email address', function (): void {
+it('validates that the communication email is a valid email address', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-general')
         ->set('contact_email', 'not-an-email')
         ->call('update')
         ->assertHasErrors(['contact_email'])
-        ->assertSee('Enter a valid email address for form submissions.');
+        ->assertSee('Enter a valid communication email address.');
 });
 
 it('hydrates the deduced currency on mount', function (): void {

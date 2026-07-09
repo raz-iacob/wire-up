@@ -205,6 +205,18 @@ return new class extends Component
         </div>
     </div>
 
+    @can('settings.edit')
+        @inject('wireupUpdates', 'App\Services\UpdateService')
+        @if ($wireupUpdates->updateAvailable())
+            <flux:callout inline icon="arrow-down-tray" color="cyan">
+                <flux:callout.heading>{{ __('Update available: :tag', ['tag' => (string) $wireupUpdates->latestVersion()]) }}</flux:callout.heading>
+                <x-slot name="actions">
+                    <flux:button :href="route('admin.settings-updates')" wire:navigate>{{ __('Review and update') }}</flux:button>
+                </x-slot>
+            </flux:callout>
+        @endif
+    @endcan
+
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <flux:card class="flex items-center gap-4">
             <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
@@ -312,7 +324,7 @@ return new class extends Component
                 <flux:card class="space-y-4">
                     <div class="flex items-center justify-between">
                         <flux:heading size="lg">{{ __('Latest messages') }}</flux:heading>
-                        <flux:button size="sm" variant="ghost" :href="route('admin.inbox-index')" wire:navigate>{{ __('View all') }}</flux:button>
+                        <flux:button size="sm" variant="ghost" inset :href="route('admin.inbox-index')" wire:navigate>{{ __('View all') }}</flux:button>
                     </div>
                     @if ($this->latestMessages->isEmpty())
                         <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No messages yet.') }}</flux:text>
@@ -320,16 +332,17 @@ return new class extends Component
                         <div class="divide-y divide-zinc-100 dark:divide-white/5">
                             @foreach ($this->latestMessages as $message)
                                 <a href="{{ route('admin.inbox-show', $message) }}" wire:navigate wire:key="msg-{{ $message->id }}" class="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
-                                    <span @class([
-                                        'mt-1.5 size-2 shrink-0 rounded-full',
-                                        'bg-sky-500' => $message->read_at === null,
-                                        'bg-transparent' => $message->read_at !== null,
-                                    ])></span>
                                     <div class="min-w-0 flex-1">
-                                        <flux:heading size="sm" class="truncate">{{ $message->name ?: ($message->email ?: __('Anonymous')) }}</flux:heading>
-                                        <flux:text size="sm" class="truncate text-zinc-500 dark:text-zinc-400">{{ $message->subject ?: \Illuminate\Support\Str::limit(strip_tags((string) $message->message), 40) }}</flux:text>
+                                        <div class="flex gap-1 items-center">
+                                            <flux:heading size="sm" class="truncate">{{ $message->name ?: ($message->email ?: __('Anonymous')) }}</flux:heading> 
+                                            <span @class([
+                                                'shrink-0 rounded-full',
+                                                'size-2 bg-sky-500 animate-pulse' => $message->read_at === null,
+                                            ])></span>
+                                        </div>
+                                        <flux:text size="sm" class="truncate">{{ $message->subject ?: \Illuminate\Support\Str::limit(strip_tags((string) $message->message), 40) }}</flux:text>
                                     </div>
-                                    <flux:text size="sm" class="shrink-0 text-zinc-400">{{ $message->created_at->diffForHumans(short: true) }}</flux:text>
+                                    <flux:text size="sm" class="shrink-0" variant="subtle">{{ $message->created_at->diffForHumans(short: true) }}</flux:text>
                                 </a>
                             @endforeach
                         </div>

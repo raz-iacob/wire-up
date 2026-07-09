@@ -1,26 +1,3 @@
-@php
-    $current = fn (string $name): bool => app('livewire')?->isLivewireRequest()
-        ? str()->is(trim(str(route($name))->after(config('app.url'))->toString(), '/') ?: '/', app('livewire')->originalPath())
-        : request()->routeIs($name);
-@endphp
-
-<div class="space-y-8">
-    <flux:tabs variant="pills" scrollable>
-        <flux:tab :href="route('admin.settings-general')" :selected="$current('admin.settings-general')" wire:navigate>{{ __('General') }}</flux:tab>
-        <flux:tab :href="route('admin.settings-identity')" :selected="$current('admin.settings-identity')" wire:navigate>{{ __('Identity') }}</flux:tab>
-        <flux:tab :href="route('admin.settings-design')" :selected="$current('admin.settings-design')" wire:navigate>{{ __('Design') }}</flux:tab>
-        <flux:tab :href="route('admin.settings-menus')" :selected="$current('admin.settings-menus')" wire:navigate>{{ __('Menus') }}</flux:tab>
-        <flux:tab :href="route('admin.settings-content-types')" :selected="$current('admin.settings-content-types')" wire:navigate>{{ __('Content Types') }}</flux:tab>
-        @can('roles.view')
-            <flux:tab :href="route('admin.settings-roles')" :selected="$current('admin.settings-roles')" wire:navigate>{{ __('Roles') }}</flux:tab>
-        @endcan
-        <flux:tab :href="route('admin.settings-social')" :selected="$current('admin.settings-social')" wire:navigate>{{ __('Social') }}</flux:tab>
-        <flux:tab :href="route('admin.settings-integrations')" :selected="$current('admin.settings-integrations')" wire:navigate>{{ __('Integrations') }}</flux:tab>
-        @inject('wireupUpdates', 'App\Services\UpdateService')
-        <flux:tab :href="route('admin.settings-updates')" :selected="$current('admin.settings-updates')" wire:navigate>{{ __('Updates') }}@if ($wireupUpdates->updateAvailable()) <flux:badge variant="solid" size="sm" color="red" class="ms-2">1</flux:badge>@endif</flux:tab>
-    </flux:tabs>
-
-    <div class="w-full max-w-5xl">
-        {{ $slot }}
-    </div>
+<div class="w-full max-w-5xl">
+    {{ $slot }}
 </div>

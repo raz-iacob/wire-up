@@ -250,79 +250,77 @@ return new class extends Component
             </div>
 
             <form wire:submit="save" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="space-y-10">
+                @error('roles')
+                    <flux:callout variant="danger" icon="exclamation-triangle" :heading="$message" />
+                @enderror
+
                 <div class="space-y-4">
-                    @error('roles')
-                        <flux:callout variant="danger" icon="exclamation-triangle" :heading="$message" />
-                    @enderror
-
-                    <div class="space-y-3">
-                        @foreach ($roles as $i => $role)
-                            <div
-                                wire:key="role-{{ $role['_key'] }}"
-                                class="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10"
-                            >
-                                <div x-data="{ open: @js((bool) $role['open']) }">
-                                    <div class="flex items-center gap-2 bg-zinc-50 dark:bg-white/5 py-1.5 pl-3 pr-1.5">
-                                        <button type="button" x-on:click="open = ! open" class="flex min-w-0 flex-1 items-center gap-2 text-left">
-                                            <flux:heading class="truncate text-sm!">
-                                                {{ $role['name'] !== '' ? $role['name'] : __('Untitled role') }}
-                                            </flux:heading>
-                                            @if ($role['bypass'])
-                                                <flux:badge color="green" size="sm">{{ __('Full access') }}</flux:badge>
-                                            @elseif ($role['is_protected'])
-                                                <flux:badge color="zinc" size="sm">{{ __('System') }}</flux:badge>
-                                            @endif
-                                        </button>
-
-                                        <flux:button size="sm" variant="subtle" square x-on:click="open = ! open" :tooltip="__('Toggle')">
-                                            <flux:icon name="chevron-down" variant="micro" x-show="! open" />
-                                            <flux:icon name="chevron-up" variant="micro" x-show="open" x-cloak />
-                                        </flux:button>
-
-                                        @unless ($role['is_protected'])
-                                            <flux:button size="sm" variant="subtle" square icon="x-mark" :tooltip="__('Remove')" wire:click="confirmRemove('{{ $role['_key'] }}')" />
-                                        @endunless
-                                    </div>
-
-                                    <div class="space-y-6 p-4" x-show="open" x-cloak>
-                                        <flux:field>
-                                            <flux:label>{{ __('Name') }}</flux:label>
-                                            <flux:input wire:model="roles.{{ $i }}.name" :readonly="$role['is_protected']" class="max-w-xs" />
-                                            <flux:error name="roles.{{ $i }}.name" />
-                                        </flux:field>
-
+                    @foreach ($roles as $i => $role)
+                        <div
+                            wire:key="role-{{ $role['_key'] }}"
+                            class="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10"
+                        >
+                            <div x-data="{ open: @js((bool) $role['open']) }">
+                                <div class="flex items-center gap-2 bg-zinc-50 dark:bg-white/5 py-1.5 pl-3 pr-1.5">
+                                    <button type="button" x-on:click="open = ! open" class="flex min-w-0 flex-1 items-center gap-2 text-left">
+                                        <flux:heading class="truncate text-sm!">
+                                            {{ $role['name'] !== '' ? $role['name'] : __('Untitled role') }}
+                                        </flux:heading>
                                         @if ($role['bypass'])
-                                            <flux:text>{{ __('This role has unrestricted access to everything.') }}</flux:text>
+                                            <flux:badge color="green" size="sm">{{ __('Full access') }}</flux:badge>
                                         @elseif ($role['is_protected'])
-                                            <flux:text>{{ __('This role has no admin access and is assigned to new sign-ups.') }}</flux:text>
-                                        @else
-                                            <div class="space-y-4">
-                                                @foreach ($this->resources as $resourceIndex => $resource)
-                                                    <flux:pillbox
-                                                        wire:model="roles.{{ $i }}.grants.{{ $resourceIndex }}"
-                                                        multiple
-                                                        :label="$resource['label']"
-                                                        :placeholder="__('No access')"
-                                                        wire:key="grant-{{ $role['_key'] }}-{{ $resourceIndex }}"
-                                                    >
-                                                        @foreach ($resource['actions'] as $action)
-                                                            <flux:pillbox.option :value="$action" :label="$this->actionLabel($action)" />
-                                                        @endforeach
-                                                    </flux:pillbox>
-                                                @endforeach
-                                            </div>
+                                            <flux:badge color="zinc" size="sm">{{ __('System') }}</flux:badge>
                                         @endif
-                                    </div>
+                                    </button>
+
+                                    <flux:button size="sm" variant="subtle" square x-on:click="open = ! open" :tooltip="__('Toggle')">
+                                        <flux:icon name="chevron-down" variant="micro" x-show="! open" />
+                                        <flux:icon name="chevron-up" variant="micro" x-show="open" x-cloak />
+                                    </flux:button>
+
+                                    @unless ($role['is_protected'])
+                                        <flux:button size="sm" variant="subtle" square icon="x-mark" :tooltip="__('Remove')" wire:click="confirmRemove('{{ $role['_key'] }}')" />
+                                    @endunless
+                                </div>
+
+                                <div class="space-y-6 p-4" x-show="open" x-cloak>
+                                    <flux:field>
+                                        <flux:label>{{ __('Name') }}</flux:label>
+                                        <flux:input wire:model="roles.{{ $i }}.name" :readonly="$role['is_protected']" class="max-w-xs" />
+                                        <flux:error name="roles.{{ $i }}.name" />
+                                    </flux:field>
+
+                                    @if ($role['bypass'])
+                                        <flux:text>{{ __('This role has unrestricted access to everything.') }}</flux:text>
+                                    @elseif ($role['is_protected'])
+                                        <flux:text>{{ __('This role has no admin access and is assigned to new sign-ups.') }}</flux:text>
+                                    @else
+                                        <div class="space-y-4">
+                                            @foreach ($this->resources as $resourceIndex => $resource)
+                                                <flux:pillbox
+                                                    wire:model="roles.{{ $i }}.grants.{{ $resourceIndex }}"
+                                                    multiple
+                                                    :label="$resource['label']"
+                                                    :placeholder="__('No access')"
+                                                    wire:key="grant-{{ $role['_key'] }}-{{ $resourceIndex }}"
+                                                >
+                                                    @foreach ($resource['actions'] as $action)
+                                                        <flux:pillbox.option :value="$action" :label="$this->actionLabel($action)" />
+                                                    @endforeach
+                                                </flux:pillbox>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
+                    @endforeach
 
-                        <flux:button type="button" icon="plus" wire:click="addRole">{{ __('Add role') }}</flux:button>
-                    </div>
+                    <flux:button type="button" size="sm" icon="plus" wire:click="addRole">{{ __('Add') }}</flux:button>
+                </div>
 
-                    <div>
-                        <flux:button type="submit" variant="primary" icon="check">{{ __('Update') }}</flux:button>
-                    </div>
+                <div>
+                    <flux:button type="submit" variant="primary" icon="check">{{ __('Update') }}</flux:button>
                 </div>
             </form>
         </div>

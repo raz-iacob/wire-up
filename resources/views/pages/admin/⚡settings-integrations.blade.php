@@ -473,11 +473,11 @@ return new class extends Component
             {{ __('Settings') }}
         </flux:breadcrumbs.item>
         <flux:breadcrumbs.item>
-            {{ __('Integrations') }}
+            {{ __('App Integrations') }}
         </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
-        <flux:navbar.item icon-trailing="chevron-down">{{ __('Integrations') }}</flux:navbar.item>
+        <flux:navbar.item icon-trailing="chevron-down">{{ __('App Integrations') }}</flux:navbar.item>
 
         <flux:navmenu>
             <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>

@@ -112,7 +112,7 @@ Requirements on the server: PHP 8.5, Composer, Node.js 22+, git, MySQL.
     }
     ```
 
-3. Create `.env` from `.env.example` with production values (see [Environment Configuration](#environment-configuration)).
+3. Create `.env` from `.env.example` with production values (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, MySQL credentials).
 
 4. Install PHP dependencies and run the installer:
 
@@ -163,26 +163,6 @@ npm run build
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-```
-
-### Environment Configuration
-
-Ensure these environment variables are set in production:
-
-```env
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://your-domain.com
-
-# Database configuration
-DB_CONNECTION=mysql
-DB_HOST=your-db-host
-DB_DATABASE=your-database
-DB_USERNAME=your-username
-DB_PASSWORD=your-password
-
-# Queue configuration (recommended)
-QUEUE_CONNECTION=redis
 ```
 
 > **Pexels media library integration:** Add a free Pexels API key (from [pexels.com/api](https://www.pexels.com/api/)) under **Settings → Integrations** in the admin to enable the integration. Editors can then search Pexels photos and videos directly from the media picker and import them into the library. When no key is set, the Pexels option is hidden. Per the [Pexels API Guidelines](https://www.pexels.com/api/documentation/#guidelines), photographer attribution and a link back to Pexels are shown in the picker, and the photographer/source details are stored with each imported asset (in `media.metadata`) so credit can be surfaced wherever the media is used.
