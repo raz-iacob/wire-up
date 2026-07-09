@@ -501,7 +501,7 @@ return new class extends Component
                     <flux:select.option value="custom">{{ __('Custom') }}</flux:select.option>
                 </flux:select>
                 <div x-show="$wire.heading_font === 'custom'" x-cloak>
-                    <flux:input wire:model="heading_font_custom" label="{{ __('Custom Google font') }}" placeholder="{{ __('e.g. Zilla Slab') }}" :description:trailing="__('Exact Google Fonts family name.')" />
+                    <flux:input wire:model="heading_font_custom" label="{{ __('Custom Google font') }}" placeholder="{{ __('Exact Google Fonts family name.') }}" />
                 </div>
 
                 <flux:select variant="listbox" searchable wire:model="body_font" label="{{ __('Body font') }}">
@@ -513,7 +513,7 @@ return new class extends Component
                     <flux:select.option value="custom">{{ __('Custom') }}</flux:select.option>
                 </flux:select>
                 <div x-show="$wire.body_font === 'custom'" x-cloak>
-                    <flux:input wire:model="body_font_custom" label="{{ __('Custom Google font') }}" placeholder="{{ __('e.g. Zilla Slab') }}" :description="__('Exact Google Fonts family name.')" />
+                    <flux:input wire:model="body_font_custom" label="{{ __('Custom Google font') }}" placeholder="{{ __('Exact Google Fonts family name.') }}" />
                 </div>
             </div>
 
