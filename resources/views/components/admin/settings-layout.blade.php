@@ -16,6 +16,8 @@
         @endcan
         <flux:tab :href="route('admin.settings-social')" :selected="$current('admin.settings-social')" wire:navigate>{{ __('Social') }}</flux:tab>
         <flux:tab :href="route('admin.settings-integrations')" :selected="$current('admin.settings-integrations')" wire:navigate>{{ __('Integrations') }}</flux:tab>
+        @inject('wireupUpdates', 'App\Services\UpdateService')
+        <flux:tab :href="route('admin.settings-updates')" :selected="$current('admin.settings-updates')" wire:navigate>{{ __('Updates') }}@if ($wireupUpdates->updateAvailable()) <flux:badge variant="solid" size="sm" color="red" class="ms-2">1</flux:badge>@endif</flux:tab>
     </flux:tabs>
 
     <div class="w-full max-w-5xl">

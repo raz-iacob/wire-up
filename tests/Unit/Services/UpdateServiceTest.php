@@ -113,7 +113,11 @@ it('ignores a malformed cached check result', function (): void {
 });
 
 it('reports whether an update is available', function (string $current, string $latest, bool $expected): void {
-    Process::fake(['*ls-remote*' => Process::result(output: "aaa\trefs/tags/{$latest}")]);
+    Process::fake([
+        '*ls-remote*' => Process::result(output: "aaa\trefs/tags/{$latest}"),
+        '*fetch*' => Process::result(),
+        '*show*' => Process::result(output: ''),
+    ]);
 
     $service = new UpdateService();
     $service->writeCurrentVersion($current);
@@ -136,4 +140,172 @@ it('reports no update when either version is unknown', function (): void {
     $service->check();
 
     expect($service->updateAvailable())->toBeFalse();
+});
+
+it('stores release notes from the changelog when an update is available', function (): void {
+    Process::fake([
+        '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*fetch*' => Process::result(),
+        '*show*' => Process::result(output: implode("\n", [
+            '# Changelog',
+            '',
+            'Intro text.',
+            '',
+            '## v1.0.0 — 2026-08-01',
+            '',
+            '- Added dark mode',
+            '- Fixed the footer',
+            '',
+            '## v0.9.0 — 2026-07-01',
+            '',
+            '- Initial release',
+        ])),
+    ]);
+
+    $service = new UpdateService();
+    $service->writeCurrentVersion('v0.9.0');
+    $service->check();
+
+    expect($service->changelog())->toBe([
+        ['version' => 'v1.0.0', 'notes' => ['Added dark mode', 'Fixed the footer']],
+    ]);
+});
+
+it('stores no release notes when the changelog fetch fails', function (): void {
+    Process::fake([
+        '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*fetch*' => Process::result(exitCode: 1),
+    ]);
+
+    $service = new UpdateService();
+    $service->writeCurrentVersion('v0.9.0');
+    $service->check();
+
+    expect($service->changelog())->toBe([]);
+});
+
+it('stores no release notes when the tag has no changelog', function (): void {
+    Process::fake([
+        '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*fetch*' => Process::result(),
+        '*show*' => Process::result(exitCode: 1),
+    ]);
+
+    $service = new UpdateService();
+    $service->writeCurrentVersion('v0.9.0');
+    $service->check();
+
+    expect($service->changelog())->toBe([]);
+});
+
+it('stores no release notes when the changelog has no newer sections', function (): void {
+    Process::fake([
+        '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*fetch*' => Process::result(),
+        '*show*' => Process::result(output: "## v0.9.0\n\n- Old news"),
+    ]);
+
+    $service = new UpdateService();
+    $service->writeCurrentVersion('v0.9.0');
+    $service->check();
+
+    expect($service->changelog())->toBe([]);
+});
+
+it('returns an empty changelog when the cached notes are malformed', function (): void {
+    Cache::forever('wireup:update:latest', ['version' => 'v1.0.0', 'notes' => 'nope']);
+
+    expect(new UpdateService()->changelog())->toBe([]);
+
+    Cache::forever('wireup:update:latest', ['version' => 'v1.0.0', 'notes' => [['version' => 1, 'notes' => 'x'], 'junk']]);
+
+    expect(new UpdateService()->changelog())->toBe([]);
+
+    Cache::forever('wireup:update:latest', ['version' => 'v1.0.0', 'notes' => [['version' => 'v1.0.0', 'notes' => 'not-a-list']]]);
+
+    expect(new UpdateService()->changelog())->toBe([]);
+});
+
+it('drops non-string note lines from the cached changelog', function (): void {
+    Cache::forever('wireup:update:latest', ['version' => 'v1.0.0', 'notes' => [['version' => 'v1.0.0', 'notes' => ['Real note', 42]]]]);
+
+    expect(new UpdateService()->changelog())->toBe([
+        ['version' => 'v1.0.0', 'notes' => ['Real note']],
+    ]);
+});
+
+it('starts with an idle state', function (): void {
+    $service = new UpdateService();
+
+    expect($service->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null])
+        ->and($service->updating())->toBeFalse();
+});
+
+it('tracks the update lifecycle', function (): void {
+    $service = new UpdateService();
+
+    $service->markPending('v1.0.0');
+
+    expect($service->state()['status'])->toBe('pending')
+        ->and($service->state()['tag'])->toBe('v1.0.0')
+        ->and($service->updating())->toBeTrue();
+
+    $service->markRunning('v1.0.0', 'Run database migrations');
+
+    expect($service->state()['status'])->toBe('running')
+        ->and($service->state()['step'])->toBe('Run database migrations')
+        ->and($service->updating())->toBeTrue();
+
+    $service->markFinished('v1.0.0');
+
+    expect($service->state()['status'])->toBe('finished')
+        ->and($service->updating())->toBeFalse();
+
+    $service->clearState();
+
+    expect($service->state()['status'])->toBe('idle');
+});
+
+it('truncates failure output in the state', function (): void {
+    $service = new UpdateService();
+    $service->markFailed('v1.0.0', 'Build frontend assets', str_repeat('x', 3000).'END');
+
+    $output = $service->state()['output'];
+
+    expect($service->state()['status'])->toBe('failed')
+        ->and($output)->toEndWith('END')
+        ->and(mb_strlen((string) $output))->toBe(2000);
+});
+
+it('marks a silent pending update as stalled', function (): void {
+    $service = new UpdateService();
+    $service->markPending('v1.0.0');
+
+    $this->travel(9)->minutes();
+
+    expect($service->state()['status'])->toBe('pending');
+
+    $this->travel(2)->minutes();
+
+    expect($service->state()['status'])->toBe('stalled')
+        ->and($service->updating())->toBeFalse();
+});
+
+it('marks a silent running update as stalled', function (): void {
+    $service = new UpdateService();
+    $service->markRunning('v1.0.0', 'Install PHP dependencies');
+
+    $this->travel(29)->minutes();
+
+    expect($service->state()['status'])->toBe('running');
+
+    $this->travel(2)->minutes();
+
+    expect($service->state()['status'])->toBe('stalled');
+});
+
+it('ignores a malformed cached state', function (): void {
+    Cache::forever('wireup:update:state', ['status' => 123, 'tag' => 5, 'step' => [], 'output' => 9, 'at' => 456]);
+
+    expect(new UpdateService()->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null]);
 });

@@ -28,7 +28,7 @@
         @endcan
         <flux:sidebar.item icon="photo" class="cursor-pointer" x-on:click="Livewire.dispatch('select-media', { target: 'media-gallery', type: null, max: 50, media: null })">{{ __('Media') }}</flux:sidebar.item>
         @can('settings.view')
-            <flux:sidebar.item icon="cog-6-tooth" :href="route('admin.settings-general')" :current="request()->routeIs('admin.settings-*')" wire:navigate.hover>{{ __('Settings') }}</flux:sidebar.item>
+            <livewire:admin.sidebar-settings />
         @endcan
     </flux:sidebar.nav>
 

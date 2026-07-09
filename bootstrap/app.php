@@ -30,6 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
             LocaleRedirect::class,
             TrackUserAccess::class,
         ]);
+
+        $middleware->preventRequestsDuringMaintenance(except: [
+            'admin',
+            'admin/*',
+            'livewire/*',
+            'login',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReportDuplicates();

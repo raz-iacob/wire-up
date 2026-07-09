@@ -123,17 +123,35 @@ Requirements on the server: PHP 8.5, Composer, Node.js 22+, git, MySQL.
 
     The installer generates the app key if missing, migrates the database, links storage, builds the frontend, caches the app, and creates the first admin user.
 
-5. Add the scheduler cron entry and a supervised queue worker (required for e-mail/Slack notifications):
+5. Add the scheduler cron entry and a supervised queue worker (required for e-mail/Slack notifications and admin-triggered updates):
 
     ```cron
     * * * * * cd /path/to/wire-up && php artisan schedule:run >> /dev/null 2>&1
     ```
 
     ```bash
-    php artisan queue:work --tries=3
+    php artisan queue:work --tries=3 --timeout=3600
     ```
 
-Releases are git tags (`v0.x.y`). `php artisan wireup:check` reports the installed and latest versions (also runs daily via the scheduler).
+    Keep `DB_QUEUE_RETRY_AFTER=3700` in `.env` (it must exceed the worker `--timeout`, or a long-running update job gets re-dispatched mid-run).
+
+### Updating
+
+Releases are git tags (`v0.x.y`) with matching sections in `CHANGELOG.md`. The scheduler checks for new releases daily (`php artisan wireup:check`); when one is available, the admin shows a badge on **Settings → Updates** with the release notes.
+
+- **From the admin:** Settings → Updates → *Update now* (runs as a queued job — requires the queue worker above).
+- **From the CLI:** `php artisan wireup:update` (options: `--tag=vX.Y.Z`, `--force`).
+- **Automatic:** enable *Automatic updates* on Settings → Updates; the daily check then installs new releases unattended.
+
+An update puts the public site into maintenance mode (the admin stays reachable), then: fetch + check out the tag, `composer install --no-dev`, `migrate --force`, `npm ci` + build, cache rebuild, `queue:restart`, and back up. **If a step fails, the site stays in maintenance mode** — review the error on Settings → Updates (or the console), fix it, then run `php artisan up`. Roll back with:
+
+```bash
+git checkout vPREVIOUS
+composer install --no-dev && php artisan migrate --force
+npm ci && npm run build && php artisan optimize && php artisan up
+```
+
+**Release routine:** add a `## vX.Y.Z` section to `CHANGELOG.md`, commit, tag (`git tag vX.Y.Z`), push with tags.
 
 ### Production Build
 

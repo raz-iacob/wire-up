@@ -49,4 +49,5 @@ Route::middleware('can:settings.view')->group(function (): void {
     Route::livewire('settings/menus', 'pages::admin.settings-menus')->name('settings-menus');
     Route::livewire('settings/social', 'pages::admin.settings-social')->name('settings-social');
     Route::livewire('settings/integrations', 'pages::admin.settings-integrations')->name('settings-integrations');
+    Route::livewire('settings/updates', 'pages::admin.settings-updates')->name('settings-updates');
 });
