@@ -7,6 +7,7 @@ use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 
 function menuItem(array $overrides = []): array
@@ -124,6 +125,84 @@ it('adds a header menu item to the current locale', function (): void {
 
     expect($menus[0]['items']['en'])->toHaveCount(1)
         ->and($menus[0]['items']['en'][0]['type'])->toBe('page');
+});
+
+it('persists an icon-only header link with its fetched svg', function (): void {
+    Http::fake(['unpkg.com/*' => Http::response('<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /></svg>')]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('menus.0.items.en', [menuItem([
+            'type' => 'link',
+            'appearance' => 'icon',
+            'label' => 'Search',
+            'url' => '/search',
+            'icon_name' => 'search',
+        ])])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $item = savedMenuItems('header')[0];
+
+    expect($item['appearance'])->toBe('icon')
+        ->and($item['icon_name'])->toBe('search')
+        ->and($item['icon_svg'])->toContain('<svg')
+        ->and($item['icon_svg'])->toContain('circle');
+});
+
+it('rejects an unknown lucide icon name', function (): void {
+    Http::fake(['unpkg.com/*' => Http::response('Not found', 404)]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('menus.0.items.en', [menuItem([
+            'type' => 'link',
+            'appearance' => 'icon',
+            'label' => 'Nope',
+            'url' => '/x',
+            'icon_name' => 'notarealicon',
+        ])])
+        ->call('update')
+        ->assertHasErrors('menus.0.items.en.0.icon_name')
+        ->assertSee('No Lucide icon named');
+});
+
+it('requires an icon name when the appearance is icon', function (): void {
+    Http::fake();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('menus.0.items.en', [menuItem([
+            'type' => 'link',
+            'appearance' => 'icon',
+            'label' => 'Search',
+            'url' => '/search',
+            'icon_name' => '',
+        ])])
+        ->call('update')
+        ->assertHasErrors('menus.0.items.en.0.icon_name');
+
+    Http::assertNothingSent();
+});
+
+it('does not allow the icon appearance on the footer menu', function (): void {
+    Http::fake();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->set('menus.1.items.en', [menuItem([
+            'type' => 'link',
+            'appearance' => 'icon',
+            'label' => 'Search',
+            'url' => '/search',
+            'icon_name' => 'search',
+        ])])
+        ->call('update')
+        ->assertHasErrors('menus.1.items.en.0.appearance');
 });
 
 it('keeps menus separate per language', function (): void {

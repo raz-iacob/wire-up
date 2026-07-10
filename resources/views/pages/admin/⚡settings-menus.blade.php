@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
 use App\Models\Page;
+use App\Services\LucideIconService;
 use App\Services\SettingsService;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
@@ -266,6 +267,8 @@ return new class extends Component
             'menus.*.items.*.*.page_id.exists' => __('The selected page is no longer available.'),
             'menus.*.items.*.*.url.required_if' => __('Enter a link for this menu item.'),
             'menus.*.items.*.*.url.regex' => $urlHint,
+            'menus.*.items.*.*.icon_name.required_if' => __('Enter a Lucide icon name.'),
+            'menus.*.items.*.*.icon_name.regex' => __('Use only lowercase letters, numbers and hyphens (e.g. shopping-cart).'),
         ];
     }
 
@@ -282,6 +285,7 @@ return new class extends Component
             'menus.*.items.*.*.type' => __('type'),
             'menus.*.items.*.*.appearance' => __('appearance'),
             'menus.*.items.*.*.target' => __('target'),
+            'menus.*.items.*.*.icon_name' => __('Lucide icon'),
         ];
     }
 
@@ -348,12 +352,14 @@ return new class extends Component
             $rules["menus.$i.display.sticky"] = ['boolean'];
             $rules["menus.$i.display.mobile"] = [Rule::in(['collapse', 'hide', 'toggle'])];
 
+            $isHeader = $this->menus[$i]['key'] === 'header';
+
             foreach (array_keys($this->activeLocales) as $locale) {
                 $base = "menus.$i.items.$locale";
 
                 $rules[$base] = ['array', 'max:20'];
                 $rules["$base.*.type"] = ['required', Rule::in(['page', 'link', 'heading'])];
-                $rules["$base.*.appearance"] = ['required', Rule::in(['link', 'button'])];
+                $rules["$base.*.appearance"] = ['required', Rule::in($isHeader ? ['link', 'button', 'icon'] : ['link', 'button'])];
                 $rules["$base.*.target"] = ['required', Rule::in(['_self', '_blank'])];
                 $rules["$base.*.label"] = ['required', 'string', 'max:100'];
                 $rules["$base.*.page_id"] = [
@@ -379,6 +385,25 @@ return new class extends Component
                 $rules["$base.*.icon"] = ['nullable', 'string', Rule::in(config()->array('menu.icons'))];
                 $rules["$base.*.badge"] = ['nullable', 'string', 'max:20'];
                 $rules["$base.*.badgeColor"] = [Rule::in(config()->array('menu.badge_colors'))];
+
+                if ($isHeader) {
+                    $rules["$base.*.icon_name"] = [
+                        "required_if:$base.*.appearance,icon",
+                        'nullable',
+                        'string',
+                        'max:60',
+                        'regex:/^[a-z0-9-]+$/',
+                        function (string $attribute, mixed $value, Closure $fail): void {
+                            if (! is_string($value) || $value === '') {
+                                return;
+                            }
+
+                            if (resolve(LucideIconService::class)->svg($value) === null) {
+                                $fail(__('No Lucide icon named ":name". Find names at lucide.dev/icons.', ['name' => $value]));
+                            }
+                        },
+                    ];
+                }
             }
         }
 
@@ -401,12 +426,13 @@ return new class extends Component
             $hydrated[] = [
                 '_key' => (string) $this->seq++,
                 'type' => in_array($item['type'] ?? null, ['page', 'link', 'heading'], true) ? $item['type'] : 'page',
-                'appearance' => in_array($item['appearance'] ?? null, ['link', 'button'], true) ? $item['appearance'] : 'link',
+                'appearance' => in_array($item['appearance'] ?? null, ['link', 'button', 'icon'], true) ? $item['appearance'] : 'link',
                 'target' => in_array($item['target'] ?? null, ['_self', '_blank'], true) ? $item['target'] : '_self',
                 'label' => is_string($item['label'] ?? null) ? $item['label'] : '',
                 'page_id' => isset($item['page_id']) ? (int) $item['page_id'] : null,
                 'url' => is_string($item['url'] ?? null) ? $item['url'] : '',
                 'icon' => is_string($item['icon'] ?? null) ? $item['icon'] : '',
+                'icon_name' => is_string($item['icon_name'] ?? null) ? $item['icon_name'] : '',
                 'badge' => is_string($item['badge'] ?? null) ? $item['badge'] : '',
                 'badgeColor' => is_string($item['badgeColor'] ?? null) ? $item['badgeColor'] : 'zinc',
                 'open' => false,
@@ -430,6 +456,7 @@ return new class extends Component
             'page_id' => null,
             'url' => '',
             'icon' => '',
+            'icon_name' => '',
             'badge' => '',
             'badgeColor' => 'zinc',
             'open' => true,
@@ -442,17 +469,23 @@ return new class extends Component
      */
     private function cleanItems(array $items): array
     {
-        return array_map(fn (array $item): array => [
-            'type' => $item['type'],
-            'appearance' => $item['appearance'],
-            'target' => $item['target'],
-            'label' => $item['label'] ?? '',
-            'page_id' => ($item['type'] ?? null) === 'page' ? ($item['page_id'] ?? null) : null,
-            'url' => ($item['type'] ?? null) === 'link' ? ($item['url'] ?? '') : '',
-            'icon' => $item['icon'] ?? '',
-            'badge' => $item['badge'] ?? '',
-            'badgeColor' => $item['badgeColor'] ?? 'zinc',
-        ], array_values($items));
+        return array_map(function (array $item): array {
+            $iconName = ($item['appearance'] ?? null) === 'icon' ? mb_trim((string) ($item['icon_name'] ?? '')) : '';
+
+            return [
+                'type' => $item['type'],
+                'appearance' => $item['appearance'],
+                'target' => $item['target'],
+                'label' => $item['label'] ?? '',
+                'page_id' => ($item['type'] ?? null) === 'page' ? ($item['page_id'] ?? null) : null,
+                'url' => ($item['type'] ?? null) === 'link' ? ($item['url'] ?? '') : '',
+                'icon' => $item['icon'] ?? '',
+                'icon_name' => $iconName,
+                'icon_svg' => $iconName !== '' ? (resolve(LucideIconService::class)->svg($iconName) ?? '') : '',
+                'badge' => $item['badge'] ?? '',
+                'badgeColor' => $item['badgeColor'] ?? 'zinc',
+            ];
+        }, array_values($items));
     }
 };
 ?>

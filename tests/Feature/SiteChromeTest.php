@@ -32,6 +32,27 @@ it('renders the current locale header menu items with their urls', function (): 
         ->assertSee('https://example.com/docs', false);
 });
 
+it('renders an icon-only header link with its label as the accessible name', function (): void {
+    setSiteMetadata(['menus' => menusPayload(['header' => ['en' => [
+        ['type' => 'link', 'appearance' => 'icon', 'target' => '_blank', 'label' => 'Search the site', 'page_id' => null, 'url' => '/search', 'icon_name' => 'search', 'icon_svg' => '<svg data-lucide="search"><circle /></svg>'],
+    ]]])]);
+
+    Livewire::test('site.header')
+        ->assertSee('data-lucide="search"', false)
+        ->assertSee('aria-label="Search the site"', false)
+        ->assertDontSee('>Search the site<', false);
+});
+
+it('falls back to a text link when an icon item has no svg', function (): void {
+    setSiteMetadata(['menus' => menusPayload(['header' => ['en' => [
+        ['type' => 'link', 'appearance' => 'icon', 'target' => '_self', 'label' => 'Search', 'page_id' => null, 'url' => '/search', 'icon_name' => 'search', 'icon_svg' => ''],
+    ]]])]);
+
+    Livewire::test('site.header')
+        ->assertSee('Search')
+        ->assertDontSee('aria-label="Search"', false);
+});
+
 it('renders the header menu for the active locale', function (): void {
     setSiteMetadata(['menus' => menusPayload(['header' => [
         'en' => [['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'English item', 'page_id' => null, 'url' => 'https://example.com/en']],

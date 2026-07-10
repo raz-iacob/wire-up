@@ -38,4 +38,16 @@ return [
 
     'badge_colors' => ['zinc', 'primary', 'green', 'red', 'amber', 'blue', 'purple'],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Lucide icon version
+    |--------------------------------------------------------------------------
+    |
+    | The pinned lucide-static release that icon-only header links are fetched
+    | from (via unpkg). Pinned so a Lucide change cannot silently alter icons.
+    |
+    */
+
+    'lucide_version' => '1.24.0',
+
 ];

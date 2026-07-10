@@ -107,7 +107,7 @@ final class SettingsService
     }
 
     /**
-     * @return array{display: array{background: bool, position: string, sticky: bool, mobile: string}, items: array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}>}|null
+     * @return array{display: array{background: bool, position: string, sticky: bool, mobile: string}, items: array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}>}|null
      */
     public function menuForDisplay(string $key): ?array
     {
@@ -504,7 +504,7 @@ final class SettingsService
     }
 
     /**
-     * @return array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}>
+     * @return array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}>
      */
     public function menu(string $key): array
     {
@@ -750,7 +750,7 @@ final class SettingsService
     /**
      * @param  array<string, mixed>  $item
      * @param  Collection<int, Page>  $pages
-     * @return array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}|null
+     * @return array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}|null
      */
     private function resolveMenuItem(array $item, Collection $pages): ?array
     {
@@ -769,6 +769,7 @@ final class SettingsService
                 'target' => '_self',
                 'appearance' => 'link',
                 'icon' => null,
+                'icon_svg' => '',
                 'badge' => '',
                 'badgeColor' => 'zinc',
             ];
@@ -797,14 +798,21 @@ final class SettingsService
 
         $icon = is_string($item['icon'] ?? null) ? $item['icon'] : '';
         $badgeColor = is_string($item['badgeColor'] ?? null) ? $item['badgeColor'] : 'zinc';
+        $iconSvg = is_string($item['icon_svg'] ?? null) ? $item['icon_svg'] : '';
+        $appearance = in_array($item['appearance'] ?? null, ['button', 'icon'], true) ? (string) $item['appearance'] : 'link';
+
+        if ($appearance === 'icon' && $iconSvg === '') {
+            $appearance = 'link';
+        }
 
         return [
             'type' => 'link',
             'label' => $label,
             'url' => $url,
             'target' => ($item['target'] ?? null) === '_blank' ? '_blank' : '_self',
-            'appearance' => ($item['appearance'] ?? null) === 'button' ? 'button' : 'link',
+            'appearance' => $appearance,
             'icon' => in_array($icon, config()->array('menu.icons'), true) ? $icon : null,
+            'icon_svg' => $appearance === 'icon' ? $iconSvg : '',
             'badge' => is_string($item['badge'] ?? null) ? $item['badge'] : '',
             'badgeColor' => in_array($badgeColor, config()->array('menu.badge_colors'), true) ? $badgeColor : 'zinc',
         ];

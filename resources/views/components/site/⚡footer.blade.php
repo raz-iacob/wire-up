@@ -9,7 +9,7 @@ return new class extends Component
 {
     public string $layout;
 
-    /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}> */
+    /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}> */
     public array $items = [];
 
     /** @var array<string, string> */

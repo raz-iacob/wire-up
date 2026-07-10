@@ -11,13 +11,13 @@ return new class extends Component
 {
     public string $layout;
 
-    /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}> */
+    /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}> */
     public array $items = [];
 
-    /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}> */
+    /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}> */
     public array $links = [];
 
-    /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, badge: string, badgeColor: string}> */
+    /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}> */
     public array $buttons = [];
 
     public string $brand;
@@ -54,7 +54,7 @@ return new class extends Component
 
         $this->items = $service->menu('header');
         $this->links = array_values(array_filter($this->items, fn (array $item): bool => $item['appearance'] === 'link'));
-        $this->buttons = array_values(array_filter($this->items, fn (array $item): bool => $item['appearance'] === 'button'));
+        $this->buttons = array_values(array_filter($this->items, fn (array $item): bool => in_array($item['appearance'], ['button', 'icon'], true)));
 
         $this->brand = $service->title() ?: config()->string('app.name');
         $this->logo = $service->logoUrl('logo_header');

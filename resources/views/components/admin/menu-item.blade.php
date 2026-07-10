@@ -67,9 +67,12 @@
         @unless ($itemType === 'heading')
             <flux:field>
                 <flux:label>{{ __('Appearance') }}</flux:label>
-                <flux:select wire:model="{{ $base }}.appearance">
+                <flux:select wire:model.live="{{ $base }}.appearance">
                     <flux:select.option value="link">{{ __('Link') }}</flux:select.option>
                     <flux:select.option value="button">{{ __('Button') }}</flux:select.option>
+                    @if ($menuKey === 'header')
+                        <flux:select.option value="icon">{{ __('Icon') }}</flux:select.option>
+                    @endif
                 </flux:select>
                 <flux:error name="{{ $base }}.appearance" />
             </flux:field>
@@ -82,6 +85,19 @@
                 </flux:select>
                 <flux:error name="{{ $base }}.target" />
             </flux:field>
+
+            @if ($menuKey === 'header' && ($item['appearance'] ?? '') === 'icon')
+                <div class="sm:col-span-2">
+                    <flux:field>
+                        <flux:label>{{ __('Lucide icon') }}</flux:label>
+                        <flux:input wire:model="{{ $base }}.icon_name" placeholder="{{ __('e.g. search, menu, shopping-cart') }}" />
+                        <flux:description>
+                            {{ __('Any icon name from') }} <flux:link href="https://lucide.dev/icons" external>lucide.dev/icons</flux:link>. {{ __('Brand logos are not included.') }}
+                        </flux:description>
+                        <flux:error name="{{ $base }}.icon_name" />
+                    </flux:field>
+                </div>
+            @endif
 
             @if ($itemType === 'link')
                 <div class="sm:col-span-2">
