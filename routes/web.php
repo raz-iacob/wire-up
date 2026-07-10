@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\SessionController;
+use App\Http\Middleware\MarkdownForAgents;
 use App\Http\Middleware\RedirectHomepageSlug;
 use App\Services\SeoService;
 use App\Services\SettingsService;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
 
-    Route::livewire('/', 'pages::home')->name('home');
+    Route::livewire('/', 'pages::home')->middleware(MarkdownForAgents::class)->name('home');
 
     Route::middleware('guest')->group(function (): void {
         Route::livewire('login', 'pages::auth.login')->name('login');
@@ -65,10 +66,11 @@ Route::get('llms-full.txt', fn (): Response => response(
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
     Route::livewire('{recordType}/{slug}', 'pages::record')
         ->where('recordType', '(?!admin/)[^/]+')
+        ->middleware(MarkdownForAgents::class)
         ->name('record');
 
     Route::livewire('{slug}', 'pages::page')
         ->where('slug', '^(?!admin).*')
-        ->middleware(RedirectHomepageSlug::class)
+        ->middleware([RedirectHomepageSlug::class, MarkdownForAgents::class])
         ->name('page');
 });

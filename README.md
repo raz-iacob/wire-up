@@ -173,6 +173,10 @@ machine-readable resources for crawlers and AI agents:
   `lastmod` and `hreflang` alternates.
 - **`/llms.txt`** - a Markdown index of published pages (title, URL, description) for AI crawlers.
 - **`/llms-full.txt`** - the full plain-text content of every published page.
+- **Markdown for agents** - every published page and record also serves a clean Markdown
+  representation of its content blocks from the same URL via content negotiation: requests with an
+  `Accept: text/markdown` header (as sent by AI agents) get Markdown instead of HTML, cutting token
+  noise while keeping canonical URLs.
 - **`/robots.txt`** - dynamic; references the sitemap and reflects the indexing settings below.
 
 **Controlling indexing:**

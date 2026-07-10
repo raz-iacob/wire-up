@@ -13,6 +13,7 @@
         "enshrined/svg-sanitize": "^0.22.0",
         "intervention/image": "^3.11.8",
         "laravel/framework": "^13.18.1",
+        "league/html-to-markdown": "^5.1",
         "livewire/blaze": "^1.0.12",
         "livewire/flux": "^2.15.0",
         "livewire/flux-pro": "^2.15.0",
