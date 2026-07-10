@@ -226,7 +226,8 @@ final class Record extends Model
         $locale = app()->getLocale();
 
         $query->where(function (Builder $inner) use ($search, $recordType, $locale): void {
-            $inner->whereTranslationLike('title', $search);
+            $inner->whereTranslationLike('title', $search)
+                ->orWhereLike("data->heading->{$locale}", "%{$search}%");
 
             foreach ($recordType->searchableFields() as $field) {
                 $path = ($field['translatable'] ?? false)

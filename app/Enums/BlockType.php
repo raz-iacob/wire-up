@@ -19,6 +19,7 @@ enum BlockType: string
     case SPONSORS = 'sponsors';
     case FEATURE_CARDS = 'feature-cards';
     case COLLECTION = 'collection';
+    case SEARCH = 'search';
     case BUTTONS = 'buttons';
     case AUDIO = 'audio';
     case DOWNLOADS = 'downloads';
@@ -63,6 +64,7 @@ enum BlockType: string
             self::SPONSORS => __('Sponsors'),
             self::FEATURE_CARDS => __('Feature Cards'),
             self::COLLECTION => __('Collection'),
+            self::SEARCH => __('Search'),
             self::BUTTONS => __('Buttons'),
             self::AUDIO => __('Audio'),
             self::DOWNLOADS => __('Downloads'),
@@ -90,6 +92,7 @@ enum BlockType: string
             self::SPONSORS => 'handshake',
             self::FEATURE_CARDS => 'squares-2x2',
             self::COLLECTION => 'rectangle-stack',
+            self::SEARCH => 'magnifying-glass',
             self::BUTTONS => 'cursor-arrow-rays',
             self::AUDIO => 'musical-note',
             self::DOWNLOADS => 'arrow-down-tray',
@@ -122,6 +125,7 @@ enum BlockType: string
             self::SPONSORS => __('Sponsor and partner logos shown in a grid, marquee or grouped by tier.'),
             self::FEATURE_CARDS => __('A responsive grid of cards, each with an image or icon, a title and a short description.'),
             self::COLLECTION => __('Display records from a content type as a carousel, grid or list — by latest, category or a hand-picked set.'),
+            self::SEARCH => __('A search box that finds records across the content types you choose, grouped by type.'),
             self::BUTTONS => __('A row of call-to-action buttons linking to pages, sections or external URLs.'),
             self::AUDIO => __('An audio player for a single uploaded track or recording.'),
             self::DOWNLOADS => __('A list of downloadable files such as PDFs, documents or archives.'),
@@ -278,6 +282,17 @@ enum BlockType: string
                     'text' => [],
                     'link' => ['type' => 'url', 'value' => '', 'newTab' => false],
                 ],
+            ],
+            self::SEARCH => [
+                'sources' => [],
+                'labels' => [],
+                'heading' => [],
+                'placeholder' => [],
+                'layout' => 'grid',
+                'columns' => 3,
+                'showImage' => true,
+                'perType' => 4,
+                'hasBackground' => false,
             ],
             self::BUTTONS => [
                 'align' => 'center',

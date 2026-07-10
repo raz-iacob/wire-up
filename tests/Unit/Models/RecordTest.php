@@ -276,6 +276,35 @@ it('matches records by title and searchable fields via the search scope', functi
         ->and($ids)->not->toContain($byNotesOnly->id);
 });
 
+it('matches records by their display heading even when the title is empty and no field is searchable', function (): void {
+    $type = RecordType::factory()->create([
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'translatable' => true, 'searchable' => false],
+        ],
+    ]);
+
+    $byHeading = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => [],
+        'data' => ['heading' => ['en' => 'Chloe Iacob']],
+    ]);
+
+    $other = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => [],
+        'data' => ['heading' => ['en' => 'Someone Else']],
+    ]);
+
+    $ids = Record::query()
+        ->where('record_type_id', $type->id)
+        ->matchingSearch('chloe', $type)
+        ->pluck('id')
+        ->all();
+
+    expect($ids)->toContain($byHeading->id)
+        ->and($ids)->not->toContain($other->id);
+});
+
 it('returns all records when the search term is empty', function (): void {
     $type = RecordType::factory()->create(['fields' => []]);
     Record::factory()->count(3)->create(['record_type_id' => $type->id]);
