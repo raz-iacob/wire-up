@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Traits\HasTranslations;
@@ -96,6 +97,24 @@ it('updates translations correctly for each active locale', function (): void {
     expect($translations)->toHaveCount(4)
         ->and($translations->where('locale', 'en')->first()->body)->toBe('Updated Title')
         ->and($translations->where('locale', 'fr')->first()->body)->toBe('Titre Mis à Jour');
+});
+
+it('keeps translations intact when updating unrelated attributes on a fresh instance', function (): void {
+    Locale::query()->whereIn('code', ['en', 'fr'])->update(['active' => true]);
+
+    $page = Page::factory()->create([
+        'title' => [
+            'en' => 'Persistent Title',
+            'fr' => 'Titre Persistant',
+        ],
+    ]);
+
+    Page::query()->findOrFail($page->id)->update(['status' => ContentStatus::PUBLISHED, 'published_at' => now()]);
+
+    expect($page->refresh()->translationsFor('title'))->toBe([
+        'en' => 'Persistent Title',
+        'fr' => 'Titre Persistant',
+    ]);
 });
 
 it('deletes translations on model deletion', function (): void {

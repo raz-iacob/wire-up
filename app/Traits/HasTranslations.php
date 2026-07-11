@@ -89,7 +89,7 @@ trait HasTranslations
 
     protected static function bootHasTranslations(): void
     {
-        static::created(fn (self $model) => $model->syncTranslations());
+        static::created(fn (self $model) => $model->syncTranslations(onlyFilled: false));
         static::saved(fn (self $model) => $model->syncTranslations());
         static::deleting(fn (self $model) => $model->deleteTranslations());
     }
@@ -110,13 +110,15 @@ trait HasTranslations
             ?? $translations->first(fn ($t): bool => $t->key === $key);
     }
 
-    protected function syncTranslations(): void
+    protected function syncTranslations(bool $onlyFilled = true): void
     {
-        collect($this->translatedAttributes())->map(function (string $attribute): void {
-            resolve('localization')->getActiveLocaleCodes()->each(function (string $locale) use ($attribute): void {
-                $this->addOrUpdateTranslation($locale, $attribute, $this->translatedTexts[$attribute][$locale] ?? '');
+        collect($this->translatedAttributes())
+            ->filter(fn (string $attribute): bool => ! $onlyFilled || array_key_exists($attribute, $this->translatedTexts))
+            ->each(function (string $attribute): void {
+                resolve('localization')->getActiveLocaleCodes()->each(function (string $locale) use ($attribute): void {
+                    $this->addOrUpdateTranslation($locale, $attribute, $this->translatedTexts[$attribute][$locale] ?? '');
+                });
             });
-        });
     }
 
     protected function addOrUpdateTranslation(string $locale, string $key, string $body): Translation

@@ -179,6 +179,18 @@ machine-readable resources for crawlers and AI agents:
   noise while keeping canonical URLs.
 - **`/robots.txt`** - dynamic; references the sitemap and reflects the indexing settings below.
 
+**MCP server for AI agents:**
+
+Wire-Up ships a local [MCP](https://modelcontextprotocol.io) server so AI agents (Claude Code,
+Cursor, and other MCP clients) can build and edit the site programmatically:
+
+- Start it with `php artisan mcp:start wire-up`, or point your MCP client at that command; debug
+  it interactively with `php artisan mcp:inspector wire-up`.
+- The `block-types` resource documents every content block and its JSON shape, and the
+  `list-pages`, `get-page`, `create-page`, `update-page-blocks`, and `publish-page` tools cover
+  the page-building workflow. Agents can verify their work by fetching page URLs with an
+  `Accept: text/markdown` header (see above).
+
 **Controlling indexing:**
 
 - **Settings → Identity** has a *Discourage search engines* toggle. When on, every page gets a
