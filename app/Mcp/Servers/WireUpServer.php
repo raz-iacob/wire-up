@@ -7,8 +7,15 @@ namespace App\Mcp\Servers;
 use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Tools\CreatePageTool;
 use App\Mcp\Tools\GetPageTool;
+use App\Mcp\Tools\GetSettingsTool;
+use App\Mcp\Tools\ImportMediaFromUrlTool;
+use App\Mcp\Tools\ImportPexelsMediaTool;
+use App\Mcp\Tools\ListMediaTool;
 use App\Mcp\Tools\ListPagesTool;
 use App\Mcp\Tools\PublishPageTool;
+use App\Mcp\Tools\SearchPexelsTool;
+use App\Mcp\Tools\UpdateDesignTool;
+use App\Mcp\Tools\UpdateIdentityTool;
 use App\Mcp\Tools\UpdatePageBlocksTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
@@ -25,11 +32,16 @@ Typical workflow for building or replicating a site:
 
 1. Read the `block-types` resource first — it documents every block type, its
    content shape, and the conventions for localized text and links.
-2. Create pages as drafts with `create-page`, passing blocks in the same call
+2. Set the look with `get-settings` + `update-design` (theme, colors, fonts,
+   shape) and the site identity with `update-identity`.
+3. Bring in imagery with `import-media-from-url`, or `search-pexels` +
+   `import-pexels-media` for stock photos, then reference the returned source
+   paths in block content.
+4. Create pages as drafts with `create-page`, passing blocks in the same call
    or adding them later with `update-page-blocks`.
-3. Verify your work by fetching the page URL with an `Accept: text/markdown`
+5. Verify your work by fetching the page URL with an `Accept: text/markdown`
    header — every page serves a markdown representation of its content.
-4. Publish with `publish-page` when the page looks right.
+6. Publish with `publish-page` when the page looks right.
 MD)]
 final class WireUpServer extends Server
 {
@@ -42,6 +54,13 @@ final class WireUpServer extends Server
         CreatePageTool::class,
         UpdatePageBlocksTool::class,
         PublishPageTool::class,
+        ListMediaTool::class,
+        ImportMediaFromUrlTool::class,
+        SearchPexelsTool::class,
+        ImportPexelsMediaTool::class,
+        GetSettingsTool::class,
+        UpdateDesignTool::class,
+        UpdateIdentityTool::class,
     ];
 
     /**

@@ -186,9 +186,11 @@ Cursor, and other MCP clients) can build and edit the site programmatically:
 
 - Start it with `php artisan mcp:start wire-up`, or point your MCP client at that command; debug
   it interactively with `php artisan mcp:inspector wire-up`.
-- The `block-types` resource documents every content block and its JSON shape, and the
-  `list-pages`, `get-page`, `create-page`, `update-page-blocks`, and `publish-page` tools cover
-  the page-building workflow. Agents can verify their work by fetching page URLs with an
+- The `block-types` resource documents every content block and its JSON shape. Tools cover the
+  full site-building workflow: pages (`list-pages`, `get-page`, `create-page`,
+  `update-page-blocks`, `publish-page`), media (`list-media`, `import-media-from-url`,
+  `search-pexels`, `import-pexels-media`), and site settings (`get-settings`, `update-design`,
+  `update-identity`). Agents can verify their work by fetching page URLs with an
   `Accept: text/markdown` header (see above).
 
 **Controlling indexing:**
