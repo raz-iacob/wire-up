@@ -5,6 +5,13 @@ declare(strict_types=1);
 use App\Models\Role;
 use App\Models\User;
 
+it('seeds the preset roles on a freshly migrated database', function (): void {
+    expect(Role::query()->pluck('key')->sort()->values()->all())
+        ->toBe(['admin', 'author', 'editor', 'member', 'owner'])
+        ->and(Role::query()->where('key', 'owner')->firstOrFail()->bypass)->toBeTrue()
+        ->and(Role::query()->where('key', 'admin')->firstOrFail()->is_protected)->toBeFalse();
+});
+
 it('resolves abilities and honours the bypass flag', function (): void {
     $editor = Role::factory()->create(['abilities' => ['pages.view', 'pages.edit'], 'bypass' => false]);
 

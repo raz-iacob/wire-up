@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Services\RolePresets;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -23,5 +25,20 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table): void {
             $table->foreign('role_id')->references('id')->on('roles')->nullOnDelete();
         });
+
+        $this->addRoles();
+    }
+
+    private function addRoles(): void
+    {
+        DB::table('roles')->insert(array_map(fn (array $preset): array => [
+            'key' => $preset['key'],
+            'name' => $preset['name'],
+            'abilities' => json_encode($preset['abilities']),
+            'bypass' => $preset['bypass'],
+            'is_protected' => $preset['is_protected'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], RolePresets::all()));
     }
 };

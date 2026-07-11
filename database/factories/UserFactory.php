@@ -98,7 +98,7 @@ final class UserFactory extends Factory
     {
         $preset = RolePresets::find($key);
 
-        return Role::query()->firstOrCreate(
+        return Role::query()->updateOrCreate(
             ['key' => $key],
             [
                 'name' => $preset['name'],
