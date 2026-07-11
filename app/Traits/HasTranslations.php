@@ -42,7 +42,6 @@ trait HasTranslations
 
     /**
      * @param  array<string, mixed>  $attributes
-     * @return $this
      *
      * @throws MassAssignmentException
      */
