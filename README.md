@@ -189,9 +189,9 @@ Cursor, and other MCP clients) can build and edit the site programmatically:
 - The `block-types` resource documents every content block and its JSON shape. Tools cover the
   full site-building workflow: pages (`list-pages`, `get-page`, `create-page`,
   `update-page-blocks`, `publish-page`), media (`list-media`, `import-media-from-url`,
-  `search-pexels`, `import-pexels-media`), and site settings (`get-settings`, `update-design`,
-  `update-identity`). Agents can verify their work by fetching page URLs with an
-  `Accept: text/markdown` header (see above).
+  `search-pexels`, `import-pexels-media`), site settings (`get-settings`, `update-design`,
+  `update-identity`, `update-social`), and navigation (`get-menus`, `update-menu`). Agents can
+  verify their work by fetching page URLs with an `Accept: text/markdown` header (see above).
 
 **Controlling indexing:**
 

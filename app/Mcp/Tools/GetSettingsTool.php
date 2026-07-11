@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Support\Pages;
 use App\Mcp\Support\SiteSettings;
+use App\Services\SettingsService;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -23,6 +24,7 @@ final class GetSettingsTool extends Tool
         return Pages::json([
             'identity' => SiteSettings::identity(),
             'design' => SiteSettings::design(),
+            'social' => SettingsService::current()->socialLinks(),
             'locales' => [
                 'default' => $localization->getDefaultLocale(),
                 'active' => $localization->getActiveLocaleCodes()->all(),

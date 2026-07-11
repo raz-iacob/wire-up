@@ -85,6 +85,7 @@ final readonly class SiteSettings
             'element_sizes' => array_keys(config()->array('theme.element_sizes')),
             'nav_hover_states' => array_keys(config()->array('theme.nav_hover_states')),
             'color_slots' => array_keys(config()->array('theme.slots')),
+            'social_platforms' => array_map(strval(...), array_keys(config()->array('social.platforms'))),
         ];
     }
 
