@@ -288,6 +288,35 @@ it('rejects incomplete or unknown custom colors', function (): void {
         ->assertSee('6-digit hex');
 });
 
+it('sets a preset dark mode theme and reports it', function (): void {
+    WireUpServer::tool(UpdateDesignTool::class, ['theme_dark' => 'midnight'])
+        ->assertOk()
+        ->assertSee('"theme_dark":"midnight"');
+
+    expect(Settings::get('theme_dark'))->toBe('midnight');
+
+    WireUpServer::tool(UpdateDesignTool::class, ['theme_dark' => 'none'])->assertOk();
+
+    expect(Settings::get('theme_dark'))->toBe('none');
+});
+
+it('applies a full custom dark palette and rejects an incomplete one', function (): void {
+    $slots = array_keys(config()->array('theme.slots'));
+    $colors = array_fill_keys($slots, '#0a0b0c');
+
+    WireUpServer::tool(UpdateDesignTool::class, ['theme_dark' => 'custom', 'colors_dark' => $colors])
+        ->assertOk();
+
+    expect(Settings::get('theme_dark'))->toBe('custom')
+        ->and(Settings::get('colors_dark'))->toBe($colors);
+
+    Settings::set(['colors_dark' => []]);
+
+    WireUpServer::tool(UpdateDesignTool::class, ['theme_dark' => 'custom', 'colors_dark' => [$slots[0] => '#112233']])
+        ->assertHasErrors()
+        ->assertSee('custom dark theme');
+});
+
 it('requires a font name when using a custom font', function (): void {
     WireUpServer::tool(UpdateDesignTool::class, ['heading_font' => 'custom'])
         ->assertHasErrors()

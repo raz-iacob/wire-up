@@ -20,9 +20,9 @@ function publishPage(string $slug, array $attributes = []): Page
 }
 
 it('can render the page screen', function (): void {
-    publishPage('about');
+    publishPage('about-fixture');
 
-    $response = $this->get(route('page', ['slug' => 'about']));
+    $response = $this->get(route('page', ['slug' => 'about-fixture']));
 
     $response->assertOk()
         ->assertSeeLivewire('pages::page');
@@ -36,9 +36,9 @@ it('returns 404 if the page does not exist', function (): void {
 });
 
 it('renders the published page title and description', function (): void {
-    publishPage('about', ['title' => 'About Us', 'description' => 'Who we are.']);
+    publishPage('about-fixture', ['title' => 'About Us', 'description' => 'Who we are.']);
 
-    $this->get(route('page', 'about'))
+    $this->get(route('page', 'about-fixture'))
         ->assertOk()
         ->assertSee('About Us')
         ->assertSee('Who we are.');

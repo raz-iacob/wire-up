@@ -5,6 +5,7 @@
             logo="{{ Vite::asset('resources/images/logo-icon-light.svg') }}"
             logo:dark="{{ Vite::asset('resources/images/logo-icon-dark.svg') }}"
             name="{{ config('app.name') }}"
+            target="_blank"
         />
         <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
     </flux:sidebar.header>

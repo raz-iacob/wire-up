@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-it('has home page', function (): void {
+it('shows the welcome landing page without javascript errors', function (): void {
     $page = visit('/');
 
-    $page->assertSee('Made with Wire-Up');
+    $page->assertNoJavascriptErrors()
+        ->assertSee('Documentation')
+        ->assertSee('Getting started')
+        ->assertDontSee('Made with Wire-Up');
 });

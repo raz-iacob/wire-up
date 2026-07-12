@@ -85,7 +85,6 @@ return new class extends Component
 <div class="flex flex-col gap-6">
     <div class="flex w-full flex-col text-center">
         <flux:heading size="xl">{{ __('Log in to your account') }}</flux:heading>
-        <flux:subheading>{{ __('Enter your email and password below to log in') }}</flux:subheading>
     </div>
 
     <form method="POST" wire:submit="login" class="flex flex-col gap-6">

@@ -57,7 +57,7 @@ it('renders an inline badge span from rich-text content on the public page', fun
 });
 
 it('renders the contact form block with its present fields and submit label', function (): void {
-    publishPageWithBlocks('contact', [
+    publishPageWithBlocks('contact-blocks', [
         ['id' => 'new-1', 'type' => 'contact-form', 'content' => array_replace_recursive(
             BlockType::CONTACT_FORM->defaultContent(),
             [
@@ -68,7 +68,7 @@ it('renders the contact form block with its present fields and submit label', fu
         )],
     ]);
 
-    $this->get(route('page', 'contact'))
+    $this->get(route('page', 'contact-blocks'))
         ->assertOk()
         ->assertSee('Get in touch')
         ->assertSee('Name')

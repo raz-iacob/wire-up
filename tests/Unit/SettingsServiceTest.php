@@ -80,7 +80,7 @@ it('returns an empty string when no custom scripts are configured', function ():
 });
 
 it('resolves a page item to its localized url', function (): void {
-    $page = publishedPage('about');
+    $page = publishedPage('about-fixture');
 
     $menu = headerMenu([
         ['type' => 'page', 'appearance' => 'link', 'target' => '_self', 'label' => 'About', 'page_id' => $page->id, 'url' => ''],
@@ -89,7 +89,7 @@ it('resolves a page item to its localized url', function (): void {
     expect($menu)->toHaveCount(1)
         ->and($menu[0])->toMatchArray([
             'label' => 'About',
-            'url' => route('page', 'about'),
+            'url' => route('page', 'about-fixture'),
             'target' => '_self',
             'appearance' => 'link',
         ]);
@@ -232,6 +232,45 @@ it('derives the accent token and Flux accent from the accent colour', function (
     Settings::set(['border_width' => 'thick']);
 
     expect((new SettingsService)->themeCss())->toContain('--wire-border-width:3px');
+});
+
+it('omits the accent tokens when the palette has no accent or primary colors', function (): void {
+    Settings::set(['theme' => 'custom', 'colors' => ['background' => '#010203'], 'theme_dark' => 'none']);
+
+    expect((new SettingsService)->themeCss())
+        ->toContain('--wire-body-bg:#010203')
+        ->not->toContain('--color-accent');
+});
+
+it('emits the default dark palette out of the box and none once disabled', function (): void {
+    expect((new SettingsService)->themeCss())
+        ->toContain('@media(prefers-color-scheme:dark){:root:where(:not(.light)){');
+
+    Settings::set(['theme_dark' => 'none']);
+
+    expect((new SettingsService)->themeCss())->not->toContain('prefers-color-scheme');
+});
+
+it('emits a preset dark palette under prefers-color-scheme', function (): void {
+    Settings::set(['theme_dark' => 'midnight']);
+
+    expect((new SettingsService)->themeCss())
+        ->toContain(':root.dark{')
+        ->toContain('@media(prefers-color-scheme:dark){:root:where(:not(.light)){')
+        ->toContain('--wire-body-bg:#0a0a0a')
+        ->toContain('--color-accent:#6366f1');
+});
+
+it('emits a custom dark palette with its accent tokens', function (): void {
+    Settings::set(['theme_dark' => 'custom', 'colors_dark' => array_merge(
+        config()->array('theme.presets.midnight.colors'),
+        ['accent' => '#fedcba'],
+    )]);
+
+    expect((new SettingsService)->themeCss())
+        ->toContain('prefers-color-scheme')
+        ->toContain('--wire-accent:#fedcba')
+        ->toContain('--color-accent:#fedcba');
 });
 
 it('returns the trimmed site-wide custom css', function (): void {
@@ -446,7 +485,19 @@ it('builds a logo url for an svg even without a crop', function (): void {
         ->toContain('media/brand-logo.svg');
 });
 
-it('falls back to the seeded home page when no homepage is configured', function (): void {
+it('resolves the seeded welcome page as the homepage on a fresh install', function (): void {
+    $home = (new SettingsService)->homePage();
+
+    expect($home)->not->toBeNull()
+        ->and($home->slug)->toBe('welcome');
+});
+
+it('falls back to a published page with the home slug when no homepage is configured', function (): void {
+    Settings::query()->where('key', 'home_page_id')->delete();
+    Settings::flush();
+    Page::query()->whereRelation('slugs', 'slug', 'home')->firstOrFail()
+        ->update(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+
     $home = (new SettingsService)->homePage();
 
     expect($home)->not->toBeNull()
@@ -460,7 +511,10 @@ it('uses the configured page as the homepage when set', function (): void {
     expect((new SettingsService)->homePageId())->toBe($page->id);
 });
 
-it('falls back to the seeded home page when the configured homepage is not published', function (): void {
+it('falls back to a published page with the home slug when the configured homepage is not published', function (): void {
+    Page::query()->whereRelation('slugs', 'slug', 'home')->firstOrFail()
+        ->update(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+
     $draft = Page::factory()->create(['status' => ContentStatus::DRAFT]);
     Settings::set(['home_page_id' => $draft->id]);
 

@@ -40,6 +40,9 @@
     <link href="{{ $googleFonts }}" rel="stylesheet">
     @endif
     <style>{!! $site->themeCss() !!}</style>
+    @if ($site->darkThemeColors() !== [])
+    <script>(()=>{const f=new URLSearchParams(window.location.search).get('_scheme'),m=window.matchMedia('(prefers-color-scheme: dark)'),s=()=>{const d=f?f==='dark':m.matches;document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d)};s();m.addEventListener('change',s);document.addEventListener('livewire:navigated',s);})()</script>
+    @endif
     @if ($site->customCss() !== '')
     <style>{!! $site->customCss() !!}</style>
     @endif

@@ -60,7 +60,7 @@ function publishMarkdownRecord(RecordType $type, string $slug, array $attributes
 }
 
 it('serves a markdown representation of a page when the request prefers text/markdown', function (): void {
-    publishMarkdownPage('about', [
+    publishMarkdownPage('about-md', [
         ['id' => 'new-1', 'type' => 'hero', 'content' => [
             'heading' => ['en' => '<p>Big title</p>'],
             'subheading' => ['en' => 'A warm welcome'],
@@ -75,7 +75,7 @@ it('serves a markdown representation of a page when the request prefers text/mar
         ['id' => 'new-4', 'type' => 'spacer', 'content' => ['size' => 'medium']],
     ], ['title' => 'About us', 'description' => 'Who we are.']);
 
-    $response = $this->get(route('page', 'about'), ['Accept' => 'text/markdown']);
+    $response = $this->get(route('page', 'about-md'), ['Accept' => 'text/markdown']);
 
     $response->assertOk()
         ->assertHeader('Content-Type', 'text/markdown; charset=UTF-8')

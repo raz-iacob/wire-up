@@ -69,24 +69,24 @@ function seoFeatureRecord(string $presetKey, array $data = [], array $attributes
 }
 
 it('lists published pages in the sitemap and omits drafts', function (): void {
-    seoFeaturePage('about', ['title' => ['en' => 'About Us']]);
+    seoFeaturePage('about-us', ['title' => ['en' => 'About Us']]);
     seoFeaturePage('draft-page', ['status' => ContentStatus::DRAFT, 'published_at' => null]);
 
     $this->get('/sitemap.xml')
         ->assertOk()
         ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
-        ->assertSee('/about', false)
+        ->assertSee('/about-us', false)
         ->assertDontSee('/draft-page', false);
 });
 
 it('empties the sitemap when the site discourages search engines', function (): void {
-    seoFeaturePage('about', ['title' => ['en' => 'About Us']]);
+    seoFeaturePage('about-us', ['title' => ['en' => 'About Us']]);
     Settings::set(['noindex' => true]);
 
     $this->get('/sitemap.xml')
         ->assertOk()
         ->assertSee('<urlset', false)
-        ->assertDontSee('/about', false);
+        ->assertDontSee('/about-us', false);
 });
 
 it('excludes a page-level noindex page from the sitemap', function (): void {
@@ -116,9 +116,9 @@ it('lists pages in llms.txt and dumps full content in llms-full.txt', function (
 });
 
 it('emits canonical, Open Graph and JSON-LD on a public page', function (): void {
-    seoFeaturePage('contact', ['title' => ['en' => 'Contact'], 'description' => ['en' => 'Reach our team.']]);
+    seoFeaturePage('reach-us', ['title' => ['en' => 'Contact'], 'description' => ['en' => 'Reach our team.']]);
 
-    $this->get('/contact')
+    $this->get('/reach-us')
         ->assertOk()
         ->assertSee('<link rel="canonical"', false)
         ->assertSee('<meta property="og:title" content="Contact">', false)
@@ -150,7 +150,7 @@ it('emits hreflang alternates in the sitemap for a multi-locale site', function 
     Locale::query()->where('code', 'nl')->update(['active' => true]);
     cache()->forget('site-locales');
 
-    $page = seoFeaturePage('about', [
+    $page = seoFeaturePage('about-hreflang', [
         'metadata' => ['published_locales' => ['en', 'nl']],
         'title' => ['en' => 'About', 'nl' => 'Over ons'],
     ]);

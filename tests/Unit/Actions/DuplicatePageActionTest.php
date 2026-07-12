@@ -16,7 +16,7 @@ it('duplicates a page with its blocks and draft status', function (): void {
         'published_at' => now()->subDay(),
         'metadata' => ['published_locales' => ['en'], 'layout' => ['hideHeader' => true]],
     ]);
-    $page->slugs()->create(['locale' => 'en', 'slug' => 'about', 'base_path' => '']);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'about-src', 'base_path' => '']);
     $page->blocks()->create(['type' => 'rich-text', 'position' => 0, 'content' => ['body' => ['en' => 'Hi']]]);
 
     $media = Media::factory()->create(['type' => MediaType::IMAGE]);

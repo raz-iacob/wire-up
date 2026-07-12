@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Page;
+use App\Models\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
@@ -131,7 +132,7 @@ final class SettingsService
 
     public function homePage(): ?Page
     {
-        $configured = config('site.home_page_id');
+        $configured = Settings::get('home_page_id');
 
         if (is_numeric($configured)) {
             $page = Page::query()
@@ -340,28 +341,17 @@ final class SettingsService
      */
     public function themeColors(): array
     {
-        $theme = (string) config('site.theme', '');
+        return $this->paletteFromTheme((string) config('site.theme', ''), 'site.colors');
+    }
 
-        if ($theme === '') {
-            return [];
-        }
+    /**
+     * @return array<string, string>
+     */
+    public function darkThemeColors(): array
+    {
+        $theme = (string) config('site.theme_dark', '');
 
-        $colors = $theme === 'custom'
-            ? config('site.colors', [])
-            : config()->array("theme.presets.$theme.colors", []);
-
-        if (! is_array($colors)) {
-            return [];
-        }
-
-        $palette = [];
-        foreach ($colors as $slot => $hex) {
-            if (is_string($slot) && is_string($hex)) {
-                $palette[$slot] = $hex;
-            }
-        }
-
-        return $palette;
+        return $this->paletteFromTheme($theme === '' ? config()->string('theme.default_dark') : $theme, 'site.colors_dark');
     }
 
     public function themeCss(): string
@@ -374,24 +364,11 @@ final class SettingsService
             }
         }
 
-        $root = [];
-        foreach ($palette as $slot => $hex) {
-            $name = match ($slot) {
-                'background' => 'body-bg',
-                'text' => 'body-text',
-                default => str_replace('_', '-', $slot),
-            };
-            $root[] = "--wire-$name:$hex";
-        }
+        $root = $this->colorDeclarations($palette);
 
         $dark = [];
-        $accentColor = $palette['accent'] ?? $palette['primary_bg'] ?? null;
-        if ($accentColor !== null && isset($palette['primary_text'])) {
-            $accent = [
-                "--color-accent:{$accentColor}",
-                "--color-accent-content:{$accentColor}",
-                "--color-accent-foreground:{$palette['primary_text']}",
-            ];
+        $accent = $this->accentDeclarations($palette);
+        if ($accent !== []) {
             $root = [...$root, ...$accent];
             $dark = $accent;
         }
@@ -449,6 +426,13 @@ final class SettingsService
         }
 
         $css = ':root{'.implode(';', $root).'}'.($dark === [] ? '' : '.dark{'.implode(';', $dark).'}');
+
+        $darkPalette = $this->darkThemeColors();
+        if ($darkPalette !== []) {
+            $darkVars = implode(';', [...$this->colorDeclarations($darkPalette), ...$this->accentDeclarations($darkPalette)]);
+            $css .= ':root.dark{'.$darkVars.'}';
+            $css .= '@media(prefers-color-scheme:dark){:root:where(:not(.light)){'.$darkVars.'}}';
+        }
 
         if ($fullGutter !== '') {
             $css .= '@media(min-width:768px){:root{--wire-gutter:'.$fullGutter.'}}';
@@ -578,6 +562,71 @@ final class SettingsService
         return array_key_exists($variant, config()->array('social.icon_variants'))
             ? $variant
             : config()->string('social.default_icon_variant', 'solid');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function paletteFromTheme(string $theme, string $customConfigKey): array
+    {
+        if ($theme === '' || $theme === 'none') {
+            return [];
+        }
+
+        $colors = $theme === 'custom'
+            ? config($customConfigKey, [])
+            : config()->array("theme.presets.$theme.colors", []);
+
+        if (! is_array($colors)) {
+            return [];
+        }
+
+        $palette = [];
+        foreach ($colors as $slot => $hex) {
+            if (is_string($slot) && is_string($hex)) {
+                $palette[$slot] = $hex;
+            }
+        }
+
+        return $palette;
+    }
+
+    /**
+     * @param  array<string, string>  $palette
+     * @return list<string>
+     */
+    private function colorDeclarations(array $palette): array
+    {
+        $declarations = [];
+        foreach ($palette as $slot => $hex) {
+            $name = match ($slot) {
+                'background' => 'body-bg',
+                'text' => 'body-text',
+                default => str_replace('_', '-', $slot),
+            };
+            $declarations[] = "--wire-$name:$hex";
+        }
+
+        return $declarations;
+    }
+
+    /**
+     * @param  array<string, string>  $palette
+     * @return list<string>
+     */
+    private function accentDeclarations(array $palette): array
+    {
+        $accentColor = $palette['accent'] ?? $palette['primary_bg'] ?? null;
+
+        if ($accentColor === null || ! isset($palette['primary_text'])) {
+            return [];
+        }
+
+        return [
+            "--color-accent:{$accentColor}",
+            "--color-accent-content:{$accentColor}",
+            "--color-accent-foreground:{$palette['primary_text']}",
+        ];
     }
 
     /**

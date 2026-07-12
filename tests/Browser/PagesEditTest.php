@@ -6,6 +6,7 @@ use App\Enums\ContentStatus;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Settings;
+use App\Models\User;
 
 it('shows the homepage badge and makes the slug readonly in the editor', function (): void {
     $page = Page::factory()->create([
@@ -483,4 +484,51 @@ it('keeps block items collapsed on load and opens only a newly added one', funct
 
     $browser->assertScript($openStates, 'false,false,true')
         ->assertNoJavascriptErrors();
+});
+
+it('locks page scroll while the preview overlay is open', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Preview Scroll',
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'preview-scroll']);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+
+    $browser->assertScript("document.body.classList.contains('overflow-hidden')", false)
+        ->click('Preview')
+        ->wait(0.5)
+        ->assertScript("!! document.querySelector('iframe')", true)
+        ->assertScript("document.body.classList.contains('overflow-hidden')", true)
+        ->click('Close')
+        ->wait(0.5)
+        ->assertScript("!! document.querySelector('iframe')", false)
+        ->assertScript("document.body.classList.contains('overflow-hidden')", false);
+});
+
+it('propagates the admin dark appearance to the preview iframe', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Preview Scheme',
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'preview-scheme']);
+
+    $this->actingAs(User::factory()->create([
+        'active' => true,
+        'role' => 'owner',
+        'metadata' => ['appearance' => 'dark'],
+    ]));
+
+    $browser = visit(route('admin.pages-edit', $page));
+
+    $browser->assertScript("document.documentElement.classList.contains('dark')", true)
+        ->assertScript("window.matchMedia('(prefers-color-scheme: dark)').matches", false)
+        ->click('Preview')
+        ->wait(0.5)
+        ->assertScript("document.querySelector('iframe').src.includes('_scheme=dark')", true)
+        ->assertScript("document.querySelector('iframe').contentWindow.document.documentElement.classList.contains('dark')", true);
 });

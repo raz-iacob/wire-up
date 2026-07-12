@@ -29,8 +29,11 @@ final class UpdateDesignTool extends Tool
         $validated = $request->validate(
             [
                 'theme' => ['sometimes', 'string', Rule::in($options['themes'])],
+                'theme_dark' => ['sometimes', 'string', Rule::in($options['dark_themes'])],
                 'colors' => ['sometimes', 'array'],
                 'colors.*' => ['string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'colors_dark' => ['sometimes', 'array'],
+                'colors_dark.*' => ['string', 'regex:/^#[0-9a-fA-F]{6}$/'],
                 'heading_font' => ['sometimes', 'string', Rule::in($options['fonts'])],
                 'body_font' => ['sometimes', 'string', Rule::in($options['fonts'])],
                 'heading_font_custom' => ['sometimes', 'string', 'max:60', 'regex:/^[A-Za-z0-9 ]+$/'],
@@ -55,6 +58,7 @@ final class UpdateDesignTool extends Tool
             ],
             [
                 'colors.*.regex' => 'Colors must be 6-digit hex values like #1a2b3c.',
+                'colors_dark.*.regex' => 'Colors must be 6-digit hex values like #1a2b3c.',
                 'heading_font_custom.regex' => 'Use only letters, numbers and spaces for the Google Font name.',
                 'body_font_custom.regex' => 'Use only letters, numbers and spaces for the Google Font name.',
             ],
@@ -89,7 +93,9 @@ final class UpdateDesignTool extends Tool
 
         return [
             'theme' => $schema->string()->enum($options['themes'])->description('Color theme preset, or "custom" to use the colors argument.'),
+            'theme_dark' => $schema->string()->enum($options['dark_themes'])->description('Palette for visitors whose device prefers dark mode: "none" to disable, a preset, or "custom" with colors_dark.'),
             'colors' => $schema->object()->description('Custom palette keyed by slot (see options.color_slots in get-settings), hex values like "#1a2b3c". Requires theme "custom".'),
+            'colors_dark' => $schema->object()->description('Custom dark-mode palette keyed by slot, hex values like "#1a2b3c". Requires theme_dark "custom".'),
             'heading_font' => $schema->string()->enum($options['fonts'])->description('Heading font, or "custom" with heading_font_custom.'),
             'body_font' => $schema->string()->enum($options['fonts'])->description('Body font, or "custom" with body_font_custom.'),
             'heading_font_custom' => $schema->string()->description('Google Font name used when heading_font is "custom".'),
@@ -120,25 +126,29 @@ final class UpdateDesignTool extends Tool
      */
     private function applyColors(array &$validated, array $slots): ?string
     {
-        if (isset($validated['colors'])) {
-            $unknown = array_diff(array_keys($validated['colors']), $slots);
+        foreach (['theme' => 'colors', 'theme_dark' => 'colors_dark'] as $themeKey => $colorsKey) {
+            if (isset($validated[$colorsKey])) {
+                $unknown = array_diff(array_keys($validated[$colorsKey]), $slots);
 
-            if ($unknown !== []) {
-                return 'Unknown color slot(s): '.implode(', ', $unknown).'. Valid slots: '.implode(', ', $slots).'.';
+                if ($unknown !== []) {
+                    return 'Unknown color slot(s): '.implode(', ', $unknown).'. Valid slots: '.implode(', ', $slots).'.';
+                }
+
+                $current = is_array(config("site.$colorsKey")) ? config("site.$colorsKey") : [];
+                $validated[$colorsKey] = [...$current, ...$validated[$colorsKey]];
             }
 
-            $current = is_array(config('site.colors')) ? config('site.colors') : [];
-            $validated['colors'] = [...$current, ...$validated['colors']];
-        }
+            $theme = $validated[$themeKey] ?? SiteSettings::design()[$themeKey];
 
-        $theme = $validated['theme'] ?? SiteSettings::design()['theme'];
+            if ($theme === 'custom') {
+                $colors = $validated[$colorsKey] ?? (is_array(config("site.$colorsKey")) ? config("site.$colorsKey") : []);
+                $missing = array_diff($slots, array_keys($colors));
 
-        if ($theme === 'custom') {
-            $colors = $validated['colors'] ?? (is_array(config('site.colors')) ? config('site.colors') : []);
-            $missing = array_diff($slots, array_keys($colors));
+                if ($missing !== []) {
+                    $label = $themeKey === 'theme' ? 'custom theme' : 'custom dark theme';
 
-            if ($missing !== []) {
-                return 'The custom theme needs a color for every slot. Missing: '.implode(', ', $missing).'.';
+                    return "The $label needs a color for every slot. Missing: ".implode(', ', $missing).'.';
+                }
             }
         }
 

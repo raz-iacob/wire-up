@@ -733,7 +733,7 @@ return new class extends Component
 @if ($showPreview)
     <div
         class="fixed inset-0 z-50 flex flex-col bg-zinc-100 dark:bg-zinc-900"
-        x-data="{ device: 'desktop', widths: { desktop: '100%', tablet: '768px', mobile: '375px' } }">
+        x-data="{ device: 'desktop', widths: { desktop: '100%', tablet: '768px', mobile: '375px' }, init() { document.body.classList.add('overflow-hidden') }, destroy() { document.body.classList.remove('overflow-hidden') } }">
         <div class="flex items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-4 py-2">
             <flux:button size="sm" variant="subtle" icon="x-mark" wire:click="$set('showPreview', false)">
                 {{ __('Close') }}
@@ -751,8 +751,8 @@ return new class extends Component
         <div class="flex-1 overflow-y-auto p-4">
             <div class="mx-auto h-full transition-[width] duration-200" x-bind:style="'width: ' + widths[device]">
                 <iframe
-                    src="{{ route('admin.records-preview', ['recordType' => $recordType, 'record' => $record, 'token' => $previewToken]) }}"
-                    class="w-full h-full rounded-lg border border-zinc-200 dark:border-white/10 bg-white shadow-sm"
+                    x-bind:src="@js(route('admin.records-preview', ['recordType' => $recordType, 'record' => $record, 'token' => $previewToken])) + '?_scheme=' +(document.documentElement.classList.contains('dark') ? 'dark' : 'light')"
+                    class="w-full h-full rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-sm [color-scheme:light] dark:[color-scheme:dark]"
                     title="{{ __('Record preview') }}"></iframe>
             </div>
         </div>

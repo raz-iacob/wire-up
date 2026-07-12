@@ -170,7 +170,7 @@ it('can add new a page', function (): void {
         'status' => 'draft',
     ]);
 
-    $response->assertRedirect(route('admin.pages-edit', ['page' => 2]));
+    $response->assertRedirect(route('admin.pages-edit', ['page' => Page::query()->latest('id')->firstOrFail()->id]));
 });
 
 it('validates title when adding new page', function (): void {

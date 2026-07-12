@@ -17,6 +17,8 @@ return [
 
     'default' => 'default',
 
+    'default_dark' => 'midnight',
+
     'slots' => [
         'background' => ['label' => 'Background', 'group' => 'General'],
         'text' => ['label' => 'Text', 'group' => 'General'],

@@ -13,12 +13,37 @@ function setSiteMetadata(array $settings): void
     Settings::set($settings);
 }
 
+beforeEach(function (): void {
+    $page = Page::factory()->create([
+        'metadata' => ['published_locales' => ['en']],
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'title' => 'Chrome Home',
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'chrome-home']);
+    Settings::set(['home_page_id' => $page->id]);
+});
+
 it('renders the header and footer on a public page', function (): void {
     $this->get(route('home'))
         ->assertOk()
         ->assertSee('data-site-header', false)
         ->assertSee('data-site-footer', false)
         ->assertSee('Made with Wire-Up');
+});
+
+it('toggles the dark class from the system preference unless dark mode is disabled', function (): void {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('prefers-color-scheme: dark', false)
+        ->assertSee("classList.toggle('dark'", false)
+        ->assertSee('livewire:navigated', false);
+
+    setSiteMetadata(['theme_dark' => 'none']);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertDontSee("classList.toggle('dark'", false);
 });
 
 it('renders the current locale header menu items with their urls', function (): void {

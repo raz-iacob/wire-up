@@ -54,7 +54,9 @@ final readonly class SiteSettings
 
         return [
             ...$design,
+            'theme_dark' => is_string($meta['theme_dark'] ?? null) && $meta['theme_dark'] !== '' ? $meta['theme_dark'] : config()->string('theme.default_dark'),
             'colors' => is_array($meta['colors'] ?? null) ? $meta['colors'] : [],
+            'colors_dark' => is_array($meta['colors_dark'] ?? null) ? $meta['colors_dark'] : [],
             'heading_font_custom' => is_string($meta['heading_font_custom'] ?? null) ? $meta['heading_font_custom'] : '',
             'body_font_custom' => is_string($meta['body_font_custom'] ?? null) ? $meta['body_font_custom'] : '',
             'header_transparent' => (bool) ($meta['header_transparent'] ?? false),
@@ -73,6 +75,7 @@ final readonly class SiteSettings
     {
         return [
             'themes' => [...array_keys(config()->array('theme.presets')), 'custom'],
+            'dark_themes' => ['none', ...array_keys(config()->array('theme.presets')), 'custom'],
             'fonts' => [...array_keys(config()->array('theme.fonts')), 'custom'],
             'heading_sizes' => array_keys(config()->array('theme.heading_sizes')),
             'body_sizes' => array_keys(config()->array('theme.body_sizes')),

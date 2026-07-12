@@ -120,7 +120,7 @@ it('keeps translations intact when updating unrelated attributes on a fresh inst
 it('deletes translations on model deletion', function (): void {
     Locale::query()->whereIn('code', ['en', 'fr'])->update(['active' => true]);
 
-    Page::query()->first()->delete();
+    Page::query()->get()->each(fn (Page $page) => $page->delete());
 
     $page = Page::factory()->create([
         'title' => [

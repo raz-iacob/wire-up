@@ -1,7 +1,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="resources/images/logo-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="resources/images/logo-light.svg">
-  <img alt="Wire-Up Logo" src="resources/images/logo.svg" width="172" height="32">
+  <img alt="Wire-Up Logo" src="resources/images/logo.svg" width="257" height="32">
 </picture>
 
 <br>

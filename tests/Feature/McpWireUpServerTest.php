@@ -11,7 +11,6 @@ use App\Mcp\Tools\ListPagesTool;
 use App\Mcp\Tools\PublishPageTool;
 use App\Mcp\Tools\UpdatePageBlocksTool;
 use App\Models\Page;
-use App\Models\Settings;
 
 it('advertises every tool with its name and input schema', function (): void {
     $advertised = collect([
@@ -42,15 +41,13 @@ it('documents every block type in the block-types resource', function (): void {
 });
 
 it('lists pages with slug, url, status and homepage flag', function (): void {
-    $home = Page::query()->firstOrFail();
-    Settings::set(['home_page_id' => $home->id]);
-
     $draft = Page::factory()->create(['title' => 'Unlinked Draft', 'status' => ContentStatus::DRAFT]);
 
     $response = WireUpServer::tool(ListPagesTool::class);
 
     $response->assertOk()
         ->assertSee('"is_homepage":true')
+        ->assertSee('"slug":"welcome"')
         ->assertSee('Unlinked Draft')
         ->assertSee('"id":'.$draft->id);
 });
@@ -118,6 +115,8 @@ it('creates and publishes a page in one call', function (): void {
 });
 
 it('rejects unknown block types with a friendly message', function (): void {
+    $before = Page::query()->count();
+
     WireUpServer::tool(CreatePageTool::class, [
         'title' => 'Broken Blocks',
         'blocks' => [['type' => 'carousel-3000', 'content' => []]],
@@ -125,7 +124,7 @@ it('rejects unknown block types with a friendly message', function (): void {
         ->assertHasErrors()
         ->assertSee('Unknown block type. Valid types are: hero,');
 
-    expect(Page::query()->where('id', '>', 1)->count())->toBe(0);
+    expect(Page::query()->count())->toBe($before);
 });
 
 it('replaces page blocks keeping the ones referenced by id', function (): void {

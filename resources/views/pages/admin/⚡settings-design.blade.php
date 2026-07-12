@@ -18,6 +18,13 @@ return new class extends Component
      */
     public array $colors = [];
 
+    public string $theme_dark;
+
+    /**
+     * @var array<string, string>
+     */
+    public array $colors_dark = [];
+
     public string $heading_font;
 
     public string $body_font;
@@ -82,6 +89,8 @@ return new class extends Component
 
         $this->theme = is_string($meta['theme'] ?? null) ? $meta['theme'] : config()->string('theme.default');
         $this->colors = $this->resolvePalette($this->theme, $meta);
+        $this->theme_dark = is_string($meta['theme_dark'] ?? null) ? $meta['theme_dark'] : config()->string('theme.default_dark');
+        $this->colors_dark = $this->resolveDarkPalette($this->theme_dark, $meta);
         $this->heading_font = $meta['heading_font'] ?? config()->string('theme.default_font');
         $this->body_font = $meta['body_font'] ?? config()->string('theme.default_font');
         $this->heading_font_custom = $meta['heading_font_custom'] ?? '';
@@ -115,6 +124,7 @@ return new class extends Component
 
         $rules = [
             'theme' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.presets')), 'custom'])],
+            'theme_dark' => ['required', 'string', Rule::in(['none', ...array_keys(config()->array('theme.presets')), 'custom'])],
             'heading_font' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.fonts')), 'custom'])],
             'body_font' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.fonts')), 'custom'])],
             'heading_font_custom' => ['nullable', 'string', 'max:60', 'regex:/^[A-Za-z0-9 ]+$/', 'required_if:heading_font,custom'],
@@ -146,6 +156,7 @@ return new class extends Component
 
         foreach (array_keys(config()->array('theme.slots')) as $slot) {
             $rules["colors.$slot"] = ['required_if:theme,custom', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
+            $rules["colors_dark.$slot"] = ['required_if:theme_dark,custom', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
         }
 
         $validated = $this->validate($rules, [
@@ -155,13 +166,17 @@ return new class extends Component
             'body_font_custom.regex' => __('Use only letters, numbers and spaces for the font name.'),
         ]);
 
-        $metadata = Arr::only($validated, ['theme', 'heading_font', 'body_font', 'heading_font_custom', 'body_font_custom', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
+        $metadata = Arr::only($validated, ['theme', 'theme_dark', 'heading_font', 'body_font', 'heading_font_custom', 'body_font_custom', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
         $metadata['heading_font_custom'] = mb_trim((string) ($validated['heading_font_custom'] ?? ''));
         $metadata['body_font_custom'] = mb_trim((string) ($validated['body_font_custom'] ?? ''));
         $metadata['custom_css'] = mb_trim((string) ($validated['custom_css'] ?? ''));
 
         if ($this->theme === 'custom') {
             $metadata['colors'] = Arr::only($this->colors, array_keys(config()->array('theme.slots')));
+        }
+
+        if ($this->theme_dark === 'custom') {
+            $metadata['colors_dark'] = Arr::only($this->colors_dark, array_keys(config()->array('theme.slots')));
         }
 
         $action->handle([
@@ -192,6 +207,19 @@ return new class extends Component
         }
 
         return $this->presetColors($theme === 'custom' ? config()->string('theme.default') : $theme);
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     * @return array<string, string>
+     */
+    private function resolveDarkPalette(string $theme, array $meta): array
+    {
+        if (is_array($meta['colors_dark'] ?? null) && $this->onlyStringColors($meta['colors_dark']) !== []) {
+            return $this->onlyStringColors($meta['colors_dark']);
+        }
+
+        return $this->presetColors(in_array($theme, ['custom', 'none'], true) ? config()->string('theme.default_dark') : $theme);
     }
 
     /**
@@ -483,6 +511,45 @@ return new class extends Component
                         <div class="grid sm:grid-cols-2 gap-4">
                             @foreach ($groupSlots as $slot => $def)
                                 <flux:color-picker wire:model="colors.{{ $slot }}" label="{{ __($def['label']) }}" />
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <flux:select variant="listbox" wire:model="theme_dark" label="{{ __('Dark mode') }}" description="{{ __('Optional palette for visitors whose device prefers dark mode.') }}">
+                <flux:select.option value="none">{{ __('Off') }}</flux:select.option>
+                @foreach ($presets as $key => $preset)
+                    <flux:select.option value="{{ $key }}">
+                        <span class="flex w-full items-center gap-3">
+                            <span class="flex-1">{{ $preset['label'] }}</span>
+                            <span class="flex items-center gap-1">
+                                @foreach (['background', 'primary_bg', 'header_bg', 'text'] as $s)
+                                    <span class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30" style="background-color: {{ $preset['colors'][$s] }}"></span>
+                                @endforeach
+                            </span>
+                        </span>
+                    </flux:select.option>
+                @endforeach
+                <flux:select.option value="custom">
+                    <span class="flex w-full items-center gap-3">
+                        <span class="flex-1">{{ __('Custom') }}</span>
+                        <span class="flex items-center gap-1">
+                            @foreach (['background', 'primary_bg', 'header_bg', 'text'] as $s)
+                                <span class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30" style="background-color: {{ $colors_dark[$s] ?? '#cccccc' }}"></span>
+                            @endforeach
+                        </span>
+                    </span>
+                </flux:select.option>
+            </flux:select>
+
+            <div x-cloak x-show="$wire.theme_dark === 'custom'" class="space-y-6">
+                @foreach ($slotsByGroup as $group => $groupSlots)
+                    <div class="space-y-3">
+                        <flux:heading size="sm">{{ __($group) }} — {{ __('Dark mode') }}</flux:heading>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            @foreach ($groupSlots as $slot => $def)
+                                <flux:color-picker wire:model="colors_dark.{{ $slot }}" label="{{ __($def['label']) }}" />
                             @endforeach
                         </div>
                     </div>
