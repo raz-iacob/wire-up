@@ -90,6 +90,20 @@ it('empties the sitemap when the site discourages search engines', function (): 
         ->assertDontSee('/about-us', false);
 });
 
+it('lists an indexable homepage under the site root url in the sitemap and llms.txt', function (): void {
+    $home = seoFeaturePage('landing-home', ['title' => ['en' => 'Landing Home']]);
+    Settings::set(['home_page_id' => $home->id]);
+
+    $this->get('/sitemap.xml')
+        ->assertOk()
+        ->assertSee('<loc>'.route('home').'/</loc>', false)
+        ->assertDontSee('/landing-home', false);
+
+    $this->get('/llms.txt')
+        ->assertOk()
+        ->assertSee('[Landing Home]('.route('home').')', false);
+});
+
 it('excludes a page-level noindex page from the sitemap', function (): void {
     seoFeaturePage('public-page', ['title' => ['en' => 'Public']]);
     seoFeaturePage('hidden-page', ['title' => ['en' => 'Hidden'], 'metadata' => ['published_locales' => ['en'], 'noindex' => true]]);
