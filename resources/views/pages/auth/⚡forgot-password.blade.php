@@ -6,6 +6,9 @@ use App\Services\SettingsService;
 use Livewire\Component;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 return new class extends Component
 {
@@ -21,9 +24,38 @@ return new class extends Component
             'email' => ['required', 'string', 'email'],
         ]);
 
-        Password::sendResetLink($this->only('email'));
+        $this->ensureIsNotRateLimited();
+
+        RateLimiter::hit($this->throttleKey(), 300);
+
+        try {
+            Password::sendResetLink($this->only('email'));
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
 
         session()->flash('status', __('A reset link will be sent if the account exists.'));
+    }
+
+    protected function ensureIsNotRateLimited(): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => __('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    protected function throttleKey(): string
+    {
+        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
     }
 
     public function render(): View
@@ -40,6 +72,10 @@ return new class extends Component
         <flux:heading size="xl">{{ __('Forgot password') }}</flux:heading>
         <flux:subheading>{{ __('Enter your email to receive a password reset link') }}</flux:subheading>
     </div>
+
+    @if (session('status'))
+        <flux:callout variant="success" icon="check-circle" :text="session('status')" />
+    @endif
 
     <form method="POST" wire:submit="sendPasswordResetLink" class="flex flex-col gap-6">
         <flux:input

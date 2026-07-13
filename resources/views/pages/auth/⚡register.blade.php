@@ -8,8 +8,10 @@ use App\Services\SettingsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rules\Password as RulesPassword;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 return new class extends Component
@@ -33,6 +35,10 @@ return new class extends Component
     {
         abort_unless(resolve(SettingsService::class)->allowsRegistration(), 403);
 
+        $this->ensureIsNotRateLimited();
+
+        RateLimiter::hit($this->throttleKey(), 300);
+
         /** @var array<string, mixed> $credentials */
         $credentials = $this->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -49,6 +55,27 @@ return new class extends Component
         Session::regenerate();
 
         $this->redirectIntended(default: route('home', absolute: false), navigate: true);
+    }
+
+    protected function ensureIsNotRateLimited(): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => __('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    protected function throttleKey(): string
+    {
+        return 'register|'.request()->ip();
     }
 
     public function render(): View

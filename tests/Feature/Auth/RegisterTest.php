@@ -156,3 +156,24 @@ it('redirects guests away from registration when sign-ups are disabled', functio
 
     $this->get(route('register'))->assertRedirectToRoute('login');
 });
+
+it('throttles registration attempts after five tries', function (): void {
+    $this->travelTo(now());
+
+    foreach (range(1, 5) as $attempt) {
+        Livewire::test('pages::auth.register')
+            ->set('email', 'not-an-email')
+            ->call('register')
+            ->assertHasErrors(['email']);
+    }
+
+    Livewire::test('pages::auth.register')
+        ->set('name', 'Throttled User')
+        ->set('email', 'throttled@example.com')
+        ->set('password', 'pass123WORD!@£')
+        ->set('password_confirmation', 'pass123WORD!@£')
+        ->call('register')
+        ->assertHasErrors(['email' => __('auth.throttle', ['seconds' => 300, 'minutes' => 5])]);
+
+    expect(User::query()->where('email', 'throttled@example.com')->exists())->toBeFalse();
+});

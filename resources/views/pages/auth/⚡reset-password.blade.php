@@ -6,6 +6,8 @@ use App\Actions\CreateUserPasswordAction;
 use App\Services\SettingsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as RulesPassword;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
@@ -38,13 +40,40 @@ return new class extends Component
             'password' => ['required', 'string', 'confirmed', RulesPassword::defaults()],
         ]);
 
+        $this->ensureIsNotRateLimited();
+
+        RateLimiter::hit($this->throttleKey(), 300);
+
         $status = $action->handle($credentials, $this->password);
 
         throw_if($status !== Password::PASSWORD_RESET, ValidationException::withMessages([
             'email' => [__(is_string($status) ? $status : '')],
         ]));
 
+        RateLimiter::clear($this->throttleKey());
+
         $this->redirectRoute('login', navigate: true);
+    }
+
+    protected function ensureIsNotRateLimited(): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => __('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    protected function throttleKey(): string
+    {
+        return Str::transliterate('reset|'.Str::lower($this->email).'|'.request()->ip());
     }
 
     public function render(): View

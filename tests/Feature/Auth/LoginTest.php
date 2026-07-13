@@ -213,3 +213,27 @@ it('redirects authenticated admin users away from login', function (): void {
 
     $response->assertRedirectToRoute('admin.dashboard');
 });
+
+it('locks out after five real failed login attempts', function (): void {
+    $this->travelTo(now());
+
+    Event::fake();
+
+    $user = User::factory()->create(['active' => true]);
+
+    foreach (range(1, 5) as $attempt) {
+        Livewire::test('pages::auth.login')
+            ->set('email', $user->email)
+            ->set('password', 'wrong-password')
+            ->call('login')
+            ->assertHasErrors(['email' => __('auth.failed')]);
+    }
+
+    Livewire::test('pages::auth.login')
+        ->set('email', $user->email)
+        ->set('password', 'wrong-password')
+        ->call('login')
+        ->assertHasErrors(['email' => __('auth.throttle', ['seconds' => 60, 'minutes' => 1])]);
+
+    Event::assertDispatched(Lockout::class);
+});

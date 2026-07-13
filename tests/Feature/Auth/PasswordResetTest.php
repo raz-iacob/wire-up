@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Livewire\Livewire;
 
 it('renders forgot password page', function (): void {
@@ -131,4 +132,58 @@ it('requires matching password confirmation', function (): void {
         ->set('password_confirmation', 'different-password')
         ->call('resetPassword');
     $response->assertHasErrors(['password']);
+});
+
+it('throttles reset link requests after five attempts', function (): void {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    foreach (range(1, 5) as $attempt) {
+        Livewire::test('pages::auth.forgot-password')
+            ->set('email', $user->email)
+            ->call('sendPasswordResetLink')
+            ->assertHasNoErrors();
+    }
+
+    Livewire::test('pages::auth.forgot-password')
+        ->set('email', $user->email)
+        ->call('sendPasswordResetLink')
+        ->assertHasErrors(['email']);
+
+    Notification::assertSentToTimes($user, ResetPasswordNotification::class, 1);
+});
+
+it('still shows the generic status when the reset mail cannot be sent', function (): void {
+    Password::shouldReceive('sendResetLink')
+        ->once()
+        ->andThrow(new RuntimeException('smtp down'));
+
+    Livewire::test('pages::auth.forgot-password')
+        ->set('email', 'someone@example.com')
+        ->call('sendPasswordResetLink')
+        ->assertHasNoErrors()
+        ->assertSee(__('A reset link will be sent if the account exists.'));
+});
+
+it('throttles password reset attempts after five tries', function (): void {
+    $this->travelTo(now());
+
+    $user = User::factory()->create();
+
+    foreach (range(1, 5) as $attempt) {
+        Livewire::test('pages::auth.reset-password', ['token' => 'wrong-token'])
+            ->set('email', $user->email)
+            ->set('password', 'pass123WORD!@£')
+            ->set('password_confirmation', 'pass123WORD!@£')
+            ->call('resetPassword')
+            ->assertHasErrors(['email']);
+    }
+
+    Livewire::test('pages::auth.reset-password', ['token' => 'wrong-token'])
+        ->set('email', $user->email)
+        ->set('password', 'pass123WORD!@£')
+        ->set('password_confirmation', 'pass123WORD!@£')
+        ->call('resetPassword')
+        ->assertHasErrors(['email' => __('auth.throttle', ['seconds' => 300, 'minutes' => 5])]);
 });

@@ -35,9 +35,13 @@ return new class extends Component
 
         $this->ensureIsNotRateLimited();
 
-        throw_unless(Auth::attemptWhen($credentials, fn (User $user): bool => $user->active, remember: $this->remember), ValidationException::withMessages([
-            'email' => __('auth.failed'),
-        ]));
+        if (! Auth::attemptWhen($credentials, fn (User $user): bool => $user->active, remember: $this->remember)) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
 
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
