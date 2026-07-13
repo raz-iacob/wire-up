@@ -34,6 +34,7 @@ it('updates to the latest release', function (): void {
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['git', 'fetch', '--tags', '--force', 'origin']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['git', '-c', 'advice.detachedHead=false', 'checkout', '--force', 'v1.0.0']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['composer', 'install', '--no-dev', '--no-interaction', '--prefer-dist']);
+    Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'wireup:backup']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'migrate', '--force']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['npm', 'ci']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['npm', 'run', 'build']);
@@ -122,6 +123,27 @@ it('records the failure when disabling maintenance mode fails', function (): voi
     expect($service->state()['status'])->toBe('failed')
         ->and($service->state()['step'])->toBe('Disable maintenance mode')
         ->and($service->currentVersion())->toBe('v1.0.0');
+});
+
+it('does not migrate when the database backup fails', function (): void {
+    Process::fake([
+        '*wireup:backup*' => Process::result(errorOutput: 'backup boom', exitCode: 1),
+        '*' => Process::result(),
+    ]);
+
+    resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
+
+    $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
+        ->expectsOutputToContain('backup boom')
+        ->assertExitCode(1);
+
+    Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'migrate', '--force']);
+    Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'up']);
+
+    $service = resolve(UpdateService::class);
+
+    expect($service->state()['status'])->toBe('failed')
+        ->and($service->state()['step'])->toBe('Back up database');
 });
 
 it('leaves the site in maintenance mode when a step fails', function (): void {

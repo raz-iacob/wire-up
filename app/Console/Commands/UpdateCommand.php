@@ -38,6 +38,7 @@ final class UpdateCommand extends Command
             'Fetch releases' => ['git', 'fetch', '--tags', '--force', 'origin'],
             "Check out {$tag}" => ['git', '-c', 'advice.detachedHead=false', 'checkout', '--force', $tag],
             'Install PHP dependencies' => ['composer', 'install', '--no-dev', '--no-interaction', '--prefer-dist'],
+            'Back up database' => [PHP_BINARY, 'artisan', 'wireup:backup'],
             'Run database migrations' => [PHP_BINARY, 'artisan', 'migrate', '--force'],
             'Install frontend dependencies' => ['npm', 'ci'],
             'Build frontend assets' => ['npm', 'run', 'build'],

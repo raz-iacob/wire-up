@@ -143,11 +143,15 @@ Releases are git tags (`v0.x.y`) with matching sections in `CHANGELOG.md`. The s
 - **From the CLI:** `php artisan wireup:update` (options: `--tag=vX.Y.Z`, `--force`).
 - **Automatic:** enable *Automatic updates* on Settings → Updates; the daily check then installs new releases unattended.
 
-An update puts the public site into maintenance mode (the admin stays reachable), then: fetch + check out the tag, `composer install --no-dev`, `migrate --force`, `npm ci` + build, cache rebuild, `queue:restart`, and back up. **If a step fails, the site stays in maintenance mode** — review the error on Settings → Updates (or the console), fix it, then run `php artisan up`. Roll back with:
+An update puts the public site into maintenance mode (the admin stays reachable), then: fetch + check out the tag, `composer install --no-dev`, **database backup** (`php artisan wireup:backup` → `storage/app/backups`, last 5 kept; MySQL needs `mysqldump` on the server, PostgreSQL needs `pg_dump`), `migrate --force`, `npm ci` + build, cache rebuild, `queue:restart`. **If a step fails, the site stays in maintenance mode** — review the error on Settings → Updates (or the console), fix it, then run `php artisan up`. Roll back with:
 
 ```bash
 git checkout vPREVIOUS
-composer install --no-dev && php artisan migrate --force
+composer install --no-dev
+# restore the pre-update backup if the migrations already ran:
+#   MySQL:      mysql -u USER -p DATABASE < storage/app/backups/db-backup-<date>.sql
+#   PostgreSQL: psql -U USER -d DATABASE -f storage/app/backups/db-backup-<date>.sql
+#   SQLite:     cp storage/app/backups/db-backup-<date>.sqlite database/database.sqlite
 npm ci && npm run build && php artisan optimize && php artisan up
 ```
 
