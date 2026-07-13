@@ -99,6 +99,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        $default = config()->string('app.locale', 'en');
+        $active = in_array($default, array_column($this->locales, 'code'), true) ? $default : 'en';
+
         foreach ($this->locales as $locale) {
             DB::table('locales')->insert([
                 'code' => $locale['code'],
@@ -106,7 +109,7 @@ return new class extends Migration
                 'endonym' => Str::ucfirst($locale['endonym']),
                 'script' => $locale['script'],
                 'rtl' => in_array($locale['script'], ['Arab', 'Hebr', 'Mong', 'Tfng', 'Thaa']),
-                'active' => $locale['code'] === 'en',
+                'active' => $locale['code'] === $active,
                 'published' => true,
                 'created_at' => now(),
                 'updated_at' => now(),

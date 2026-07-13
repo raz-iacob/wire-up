@@ -28,6 +28,7 @@ it('runs every install step in order', function (): void {
 
     $this->artisan(InstallCommand::class)
         ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
+        ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'en')
         ->expectsOutputToContain('An admin user already exists, skipping.')
         ->expectsOutputToContain('Wire-Up is installed.')
         ->assertExitCode(0);
@@ -52,6 +53,7 @@ it('generates the application key when it is missing', function (): void {
 
     $this->artisan(InstallCommand::class)
         ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
+        ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'en')
         ->assertExitCode(0);
 
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'key:generate', '--force']);
@@ -78,6 +80,7 @@ it('aborts when a step fails', function (): void {
 
     $this->artisan(InstallCommand::class)
         ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
+        ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'en')
         ->expectsOutputToContain('migration boom')
         ->assertExitCode(1);
 
@@ -99,6 +102,7 @@ it('creates the first admin user when none exists', function (): void {
 
     $this->artisan(InstallCommand::class)
         ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
+        ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'en')
         ->expectsQuestion('Enter name', 'Admin User')
         ->expectsQuestion('Enter email', 'admin@example.com')
         ->expectsQuestion('Please enter your desired password', 'password')
@@ -106,4 +110,87 @@ it('creates the first admin user when none exists', function (): void {
         ->assertExitCode(0);
 
     expect(User::query()->where('email', 'admin@example.com')->exists())->toBeTrue();
+});
+
+it('writes the chosen default language to the environment file', function (): void {
+    Process::fake();
+    User::factory()->create();
+
+    $dir = dirname((string) config('wireup.version_file'));
+    File::ensureDirectoryExists($dir);
+    File::put($dir.'/.env', "APP_NAME=Test\nAPP_LOCALE=en\n");
+    $this->app->useEnvironmentPath($dir);
+
+    $this->artisan(InstallCommand::class)
+        ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
+        ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'de')
+        ->expectsOutputToContain('Default language set to "de".')
+        ->assertExitCode(0);
+
+    expect(File::get($dir.'/.env'))->toContain('APP_LOCALE=de')
+        ->and(config('app.locale'))->toBe('de')
+        ->and(config('app.default_locale'))->toBe('de');
+});
+
+it('appends APP_LOCALE when the environment file lacks it', function (): void {
+    Process::fake();
+    User::factory()->create();
+
+    $dir = dirname((string) config('wireup.version_file'));
+    File::ensureDirectoryExists($dir);
+    File::put($dir.'/.env', "APP_NAME=Test\n");
+    $this->app->useEnvironmentPath($dir);
+
+    $this->artisan(InstallCommand::class)
+        ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
+        ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'fr')
+        ->assertExitCode(0);
+
+    expect(File::get($dir.'/.env'))->toContain("\nAPP_LOCALE=fr\n");
+});
+
+it('rejects an invalid language code and keeps the current locale', function (): void {
+    Process::fake();
+    User::factory()->create();
+
+    $dir = dirname((string) config('wireup.version_file'));
+    File::ensureDirectoryExists($dir);
+    File::put($dir.'/.env', "APP_LOCALE=en\n");
+    $this->app->useEnvironmentPath($dir);
+
+    $this->artisan(InstallCommand::class)
+        ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
+        ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'Not A Locale!')
+        ->expectsOutputToContain('is not a valid language code')
+        ->assertExitCode(0);
+
+    expect(File::get($dir.'/.env'))->toContain('APP_LOCALE=en')
+        ->and(config('app.locale'))->toBe('en');
+});
+
+it('skips the language prompt when running non-interactively', function (): void {
+    Process::fake();
+    config()->set('app.env', 'production');
+    User::factory()->create();
+
+    $this->artisan(InstallCommand::class, ['--no-interaction' => true])
+        ->assertExitCode(0);
+
+    expect(config('app.locale'))->toBe('en');
+});
+
+it('creates the sqlite database file when it is missing', function (): void {
+    Process::fake();
+    User::factory()->create();
+
+    $dir = dirname((string) config('wireup.version_file'));
+    config()->set('database.connections.sqlite.database', $dir.'/database.sqlite');
+
+    $this->artisan(InstallCommand::class)
+        ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
+        ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'en')
+        ->expectsOutputToContain('Create SQLite database')
+        ->assertExitCode(0);
+
+    expect(File::exists($dir.'/database.sqlite'))->toBeTrue();
 });

@@ -36,13 +36,18 @@ return new class extends Migration
         $this->addBlocks($contactId, $this->contactBlocks());
     }
 
+    private function locale(): string
+    {
+        return config()->string('app.locale', 'en');
+    }
+
     /**
      * @param  array<string, mixed>  $metadata
      */
     private function addPage(string $title, string $description, string $slug, ContentStatus $status, array $metadata = []): int
     {
         $pageId = DB::table('pages')->insertGetId([
-            'metadata' => json_encode([...$metadata, 'published_locales' => ['en']]),
+            'metadata' => json_encode([...$metadata, 'published_locales' => [$this->locale()]]),
             'status' => $status,
             'published_at' => $status === ContentStatus::PUBLISHED ? now() : null,
             'created_at' => now(),
@@ -50,12 +55,12 @@ return new class extends Migration
         ]);
 
         DB::table('translations')->insert([
-            ['translatable_type' => 'page', 'translatable_id' => $pageId, 'locale' => 'en', 'key' => 'title', 'body' => $title],
-            ['translatable_type' => 'page', 'translatable_id' => $pageId, 'locale' => 'en', 'key' => 'description', 'body' => $description],
+            ['translatable_type' => 'page', 'translatable_id' => $pageId, 'locale' => $this->locale(), 'key' => 'title', 'body' => $title],
+            ['translatable_type' => 'page', 'translatable_id' => $pageId, 'locale' => $this->locale(), 'key' => 'description', 'body' => $description],
         ]);
 
         DB::table('slugs')->insert([
-            ['sluggable_type' => 'page', 'sluggable_id' => $pageId, 'slug' => $slug, 'locale' => 'en'],
+            ['sluggable_type' => 'page', 'sluggable_id' => $pageId, 'slug' => $slug, 'locale' => $this->locale()],
         ]);
 
         return $pageId;
@@ -114,12 +119,12 @@ return new class extends Migration
             ['type' => BlockType::SPACER, 'content' => ['size' => 'small']],
             ['type' => BlockType::RICH_TEXT, 'content' => [
                 'heading' => [],
-                'body' => ['en' => $logo],
+                'body' => [$this->locale() => $logo],
                 'align' => 'center',
             ]],
             ['type' => BlockType::RICH_TEXT, 'content' => [
                 'heading' => [],
-                'body' => ['en' => '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:1.5rem">'.$cards.'</div>'
+                'body' => [$this->locale() => '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:1.5rem">'.$cards.'</div>'
                     .'<p style="text-align:right;font-size:0.875rem;opacity:0.6;margin-top:1.5rem">'.$versionLabel.'</p>'],
                 'align' => 'left',
             ]],
@@ -146,12 +151,12 @@ return new class extends Migration
                 'width' => 'full',
                 'height' => 'auto',
                 'background' => ['type' => 'color', 'image' => null, 'video' => null, 'gradient' => ['start' => null, 'end' => null, 'direction' => 'to-b']],
-                'heading' => ['en' => 'Welcome to our website!'],
-                'subheading' => ['en' => 'We are glad you are here.'],
+                'heading' => [$this->locale() => 'Welcome to our website!'],
+                'subheading' => [$this->locale() => 'We are glad you are here.'],
             ]],
             ['type' => BlockType::RICH_TEXT, 'content' => [
                 'heading' => [],
-                'body' => ['en' => '<p>This is your homepage. Replace this text with a short introduction to what you do, and add more blocks to bring it to life.</p>'],
+                'body' => [$this->locale() => '<p>This is your homepage. Replace this text with a short introduction to what you do, and add more blocks to bring it to life.</p>'],
                 'align' => 'left',
             ]],
         ];
@@ -164,8 +169,8 @@ return new class extends Migration
     {
         return [
             ['type' => BlockType::RICH_TEXT, 'content' => [
-                'heading' => ['en' => 'About us'],
-                'body' => ['en' => '<p>Tell your story here — who you are, what you do, and why it matters. A few honest paragraphs go a long way.</p>'],
+                'heading' => [$this->locale() => 'About us'],
+                'body' => [$this->locale() => '<p>Tell your story here — who you are, what you do, and why it matters. A few honest paragraphs go a long way.</p>'],
                 'align' => 'left',
             ]],
         ];
@@ -179,8 +184,8 @@ return new class extends Migration
         return [
             ['type' => BlockType::CONTACT_FORM, 'content' => [
                 ...BlockType::CONTACT_FORM->defaultContent(),
-                'heading' => ['en' => 'Get in touch'],
-                'description' => ['en' => '<p>Have a question? Send us a message and we will get back to you.</p>'],
+                'heading' => [$this->locale() => 'Get in touch'],
+                'description' => [$this->locale() => '<p>Have a question? Send us a message and we will get back to you.</p>'],
             ]],
         ];
     }

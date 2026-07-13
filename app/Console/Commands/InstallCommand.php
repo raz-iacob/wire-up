@@ -9,6 +9,7 @@ use App\Services\UpdateService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
 #[Description('Prepare a server install after cloning the repository')]
@@ -27,6 +28,9 @@ final class InstallCommand extends Command
         if (blank(config('app.key')) && ! $this->runStep('Generate application key', [PHP_BINARY, 'artisan', 'key:generate', '--force'])) {
             return 1;
         }
+
+        $this->configureDefaultLocale();
+        $this->ensureSqliteDatabaseExists();
 
         $steps = [
             'Run database migrations' => [PHP_BINARY, 'artisan', 'migrate', '--force'],
@@ -55,6 +59,51 @@ final class InstallCommand extends Command
         $this->info('Wire-Up is installed.');
 
         return 0;
+    }
+
+    private function ensureSqliteDatabaseExists(): void
+    {
+        $database = config()->string('database.connections.sqlite.database', ':memory:');
+
+        if (config('database.default') !== 'sqlite' || $database === ':memory:' || File::exists($database)) {
+            return;
+        }
+
+        File::ensureDirectoryExists(dirname($database));
+        File::put($database, '');
+
+        $this->components->task('Create SQLite database', fn (): bool => true);
+    }
+
+    private function configureDefaultLocale(): void
+    {
+        if (! $this->input->isInteractive()) {
+            return;
+        }
+
+        $current = config()->string('app.locale', 'en');
+        $locale = mb_strtolower(mb_trim((string) $this->ask('Default site language (BCP 47 code, e.g. en, de, fr)', $current)));
+
+        if ($locale === '' || $locale === $current) {
+            return;
+        }
+
+        if (preg_match('/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/', $locale) !== 1) {
+            $this->components->warn("\"{$locale}\" is not a valid language code, keeping \"{$current}\".");
+
+            return;
+        }
+
+        $path = $this->laravel->environmentFilePath();
+        $contents = File::exists($path) ? File::get($path) : '';
+        $replaced = (string) preg_replace('/^APP_LOCALE=.*$/m', "APP_LOCALE={$locale}", $contents, count: $count);
+
+        File::put($path, $count > 0 ? $replaced : mb_rtrim($contents)."\nAPP_LOCALE={$locale}\n");
+
+        config()->set('app.locale', $locale);
+        config()->set('app.default_locale', $locale);
+
+        $this->components->info("Default language set to \"{$locale}\".");
     }
 
     /**

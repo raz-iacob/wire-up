@@ -90,7 +90,7 @@ composer test:lint
 
 ### Server installation
 
-Requirements on the server: PHP 8.5, Composer, Node.js 22+, git, MySQL.
+Requirements on the server: PHP 8.5, Composer, Node.js 22+, git. No database server is needed — Wire-Up uses SQLite by default (MySQL and PostgreSQL are supported alternatives).
 
 1. Add a **deploy key** (read-only SSH key) to the GitHub repository and clone it:
 
@@ -112,7 +112,7 @@ Requirements on the server: PHP 8.5, Composer, Node.js 22+, git, MySQL.
     }
     ```
 
-3. Create `.env` from `.env.example` with production values (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, MySQL credentials).
+3. Create `.env` from `.env.example` with production values (`APP_ENV=production`, `APP_URL`). SQLite is preconfigured; to use MySQL/PostgreSQL instead, set the `DB_*` variables.
 
 4. Install PHP dependencies and run the installer:
 
@@ -121,7 +121,7 @@ Requirements on the server: PHP 8.5, Composer, Node.js 22+, git, MySQL.
     php artisan wireup:install
     ```
 
-    The installer generates the app key if missing, migrates the database, links storage, builds the frontend, caches the app, and creates the first admin user.
+    The installer generates the app key if missing, asks for the default site language, creates the SQLite database when needed, migrates, links storage, builds the frontend, caches the app, and creates the first admin user.
 
 5. Add the scheduler cron entry and a supervised queue worker (required for e-mail/Slack notifications and admin-triggered updates):
 
