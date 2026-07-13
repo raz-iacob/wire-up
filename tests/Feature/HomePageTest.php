@@ -27,6 +27,7 @@ it('renders the seeded welcome page at the site root on a fresh install', functi
         ->assertSee('https://wire-up.dev', false)
         ->assertSee('Getting started')
         ->assertSee('href="/login"', false)
+        ->assertSee('<meta name="robots" content="noindex, nofollow">', false)
         ->assertDontSee('data-site-header')
         ->assertDontSee('data-site-footer');
 });

@@ -14,6 +14,7 @@ return new class extends Migration
     {
         $welcomeId = $this->addPage('Welcome', 'Your new Wire-Up site is ready.', 'welcome', ContentStatus::PUBLISHED, [
             'layout' => ['hideHeader' => true, 'hideFooter' => true],
+            'noindex' => true,
         ]);
 
         $this->addBlocks($welcomeId, $this->welcomeBlocks());

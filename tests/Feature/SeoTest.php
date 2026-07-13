@@ -76,7 +76,8 @@ it('lists published pages in the sitemap and omits drafts', function (): void {
         ->assertOk()
         ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
         ->assertSee('/about-us', false)
-        ->assertDontSee('/draft-page', false);
+        ->assertDontSee('/draft-page', false)
+        ->assertDontSee('/welcome', false);
 });
 
 it('empties the sitemap when the site discourages search engines', function (): void {
