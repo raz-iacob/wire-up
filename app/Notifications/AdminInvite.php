@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Services\SettingsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -35,9 +36,10 @@ final class AdminInvite extends Notification implements ShouldQueue
 
     private function buildMailMessage(string $url): MailMessage
     {
-        $appName = config()->string('app.name');
+        $appName = resolve(SettingsService::class)->brandName();
 
         return new MailMessage()
+            ->from(config()->string('mail.from.address'), $appName)
             ->subject(__('You have been invited to join :app_name', ['app_name' => $appName]))
             ->greeting(__('Hello,'))
             ->line($this->inviterName.' '.__('has invited you to join the :app_name team.', ['app_name' => $appName]))

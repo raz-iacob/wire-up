@@ -640,3 +640,31 @@ it('drops a register menu item when sign-ups are disabled', function (): void {
 
     expect($menu)->toBeEmpty();
 });
+
+it('uses the site title as the brand name and falls back to the app name', function (): void {
+    expect((new SettingsService)->brandName())->toBe(config('app.name'));
+
+    Settings::set(['title' => ['en' => 'Acme Studio']]);
+
+    expect((new SettingsService)->brandName())->toBe('Acme Studio');
+});
+
+it('falls back to the wire-up logo for the mail header when no logo is set', function (): void {
+    expect((new SettingsService)->mailLogo())->toBe(['url' => asset('images/wire-up-mail-logo.png'), 'height' => 32]);
+});
+
+it('uses no mail logo for an svg header logo', function (): void {
+    Settings::set(['logo_header' => ['source' => 'media/logo.SVG']]);
+
+    expect((new SettingsService)->mailLogo())->toBeNull();
+});
+
+it('uses the raster header logo for the mail header', function (): void {
+    Settings::set(['logo_header' => ['source' => 'media/logo.png']]);
+
+    $logo = (new SettingsService)->mailLogo();
+
+    expect($logo['height'])->toBe(50)
+        ->and($logo['url'])->toContain('h=100,q=80,fm=png')
+        ->toContain('media/logo.png');
+});

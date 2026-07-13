@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Submission;
+use App\Services\SettingsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -37,6 +38,7 @@ final class SubmissionReceived extends Notification implements ShouldQueue
         $email = is_string($this->submission->email) ? $this->submission->email : '';
 
         $mail = new MailMessage()
+            ->from(config()->string('mail.from.address'), resolve(SettingsService::class)->brandName())
             ->subject($this->subject())
             ->markdown('mail.submission-received', [
                 'formName' => $this->formName(),

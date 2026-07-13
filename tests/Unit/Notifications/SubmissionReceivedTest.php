@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Settings;
 use App\Models\Submission;
 use App\Notifications\SubmissionReceived;
 use App\Services\SlackWebhookChannel;
@@ -135,4 +136,44 @@ it('renders the markdown mail to html without errors', function (): void {
         ->toContain('Massage enquiry')
         ->toContain('Ada Lovelace')
         ->toContain('Hello there');
+});
+
+it('brands the mail with the site title, from name and sign-off', function (): void {
+    Settings::set(['title' => ['en' => 'Acme Studio']]);
+
+    $submission = Submission::factory()->create(['message' => 'Hello there']);
+    $mail = new SubmissionReceived($submission)->toMail(new AnonymousNotifiable);
+
+    $html = (string) $mail->render();
+
+    expect($mail->from)->toBe([config('mail.from.address'), 'Acme Studio'])
+        ->and($html)->toContain('Acme Studio')
+        ->and($html)->toContain('© '.date('Y').' Acme Studio');
+});
+
+it('shows the header logo in the mail when it is a raster image', function (): void {
+    Settings::set(['logo_header' => ['source' => 'media/logo.png']]);
+
+    $submission = Submission::factory()->create();
+    $html = (string) new SubmissionReceived($submission)->toMail(new AnonymousNotifiable)->render();
+
+    expect($html)->toContain('<img src="'.route('image.show', ['options' => 'h=100,q=80,fm=png', 'path' => 'media/logo.png']).'"');
+});
+
+it('shows the wire-up logo in the mail when no header logo is set', function (): void {
+    $submission = Submission::factory()->create();
+    $html = (string) new SubmissionReceived($submission)->toMail(new AnonymousNotifiable)->render();
+
+    expect($html)->toContain('<img src="'.asset('images/wire-up-mail-logo.png').'"');
+});
+
+it('falls back to the brand name in the mail for an svg logo', function (): void {
+    Settings::set(['title' => ['en' => 'Acme Studio'], 'logo_header' => ['source' => 'media/logo.svg']]);
+
+    $submission = Submission::factory()->create();
+    $html = (string) new SubmissionReceived($submission)->toMail(new AnonymousNotifiable)->render();
+
+    expect($html)->not->toContain('<img src="'.route('image.show', ['options' => 'h=100,q=80,fm=png', 'path' => 'media/logo.svg']).'"')
+        ->and($html)->not->toContain(asset('images/wire-up-mail-logo.png'))
+        ->and($html)->toContain('Acme Studio');
 });

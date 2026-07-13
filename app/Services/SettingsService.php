@@ -278,6 +278,33 @@ final class SettingsService
         return is_string($key) ? $key : '';
     }
 
+    public function brandName(): string
+    {
+        $title = $this->title();
+
+        return $title !== '' ? $title : config()->string('app.name');
+    }
+
+    /**
+     * @return array{url: string, height: int}|null
+     */
+    public function mailLogo(): ?array
+    {
+        $source = config('site.logo_header.source');
+
+        if (! is_string($source)) {
+            return ['url' => asset('images/wire-up-mail-logo.png'), 'height' => 32];
+        }
+
+        if (str_ends_with(mb_strtolower($source), '.svg')) {
+            return null;
+        }
+
+        $url = $this->logoUrl('logo_header', maxHeight: 100);
+
+        return $url === null ? null : ['url' => $url, 'height' => 50];
+    }
+
     public function logoUrl(string $role, string $crop = 'default', int $maxHeight = 320): ?string
     {
         $item = config('site.'.$role);

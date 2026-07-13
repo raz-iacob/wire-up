@@ -32,5 +32,5 @@
 @endif
 
 {{ __('Regards,') }}<br>
-{{ config('app.name') }}
+{{ \App\Services\SettingsService::current()->brandName() }}
 </x-mail::message>
