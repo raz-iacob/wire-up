@@ -53,7 +53,7 @@ final class WireUpServer extends Server
     /**
      * @var array<int, class-string<Server\Tool>>
      */
-    protected array $tools = [
+    public const array TOOLS = [
         ListPagesTool::class,
         GetPageTool::class,
         CreatePageTool::class,
@@ -74,7 +74,33 @@ final class WireUpServer extends Server
     /**
      * @var array<int, class-string<Server\Resource>>
      */
-    protected array $resources = [
+    public const array RESOURCES = [
         BlockTypesResource::class,
     ];
+
+    /**
+     * @var array<int, class-string<Server\Tool>>
+     */
+    protected array $tools = self::TOOLS;
+
+    /**
+     * @var array<int, class-string<Server\Resource>>
+     */
+    protected array $resources = self::RESOURCES;
+
+    /**
+     * @return array<int, class-string<Server\Tool>>
+     */
+    public static function toolClasses(): array
+    {
+        return self::TOOLS;
+    }
+
+    /**
+     * @return array<int, class-string<Server\Resource>>
+     */
+    public static function resourceClasses(): array
+    {
+        return self::RESOURCES;
+    }
 }
