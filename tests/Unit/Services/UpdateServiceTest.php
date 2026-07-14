@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Models\Settings;
+use App\Notifications\SystemUpdateCompleted;
 use App\Services\UpdateService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 
@@ -308,4 +311,44 @@ it('ignores a malformed cached state', function (): void {
     Cache::forever('wireup:update:state', ['status' => 123, 'tag' => 5, 'step' => [], 'output' => 9, 'at' => 456]);
 
     expect(new UpdateService()->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null]);
+});
+
+it('emails the contact address when an update finishes', function (): void {
+    Notification::fake();
+    Settings::set(['contact_email' => 'owner@example.com']);
+
+    resolve(UpdateService::class)->markFinished('v1.2.0');
+
+    Notification::assertSentOnDemandTimes(SystemUpdateCompleted::class, 1);
+});
+
+it('emails the contact address when an update fails', function (): void {
+    Notification::fake();
+    Settings::set(['contact_email' => 'owner@example.com']);
+
+    resolve(UpdateService::class)->markFailed('v1.2.0', 'Run database migrations', 'migration exploded');
+
+    Notification::assertSentOnDemand(
+        SystemUpdateCompleted::class,
+        fn (SystemUpdateCompleted $notification, array $channels, object $notifiable): bool => $notifiable->routes['mail'] === 'owner@example.com',
+    );
+});
+
+it('sends no outcome mail when no contact email is configured', function (): void {
+    Notification::fake();
+
+    resolve(UpdateService::class)->markFinished('v1.2.0');
+
+    Notification::assertNothingSent();
+});
+
+it('keeps the update state when the outcome mail cannot be sent', function (): void {
+    Settings::set(['contact_email' => 'owner@example.com']);
+
+    Notification::shouldReceive('sendNow')->once()->andThrow(new RuntimeException('smtp down'));
+
+    $service = resolve(UpdateService::class);
+    $service->markFailed('v1.2.0', 'Build frontend assets', 'boom');
+
+    expect($service->state()['status'])->toBe('failed');
 });

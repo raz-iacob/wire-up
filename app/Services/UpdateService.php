@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Notifications\SystemUpdateCompleted;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Process;
+use Throwable;
 
 final class UpdateService
 {
@@ -176,16 +179,35 @@ final class UpdateService
     public function markFinished(string $tag): void
     {
         $this->writeState('finished', $tag);
+
+        $this->notifyOutcome(new SystemUpdateCompleted($tag, successful: true));
     }
 
     public function markFailed(string $tag, string $step, string $output): void
     {
         $this->writeState('failed', $tag, $step, mb_substr($output, -2000));
+
+        $this->notifyOutcome(new SystemUpdateCompleted($tag, successful: false, step: $step, output: mb_substr($output, -2000)));
     }
 
     public function clearState(): void
     {
         Cache::forget(self::CACHE_STATE);
+    }
+
+    private function notifyOutcome(SystemUpdateCompleted $notification): void
+    {
+        $email = SettingsService::current()->contactEmail();
+
+        if ($email === '') {
+            return;
+        }
+
+        try {
+            Notification::route('mail', $email)->notifyNow($notification);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     /**
