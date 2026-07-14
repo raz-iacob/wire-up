@@ -278,7 +278,14 @@ return new class extends Component
             radii: @js(config('theme.radii')),
             borderWidths: @js(config('theme.border_widths')),
             presetPalettes: @js(collect($presets)->map(fn (array $p): array => $p['colors'])),
+            previewDark: false,
             get c() {
+                if (this.previewDark && $wire.theme_dark !== 'none') {
+                    return ($wire.theme_dark !== 'custom' && this.presetPalettes[$wire.theme_dark])
+                        ? this.presetPalettes[$wire.theme_dark]
+                        : ($wire.colors_dark || {})
+                }
+
                 return ($wire.theme !== 'custom' && this.presetPalettes[$wire.theme])
                     ? this.presetPalettes[$wire.theme]
                     : ($wire.colors || {})
@@ -320,6 +327,10 @@ return new class extends Component
 
         <div class="order-2 md:col-span-2 md:sticky md:top-4">
             <flux:text class="mb-6">{{ __('Design the look of your public site — colours, fonts, and shape.') }}</flux:text>
+            <div class="mb-2 flex items-center justify-end gap-1" x-cloak x-show="$wire.theme_dark !== 'none'">
+                <flux:button size="sm" variant="subtle" icon="sun" data-test="preview-scheme-light" x-on:click="previewDark = false" x-bind:data-active="! previewDark" class="data-[active=true]:text-accent" :tooltip="__('Light preview')" />
+                <flux:button size="sm" variant="subtle" icon="moon" data-test="preview-scheme-dark" x-on:click="previewDark = true" x-bind:data-active="previewDark" class="data-[active=true]:text-accent" :tooltip="__('Dark preview')" />
+            </div>
             <div x-cloak class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 select-none">
 
                 <div class="relative transition-shadow" :class="$wire.header_sticky ? 'shadow-md' : ''">

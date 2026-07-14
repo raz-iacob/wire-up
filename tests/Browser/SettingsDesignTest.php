@@ -88,3 +88,35 @@ it('keeps exactly one header and footer variant visible when other fields change
         ->assertScript($countVisible('header-variant'), 1)
         ->assertScript($countVisible('footer-variant'), 1);
 });
+
+it('previews the dark palette via the scheme toggle', function (): void {
+    $this->actingAsAdmin();
+
+    $page = visit(route('admin.settings-design'));
+
+    $bg = "getComputedStyle(document.querySelector('[data-test=preview-body]')).backgroundColor";
+
+    $page->assertScript($bg, 'rgb(255, 255, 255)');
+
+    $page->click('[data-test=preview-scheme-dark]');
+    $page->wait(0.3);
+
+    $page->assertNoJavascriptErrors()
+        ->assertScript($bg, 'rgb(10, 10, 10)');
+
+    $page->click('[data-test=preview-scheme-light]');
+    $page->wait(0.3);
+
+    $page->assertScript($bg, 'rgb(255, 255, 255)');
+});
+
+it('hides the scheme toggle when dark mode is off', function (): void {
+    Settings::set(['theme_dark' => 'none']);
+
+    $this->actingAsAdmin();
+
+    $page = visit(route('admin.settings-design'));
+
+    $page->assertNoJavascriptErrors()
+        ->assertScript("Array.from(document.querySelectorAll('[data-test=preview-scheme-dark]')).filter(el => el.offsetHeight > 0).length", 0);
+});
