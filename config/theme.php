@@ -290,8 +290,8 @@ return [
     | Header & footer layout variants
     |--------------------------------------------------------------------------
     |
-    | Selectable layout skeletons for the public site header and footer.
-    | Preview-first: these drive the admin preview only for now.
+    | Selectable layout skeletons for the public site header and footer,
+    | rendered on the public site and mirrored in the admin preview.
     |
     */
 
@@ -321,7 +321,5 @@ return [
         'split' => ['label' => 'Split',  'description' => 'Form beside a full-height image'],
         'split-card' => ['label' => 'Split card', 'description' => 'Form and image inside a centered card'],
     ],
-
-    'auth_image_layouts' => ['split', 'split-card'],
 
 ];

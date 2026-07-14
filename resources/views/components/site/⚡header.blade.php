@@ -144,7 +144,7 @@ return new class extends Component
             x-bind:aria-expanded="open.toString()"
             aria-label="{{ __('Toggle menu') }}"
             @class([
-                'absolute end-6 top-1/2 z-50 -translate-y-1/2 p-1 text-(--wire-header-text)',
+                'absolute end-6 top-1/2 z-50 -translate-y-1/2 p-1 text-(--wire-header-text) rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current',
                 'md:hidden' => $layout !== 'minimal',
             ])
         >

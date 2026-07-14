@@ -64,7 +64,7 @@
             type="button"
             x-on:click="open = true"
             x-bind:aria-expanded="open.toString()"
-            @class(['flex items-center gap-2 text-sm md:hidden', 'ms-auto' => $isRight])
+            @class(['flex items-center gap-2 text-sm md:hidden rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current', 'ms-auto' => $isRight])
         >
             <flux:icon name="bars-3" class="size-5 shrink-0" />
             @if ($activeItem !== '')
@@ -103,7 +103,7 @@
                 ])
             >
                 <div @class(['flex', 'justify-start' => $isRight, 'justify-end' => ! $isRight])>
-                    <button type="button" x-on:click="open = false" aria-label="{{ __('Close menu') }}">
+                    <button type="button" x-on:click="open = false" aria-label="{{ __('Close menu') }}" class="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current">
                         <flux:icon name="x-mark" class="size-6" />
                     </button>
                 </div>

@@ -189,3 +189,17 @@ it('renders the published page menu item with its localized url', function (): v
         ->assertSee('Get started')
         ->assertSee(route('page', 'get-started'), false);
 });
+
+it('emits paired theme-color metas for light and dark, and a single one when dark is off', function (): void {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">', false)
+        ->assertSee('<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a">', false);
+
+    setSiteMetadata(['theme_dark' => 'none']);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('<meta name="theme-color" content="#ffffff">', false)
+        ->assertDontSee('prefers-color-scheme: dark) content', false);
+});

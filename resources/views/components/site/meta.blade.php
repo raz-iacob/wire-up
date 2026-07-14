@@ -8,6 +8,7 @@
     $ogTitle = $title ?: $siteName;
     $ogLocale = str_replace('-', '_', app()->getLocale());
     $themeColor = $site->color('background');
+    $darkThemeColor = $site->darkThemeColors()['background'] ?? null;
 @endphp
 
 <meta name="robots" content="{{ $seo->robots($page) }}">
@@ -41,7 +42,10 @@
 <link rel="alternate" hreflang="{{ $code }}" href="{{ $href }}" />
 @endforeach
 
-@if ($themeColor)
+@if ($themeColor && $darkThemeColor)
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="{{ $themeColor }}">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="{{ $darkThemeColor }}">
+@elseif ($themeColor)
 <meta name="theme-color" content="{{ $themeColor }}">
 @endif
 

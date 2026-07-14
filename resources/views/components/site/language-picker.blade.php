@@ -3,7 +3,7 @@
 @if ($languages->count() > 1)
 <flux:dropdown position="bottom" :align="$align">
     <button type="button"
-        class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70"
+        class="inline-flex items-center gap-1.5 text-sm font-medium text-(--wire-header-text) transition-opacity hover:opacity-70 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
         aria-label="{{ __('Language') }}">
         <flux:icon name="globe-alt" variant="micro" />
         <span>{{ data_get($languages->firstWhere('current', true), 'label') }}</span>
