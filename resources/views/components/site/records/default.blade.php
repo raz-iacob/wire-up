@@ -10,7 +10,7 @@
             $options[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
         }
 
-        return route('image.show', ['options' => implode(',', $options), 'path' => $media->source]);
+        return \App\Services\ImageService::url(implode(',', $options), $media->source);
     };
 
     $photo = \Illuminate\Support\Arr::first($record->fieldMedia('photo', false));

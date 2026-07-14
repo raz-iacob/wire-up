@@ -7,7 +7,9 @@ namespace App\Services;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Encoders\GifEncoder;
 use Intervention\Image\Encoders\JpegEncoder;
@@ -15,6 +17,8 @@ use Intervention\Image\Encoders\PngEncoder;
 use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\ImageInterface;
+use Symfony\Component\Finder\SplFileInfo;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 final class ImageService
@@ -37,6 +41,70 @@ final class ImageService
     public static function make(string $fileKey): self
     {
         return (new self)->setSourceFile($fileKey);
+    }
+
+    public static function url(string $options, string $path): string
+    {
+        return url(URL::signedRoute('image.show', ['options' => $options, 'path' => $path], absolute: false));
+    }
+
+    public static function cached(string $options, string $path): ?BinaryFileResponse
+    {
+        $file = self::cacheFile($options, $path);
+
+        if (! is_file($file)) {
+            return null;
+        }
+
+        touch($file);
+
+        return self::fileResponse($file, self::formatFromOptions($options));
+    }
+
+    public static function transform(string $options, string $path): BinaryFileResponse
+    {
+        [$contents] = self::make($path)->applyOptionsString($options)->encoded();
+
+        $file = self::cacheFile($options, $path);
+
+        File::ensureDirectoryExists(dirname($file));
+        File::put($file, $contents);
+
+        return self::fileResponse($file, self::formatFromOptions($options));
+    }
+
+    public static function purgeCache(string $path): void
+    {
+        File::deleteDirectory(self::cacheRoot().'/'.hash('sha256', $path));
+    }
+
+    public static function pruneCache(int $maxMegabytes): int
+    {
+        $root = self::cacheRoot();
+
+        if (! File::isDirectory($root)) {
+            return 0;
+        }
+
+        $files = collect(File::allFiles($root))
+            ->sortBy(fn (SplFileInfo $file): int => $file->getMTime())
+            ->values();
+
+        $total = $files->sum(fn (SplFileInfo $file): int => $file->getSize());
+        $budget = $maxMegabytes * 1024 * 1024;
+        $deleted = 0;
+
+        foreach ($files as $file) {
+            if ($total <= $budget) {
+                break;
+            }
+
+            $total -= $file->getSize();
+            File::delete($file->getPathname());
+            $deleted++;
+        }
+
+        return $deleted;
     }
 
     public static function placeholder(): string
@@ -150,7 +218,10 @@ final class ImageService
         return $this;
     }
 
-    public function response(int $cacheAgeSeconds = 30 * 86400): Response
+    /**
+     * @return array{0: string, 1: string}
+     */
+    public function encoded(): array
     {
         $quality = (int) ($this->options['q'] ?? 80);
         $format = $this->options['fm'] ?? 'jpg';
@@ -161,9 +232,37 @@ final class ImageService
             default => ['image/jpeg', new JpegEncoder(quality: $quality)],
         };
 
-        return response($this->image->encode($encoder)->toString(), 200)
-            ->header('Content-Type', $mime)
-            ->header('Cache-Control', "public, max-age={$cacheAgeSeconds}, s-maxage={$cacheAgeSeconds}, immutable");
+        return [$this->image->encode($encoder)->toString(), $mime];
+    }
+
+    private static function cacheRoot(): string
+    {
+        return storage_path('framework/images');
+    }
+
+    private static function cacheFile(string $options, string $path): string
+    {
+        return self::cacheRoot().'/'.hash('sha256', $path).'/'.hash('sha256', $options).'.'.self::formatFromOptions($options);
+    }
+
+    private static function formatFromOptions(string $options): string
+    {
+        return preg_match('/(?:^|,)fm=(png|gif|webp)(?:,|$)/', $options, $matches) === 1 ? $matches[1] : 'jpg';
+    }
+
+    private static function fileResponse(string $file, string $format, int $cacheAgeSeconds = 30 * 86400): BinaryFileResponse
+    {
+        $mime = match ($format) {
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => 'image/jpeg',
+        };
+
+        return response()->file($file, [
+            'Content-Type' => $mime,
+            'Cache-Control' => "public, max-age={$cacheAgeSeconds}, s-maxage={$cacheAgeSeconds}, immutable",
+        ]);
     }
 
     /**

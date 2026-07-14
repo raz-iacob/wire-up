@@ -10,6 +10,7 @@ use App\Models\Mediable;
 use App\Models\Page;
 use App\Models\Settings;
 use App\Services\ImageService;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 test('to array', function (): void {
@@ -100,7 +101,7 @@ it('returns image preview URL for image media type', function (): void {
         'source' => 'photos/test-image.jpg',
     ])->fresh();
 
-    $expectedPreviewUrl = route('image.show', ['w=350,h=200', 'photos/test-image.jpg']);
+    $expectedPreviewUrl = ImageService::url('w=350,h=200', 'photos/test-image.jpg');
 
     expect($media->preview)->toBe($expectedPreviewUrl);
 });
@@ -111,7 +112,7 @@ it('returns a medium uncropped source URL for image crop editing', function (): 
         'source' => 'photos/test-image.jpg',
     ])->fresh();
 
-    expect($media->cropSrc)->toBe(route('image.show', ['w=1200', 'photos/test-image.jpg']));
+    expect($media->cropSrc)->toBe(ImageService::url('w=1200', 'photos/test-image.jpg'));
 });
 
 it('returns a placeholder crop source for non-image media types', function (): void {
@@ -130,7 +131,7 @@ it('returns video preview URL for video media type when thumbnail is not null', 
         'thumbnail' => 'videos/test-video.mp4',
     ])->fresh();
 
-    $expectedPreviewUrl = route('image.show', ['w=350,h=200', 'videos/test-video.mp4']);
+    $expectedPreviewUrl = ImageService::url('w=350,h=200', 'videos/test-video.mp4');
 
     expect($media->preview)->toBe($expectedPreviewUrl);
 });
@@ -283,4 +284,17 @@ it('prevents deletion when media is used in site settings', function (): void {
 
     expect($media->delete())->toBeFalse()
         ->and(Media::query()->whereKey($media->id)->exists())->toBeTrue();
+});
+
+it('purges cached image variants when the media is deleted', function (): void {
+    Storage::fake(config('filesystems.media'));
+
+    $media = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'photos/purge-me.jpg']);
+
+    $dir = storage_path('framework/images/'.hash('sha256', 'photos/purge-me.jpg'));
+    File::ensureDirectoryExists($dir);
+    File::put($dir.'/variant.jpg', 'cached');
+
+    expect($media->delete())->toBeTrue()
+        ->and(File::isDirectory($dir))->toBeFalse();
 });

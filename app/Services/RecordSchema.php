@@ -226,7 +226,7 @@ final readonly class RecordSchema
             $options[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
         }
 
-        return route('image.show', ['options' => implode(',', $options), 'path' => $media->source]);
+        return ImageService::url(implode(',', $options), $media->source);
     }
 
     private function value(Record $record, string $key): mixed

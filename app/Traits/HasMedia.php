@@ -61,10 +61,8 @@ trait HasMedia
         $media ??= $this->findImage($role, $crop);
 
         return $media ?
-            route('image.show', [
-                'options' => $this->cropString([...($media->pivot->crop[$crop] ?? []), ...$params]),
-                'path' => $media->source,
-            ]) : ($fallback ? ImageService::placeholder() : null);
+            ImageService::url($this->cropString([...($media->pivot->crop[$crop] ?? []), ...$params]), $media->source)
+            : ($fallback ? ImageService::placeholder() : null);
     }
 
     /**

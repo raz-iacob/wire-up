@@ -18,4 +18,17 @@ return [
 
     'max_upload_kilobytes' => env('MEDIA_MAX_UPLOAD_KILOBYTES'),
 
+    /*
+    |---------------------------------------------------------------------------
+    | Transform Cache Size
+    |---------------------------------------------------------------------------
+    |
+    | Transformed image variants are cached under storage/framework/images so
+    | repeat requests skip the resize work. The daily prune keeps the cache
+    | under this many megabytes by deleting the least recently used variants.
+    |
+    */
+
+    'transform_cache_max_megabytes' => (int) env('MEDIA_TRANSFORM_CACHE_MAX_MEGABYTES', 512),
+
 ];

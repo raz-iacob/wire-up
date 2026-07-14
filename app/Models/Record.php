@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\ContentStatus;
 use App\Enums\FieldType;
 use App\Enums\MediaType;
+use App\Services\ImageService;
 use App\Services\SettingsService;
 use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
@@ -206,7 +207,7 @@ final class Record extends Model
                     $options[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
                 }
 
-                return route('image.show', ['options' => implode(',', $options), 'path' => $media->source]);
+                return ImageService::url(implode(',', $options), $media->source);
             }
         }
 

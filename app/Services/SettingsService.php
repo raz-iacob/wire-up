@@ -334,10 +334,7 @@ final class SettingsService
             );
         }
 
-        return route('image.show', [
-            'options' => implode(',', $options),
-            'path' => $source,
-        ]);
+        return ImageService::url(implode(',', $options), $source);
     }
 
     public function faviconUrl(string $crop = 'default'): ?string
@@ -713,12 +710,10 @@ final class SettingsService
         $crops = is_array($item['crop'] ?? null) ? $item['crop'] : [];
         $variant = is_array($crops[$crop] ?? null) ? $crops[$crop] : null;
 
-        return route('image.show', [
-            'options' => $variant !== null
-                ? $this->cropString([...$variant, ...$params])
-                : $this->scaleString($params),
-            'path' => $source,
-        ]);
+        return ImageService::url(
+            $variant !== null ? $this->cropString([...$variant, ...$params]) : $this->scaleString($params),
+            $source,
+        );
     }
 
     /**

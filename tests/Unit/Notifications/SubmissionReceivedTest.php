@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Settings;
 use App\Models\Submission;
 use App\Notifications\SubmissionReceived;
+use App\Services\ImageService;
 use App\Services\SlackWebhookChannel;
 use Illuminate\Mail\Markdown;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -157,7 +158,7 @@ it('shows the header logo in the mail when it is a raster image', function (): v
     $submission = Submission::factory()->create();
     $html = (string) new SubmissionReceived($submission)->toMail(new AnonymousNotifiable)->render();
 
-    expect($html)->toContain('<img src="'.route('image.show', ['options' => 'h=100,q=80,fm=png', 'path' => 'media/logo.png']).'"');
+    expect($html)->toContain('<img src="'.ImageService::url('h=100,q=80,fm=png', 'media/logo.png').'"');
 });
 
 it('shows the wire-up logo in the mail when no header logo is set', function (): void {
@@ -173,7 +174,7 @@ it('falls back to the brand name in the mail for an svg logo', function (): void
     $submission = Submission::factory()->create();
     $html = (string) new SubmissionReceived($submission)->toMail(new AnonymousNotifiable)->render();
 
-    expect($html)->not->toContain('<img src="'.route('image.show', ['options' => 'h=100,q=80,fm=png', 'path' => 'media/logo.svg']).'"')
+    expect($html)->not->toContain('<img src="'.ImageService::url('h=100,q=80,fm=png', 'media/logo.svg').'"')
         ->and($html)->not->toContain(asset('images/wire-up-mail-logo.png'))
         ->and($html)->toContain('Acme Studio');
 });

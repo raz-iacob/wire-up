@@ -82,8 +82,11 @@ final class Media extends Model
             parent::delete();
 
             Storage::disk(config('filesystems.media'))->delete($this->source);
+            ImageService::purgeCache($this->source);
+
             if ($this->thumbnail) {
                 Storage::disk(config('filesystems.media'))->delete($this->thumbnail);
+                ImageService::purgeCache($this->thumbnail);
             }
 
             return true;
@@ -145,8 +148,8 @@ final class Media extends Model
     {
         return Attribute::make(
             get: fn (): string => match ($this->type) {
-                MediaType::IMAGE => route('image.show', ['w=350,h=200', $this->source]),
-                default => $this->thumbnail ? route('image.show', ['w=350,h=200', $this->thumbnail]) : ImageService::placeholder(),
+                MediaType::IMAGE => ImageService::url('w=350,h=200', $this->source),
+                default => $this->thumbnail ? ImageService::url('w=350,h=200', $this->thumbnail) : ImageService::placeholder(),
             }
         );
     }
@@ -158,7 +161,7 @@ final class Media extends Model
     {
         return Attribute::make(
             get: fn (): string => $this->type === MediaType::IMAGE
-                ? route('image.show', ['w=1200', $this->source])
+                ? ImageService::url('w=1200', $this->source)
                 : ImageService::placeholder()
         );
     }

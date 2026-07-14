@@ -456,20 +456,17 @@ return new class extends Component
 
                             $previewSrc = $item['preview'] ?? null;
                             if ($isCroppable && $storedCrop && ! empty($item['source'])) {
-                                $previewSrc = route('image.show', [
-                                    'options' => sprintf(
-                                        'w=%d,h=%d,crop=%d-%d-%d-%d,q=%d,fm=%s',
-                                        $storedCrop['w'] ?? ($primaryDef['w'] ?? 1200),
-                                        $storedCrop['h'] ?? ($primaryDef['h'] ?? 630),
-                                        $storedCrop['crop_w'] ?? 0,
-                                        $storedCrop['crop_h'] ?? 0,
-                                        $storedCrop['crop_x'] ?? 0,
-                                        $storedCrop['crop_y'] ?? 0,
-                                        $storedCrop['q'] ?? 80,
-                                        $storedCrop['fm'] ?? 'jpg',
-                                    ),
-                                    'path' => $item['source'],
-                                ]);
+                                $previewSrc = \App\Services\ImageService::url(sprintf(
+                                    'w=%d,h=%d,crop=%d-%d-%d-%d,q=%d,fm=%s',
+                                    $storedCrop['w'] ?? ($primaryDef['w'] ?? 1200),
+                                    $storedCrop['h'] ?? ($primaryDef['h'] ?? 630),
+                                    $storedCrop['crop_w'] ?? 0,
+                                    $storedCrop['crop_h'] ?? 0,
+                                    $storedCrop['crop_x'] ?? 0,
+                                    $storedCrop['crop_y'] ?? 0,
+                                    $storedCrop['q'] ?? 80,
+                                    $storedCrop['fm'] ?? 'jpg',
+                                ), $item['source']);
                             }
                         @endphp
                         <div

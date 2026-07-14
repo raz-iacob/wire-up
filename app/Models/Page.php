@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ContentStatus;
+use App\Services\ImageService;
 use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
 use App\Traits\HasMedia;
@@ -146,9 +147,6 @@ final class Page extends Model
             $optionParts[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
         }
 
-        return route('image.show', [
-            'options' => implode(',', $optionParts),
-            'path' => $image['source'],
-        ]);
+        return ImageService::url(implode(',', $optionParts), $image['source']);
     }
 }

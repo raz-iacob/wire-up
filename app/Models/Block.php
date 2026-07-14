@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\BlockType;
+use App\Services\ImageService;
 use App\Services\SettingsService;
 use Carbon\CarbonInterface;
 use Database\Factories\BlockFactory;
@@ -138,10 +139,7 @@ final class Block extends Model
             $optionParts[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
         }
 
-        return route('image.show', [
-            'options' => implode(',', $optionParts),
-            'path' => $image['source'],
-        ]);
+        return ImageService::url(implode(',', $optionParts), $image['source']);
     }
 
     public function imageAlt(string $field = 'image'): string
@@ -189,7 +187,7 @@ final class Block extends Model
             $params['fm'] ?? 'jpg',
         );
 
-        return route('image.show', ['options' => $options, 'path' => $thumbnail]);
+        return ImageService::url($options, $thumbnail);
     }
 
     public function fileUrl(string $field): ?string

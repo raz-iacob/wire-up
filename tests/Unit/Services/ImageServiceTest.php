@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Services\ImageService;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function (): void {
@@ -60,14 +59,13 @@ it('applies crop and scale options', function (): void {
     expect($service)->toBeInstanceOf(ImageService::class);
 });
 
-it('returns correct headers and content in response', function (): void {
-    $service = ImageService::make('test-image.jpg')->applyOptions(['w' => 100, 'h' => 100, 'fm' => 'png', 'q' => 90]);
+it('returns the encoded image bytes with their mime type', function (): void {
+    [$contents, $mime] = ImageService::make('test-image.jpg')
+        ->applyOptions(['w' => 100, 'h' => 100, 'fm' => 'png', 'q' => 90])
+        ->encoded();
 
-    $response = $service->response(3600);
-
-    expect($response)->toBeInstanceOf(Response::class)
-        ->and($response->headers->get('Content-Type'))->toBe('image/png')
-        ->and($response->headers->get('Cache-Control'))->toContain('max-age=3600');
+    expect($mime)->toBe('image/png')
+        ->and($contents)->not->toBe('');
 });
 
 it('handles invalid option string in applyOptionsString', function (): void {
@@ -105,31 +103,25 @@ it('clamps an oversized crop to the image bounds without distortion', function (
     $service = ImageService::make('test-image.jpg')
         ->applyOptions(['crop' => '5059-3372-255-56']);
 
-    $response = $service->response();
+    [$contents] = $service->encoded();
 
-    expect($response->getStatusCode())->toBe(200);
+    expect($contents)->not->toBe('');
 });
 
-it('returns jpeg for unknown format in response', function (): void {
-    $service = ImageService::make('test-image.jpg')->applyOptions(['fm' => 'foo']);
+it('encodes as jpeg for an unknown format', function (): void {
+    [, $mime] = ImageService::make('test-image.jpg')->applyOptions(['fm' => 'foo'])->encoded();
 
-    $response = $service->response(3600);
-
-    expect($response->headers->get('Content-Type'))->toBe('image/jpeg');
+    expect($mime)->toBe('image/jpeg');
 });
 
-it('returns gif for gif format in response', function (): void {
-    $service = ImageService::make('test-image.jpg')->applyOptions(['fm' => 'gif']);
+it('encodes as gif for the gif format', function (): void {
+    [, $mime] = ImageService::make('test-image.jpg')->applyOptions(['fm' => 'gif'])->encoded();
 
-    $response = $service->response(3600);
-
-    expect($response->headers->get('Content-Type'))->toBe('image/gif');
+    expect($mime)->toBe('image/gif');
 });
 
-it('returns webp for webp format in response', function (): void {
-    $service = ImageService::make('test-image.jpg')->applyOptions(['fm' => 'webp', 'q' => 75]);
+it('encodes as webp for the webp format', function (): void {
+    [, $mime] = ImageService::make('test-image.jpg')->applyOptions(['fm' => 'webp', 'q' => 75])->encoded();
 
-    $response = $service->response(3600);
-
-    expect($response->headers->get('Content-Type'))->toBe('image/webp');
+    expect($mime)->toBe('image/webp');
 });

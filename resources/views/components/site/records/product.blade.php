@@ -12,7 +12,7 @@
             $options[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
         }
 
-        return route('image.show', ['options' => implode(',', $options), 'path' => $media->source]);
+        return \App\Services\ImageService::url(implode(',', $options), $media->source);
     };
 
     $galleryItems = collect($record->fieldMedia('gallery', false))
@@ -22,11 +22,11 @@
             return [
                 'type' => $isVideo ? 'video' : 'image',
                 'poster' => $isVideo
-                    ? ($media->thumbnail ? route('image.show', ['w=900', $media->thumbnail]) : \App\Services\ImageService::placeholder())
+                    ? ($media->thumbnail ? \App\Services\ImageService::url('w=900', $media->thumbnail) : \App\Services\ImageService::placeholder())
                     : $imageUrl($media, 900),
                 'full' => $isVideo ? $media->url : $imageUrl($media, 1600),
                 'thumb' => $isVideo
-                    ? ($media->thumbnail ? route('image.show', ['w=200', $media->thumbnail]) : \App\Services\ImageService::placeholder())
+                    ? ($media->thumbnail ? \App\Services\ImageService::url('w=200', $media->thumbnail) : \App\Services\ImageService::placeholder())
                     : $imageUrl($media, 200),
                 'alt' => $media->alt_text ?? '',
                 'caption' => (string) (is_array($media->pivot->metadata ?? null) ? ($media->pivot->metadata['caption'] ?? '') : ''),
