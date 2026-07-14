@@ -325,3 +325,107 @@ it('omits the custom code wrappers when nothing is configured', function (): voi
         ->assertDontSee('window.headMarker', false)
         ->assertDontSee('window.bodyMarker', false);
 });
+
+it('hydrates the saved AI Assistant settings on mount', function (): void {
+    Settings::set([
+        'ai_provider' => 'anthropic',
+        'ai_api_key' => 'sk-ant-saved',
+        'ai_model' => 'claude-sonnet-5',
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->assertSet('ai_provider', 'anthropic')
+        ->assertSet('ai_api_key', 'sk-ant-saved')
+        ->assertSet('ai_model', 'claude-sonnet-5');
+});
+
+it('defaults the AI Assistant to anthropic and opus when unset', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->assertSet('ai_provider', 'anthropic')
+        ->assertSet('ai_model', 'claude-opus-4-8');
+});
+
+it('connects the AI Assistant by persisting provider, key and model', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('ai_provider', 'anthropic')
+        ->set('ai_api_key', '  sk-ant-new  ')
+        ->set('ai_model', '  claude-opus-4-8  ')
+        ->call('connectAssistant')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('ai_provider'))->toBe('anthropic')
+        ->and(Settings::get('ai_api_key'))->toBe('  sk-ant-new  ')
+        ->and(Settings::get('ai_model'))->toBe('claude-opus-4-8');
+});
+
+it('requires an api key and a known provider to connect the AI Assistant', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('ai_provider', 'cohere')
+        ->set('ai_api_key', '')
+        ->set('ai_model', 'x')
+        ->call('connectAssistant')
+        ->assertHasErrors(['ai_provider', 'ai_api_key']);
+});
+
+it('connects the AI Assistant with the gemini provider', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('ai_provider', 'gemini')
+        ->set('ai_api_key', 'gemini-key')
+        ->set('ai_model', 'gemini-model-name')
+        ->call('connectAssistant')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('ai_provider'))->toBe('gemini')
+        ->and(Settings::get('ai_model'))->toBe('gemini-model-name');
+});
+
+it('bridges the saved gemini key into the ai config at boot', function (): void {
+    Settings::set(['ai_provider' => 'gemini', 'ai_api_key' => 'gemini-db-key']);
+
+    new AppServiceProvider(app())->boot();
+
+    expect(config('ai.default'))->toBe('gemini')
+        ->and(config('ai.providers.gemini.key'))->toBe('gemini-db-key');
+});
+
+it('disconnects the AI Assistant by clearing only the api key', function (): void {
+    Settings::set(['ai_provider' => 'anthropic', 'ai_api_key' => 'sk-ant-x', 'ai_model' => 'claude-opus-4-8']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->call('disconnect', 'assistant')
+        ->assertHasNoErrors()
+        ->assertSet('ai_api_key', '');
+
+    expect(Settings::get('ai_api_key'))->toBe('')
+        ->and(Settings::get('ai_model'))->toBe('claude-opus-4-8');
+});
+
+it('bridges the saved AI provider key into the ai config at boot', function (): void {
+    Settings::set(['ai_provider' => 'anthropic', 'ai_api_key' => 'sk-ant-db']);
+
+    new AppServiceProvider(app())->boot();
+
+    expect(config('ai.default'))->toBe('anthropic')
+        ->and(config('ai.providers.anthropic.key'))->toBe('sk-ant-db');
+});
+
+it('does not touch the ai config when no assistant key is saved', function (): void {
+    Settings::set(['ai_api_key' => '']);
+    config()->set('ai.default', 'openai');
+
+    new AppServiceProvider(app())->boot();
+
+    expect(config('ai.default'))->toBe('openai');
+});

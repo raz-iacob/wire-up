@@ -41,3 +41,13 @@ it('builds dotted ability keys for every resource action', function (): void {
     expect(PermissionRegistry::isValidAbility('pages.view'))->toBeTrue();
     expect(PermissionRegistry::isValidAbility('pages.publish'))->toBeFalse();
 });
+
+it('registers the assistant.use ability under administration', function (): void {
+    $assistant = collect(PermissionRegistry::resources())->firstWhere('key', 'assistant');
+
+    expect($assistant)->not->toBeNull()
+        ->and($assistant['group'])->toBe(PermissionRegistry::GROUP_ADMINISTRATION)
+        ->and($assistant['actions'])->toBe(['use'])
+        ->and(PermissionRegistry::abilityKeys())->toContain('assistant.use')
+        ->and(PermissionRegistry::isValidAbility('assistant.use'))->toBeTrue();
+});

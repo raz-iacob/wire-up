@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PermissionAction;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
@@ -112,4 +113,13 @@ it('will not delete a protected role', function (): void {
     $component->call('confirmRemove', $ownerKey);
 
     expect($component->get('removeKey'))->toBeNull();
+});
+
+it('labels crud and non-crud (assistant "use") actions in the roles builder', function (): void {
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.settings-roles');
+
+    expect($component->instance()->actionLabel('view'))->toBe(PermissionAction::View->label())
+        ->and($component->instance()->actionLabel('use'))->toBe(__('Use'));
 });

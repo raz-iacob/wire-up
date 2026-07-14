@@ -21,9 +21,29 @@ return new class extends Component
 
     public string $slack_webhook_url = '';
 
+    public string $ai_provider = 'anthropic';
+
+    public string $ai_api_key = '';
+
+    public string $ai_model = 'claude-opus-4-8';
+
     public string $head_scripts = '';
 
     public string $body_scripts = '';
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public function aiModels(): array
+    {
+        return [
+            'anthropic' => [
+                'claude-opus-4-8' => 'Claude Opus 4.8 — '.__('most capable'),
+                'claude-sonnet-5' => 'Claude Sonnet 5 — '.__('balanced'),
+                'claude-haiku-4-5' => 'Claude Haiku 4.5 — '.__('fastest'),
+            ],
+        ];
+    }
 
     public function mount(): void
     {
@@ -33,6 +53,9 @@ return new class extends Component
         $this->google_analytics_credentials = is_string(config('site.google_analytics_credentials')) ? config()->string('site.google_analytics_credentials') : '';
         $this->google_maps_api_key = is_string(config('site.google_maps_api_key')) ? config()->string('site.google_maps_api_key') : '';
         $this->slack_webhook_url = is_string(config('site.slack_webhook_url')) ? config()->string('site.slack_webhook_url') : '';
+        $this->ai_provider = in_array(config('site.ai_provider'), ['anthropic', 'openai', 'gemini'], true) ? config()->string('site.ai_provider') : 'anthropic';
+        $this->ai_api_key = is_string(config('site.ai_api_key')) ? config()->string('site.ai_api_key') : '';
+        $this->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : 'claude-opus-4-8';
         $this->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
         $this->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
     }
@@ -133,6 +156,31 @@ return new class extends Component
         Flux::toast(__('Slack connected.'), variant: 'success');
     }
 
+    public function connectAssistant(UpdateSettingsAction $action): void
+    {
+        $this->authorize('settings.edit');
+
+        $validated = $this->validate([
+            'ai_provider' => ['required', 'string', 'in:anthropic,openai,gemini'],
+            'ai_api_key' => ['required', 'string', 'max:255'],
+            'ai_model' => ['required', 'string', 'max:100'],
+        ], [], [
+            'ai_api_key' => __('API key'),
+            'ai_model' => __('model'),
+        ]);
+
+        $action->handle([
+            'ai_provider' => $validated['ai_provider'],
+            'ai_api_key' => $validated['ai_api_key'],
+            'ai_model' => mb_trim($validated['ai_model']),
+        ]);
+
+        $this->dispatch('integrations-updated');
+
+        Flux::modal('integration-assistant')->close();
+        Flux::toast(__('AI Assistant connected.'), variant: 'success');
+    }
+
     public function disconnect(string $integration, UpdateSettingsAction $action): void
     {
         $this->authorize('settings.edit');
@@ -142,6 +190,7 @@ return new class extends Component
             'google-analytics' => ['google_analytics_id', 'google_analytics_property_id', 'google_analytics_credentials'],
             'google-maps' => ['google_maps_api_key'],
             'slack' => ['slack_webhook_url'],
+            'assistant' => ['ai_api_key'],
             default => [],
         };
 
@@ -283,6 +332,25 @@ return new class extends Component
                     <flux:text>{{ __('Get a Slack message when someone submits a form.') }}</flux:text>
                 </div>
             </flux:card>
+
+            @php($assistantConnected = $ai_api_key !== '')
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
+                        <flux:icon name="sparkles" class="size-6 text-accent" />
+                    </div>
+                    <flux:modal.trigger name="integration-assistant">
+                        <flux:button size="sm" :variant="$assistantConnected ? 'primary' : 'outline'" :icon="$assistantConnected ? 'check' : null">
+                            {{ $assistantConnected ? __('Connected') : __('Connect') }}
+                        </flux:button>
+                    </flux:modal.trigger>
+                </div>
+
+                <div class="space-y-1">
+                    <flux:heading size="lg">{{ __('AI Assistant') }}</flux:heading>
+                    <flux:text>{{ __('Let an AI model build and fill your site from a chat — pages, blocks, design and more.') }}</flux:text>
+                </div>
+            </flux:card>
         </div>
 
         <flux:modal name="integration-pexels" class="w-full md:max-w-lg">
@@ -404,6 +472,55 @@ return new class extends Component
                 <div class="flex items-center justify-between gap-4">
                     @if ($slack_webhook_url !== '')
                         <flux:button variant="subtle" wire:click="disconnect('slack')">{{ __('Disconnect') }}</flux:button>
+                    @else
+                        <span></span>
+                    @endif
+                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+
+        <flux:modal name="integration-assistant" class="w-full md:max-w-lg">
+            <form wire:submit="connectAssistant" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Connect the AI Assistant') }}</flux:heading>
+                    <flux:text class="mt-2">{{ __('Choose a provider and paste an API key. The assistant can create pages, edit content, adjust the design and manage menus — it never touches users or app integrations.') }}</flux:text>
+                </div>
+
+                <flux:select wire:model.live="ai_provider" :label="__('Provider')">
+                    <flux:select.option value="anthropic">Claude (Anthropic)</flux:select.option>
+                    <flux:select.option value="openai">OpenAI</flux:select.option>
+                    <flux:select.option value="gemini">Gemini (Google)</flux:select.option>
+                </flux:select>
+
+                <flux:input
+                    wire:model="ai_api_key"
+                    type="password"
+                    viewable
+                    :label="__('API key')"
+                    :placeholder="__('Paste your API key…')"
+                />
+
+                <div x-show="$wire.ai_provider === 'anthropic'">
+                    <flux:select wire:model="ai_model" :label="__('Model')">
+                        @foreach ($this->aiModels()['anthropic'] as $value => $label)
+                            <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                </div>
+
+                <div x-show="$wire.ai_provider !== 'anthropic'" x-cloak>
+                    <flux:input
+                        wire:model="ai_model"
+                        :label="__('Model')"
+                        :placeholder="__('e.g. the model name from your provider account')"
+                        :description="__('Enter the exact model identifier your provider gives you.')"
+                    />
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    @if ($ai_api_key !== '')
+                        <flux:button variant="subtle" wire:click="disconnect('assistant')">{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
                     @endif

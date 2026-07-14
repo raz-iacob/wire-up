@@ -12,6 +12,7 @@
         "php": "^8.5.0",
         "enshrined/svg-sanitize": "^0.22.0",
         "intervention/image": "^3.11.8",
+        "laravel/ai": "^0.9",
         "laravel/framework": "^13.19.0",
         "league/html-to-markdown": "^5.1.1",
         "livewire/blaze": "^1.0.12",

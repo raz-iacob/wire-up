@@ -16,3 +16,14 @@ it('finds a preset by key', function (): void {
 it('returns null for an unknown preset key', function (): void {
     expect(RolePresets::find('does-not-exist'))->toBeNull();
 });
+
+it('grants assistant.use to admin but not to editor or author', function (): void {
+    $abilities = fn (string $key): array => collect(RolePresets::all())->firstWhere('key', $key)['abilities'];
+
+    expect($abilities('admin'))->toContain('assistant.use')
+        ->and($abilities('editor'))->not->toContain('assistant.use')
+        ->and($abilities('author'))->not->toContain('assistant.use')
+        ->and($abilities('member'))->not->toContain('assistant.use');
+
+    expect(RolePresets::find('owner')['bypass'])->toBeTrue();
+});

@@ -45,7 +45,7 @@ return new class extends Component
 
     public function actionLabel(string $action): string
     {
-        return PermissionAction::from($action)->label();
+        return PermissionAction::tryFrom($action)?->label() ?? __(ucfirst($action));
     }
 
     public function addRole(): void

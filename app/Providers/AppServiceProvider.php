@@ -86,6 +86,14 @@ final class AppServiceProvider extends ServiceProvider
         if (is_string($slackWebhookUrl) && $slackWebhookUrl !== '') {
             config()->set('services.slack.webhook_url', $slackWebhookUrl);
         }
+
+        $aiProvider = config('site.ai_provider');
+        $aiApiKey = config('site.ai_api_key');
+
+        if (is_string($aiProvider) && in_array($aiProvider, ['anthropic', 'openai', 'gemini'], true) && is_string($aiApiKey) && $aiApiKey !== '') {
+            config()->set('ai.default', $aiProvider);
+            config()->set('ai.providers.'.$aiProvider.'.key', $aiApiKey);
+        }
     }
 
     private function configureModels(): void

@@ -61,6 +61,7 @@ final class PermissionRegistry
             ['key' => 'users', 'label' => __('Users'), 'group' => self::GROUP_ADMINISTRATION, 'actions' => $crud],
             ['key' => 'settings', 'label' => __('Settings'), 'group' => self::GROUP_ADMINISTRATION, 'actions' => [PermissionAction::View->value, PermissionAction::Edit->value]],
             ['key' => 'roles', 'label' => __('Roles'), 'group' => self::GROUP_ADMINISTRATION, 'actions' => $crud],
+            ['key' => 'assistant', 'label' => __('AI Assistant'), 'group' => self::GROUP_ADMINISTRATION, 'actions' => ['use']],
         ];
     }
 
