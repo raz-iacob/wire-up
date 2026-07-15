@@ -134,7 +134,7 @@ final class ImageService
 
         abort_if(empty($stream), 404);
 
-        $this->image = $this->manager()->read($stream);
+        $this->image = $this->manager()->decodeStream($stream);
 
         return $this;
     }
@@ -200,18 +200,15 @@ final class ImageService
             $this->image->crop(
                 width: $width,
                 height: $height,
-                offset_x: min($crop['offset_x'], max(0, $imageWidth - $width)),
-                offset_y: min($crop['offset_y'], max(0, $imageHeight - $height)),
+                x: min($crop['offset_x'], max(0, $imageWidth - $width)),
+                y: min($crop['offset_y'], max(0, $imageHeight - $height)),
             );
         }
 
         if (Arr::hasAny($options, ['w', 'h'])) {
-            $w = isset($options['w']) ? min((int) $options['w'], 1920) : null;
-            $h = isset($options['h']) ? min((int) $options['h'], 1920) : null;
-
-            $this->image->scale(
-                width: $w && $w < $this->image->width() ? $w : null,
-                height: $h && $h < $this->image->height() ? $h : null,
+            $this->image->scaleDown(
+                width: isset($options['w']) ? min((int) $options['w'], 1920) : null,
+                height: isset($options['h']) ? min((int) $options['h'], 1920) : null,
             );
         }
 

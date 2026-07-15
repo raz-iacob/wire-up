@@ -11,9 +11,9 @@
     "require": {
         "php": "^8.5.0",
         "enshrined/svg-sanitize": "^0.22.0",
-        "intervention/image": "^3.11.8",
-        "laravel/ai": "^0.9",
-        "laravel/framework": "^13.19.0",
+        "intervention/image": "^4.2",
+        "laravel/ai": "^0.9.1",
+        "laravel/framework": "^13.20.0",
         "league/html-to-markdown": "^5.1.1",
         "livewire/blaze": "^1.0.12",
         "livewire/flux": "^2.15.0",
@@ -38,7 +38,7 @@
         "pestphp/pest-plugin-browser": "^4.3.1",
         "pestphp/pest-plugin-laravel": "^4.1",
         "pestphp/pest-plugin-type-coverage": "^4.0.4",
-        "rector/rector": "^2.5.5"
+        "rector/rector": "^2.5.7"
     },
     "autoload": {
         "psr-4": {

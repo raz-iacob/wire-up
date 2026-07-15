@@ -27,7 +27,7 @@ it('can grab an image from storage and apply optional formatting', function (): 
     $this->assertSame('image/webp', $response->headers->get('Content-Type'));
 
     $manager = new ImageManager(new GdDriver);
-    $image = $manager->read($response->getFile()->getContent());
+    $image = $manager->decodeBinary($response->getFile()->getContent());
 
     expect($image->width())->toBeLessThanOrEqual(50)
         ->and($image->height())->toBeLessThanOrEqual(50)
