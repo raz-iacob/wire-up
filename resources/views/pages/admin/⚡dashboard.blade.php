@@ -188,7 +188,6 @@ return new class extends Component
 
 <div class="space-y-6 md:space-y-8">
     @php
-        $media = $this->mediaStats();
         $new = $this->newInPeriod();
     @endphp
 
@@ -217,7 +216,9 @@ return new class extends Component
         @endif
     @endcan
 
+    @island
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        @php($media = $this->mediaStats())
         <flux:card class="flex items-center gap-4">
             <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
                 <flux:icon name="document-check" class="size-6" />
@@ -262,8 +263,10 @@ return new class extends Component
             </div>
         </flux:card>
     </div>
+    @endisland
 
     <div class="grid gap-6 lg:grid-cols-3">
+        @island
         <div class="space-y-6 lg:col-span-2">
             <flux:card class="space-y-4">
                 <flux:heading size="lg">{{ __('Content') }}</flux:heading>
@@ -318,8 +321,10 @@ return new class extends Component
                 @endif
             </flux:card>
         </div>
+        @endisland
 
         <div class="space-y-6">
+            @island
             @can('inbox.view')
                 <flux:card class="space-y-4">
                     <div class="flex items-center justify-between">
@@ -370,6 +375,7 @@ return new class extends Component
                     @endif
                 </flux:card>
             @endcan
+            @endisland
 
             <flux:card class="space-y-4">
                 <flux:heading size="lg">{{ __('New this period') }}</flux:heading>
