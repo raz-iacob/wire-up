@@ -114,6 +114,17 @@ it('creates and publishes a page in one call', function (): void {
         ->and($page->published_at)->not->toBeNull();
 });
 
+it('refuses to create a page whose title already exists', function (): void {
+    $existing = Page::factory()->create(['title' => 'Duplicate Me']);
+    $before = Page::query()->count();
+
+    WireUpServer::tool(CreatePageTool::class, ['title' => 'Duplicate Me'])
+        ->assertHasErrors()
+        ->assertSee('already exists (id '.$existing->id.')');
+
+    expect(Page::query()->count())->toBe($before);
+});
+
 it('rejects unknown block types with a friendly message', function (): void {
     $before = Page::query()->count();
 

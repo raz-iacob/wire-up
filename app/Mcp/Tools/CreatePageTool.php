@@ -8,7 +8,9 @@ use App\Actions\CreatePageAction;
 use App\Actions\UpdatePageAction;
 use App\Enums\ContentStatus;
 use App\Mcp\Support\Pages;
+use App\Models\Page;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -37,6 +39,18 @@ final class CreatePageTool extends Tool
                 ...Pages::blockMessages(),
             ],
         );
+
+        $existing = Page::query()
+            ->whereHas('translations', function (Builder $query) use ($validated): void {
+                $query->where('key', 'title')
+                    ->where('locale', app()->getLocale())
+                    ->where('body', $validated['title']);
+            })
+            ->first();
+
+        if ($existing !== null) {
+            return Response::error("A page titled \"{$validated['title']}\" already exists (id {$existing->id}). Update it with update-page-blocks instead of creating a duplicate, or choose a different title.");
+        }
 
         $page = new CreatePageAction()->handle([
             'title' => $validated['title'],
