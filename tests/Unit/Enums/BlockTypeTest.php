@@ -32,7 +32,7 @@ it('sorts every case alphabetically by label', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'collection', 'search', 'buttons', 'audio', 'downloads', 'rich-text', 'stats', 'team', 'pricing', 'contact-form', 'spacer', 'divider']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'collection', 'search', 'buttons', 'audio', 'downloads', 'rich-text', 'code', 'stats', 'team', 'pricing', 'contact-form', 'spacer', 'divider']);
 });
 
 it('seeds the divider default content and has no anchor', function (): void {
@@ -54,6 +54,23 @@ it('seeds the rich text default content shape', function (): void {
 it('derives the rich text title from the heading, falling back to the label', function (): void {
     expect(BlockType::RICH_TEXT->editorTitle(['heading' => ['en' => '<p>Our story</p>']], 'en'))->toBe('Our story');
     expect(BlockType::RICH_TEXT->editorTitle([], 'en'))->toBe('Rich Text');
+});
+
+it('seeds the code default content shape', function (): void {
+    expect(BlockType::CODE->defaultContent())->toBe([
+        'code' => '',
+        'language' => 'php',
+        'filename' => '',
+        'wrap' => false,
+        'hasBackground' => false,
+        'heading' => [],
+        'intro' => [],
+    ]);
+});
+
+it('derives the code title from the heading, falling back to the label', function (): void {
+    expect(BlockType::CODE->editorTitle(['heading' => ['en' => '<p>Install steps</p>']], 'en'))->toBe('Install steps');
+    expect(BlockType::CODE->editorTitle([], 'en'))->toBe('Code');
 });
 
 it('seeds the stats default content shape', function (): void {

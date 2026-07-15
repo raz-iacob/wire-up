@@ -56,6 +56,40 @@ it('renders an inline badge span from rich-text content on the public page', fun
         ->assertSee('For Children');
 });
 
+it('renders a code block with escaped code, a language class, filename and copy control', function (): void {
+    publishPageWithBlocks('code-page', [
+        ['id' => 'new-1', 'type' => 'code', 'content' => [
+            'code' => "<?php\necho 'hi <script>';",
+            'language' => 'php',
+            'filename' => 'app/Demo.php',
+            'wrap' => false,
+        ]],
+    ]);
+
+    $this->get(route('page', 'code-page'))
+        ->assertOk()
+        ->assertSee('class="language-php"', false)
+        ->assertSee('data-highlight', false)
+        ->assertSee('app/Demo.php')
+        ->assertSee('&lt;?php', false)
+        ->assertSee('&lt;script&gt;', false)
+        ->assertSee('Copy');
+});
+
+it('falls back to a safe language token when the code language is invalid', function (): void {
+    publishPageWithBlocks('code-lang-page', [
+        ['id' => 'new-1', 'type' => 'code', 'content' => [
+            'code' => 'echo 1;',
+            'language' => 'php" onload="alert(1)',
+        ]],
+    ]);
+
+    $this->get(route('page', 'code-lang-page'))
+        ->assertOk()
+        ->assertSee('class="language-plaintext"', false)
+        ->assertDontSee('onload="alert', false);
+});
+
 it('renders the contact form block with its present fields and submit label', function (): void {
     publishPageWithBlocks('contact-blocks', [
         ['id' => 'new-1', 'type' => 'contact-form', 'content' => array_replace_recursive(

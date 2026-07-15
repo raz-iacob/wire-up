@@ -24,6 +24,7 @@ enum BlockType: string
     case AUDIO = 'audio';
     case DOWNLOADS = 'downloads';
     case RICH_TEXT = 'rich-text';
+    case CODE = 'code';
     case STATS = 'stats';
     case TEAM = 'team';
     case PRICING = 'pricing';
@@ -69,6 +70,7 @@ enum BlockType: string
             self::AUDIO => __('Audio'),
             self::DOWNLOADS => __('Downloads'),
             self::RICH_TEXT => __('Rich Text'),
+            self::CODE => __('Code'),
             self::STATS => __('Stats'),
             self::TEAM => __('Team'),
             self::PRICING => __('Pricing'),
@@ -97,6 +99,7 @@ enum BlockType: string
             self::AUDIO => 'musical-note',
             self::DOWNLOADS => 'arrow-down-tray',
             self::RICH_TEXT => 'document-text',
+            self::CODE => 'code-bracket',
             self::STATS => 'chart-bar',
             self::TEAM => 'users',
             self::PRICING => 'currency-dollar',
@@ -130,6 +133,7 @@ enum BlockType: string
             self::AUDIO => __('An audio player for a single uploaded track or recording.'),
             self::DOWNLOADS => __('A list of downloadable files such as PDFs, documents or archives.'),
             self::RICH_TEXT => __('A standalone block of formatted text with an optional heading.'),
+            self::CODE => __('A syntax-highlighted code snippet with an optional filename and copy button.'),
             self::STATS => __('Eye-catching numbers or statistics shown in a row.'),
             self::TEAM => __('A grid of team members with a photo, role, bio and social links.'),
             self::PRICING => __('Pricing plans shown side by side, each with features and a button.'),
@@ -320,6 +324,15 @@ enum BlockType: string
                 'width' => 'normal',
                 'align' => 'left',
                 'hasBackground' => false,
+            ],
+            self::CODE => [
+                'code' => '',
+                'language' => 'php',
+                'filename' => '',
+                'wrap' => false,
+                'hasBackground' => false,
+                'heading' => [],
+                'intro' => [],
             ],
             self::STATS => [
                 'columns' => 4,

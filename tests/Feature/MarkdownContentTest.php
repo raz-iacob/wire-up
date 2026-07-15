@@ -98,6 +98,29 @@ it('serves a markdown representation of a page when the request prefers text/mar
         ->not->toContain('<p>');
 });
 
+it('renders a code block as a fenced markdown code block', function (): void {
+    publishMarkdownPage('code-md', [
+        ['id' => 'new-1', 'type' => 'code', 'content' => [
+            'heading' => ['en' => 'Install'],
+            'intro' => ['en' => '<p>Run this first.</p>'],
+            'code' => "composer install\nnpm install",
+            'language' => 'bash',
+        ]],
+        ['id' => 'new-2', 'type' => 'code', 'content' => [
+            'code' => 'echo 1;',
+            'language' => 'not a language',
+        ]],
+    ]);
+
+    $markdown = (string) $this->get(route('page', 'code-md'), ['Accept' => 'text/markdown'])->getContent();
+
+    expect($markdown)
+        ->toContain('## Install')
+        ->toContain('Run this first.')
+        ->toContain("```bash\ncomposer install\nnpm install\n```")
+        ->toContain("```\necho 1;\n```");
+});
+
 it('keeps serving html when the request does not prefer markdown', function (): void {
     publishMarkdownPage('plain', [
         ['id' => 'new-1', 'type' => 'hero', 'content' => ['heading' => ['en' => 'Hello there']]],

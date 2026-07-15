@@ -40,6 +40,7 @@ final readonly class BlockMarkdown
             BlockType::AUDIO => $this->audio($block, $locale),
             BlockType::DOWNLOADS => $this->downloads($block, $locale),
             BlockType::RICH_TEXT => $this->richText($block, $locale),
+            BlockType::CODE => $this->code($block, $locale),
             BlockType::STATS => $this->stats($block, $locale),
             BlockType::TEAM => $this->team($block, $locale),
             BlockType::PRICING => $this->pricing($block, $locale),
@@ -319,6 +320,21 @@ final readonly class BlockMarkdown
         return $this->join([
             $this->heading($block, 'heading', $locale),
             $this->prose($block, 'body', $locale),
+        ]);
+    }
+
+    private function code(Block $block, string $locale): string
+    {
+        $content = $block->content ?? [];
+        $code = mb_rtrim((string) ($content['code'] ?? ''));
+        $language = preg_match('/^[a-z0-9]+$/', (string) ($content['language'] ?? '')) === 1
+            ? (string) $content['language']
+            : '';
+
+        return $this->join([
+            $this->heading($block, 'heading', $locale),
+            $this->prose($block, 'intro', $locale),
+            $code !== '' ? "```{$language}\n{$code}\n```" : '',
         ]);
     }
 
