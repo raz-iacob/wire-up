@@ -37,7 +37,6 @@ it('submits the contact form and shows the inline success state', function (): v
         ->wait(3.5)
         ->press('Send')
         ->waitForText('Got it, thanks!')
-        ->assertSee('Got it, thanks!')
         ->assertNoJavascriptErrors();
 
     $this->assertDatabaseHas('submissions', [
