@@ -9,6 +9,7 @@ use App\Models\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Number;
 
 final class SettingsService
 {
@@ -261,7 +262,7 @@ final class SettingsService
             return '';
         }
 
-        return $this->currencySymbol().number_format((float) $amount, $this->currencyDecimals(), '.', ',');
+        return $this->currencySymbol().Number::format((float) $amount, precision: $this->currencyDecimals());
     }
 
     public function googleAnalyticsId(): string
