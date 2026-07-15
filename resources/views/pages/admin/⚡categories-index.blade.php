@@ -12,6 +12,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -22,6 +23,7 @@ return new class extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Validate(['required', 'string', 'max:255'])]
     public string $name = '';
 
     public ?int $selectedId = null;
@@ -32,9 +34,7 @@ return new class extends Component
     {
         $this->authorize('categories.create');
 
-        $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
+        $this->validate();
 
         $category = $action->handle([
             'name' => [resolve('localization')->getDefaultLocale() => $this->name],

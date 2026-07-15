@@ -15,6 +15,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -30,12 +31,14 @@ return new class extends Component
     #[Url(as: 'status', except: '')]
     public string $status = '';
 
+    #[Validate(['required', 'string', 'max:255'])]
     public string $title = '';
 
     public ?int $selectedId = null;
 
     public ?int $duplicateId = null;
 
+    #[Validate(['required', 'string', 'max:255'])]
     public string $duplicateTitle = '';
 
     public int $perPage = 20;
@@ -51,9 +54,7 @@ return new class extends Component
     {
         $this->authorize('records.'.$this->recordType->key.'.create');
 
-        $this->validate([
-            'title' => ['required', 'string', 'max:255'],
-        ]);
+        $this->validateOnly('title');
 
         $record = $action->handle($this->recordType, [
             'title' => $this->title,
@@ -78,7 +79,7 @@ return new class extends Component
     {
         $this->authorize('records.'.$this->recordType->key.'.create');
 
-        $this->validate(['duplicateTitle' => ['required', 'string', 'max:255']]);
+        $this->validateOnly('duplicateTitle');
 
         $record = Record::query()
             ->where('record_type_id', $this->recordType->id)

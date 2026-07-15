@@ -14,6 +14,7 @@ use App\Actions\DeletePageAction;
 use App\Actions\DuplicatePageAction;
 use App\Services\SettingsService;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Validate;
 use Illuminate\Contracts\View\View;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -28,12 +29,14 @@ return new class extends Component
     #[Url(as: 'status', except: '')]
     public string $status = '';
 
+    #[Validate(['required', 'string', 'max:255'])]
     public string $title = '';
 
     public ?int $selectedId = null;
 
     public ?int $duplicateId = null;
 
+    #[Validate(['required', 'string', 'max:255'])]
     public string $duplicateTitle = '';
 
     public int $perPage = 20;
@@ -42,9 +45,7 @@ return new class extends Component
     {
         $this->authorize('pages.create');
 
-        $this->validate([
-            'title' => ['required', 'string', 'max:255'],
-        ]);
+        $this->validateOnly('title');
 
         $page = $action->handle([
             'title' => $this->title,
@@ -67,7 +68,7 @@ return new class extends Component
     {
         $this->authorize('pages.create');
 
-        $this->validate(['duplicateTitle' => ['required', 'string', 'max:255']]);
+        $this->validateOnly('duplicateTitle');
 
         $copy = $action->handle(Page::query()->findOrFail($this->duplicateId), mb_trim($this->duplicateTitle));
 
