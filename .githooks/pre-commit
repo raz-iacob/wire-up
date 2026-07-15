@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+echo "Running composer test before commit..."
+
+composer test
+status=$?
+
+if [ "$status" -ne 0 ]; then
+    echo
+    echo "composer test failed — commit aborted. Fix the failures or re-run with --no-verify to bypass."
+    exit 1
+fi
