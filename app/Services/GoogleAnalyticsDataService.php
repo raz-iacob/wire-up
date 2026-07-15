@@ -145,7 +145,7 @@ final class GoogleAnalyticsDataService
         return Cache::remember(
             'google-analytics:report:'.hash('sha256', $propertyId.json_encode($payload)),
             now()->addMinutes(30),
-            fn (): array => Http::withToken($this->accessToken())
+            fn (): array => Http::retry(2, 100)->withToken($this->accessToken())
                 ->post(self::DATA_BASE."/properties/{$propertyId}:runReport", $payload)
                 ->throw()
                 ->json() ?? [],
@@ -212,7 +212,7 @@ final class GoogleAnalyticsDataService
 
                 openssl_sign($header.'.'.$claims, $signature, $privateKey, OPENSSL_ALGO_SHA256);
 
-                $token = Http::asForm()
+                $token = Http::retry(2, 100)->asForm()
                     ->post(self::TOKEN_URL, [
                         'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
                         'assertion' => $header.'.'.$claims.'.'.$this->base64UrlEncode($signature),

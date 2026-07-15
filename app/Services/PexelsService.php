@@ -74,7 +74,7 @@ final class PexelsService
         return Cache::remember(
             'pexels:'.$url.'?'.http_build_query($params),
             now()->addMinutes(30),
-            fn (): array => Http::withHeaders(['Authorization' => (string) config('services.pexels.key')])
+            fn (): array => Http::retry(2, 100)->withHeaders(['Authorization' => (string) config('services.pexels.key')])
                 ->get($url, $params)
                 ->throw()
                 ->json() ?? [],

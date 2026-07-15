@@ -32,7 +32,7 @@ final readonly class ImportPexelsMediaAction
             return $alreadyImported;
         }
 
-        $contents = Http::get((string) $item['download_url'])->throw()->body();
+        $contents = Http::retry(2, 100)->get((string) $item['download_url'])->throw()->body();
         $etag = md5($contents);
 
         $existingByEtag = Media::query()->where('etag', $etag)->first();
@@ -53,7 +53,7 @@ final readonly class ImportPexelsMediaAction
         $thumbnail = null;
 
         if ($type === MediaType::VIDEO && ! empty($item['preview'])) {
-            $thumbContents = Http::get((string) $item['preview'])->body();
+            $thumbContents = Http::retry(2, 100)->get((string) $item['preview'])->body();
 
             if ($thumbContents !== '') {
                 $thumbnail = "media/{$uuid}_{$slug}_thumb.jpg";
