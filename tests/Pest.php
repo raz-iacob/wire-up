@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
@@ -18,6 +19,8 @@ pest()->extend(TestCase::class)
         Http::preventStrayRequests();
         Process::preventStrayProcesses();
         Sleep::fake();
+
+        config(['media.cache_path' => storage_path('framework/images/test-'.(ParallelTesting::token() ?: 'single'))]);
 
         $this->freezeTime();
     })

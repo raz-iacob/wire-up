@@ -20,12 +20,24 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Transform Cache Location
+    |---------------------------------------------------------------------------
+    |
+    | Absolute path where transformed image variants are cached. The test suite
+    | overrides this per parallel worker so runs stay isolated on disk.
+    |
+    */
+
+    'cache_path' => storage_path('framework/images'),
+
+    /*
+    |---------------------------------------------------------------------------
     | Transform Cache Size
     |---------------------------------------------------------------------------
     |
-    | Transformed image variants are cached under storage/framework/images so
-    | repeat requests skip the resize work. The daily prune keeps the cache
-    | under this many megabytes by deleting the least recently used variants.
+    | Transformed image variants are cached under the path above so repeat
+    | requests skip the resize work. The daily prune keeps the cache under this
+    | many megabytes by deleting the least recently used variants.
     |
     */
 

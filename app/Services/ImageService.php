@@ -234,7 +234,7 @@ final class ImageService
 
     private static function cacheRoot(): string
     {
-        return storage_path('framework/images');
+        return (string) config('media.cache_path');
     }
 
     private static function cacheFile(string $options, string $path): string

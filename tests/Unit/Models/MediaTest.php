@@ -291,7 +291,7 @@ it('purges cached image variants when the media is deleted', function (): void {
 
     $media = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'photos/purge-me.jpg']);
 
-    $dir = storage_path('framework/images/'.hash('sha256', 'photos/purge-me.jpg'));
+    $dir = config('media.cache_path').'/'.hash('sha256', 'photos/purge-me.jpg');
     File::ensureDirectoryExists($dir);
     File::put($dir.'/variant.jpg', 'cached');
 

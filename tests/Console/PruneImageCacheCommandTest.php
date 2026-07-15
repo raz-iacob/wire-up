@@ -5,12 +5,12 @@ declare(strict_types=1);
 use App\Console\Commands\PruneImageCacheCommand;
 use Illuminate\Support\Facades\File;
 
-beforeEach(fn () => File::deleteDirectory(storage_path('framework/images')));
+beforeEach(fn () => File::deleteDirectory(config('media.cache_path')));
 
-afterEach(fn () => File::deleteDirectory(storage_path('framework/images')));
+afterEach(fn () => File::deleteDirectory(config('media.cache_path')));
 
 it('prunes the oldest cached variants down to the size cap', function (): void {
-    $root = storage_path('framework/images');
+    $root = config('media.cache_path');
     File::ensureDirectoryExists($root.'/a');
     File::put($root.'/a/old.jpg', str_repeat('a', 1024 * 1024));
     touch($root.'/a/old.jpg', time() - 100);

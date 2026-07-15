@@ -12,11 +12,11 @@ use Intervention\Image\ImageManager;
 beforeEach(function (): void {
     Storage::fake(config('filesystems.media'));
     Storage::disk(config('filesystems.media'))->put('test-image.jpg', file_get_contents(__DIR__.'/../Fixtures/test-image.jpg'));
-    File::deleteDirectory(storage_path('framework/images'));
+    File::deleteDirectory(config('media.cache_path'));
 });
 
 afterEach(function (): void {
-    File::deleteDirectory(storage_path('framework/images'));
+    File::deleteDirectory(config('media.cache_path'));
 });
 
 it('can grab an image from storage and apply optional formatting', function (): void {
@@ -52,11 +52,11 @@ it('serves unsigned requests for admins so the admin previews keep working', fun
 it('caches the transformed output and serves repeats from the cache', function (): void {
     $url = ImageService::url('w=50,q=80,fm=webp', 'test-image.jpg');
 
-    expect(File::isDirectory(storage_path('framework/images')))->toBeFalse();
+    expect(File::isDirectory(config('media.cache_path')))->toBeFalse();
 
     $this->get($url)->assertOk();
 
-    $cached = File::allFiles(storage_path('framework/images'));
+    $cached = File::allFiles(config('media.cache_path'));
 
     expect($cached)->toHaveCount(1)
         ->and($cached[0]->getExtension())->toBe('webp');
@@ -65,7 +65,7 @@ it('caches the transformed output and serves repeats from the cache', function (
         ->assertOk()
         ->assertHeader('Content-Type', 'image/webp');
 
-    expect(File::allFiles(storage_path('framework/images')))->toHaveCount(1);
+    expect(File::allFiles(config('media.cache_path')))->toHaveCount(1);
 });
 
 it('serves svg files verbatim with a locked-down content security policy', function (): void {
