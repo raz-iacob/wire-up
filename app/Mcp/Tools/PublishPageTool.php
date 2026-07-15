@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Actions\UpdatePageAction;
+use App\Ai\Contracts\RequiresConfirmation;
 use App\Enums\ContentStatus;
 use App\Mcp\Support\Pages;
 use App\Models\Page;
@@ -18,7 +19,7 @@ use Laravel\Mcp\Server\Tool;
 
 #[Name('publish-page')]
 #[Description('Publish a page so it is publicly visible, or set it back to draft.')]
-final class PublishPageTool extends Tool
+final class PublishPageTool extends Tool implements RequiresConfirmation
 {
     public function handle(Request $request): Response
     {

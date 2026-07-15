@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
 
 final readonly class ImportMediaFromUrlAction
 {
@@ -31,7 +34,16 @@ final readonly class ImportMediaFromUrlAction
 
     public function handle(string $url, string $alt = ''): Media
     {
-        $contents = Http::get($url)->throw()->body();
+        $this->assertPublicUrl($url);
+
+        $contents = Http::withOptions([
+            'allow_redirects' => [
+                'max' => 3,
+                'on_redirect' => function (RequestInterface $request, ResponseInterface $response, UriInterface $uri): void {
+                    $this->assertPublicUrl((string) $uri);
+                },
+            ],
+        ])->timeout(20)->get($url)->throw()->body();
 
         throw_if($contents === '', InvalidArgumentException::class, 'The URL returned an empty response.');
 
@@ -68,5 +80,35 @@ final readonly class ImportMediaFromUrlAction
             'height' => $dimensions !== false ? $dimensions[1] : null,
             'metadata' => ['source' => 'url', 'origin_url' => $url],
         ]);
+    }
+
+    private function assertPublicUrl(string $url): void
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        throw_if(! is_string($host) || $host === '', InvalidArgumentException::class, 'The URL is not valid.');
+
+        foreach ($this->resolveHost(mb_trim($host, '[]')) as $ip) {
+            throw_if(
+                filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false,
+                InvalidArgumentException::class,
+                'For security, only files on public internet addresses can be imported.',
+            );
+        }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function resolveHost(string $host): array
+    {
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            return [$host];
+        }
+
+        $ipv4 = gethostbynamel($host) ?: [];
+        $ipv6 = array_column(dns_get_record($host, DNS_AAAA) ?: [], 'ipv6');
+
+        return array_values(array_filter([...$ipv4, ...$ipv6]));
     }
 }

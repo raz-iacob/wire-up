@@ -126,6 +126,34 @@ it('validates the import url', function (): void {
         ->assertSee('valid http(s) URL');
 });
 
+it('refuses to import from internal or private addresses (SSRF guard)', function (string $url): void {
+    Http::fake();
+
+    WireUpServer::tool(ImportMediaFromUrlTool::class, ['url' => $url])
+        ->assertHasErrors()
+        ->assertSee('public internet addresses');
+
+    Http::assertNothingSent();
+})->with([
+    'loopback' => 'http://127.0.0.1/x.png',
+    'localhost name' => 'http://localhost/x.png',
+    'cloud metadata' => 'http://169.254.169.254/latest/meta-data/',
+    'private range' => 'http://10.0.0.5/x.png',
+    'private range 192' => 'http://192.168.1.1/x.png',
+    'ipv6 loopback' => 'http://[::1]/x.png',
+]);
+
+it('blocks a redirect that points at an internal address', function (): void {
+    Http::fake([
+        'redirect-source.invalid/*' => Http::response('', 302, ['Location' => 'http://169.254.169.254/x.png']),
+        '*' => Http::response(onePixelPng()),
+    ]);
+
+    WireUpServer::tool(ImportMediaFromUrlTool::class, ['url' => 'https://redirect-source.invalid/go'])
+        ->assertHasErrors()
+        ->assertSee('public internet addresses');
+});
+
 it('lists media with an optional type filter', function (): void {
     $image = Media::factory()->create(['type' => MediaType::IMAGE, 'filename' => 'hero-shot.jpg', 'thumbnail' => null, 'duration' => null]);
     Media::factory()->create(['type' => MediaType::DOCUMENT, 'filename' => 'specs.pdf', 'thumbnail' => null, 'duration' => null]);

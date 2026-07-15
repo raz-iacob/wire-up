@@ -162,8 +162,16 @@
         <livewire:admin.record-library />
         @endpersist
 
+        @can('assistant.use')
+            @if (config('site.ai_api_key'))
+                @persist('assistant')
+                <livewire:admin.assistant />
+                @endpersist
+            @endif
+        @endcan
+
         @persist('toast')
-        <flux:toast.group expanded position="bottom end">
+        <flux:toast.group expanded position="top center">
             <flux:toast />
         </flux:toast.group>
         @endpersist

@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 use App\Ai\Agents\SiteAssistant;
 use App\Ai\Contracts\HiddenFromAssistant;
+use App\Ai\Tools\ConfirmationTool;
+use App\Ai\Tools\DraftOnlyTool;
 use App\Ai\Tools\McpResourceTool;
+use App\Enums\ContentStatus;
 use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Tools\CreatePageTool;
 use App\Mcp\Tools\GetPageTool;
+use App\Mcp\Tools\PublishPageTool;
 use App\Models\Page;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
@@ -47,7 +51,9 @@ it('instructs the assistant on the Wire-Up building workflow', function (): void
 
     expect($instructions)->toContain('block-types')
         ->toContain('publish-page')
-        ->toContain('cannot manage users');
+        ->toContain('cannot manage users')
+        ->toContain('untrusted data')
+        ->toContain('private-network');
 });
 
 it('exposes every WireUp tool and the block-types resource to the assistant', function (): void {
@@ -62,11 +68,38 @@ it('exposes every WireUp tool and the block-types resource to the assistant', fu
     ]);
 });
 
-it('hands raw MCP tools to the SDK and wraps resources as no-input read tools', function (): void {
+it('wraps tools for the SDK by their assistant policy', function (): void {
     $tools = collect((new SiteAssistant)->tools());
 
-    expect($tools->first(fn (object $t): bool => $t->name() === 'create-page'))->toBeInstanceOf(CreatePageTool::class)
+    expect($tools->first(fn (object $t): bool => $t->name() === 'get-page'))->toBeInstanceOf(GetPageTool::class)
+        ->and($tools->first(fn (object $t): bool => $t->name() === 'create-page'))->toBeInstanceOf(DraftOnlyTool::class)
+        ->and($tools->first(fn (object $t): bool => $t->name() === 'publish-page'))->toBeInstanceOf(ConfirmationTool::class)
         ->and($tools->first(fn (object $t): bool => $t->name() === 'block-types'))->toBeInstanceOf(McpResourceTool::class);
+});
+
+it('marks only publishing as requiring confirmation', function (): void {
+    expect(SiteAssistant::confirmableToolNames())->toBe(['publish-page'])
+        ->and(SiteAssistant::confirmableToolClass('publish-page'))->toBe(PublishPageTool::class)
+        ->and(SiteAssistant::confirmableToolClass('create-page'))->toBeNull();
+});
+
+it('does not publish when the confirmation tool runs during a stream', function (): void {
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
+
+    $output = new ConfirmationTool(new PublishPageTool)->handle(new ToolRequest(['page' => $page->id]));
+
+    expect($output)->toContain('awaiting_confirmation')
+        ->and($page->refresh()->status)->toBe(ContentStatus::DRAFT);
+});
+
+it('forces the assistant create-page tool to drafts', function (): void {
+    $tool = new DraftOnlyTool(new CreatePageTool);
+
+    expect($tool->schema(new JsonSchemaTypeFactory))->not->toHaveKey('publish');
+
+    $tool->handle(new ToolRequest(['title' => 'Forced Draft', 'publish' => true]));
+
+    expect(Page::query()->latest('id')->firstOrFail()->status)->toBe(ContentStatus::DRAFT);
 });
 
 it('bridges the block-types resource so the assistant can read the catalog', function (): void {
