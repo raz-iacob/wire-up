@@ -3,33 +3,29 @@
 declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
+use App\Livewire\Forms\AssistantIntegrationForm;
+use App\Livewire\Forms\CustomCodeForm;
+use App\Livewire\Forms\GoogleAnalyticsIntegrationForm;
+use App\Livewire\Forms\GoogleMapsIntegrationForm;
+use App\Livewire\Forms\PexelsIntegrationForm;
+use App\Livewire\Forms\SlackIntegrationForm;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 return new class extends Component
 {
-    public string $pexels_api_key = '';
+    public PexelsIntegrationForm $pexelsForm;
 
-    public string $google_analytics_id = '';
+    public GoogleAnalyticsIntegrationForm $googleAnalyticsForm;
 
-    public string $google_analytics_property_id = '';
+    public GoogleMapsIntegrationForm $googleMapsForm;
 
-    public string $google_analytics_credentials = '';
+    public SlackIntegrationForm $slackForm;
 
-    public string $google_maps_api_key = '';
+    public AssistantIntegrationForm $assistantForm;
 
-    public string $slack_webhook_url = '';
-
-    public string $ai_provider = 'anthropic';
-
-    public string $ai_api_key = '';
-
-    public string $ai_model = 'claude-opus-4-8';
-
-    public string $head_scripts = '';
-
-    public string $body_scripts = '';
+    public CustomCodeForm $customCodeForm;
 
     /**
      * @return array<string, array<string, string>>
@@ -47,28 +43,24 @@ return new class extends Component
 
     public function mount(): void
     {
-        $this->pexels_api_key = is_string(config('site.pexels_api_key')) ? config()->string('site.pexels_api_key') : '';
-        $this->google_analytics_id = is_string(config('site.google_analytics_id')) ? config()->string('site.google_analytics_id') : '';
-        $this->google_analytics_property_id = is_string(config('site.google_analytics_property_id')) ? config()->string('site.google_analytics_property_id') : '';
-        $this->google_analytics_credentials = is_string(config('site.google_analytics_credentials')) ? config()->string('site.google_analytics_credentials') : '';
-        $this->google_maps_api_key = is_string(config('site.google_maps_api_key')) ? config()->string('site.google_maps_api_key') : '';
-        $this->slack_webhook_url = is_string(config('site.slack_webhook_url')) ? config()->string('site.slack_webhook_url') : '';
-        $this->ai_provider = in_array(config('site.ai_provider'), ['anthropic', 'openai', 'gemini'], true) ? config()->string('site.ai_provider') : 'anthropic';
-        $this->ai_api_key = is_string(config('site.ai_api_key')) ? config()->string('site.ai_api_key') : '';
-        $this->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : 'claude-opus-4-8';
-        $this->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
-        $this->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
+        $this->pexelsForm->pexels_api_key = is_string(config('site.pexels_api_key')) ? config()->string('site.pexels_api_key') : '';
+        $this->googleAnalyticsForm->google_analytics_id = is_string(config('site.google_analytics_id')) ? config()->string('site.google_analytics_id') : '';
+        $this->googleAnalyticsForm->google_analytics_property_id = is_string(config('site.google_analytics_property_id')) ? config()->string('site.google_analytics_property_id') : '';
+        $this->googleAnalyticsForm->google_analytics_credentials = is_string(config('site.google_analytics_credentials')) ? config()->string('site.google_analytics_credentials') : '';
+        $this->googleMapsForm->google_maps_api_key = is_string(config('site.google_maps_api_key')) ? config()->string('site.google_maps_api_key') : '';
+        $this->slackForm->slack_webhook_url = is_string(config('site.slack_webhook_url')) ? config()->string('site.slack_webhook_url') : '';
+        $this->assistantForm->ai_provider = in_array(config('site.ai_provider'), ['anthropic', 'openai', 'gemini'], true) ? config()->string('site.ai_provider') : 'anthropic';
+        $this->assistantForm->ai_api_key = is_string(config('site.ai_api_key')) ? config()->string('site.ai_api_key') : '';
+        $this->assistantForm->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : 'claude-opus-4-8';
+        $this->customCodeForm->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
+        $this->customCodeForm->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
     }
 
     public function connectPexels(UpdateSettingsAction $action): void
     {
         $this->authorize('settings.edit');
 
-        $validated = $this->validate([
-            'pexels_api_key' => ['required', 'string', 'max:255'],
-        ], [], [
-            'pexels_api_key' => __('Pexels API key'),
-        ]);
+        $validated = $this->pexelsForm->validate();
 
         $action->handle(['pexels_api_key' => $validated['pexels_api_key']]);
 
@@ -80,32 +72,7 @@ return new class extends Component
     {
         $this->authorize('settings.edit');
 
-        $validated = $this->validate([
-            'google_analytics_id' => ['required', 'string', 'max:40', 'regex:/^G-[A-Z0-9]+$/'],
-            'google_analytics_property_id' => ['nullable', 'string', 'max:20', 'regex:/^\d+$/', 'required_with:google_analytics_credentials'],
-            'google_analytics_credentials' => ['nullable', 'string', 'max:10000', 'required_with:google_analytics_property_id', function (string $attribute, mixed $value, \Closure $fail): void {
-                if (! is_string($value) || $value === '') {
-                    return;
-                }
-
-                $decoded = json_decode($value, true);
-                $email = is_array($decoded) ? ($decoded['client_email'] ?? null) : null;
-                $key = is_array($decoded) ? ($decoded['private_key'] ?? null) : null;
-
-                if (! is_string($email) || $email === '' || ! is_string($key) || $key === '') {
-                    $fail(__('Paste the full service account JSON key file.'));
-                }
-            }],
-        ], [
-            'google_analytics_id.regex' => __('Enter a valid Google Analytics measurement ID, like G-XXXXXXXXXX.'),
-            'google_analytics_property_id.regex' => __('Enter the numeric GA4 property ID, like 123456789.'),
-            'google_analytics_property_id.required_with' => __('Add the property ID to enable analytics reports.'),
-            'google_analytics_credentials.required_with' => __('Add the service account JSON to enable analytics reports.'),
-        ], [
-            'google_analytics_id' => __('Google Analytics measurement ID'),
-            'google_analytics_property_id' => __('GA4 property ID'),
-            'google_analytics_credentials' => __('service account JSON'),
-        ]);
+        $validated = $this->googleAnalyticsForm->validate();
 
         $action->handle([
             'google_analytics_id' => $validated['google_analytics_id'],
@@ -123,11 +90,7 @@ return new class extends Component
     {
         $this->authorize('settings.edit');
 
-        $validated = $this->validate([
-            'google_maps_api_key' => ['required', 'string', 'max:255'],
-        ], [], [
-            'google_maps_api_key' => __('Google Maps API key'),
-        ]);
+        $validated = $this->googleMapsForm->validate();
 
         $action->handle(['google_maps_api_key' => $validated['google_maps_api_key']]);
 
@@ -139,16 +102,9 @@ return new class extends Component
     {
         $this->authorize('settings.edit');
 
-        $this->slack_webhook_url = mb_trim($this->slack_webhook_url);
+        $this->slackForm->slack_webhook_url = mb_trim($this->slackForm->slack_webhook_url);
 
-        $validated = $this->validate([
-            'slack_webhook_url' => ['required', 'string', 'max:500', 'url', 'regex:#^https://hooks\.slack\.com/#'],
-        ], [
-            'slack_webhook_url.url' => __('Enter a valid Slack incoming webhook URL.'),
-            'slack_webhook_url.regex' => __('Enter a valid Slack incoming webhook URL, like https://hooks.slack.com/services/…'),
-        ], [
-            'slack_webhook_url' => __('Slack webhook URL'),
-        ]);
+        $validated = $this->slackForm->validate();
 
         $action->handle(['slack_webhook_url' => $validated['slack_webhook_url']]);
 
@@ -160,14 +116,7 @@ return new class extends Component
     {
         $this->authorize('settings.edit');
 
-        $validated = $this->validate([
-            'ai_provider' => ['required', 'string', 'in:anthropic,openai,gemini'],
-            'ai_api_key' => ['required', 'string', 'max:255'],
-            'ai_model' => ['required', 'string', 'max:100'],
-        ], [], [
-            'ai_api_key' => __('API key'),
-            'ai_model' => __('model'),
-        ]);
+        $validated = $this->assistantForm->validate();
 
         $action->handle([
             'ai_provider' => $validated['ai_provider'],
@@ -198,9 +147,14 @@ return new class extends Component
             return;
         }
 
-        foreach ($fields as $field) {
-            $this->{$field} = '';
-        }
+        match ($integration) {
+            'pexels' => $this->pexelsForm->reset('pexels_api_key'),
+            'google-analytics' => $this->googleAnalyticsForm->reset('google_analytics_id', 'google_analytics_property_id', 'google_analytics_credentials'),
+            'google-maps' => $this->googleMapsForm->reset('google_maps_api_key'),
+            'slack' => $this->slackForm->reset('slack_webhook_url'),
+            'assistant' => $this->assistantForm->reset('ai_api_key'),
+            default => null,
+        };
 
         $action->handle(array_fill_keys($fields, ''));
 
@@ -214,13 +168,7 @@ return new class extends Component
     {
         $this->authorize('settings.edit');
 
-        $validated = $this->validate([
-            'head_scripts' => ['nullable', 'string', 'max:50000'],
-            'body_scripts' => ['nullable', 'string', 'max:50000'],
-        ], [], [
-            'head_scripts' => __('custom head code'),
-            'body_scripts' => __('custom body code'),
-        ]);
+        $validated = $this->customCodeForm->validate();
 
         $action->handle([
             'head_scripts' => mb_trim((string) ($validated['head_scripts'] ?? '')),
@@ -242,7 +190,7 @@ return new class extends Component
 <x-admin.settings-layout>
     <div class="space-y-10">
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            @php($pexelsConnected = $pexels_api_key !== '')
+            @php($pexelsConnected = $this->pexelsForm->pexels_api_key !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -264,7 +212,7 @@ return new class extends Component
                 </div>
             </flux:card>
 
-            @php($gaConnected = $google_analytics_id !== '')
+            @php($gaConnected = $this->googleAnalyticsForm->google_analytics_id !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -287,7 +235,7 @@ return new class extends Component
                 </div>
             </flux:card>
 
-            @php($mapsConnected = $google_maps_api_key !== '')
+            @php($mapsConnected = $this->googleMapsForm->google_maps_api_key !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -309,7 +257,7 @@ return new class extends Component
                 </div>
             </flux:card>
 
-            @php($slackConnected = $slack_webhook_url !== '')
+            @php($slackConnected = $this->slackForm->slack_webhook_url !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -333,7 +281,7 @@ return new class extends Component
                 </div>
             </flux:card>
 
-            @php($assistantConnected = $ai_api_key !== '')
+            @php($assistantConnected = $this->assistantForm->ai_api_key !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -361,7 +309,7 @@ return new class extends Component
                 </div>
 
                 <flux:input
-                    wire:model="pexels_api_key"
+                    wire:model="pexelsForm.pexels_api_key"
                     type="password"
                     viewable
                     :label="__('Pexels API key')"
@@ -369,7 +317,7 @@ return new class extends Component
                 />
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($pexels_api_key !== '')
+                    @if ($this->pexelsForm->pexels_api_key !== '')
                         <flux:button variant="subtle" wire:click="disconnect('pexels')">{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
@@ -387,7 +335,7 @@ return new class extends Component
                 </div>
 
                 <flux:input
-                    wire:model="google_analytics_id"
+                    wire:model="googleAnalyticsForm.google_analytics_id"
                     :label="__('Google Analytics measurement ID')"
                     placeholder="G-XXXXXXXXXX"
                 />
@@ -403,14 +351,14 @@ return new class extends Component
                     </div>
 
                     <flux:input
-                        wire:model="google_analytics_property_id"
+                        wire:model="googleAnalyticsForm.google_analytics_property_id"
                         :label="__('GA4 property ID')"
                         placeholder="123456789"
                         :description="__('In Google Analytics under Admin → Property details.')"
                     />
 
                     <flux:textarea
-                        wire:model="google_analytics_credentials"
+                        wire:model="googleAnalyticsForm.google_analytics_credentials"
                         rows="5"
                         class="font-mono text-sm"
                         :label="__('Service account JSON')"
@@ -419,7 +367,7 @@ return new class extends Component
                 </div>
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($google_analytics_id !== '')
+                    @if ($this->googleAnalyticsForm->google_analytics_id !== '')
                         <flux:button variant="subtle" wire:click="disconnect('google-analytics')">{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
@@ -437,7 +385,7 @@ return new class extends Component
                 </div>
 
                 <flux:input
-                    wire:model="google_maps_api_key"
+                    wire:model="googleMapsForm.google_maps_api_key"
                     type="password"
                     viewable
                     :label="__('Google Maps API key')"
@@ -445,7 +393,7 @@ return new class extends Component
                 />
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($google_maps_api_key !== '')
+                    @if ($this->googleMapsForm->google_maps_api_key !== '')
                         <flux:button variant="subtle" wire:click="disconnect('google-maps')">{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
@@ -464,13 +412,13 @@ return new class extends Component
                 </div>
 
                 <flux:input
-                    wire:model="slack_webhook_url"
+                    wire:model="slackForm.slack_webhook_url"
                     :label="__('Slack webhook URL')"
                     placeholder="https://hooks.slack.com/services/…"
                 />
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($slack_webhook_url !== '')
+                    @if ($this->slackForm->slack_webhook_url !== '')
                         <flux:button variant="subtle" wire:click="disconnect('slack')">{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
@@ -487,31 +435,31 @@ return new class extends Component
                     <flux:text class="mt-2">{{ __('Choose a provider and paste an API key. The assistant can create pages, edit content, adjust the design and manage menus — it never touches users or app integrations.') }}</flux:text>
                 </div>
 
-                <flux:select wire:model.live="ai_provider" :label="__('Provider')">
+                <flux:select wire:model.live="assistantForm.ai_provider" :label="__('Provider')">
                     <flux:select.option value="anthropic">Claude (Anthropic)</flux:select.option>
                     <flux:select.option value="openai">OpenAI</flux:select.option>
                     <flux:select.option value="gemini">Gemini (Google)</flux:select.option>
                 </flux:select>
 
                 <flux:input
-                    wire:model="ai_api_key"
+                    wire:model="assistantForm.ai_api_key"
                     type="password"
                     viewable
                     :label="__('API key')"
                     :placeholder="__('Paste your API key…')"
                 />
 
-                <div x-show="$wire.ai_provider === 'anthropic'">
-                    <flux:select wire:model="ai_model" :label="__('Model')">
+                <div x-show="$wire.assistantForm.ai_provider === 'anthropic'">
+                    <flux:select wire:model="assistantForm.ai_model" :label="__('Model')">
                         @foreach ($this->aiModels()['anthropic'] as $value => $label)
                             <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
                         @endforeach
                     </flux:select>
                 </div>
 
-                <div x-show="$wire.ai_provider !== 'anthropic'" x-cloak>
+                <div x-show="$wire.assistantForm.ai_provider !== 'anthropic'" x-cloak>
                     <flux:input
-                        wire:model="ai_model"
+                        wire:model="assistantForm.ai_model"
                         :label="__('Model')"
                         :placeholder="__('e.g. the model name from your provider account')"
                         :description="__('Enter the exact model identifier your provider gives you.')"
@@ -519,7 +467,7 @@ return new class extends Component
                 </div>
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($ai_api_key !== '')
+                    @if ($this->assistantForm->ai_api_key !== '')
                         <flux:button variant="subtle" wire:click="disconnect('assistant')">{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
@@ -537,10 +485,10 @@ return new class extends Component
                 <flux:text>{{ __('Paste tracking pixels, analytics or other third-party snippets. Code is added as-is to every page on your public site, so only add code from sources you trust.') }}</flux:text>
                 <div class="flex flex-wrap items-center gap-3">
                     <flux:modal.trigger name="site-head-scripts">
-                        <flux:button icon="code-bracket" variant="filled">{{ $head_scripts !== '' ? __('Edit head code') : __('Add head code') }}</flux:button>
+                        <flux:button icon="code-bracket" variant="filled">{{ $this->customCodeForm->head_scripts !== '' ? __('Edit head code') : __('Add head code') }}</flux:button>
                     </flux:modal.trigger>
                     <flux:modal.trigger name="site-body-scripts">
-                        <flux:button icon="code-bracket" variant="filled">{{ $body_scripts !== '' ? __('Edit body code') : __('Add body code') }}</flux:button>
+                        <flux:button icon="code-bracket" variant="filled">{{ $this->customCodeForm->body_scripts !== '' ? __('Edit body code') : __('Add body code') }}</flux:button>
                     </flux:modal.trigger>
                 </div>
             </div>
@@ -551,7 +499,7 @@ return new class extends Component
                         <flux:heading size="lg">{{ __('Custom head code') }}</flux:heading>
                         <flux:text class="mt-2">{{ __('Added inside the <head> tag on every page. Use for Facebook Pixel, BugHerd, verification tags and similar snippets.') }}</flux:text>
                     </div>
-                    <flux:textarea wire:model="head_scripts" rows="12" class="font-mono text-sm" placeholder="&lt;script&gt;…&lt;/script&gt;" />
+                    <flux:textarea wire:model="customCodeForm.head_scripts" rows="12" class="font-mono text-sm" placeholder="&lt;script&gt;…&lt;/script&gt;" />
                     <div class="flex justify-end">
                         <flux:modal.close>
                             <flux:button variant="primary">{{ __('Done') }}</flux:button>
@@ -566,7 +514,7 @@ return new class extends Component
                         <flux:heading size="lg">{{ __('Custom body code') }}</flux:heading>
                         <flux:text class="mt-2">{{ __('Added just before the closing </body> tag on every page. Use for chat widgets and scripts that should load last.') }}</flux:text>
                     </div>
-                    <flux:textarea wire:model="body_scripts" rows="12" class="font-mono text-sm" placeholder="&lt;script&gt;…&lt;/script&gt;" />
+                    <flux:textarea wire:model="customCodeForm.body_scripts" rows="12" class="font-mono text-sm" placeholder="&lt;script&gt;…&lt;/script&gt;" />
                     <div class="flex justify-end">
                         <flux:modal.close>
                             <flux:button variant="primary">{{ __('Done') }}</flux:button>

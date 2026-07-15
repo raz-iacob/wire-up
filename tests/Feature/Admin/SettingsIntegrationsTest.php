@@ -44,22 +44,22 @@ it('hydrates the saved credentials and custom code on mount', function (): void 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->assertSet('pexels_api_key', 'saved-pexels-key')
-        ->assertSet('google_analytics_id', 'G-SAVED01')
-        ->assertSet('google_analytics_property_id', '987654321')
-        ->assertSet('google_analytics_credentials', '{"client_email":"saved@example.com","private_key":"saved-key"}')
-        ->assertSet('google_maps_api_key', 'saved-maps-key')
-        ->assertSet('slack_webhook_url', 'https://hooks.slack.com/services/T0/B0/saved')
-        ->assertSet('head_scripts', '<script>head()</script>')
-        ->assertSet('body_scripts', '<script>body()</script>');
+        ->assertSet('pexelsForm.pexels_api_key', 'saved-pexels-key')
+        ->assertSet('googleAnalyticsForm.google_analytics_id', 'G-SAVED01')
+        ->assertSet('googleAnalyticsForm.google_analytics_property_id', '987654321')
+        ->assertSet('googleAnalyticsForm.google_analytics_credentials', '{"client_email":"saved@example.com","private_key":"saved-key"}')
+        ->assertSet('googleMapsForm.google_maps_api_key', 'saved-maps-key')
+        ->assertSet('slackForm.slack_webhook_url', 'https://hooks.slack.com/services/T0/B0/saved')
+        ->assertSet('customCodeForm.head_scripts', '<script>head()</script>')
+        ->assertSet('customCodeForm.body_scripts', '<script>body()</script>');
 });
 
 it('persists and trims the custom head and body code on update', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('head_scripts', "  <script>fbq('init')</script>  ")
-        ->set('body_scripts', '  <script>chat()</script>  ')
+        ->set('customCodeForm.head_scripts', "  <script>fbq('init')</script>  ")
+        ->set('customCodeForm.body_scripts', '  <script>chat()</script>  ')
         ->call('updateCustomCode')
         ->assertHasNoErrors();
 
@@ -71,7 +71,7 @@ it('connects pexels by persisting the api key', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('pexels_api_key', 'new-pexels-key')
+        ->set('pexelsForm.pexels_api_key', 'new-pexels-key')
         ->call('connectPexels')
         ->assertHasNoErrors();
 
@@ -82,7 +82,7 @@ it('connects google analytics by persisting the measurement id', function (): vo
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('google_analytics_id', 'G-NEW0001')
+        ->set('googleAnalyticsForm.google_analytics_id', 'G-NEW0001')
         ->call('connectGoogleAnalytics')
         ->assertHasNoErrors();
 
@@ -97,9 +97,9 @@ it('connects google analytics reports by persisting the property id and credenti
     $credentials = '{"client_email":"reports@example.com","private_key":"a-key"}';
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('google_analytics_id', 'G-NEW0001')
-        ->set('google_analytics_property_id', '123456789')
-        ->set('google_analytics_credentials', $credentials)
+        ->set('googleAnalyticsForm.google_analytics_id', 'G-NEW0001')
+        ->set('googleAnalyticsForm.google_analytics_property_id', '123456789')
+        ->set('googleAnalyticsForm.google_analytics_credentials', $credentials)
         ->call('connectGoogleAnalytics')
         ->assertHasNoErrors()
         ->assertDispatched('integrations-updated');
@@ -113,24 +113,24 @@ it('requires the analytics reports fields together', function (string $field, st
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('google_analytics_id', 'G-NEW0001')
+        ->set('googleAnalyticsForm.google_analytics_id', 'G-NEW0001')
         ->set($field, $value)
         ->call('connectGoogleAnalytics')
         ->assertHasErrors([$missing => 'required_with']);
 })->with([
-    'property id without credentials' => ['google_analytics_property_id', '123456789', 'google_analytics_credentials'],
-    'credentials without property id' => ['google_analytics_credentials', '{"client_email":"a@b.c","private_key":"k"}', 'google_analytics_property_id'],
+    'property id without credentials' => ['googleAnalyticsForm.google_analytics_property_id', '123456789', 'googleAnalyticsForm.google_analytics_credentials'],
+    'credentials without property id' => ['googleAnalyticsForm.google_analytics_credentials', '{"client_email":"a@b.c","private_key":"k"}', 'googleAnalyticsForm.google_analytics_property_id'],
 ]);
 
 it('rejects a non-numeric property id', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('google_analytics_id', 'G-NEW0001')
-        ->set('google_analytics_property_id', 'G-NEW0001')
-        ->set('google_analytics_credentials', '{"client_email":"a@b.c","private_key":"k"}')
+        ->set('googleAnalyticsForm.google_analytics_id', 'G-NEW0001')
+        ->set('googleAnalyticsForm.google_analytics_property_id', 'G-NEW0001')
+        ->set('googleAnalyticsForm.google_analytics_credentials', '{"client_email":"a@b.c","private_key":"k"}')
         ->call('connectGoogleAnalytics')
-        ->assertHasErrors(['google_analytics_property_id'])
+        ->assertHasErrors(['googleAnalyticsForm.google_analytics_property_id'])
         ->assertSee('Enter the numeric GA4 property ID, like 123456789.');
 });
 
@@ -138,11 +138,11 @@ it('rejects credentials that are not a valid service account key', function (str
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('google_analytics_id', 'G-NEW0001')
-        ->set('google_analytics_property_id', '123456789')
-        ->set('google_analytics_credentials', $credentials)
+        ->set('googleAnalyticsForm.google_analytics_id', 'G-NEW0001')
+        ->set('googleAnalyticsForm.google_analytics_property_id', '123456789')
+        ->set('googleAnalyticsForm.google_analytics_credentials', $credentials)
         ->call('connectGoogleAnalytics')
-        ->assertHasErrors(['google_analytics_credentials'])
+        ->assertHasErrors(['googleAnalyticsForm.google_analytics_credentials'])
         ->assertSee('Paste the full service account JSON key file.');
 })->with([
     'not json' => ['not-json'],
@@ -155,7 +155,7 @@ it('connects google maps by persisting the api key', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('google_maps_api_key', 'AIzaMapsKey123')
+        ->set('googleMapsForm.google_maps_api_key', 'AIzaMapsKey123')
         ->call('connectGoogleMaps')
         ->assertHasNoErrors();
 
@@ -166,16 +166,16 @@ it('requires an api key to connect google maps', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('google_maps_api_key', '')
+        ->set('googleMapsForm.google_maps_api_key', '')
         ->call('connectGoogleMaps')
-        ->assertHasErrors(['google_maps_api_key']);
+        ->assertHasErrors(['googleMapsForm.google_maps_api_key']);
 });
 
 it('connects slack by persisting the webhook url', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('slack_webhook_url', '  https://hooks.slack.com/services/T0/B0/xyz  ')
+        ->set('slackForm.slack_webhook_url', '  https://hooks.slack.com/services/T0/B0/xyz  ')
         ->call('connectSlack')
         ->assertHasNoErrors();
 
@@ -186,9 +186,9 @@ it('rejects webhook urls that are not slack incoming webhooks', function (string
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('slack_webhook_url', $url)
+        ->set('slackForm.slack_webhook_url', $url)
         ->call('connectSlack')
-        ->assertHasErrors(['slack_webhook_url' => $rule]);
+        ->assertHasErrors(['slackForm.slack_webhook_url' => $rule]);
 })->with([
     'empty' => ['', 'required'],
     'not a url' => ['not-a-url', 'url'],
@@ -199,9 +199,9 @@ it('requires an api key to connect pexels', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('pexels_api_key', '')
+        ->set('pexelsForm.pexels_api_key', '')
         ->call('connectPexels')
-        ->assertHasErrors(['pexels_api_key']);
+        ->assertHasErrors(['pexelsForm.pexels_api_key']);
 });
 
 it('disconnects an integration by clearing its credential', function (): void {
@@ -219,16 +219,16 @@ it('disconnects an integration by clearing its credential', function (): void {
     Livewire::test('pages::admin.settings-integrations')
         ->call('disconnect', 'pexels')
         ->assertHasNoErrors()
-        ->assertSet('pexels_api_key', '')
+        ->assertSet('pexelsForm.pexels_api_key', '')
         ->call('disconnect', 'google-analytics')
-        ->assertSet('google_analytics_id', '')
-        ->assertSet('google_analytics_property_id', '')
-        ->assertSet('google_analytics_credentials', '')
+        ->assertSet('googleAnalyticsForm.google_analytics_id', '')
+        ->assertSet('googleAnalyticsForm.google_analytics_property_id', '')
+        ->assertSet('googleAnalyticsForm.google_analytics_credentials', '')
         ->assertDispatched('integrations-updated')
         ->call('disconnect', 'google-maps')
-        ->assertSet('google_maps_api_key', '')
+        ->assertSet('googleMapsForm.google_maps_api_key', '')
         ->call('disconnect', 'slack')
-        ->assertSet('slack_webhook_url', '');
+        ->assertSet('slackForm.slack_webhook_url', '');
 
     expect(Settings::get('pexels_api_key'))->toBe('')
         ->and(Settings::get('google_analytics_id'))->toBe('')
@@ -242,9 +242,9 @@ it('validates the google analytics id format', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('google_analytics_id', 'UA-12345')
+        ->set('googleAnalyticsForm.google_analytics_id', 'UA-12345')
         ->call('connectGoogleAnalytics')
-        ->assertHasErrors(['google_analytics_id'])
+        ->assertHasErrors(['googleAnalyticsForm.google_analytics_id'])
         ->assertSee('Enter a valid Google Analytics measurement ID, like G-XXXXXXXXXX.');
 });
 
@@ -336,26 +336,26 @@ it('hydrates the saved AI Assistant settings on mount', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->assertSet('ai_provider', 'anthropic')
-        ->assertSet('ai_api_key', 'sk-ant-saved')
-        ->assertSet('ai_model', 'claude-sonnet-5');
+        ->assertSet('assistantForm.ai_provider', 'anthropic')
+        ->assertSet('assistantForm.ai_api_key', 'sk-ant-saved')
+        ->assertSet('assistantForm.ai_model', 'claude-sonnet-5');
 });
 
 it('defaults the AI Assistant to anthropic and opus when unset', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->assertSet('ai_provider', 'anthropic')
-        ->assertSet('ai_model', 'claude-opus-4-8');
+        ->assertSet('assistantForm.ai_provider', 'anthropic')
+        ->assertSet('assistantForm.ai_model', 'claude-opus-4-8');
 });
 
 it('connects the AI Assistant by persisting provider, key and model', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('ai_provider', 'anthropic')
-        ->set('ai_api_key', '  sk-ant-new  ')
-        ->set('ai_model', '  claude-opus-4-8  ')
+        ->set('assistantForm.ai_provider', 'anthropic')
+        ->set('assistantForm.ai_api_key', '  sk-ant-new  ')
+        ->set('assistantForm.ai_model', '  claude-opus-4-8  ')
         ->call('connectAssistant')
         ->assertHasNoErrors();
 
@@ -368,20 +368,20 @@ it('requires an api key and a known provider to connect the AI Assistant', funct
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('ai_provider', 'cohere')
-        ->set('ai_api_key', '')
-        ->set('ai_model', 'x')
+        ->set('assistantForm.ai_provider', 'cohere')
+        ->set('assistantForm.ai_api_key', '')
+        ->set('assistantForm.ai_model', 'x')
         ->call('connectAssistant')
-        ->assertHasErrors(['ai_provider', 'ai_api_key']);
+        ->assertHasErrors(['assistantForm.ai_provider', 'assistantForm.ai_api_key']);
 });
 
 it('connects the AI Assistant with the gemini provider', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->set('ai_provider', 'gemini')
-        ->set('ai_api_key', 'gemini-key')
-        ->set('ai_model', 'gemini-model-name')
+        ->set('assistantForm.ai_provider', 'gemini')
+        ->set('assistantForm.ai_api_key', 'gemini-key')
+        ->set('assistantForm.ai_model', 'gemini-model-name')
         ->call('connectAssistant')
         ->assertHasNoErrors();
 
@@ -406,7 +406,7 @@ it('disconnects the AI Assistant by clearing only the api key', function (): voi
     Livewire::test('pages::admin.settings-integrations')
         ->call('disconnect', 'assistant')
         ->assertHasNoErrors()
-        ->assertSet('ai_api_key', '');
+        ->assertSet('assistantForm.ai_api_key', '');
 
     expect(Settings::get('ai_api_key'))->toBe('')
         ->and(Settings::get('ai_model'))->toBe('claude-opus-4-8');
