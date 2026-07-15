@@ -11,6 +11,7 @@ use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Uri;
 
 final class LocalizationService
 {
@@ -56,10 +57,9 @@ final class LocalizationService
 
     public function getLocalizedURL(string $url, string $locale): string
     {
-        $parsed = parse_url($url);
-        $path = $parsed['path'] ?? '';
+        $uri = Uri::of($url);
 
-        $segments = explode('/', mb_ltrim($path, '/'));
+        $segments = explode('/', mb_ltrim($uri->path(), '/'));
 
         $activeLocalesCodes = array_keys($this->getActiveLocales());
         if (in_array($segments[0], $activeLocalesCodes, true)) {
@@ -72,20 +72,7 @@ final class LocalizationService
             ? $pathWithoutLocale
             : $locale.'/'.$pathWithoutLocale;
 
-        $newPath = '/'.mb_ltrim($newPath, '/');
-
-        if (! isset($parsed['host'])) {
-            return $newPath.
-                (isset($parsed['query']) ? '?'.$parsed['query'] : '').
-                (isset($parsed['fragment']) ? '#'.$parsed['fragment'] : '');
-        }
-
-        return ($parsed['scheme'] ?? 'https').'://'.
-            $parsed['host'].
-            ($parsed['port'] ?? '' ? ':'.$parsed['port'] : '').
-            $newPath.
-            (isset($parsed['query']) ? '?'.$parsed['query'] : '').
-            (isset($parsed['fragment']) ? '#'.$parsed['fragment'] : '');
+        return (string) $uri->withPath('/'.mb_ltrim($newPath, '/'));
     }
 
     /**

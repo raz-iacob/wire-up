@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Services\UpdateService;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -11,9 +12,10 @@ return new class extends Component
     #[On('updates-checked')]
     public function refresh(): void
     {
-        //
+        unset($this->updateAvailable);
     }
 
+    #[Computed]
     public function updateAvailable(): bool
     {
         return resolve(UpdateService::class)->updateAvailable();
@@ -26,7 +28,7 @@ return new class extends Component
         <x-slot:icon>
             <div class="relative">
                 <flux:icon icon="cog-6-tooth" variant="outline" class="size-4" />
-                @if ($this->updateAvailable())
+                @if ($this->updateAvailable)
                     <div class="absolute -inset-e-0.5 -top-0.5 size-2 rounded-full bg-red-500 animate-pulse"></div>
                 @endif
             </div>
@@ -41,6 +43,6 @@ return new class extends Component
         @can('roles.view')
             <flux:sidebar.item :href="route('admin.settings-roles')" :current="request()->routeIs('admin.settings-roles')" wire:navigate.hover>{{ __('User Roles') }}</flux:sidebar.item>
         @endcan
-        <flux:sidebar.item :href="route('admin.settings-updates')" :current="request()->routeIs('admin.settings-updates')" :badge="$this->updateAvailable() ? '1' : null" wire:navigate.hover>{{ __('Updates') }}</flux:sidebar.item>
+        <flux:sidebar.item :href="route('admin.settings-updates')" :current="request()->routeIs('admin.settings-updates')" :badge="$this->updateAvailable ? '1' : null" wire:navigate.hover>{{ __('Updates') }}</flux:sidebar.item>
     </flux:sidebar.group>
 </div>

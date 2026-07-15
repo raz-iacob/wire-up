@@ -304,7 +304,7 @@ return new class extends Component
                 @else
                     <div class="divide-y divide-zinc-100 dark:divide-white/5">
                         @foreach ($this->recentActivity as $item)
-                            <a href="{{ $item['url'] }}" wire:navigate wire:key="activity-{{ $loop->index }}" class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                            <a href="{{ $item['url'] }}" wire:navigate wire:key="activity-{{ $item['url'] }}" class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
                                 <div class="min-w-0 flex-1">
                                     <flux:heading size="sm" class="truncate">{{ $item['title'] }}</flux:heading>
                                     <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">

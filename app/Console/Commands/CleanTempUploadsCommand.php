@@ -9,6 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Number;
 
 #[Description('Clean up Livewire temporary file uploads')]
 #[Signature('wireup:clean-temp {--older-than=24 : Delete files older than X hours}')]
@@ -48,8 +49,8 @@ final class CleanTempUploadsCommand extends Command
         if ($deletedCount === 0) {
             $this->info('No temporary files older than '.$olderThanHours.' hours found.');
         } else {
-            $totalSizeMB = round($totalSize / 1024 / 1024, 2);
-            $this->info("Deleted {$deletedCount} files, freed {$totalSizeMB} MB of disk space.");
+            $freed = Number::fileSize($totalSize, precision: 2);
+            $this->info("Deleted {$deletedCount} files, freed {$freed} of disk space.");
         }
 
         return self::SUCCESS;

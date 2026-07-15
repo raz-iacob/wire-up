@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Console\Commands\CleanTempUploadsCommand;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Number;
 
 beforeEach(function (): void {
     $this->tempPath = storage_path('app/private/livewire-tmp');
@@ -51,7 +52,10 @@ it('deletes old files and displays summary', function (): void {
 
     $this->travelTo(now()->addMinute());
 
+    $freed = Number::fileSize(1024 + 2048 + 512, precision: 2);
+
     $this->artisan(CleanTempUploadsCommand::class, ['--older-than' => 0])
+        ->expectsOutput("Deleted 3 files, freed {$freed} of disk space.")
         ->assertExitCode(0);
 
     expect(File::exists($oldFile1))->toBeFalse();
