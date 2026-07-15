@@ -210,7 +210,7 @@ return new class extends Component
     }
 
     /**
-     * @param  array<int, array{name: string, status: string}>  $tools
+     * @param  array<int, array{name: string, status: string, id?: string}>  $tools
      */
     public function toolChipsHtml(array $tools): string
     {
@@ -287,7 +287,9 @@ return new class extends Component
             return [];
         }
 
-        $tools = collect(json_decode((string) $row->tool_calls, true) ?: [])
+        $decoded = json_decode((string) $row->tool_calls, true);
+
+        $tools = collect(is_array($decoded) ? $decoded : [])
             ->pluck('name')
             ->filter(fn (mixed $name): bool => is_string($name) && ! in_array($name, $confirmable, true))
             ->map(fn (string $name): array => ['name' => $name, 'status' => 'done'])
