@@ -66,6 +66,12 @@ final class SiteAssistant implements Agent, Conversational, HasTools
 
         How to work:
 
+        0. To recreate or copy an existing website, use read-webpage on its URL first —
+           it returns each page's content, images, and navigation so you can rebuild it.
+           You do not need the owner to paste the content; read it yourself, then build.
+           Recreate the structure and design faithfully, but write original block content
+           based on what you read.
+
         1. Read the block-types catalog before writing any block — it documents every
            block type, its content shape, and the conventions for localized text,
            links, and media.

@@ -14,6 +14,7 @@ use App\Mcp\Tools\ImportPexelsMediaTool;
 use App\Mcp\Tools\ListMediaTool;
 use App\Mcp\Tools\ListPagesTool;
 use App\Mcp\Tools\PublishPageTool;
+use App\Mcp\Tools\ReadWebpageTool;
 use App\Mcp\Tools\SearchPexelsTool;
 use App\Mcp\Tools\UpdateDesignTool;
 use App\Mcp\Tools\UpdateIdentityTool;
@@ -61,6 +62,7 @@ final class WireUpServer extends Server
         PublishPageTool::class,
         ListMediaTool::class,
         ImportMediaFromUrlTool::class,
+        ReadWebpageTool::class,
         SearchPexelsTool::class,
         ImportPexelsMediaTool::class,
         GetSettingsTool::class,
