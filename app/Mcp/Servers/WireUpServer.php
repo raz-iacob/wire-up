@@ -15,6 +15,7 @@ use App\Mcp\Tools\ListMediaTool;
 use App\Mcp\Tools\ListPagesTool;
 use App\Mcp\Tools\PublishPageTool;
 use App\Mcp\Tools\ReadWebpageTool;
+use App\Mcp\Tools\ScaffoldSiteTool;
 use App\Mcp\Tools\SearchPexelsTool;
 use App\Mcp\Tools\UpdateDesignTool;
 use App\Mcp\Tools\UpdateIdentityTool;
@@ -42,7 +43,10 @@ Typical workflow for building or replicating a site:
    `import-pexels-media` for stock photos, then reference the returned source
    paths in block content.
 4. Create pages as drafts with `create-page`, passing blocks in the same call
-   or adding them later with `update-page-blocks`.
+   or adding them later with `update-page-blocks`. To lay out a whole site at
+   once, `scaffold-site` creates the pages, header/footer navigation and
+   homepage in a single call — then fill each page's blocks with
+   `update-page-blocks`.
 5. Wire the pages into navigation with `get-menus` + `update-menu` (header and
    footer), and set social profile links with `update-social`.
 6. Verify your work by fetching the page URL with an `Accept: text/markdown`
@@ -57,6 +61,7 @@ final class WireUpServer extends Server
     public const array TOOLS = [
         ListPagesTool::class,
         GetPageTool::class,
+        ScaffoldSiteTool::class,
         CreatePageTool::class,
         UpdatePageBlocksTool::class,
         PublishPageTool::class,

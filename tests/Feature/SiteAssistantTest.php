@@ -60,7 +60,7 @@ it('exposes every WireUp tool and the block-types resource to the assistant', fu
     $names = collect((new SiteAssistant)->tools())->map(fn (object $tool): string => $tool->name());
 
     expect($names->all())->toEqualCanonicalizing([
-        'list-pages', 'get-page', 'create-page', 'update-page-blocks', 'publish-page',
+        'list-pages', 'get-page', 'scaffold-site', 'create-page', 'update-page-blocks', 'publish-page',
         'list-media', 'import-media-from-url', 'read-webpage', 'search-pexels', 'import-pexels-media',
         'get-settings', 'update-design', 'update-identity',
         'get-menus', 'update-menu', 'update-social',
