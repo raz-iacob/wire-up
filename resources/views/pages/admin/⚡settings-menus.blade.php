@@ -87,7 +87,7 @@ return new class extends Component
             return;
         }
 
-        $this->menus[$index]['items'][$this->locale][] = $this->defaultItem(in_array($type, ['page', 'link', 'heading'], true) ? $type : 'page');
+        $this->menus[$index]['items'][$this->locale][] = $this->defaultItem(in_array($type, ['page', 'link', 'heading', 'account'], true) ? $type : 'page');
     }
 
     public function addMenu(): void
@@ -358,10 +358,10 @@ return new class extends Component
                 $base = "menus.$i.items.$locale";
 
                 $rules[$base] = ['array', 'max:20'];
-                $rules["$base.*.type"] = ['required', Rule::in(['page', 'link', 'heading'])];
+                $rules["$base.*.type"] = ['required', Rule::in(['page', 'link', 'heading', 'account'])];
                 $rules["$base.*.appearance"] = ['required', Rule::in($isHeader ? ['link', 'button', 'icon'] : ['link', 'button'])];
                 $rules["$base.*.target"] = ['required', Rule::in(['_self', '_blank'])];
-                $rules["$base.*.label"] = ['required', 'string', 'max:100'];
+                $rules["$base.*.label"] = ["required_unless:$base.*.type,account", 'nullable', 'string', 'max:100'];
                 $rules["$base.*.page_id"] = [
                     "required_if:$base.*.type,page",
                     'nullable',
@@ -425,7 +425,7 @@ return new class extends Component
 
             $hydrated[] = [
                 '_key' => (string) $this->seq++,
-                'type' => in_array($item['type'] ?? null, ['page', 'link', 'heading'], true) ? $item['type'] : 'page',
+                'type' => in_array($item['type'] ?? null, ['page', 'link', 'heading', 'account'], true) ? $item['type'] : 'page',
                 'appearance' => in_array($item['appearance'] ?? null, ['link', 'button', 'icon'], true) ? $item['appearance'] : 'link',
                 'target' => in_array($item['target'] ?? null, ['_self', '_blank'], true) ? $item['target'] : '_self',
                 'label' => is_string($item['label'] ?? null) ? $item['label'] : '',

@@ -78,6 +78,10 @@
             {{ __('Add item') }}
         </flux:button>
 
+        <flux:button type="button" size="sm" variant="subtle" icon="user-circle" wire:click="addItem('{{ $menu['key'] }}', 'account')">
+            {{ __('Add account link') }}
+        </flux:button>
+
         @unless ($menu['builtin'])
             <flux:button type="button" size="sm" variant="subtle" icon="bars-3-bottom-left" wire:click="addItem('{{ $menu['key'] }}', 'heading')">
                 {{ __('Add group heading') }}

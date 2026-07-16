@@ -537,6 +537,12 @@ final class SettingsService
                 continue;
             }
 
+            if (($item['type'] ?? null) === 'account') {
+                array_push($resolved, ...$this->resolveAccountItems($item));
+
+                continue;
+            }
+
             $entry = $this->resolveMenuItem($item, $pages);
             if ($entry !== null) {
                 $resolved[] = $entry;
@@ -893,5 +899,38 @@ final class SettingsService
             'badge' => is_string($item['badge'] ?? null) ? $item['badge'] : '',
             'badgeColor' => in_array($badgeColor, config()->array('menu.badge_colors'), true) ? $badgeColor : 'zinc',
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}>
+     */
+    private function resolveAccountItems(array $item): array
+    {
+        $appearance = ($item['appearance'] ?? null) === 'button' ? 'button' : 'link';
+
+        $link = fn (string $label, string $url): array => [
+            'type' => 'link',
+            'label' => $label,
+            'url' => $url,
+            'target' => '_self',
+            'appearance' => $appearance,
+            'icon' => null,
+            'icon_svg' => '',
+            'badge' => '',
+            'badgeColor' => 'zinc',
+        ];
+
+        if (auth()->check()) {
+            return [$link(__('Account'), route('account'))];
+        }
+
+        $links = [$link(__('Log in'), route('login'))];
+
+        if ($this->allowsRegistration()) {
+            $links[] = $link(__('Sign up'), route('register'));
+        }
+
+        return $links;
     }
 }

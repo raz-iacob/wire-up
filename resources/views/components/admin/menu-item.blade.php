@@ -9,7 +9,9 @@
 
 @php
     $itemType = $item['type'] ?? 'page';
+    $isAccount = $itemType === 'account';
     $k = $item['_key'];
+    $fallbackTitle = $isAccount ? __('Account') : __('New Item');
 @endphp
 
 <div
@@ -32,8 +34,8 @@
         </button>
 
         <button type="button" x-on:click="open = ! open" class="min-w-0 flex-1 text-left">
-            <flux:heading class="truncate text-sm!" data-test="menu-item-title" x-text="title || @js(__('New Item'))">
-                {{ ($item['label'] ?? '') !== '' ? $item['label'] : __('New Item') }}
+            <flux:heading class="truncate text-sm!" data-test="menu-item-title" x-text="title || @js($fallbackTitle)">
+                {{ ($item['label'] ?? '') !== '' ? $item['label'] : $fallbackTitle }}
             </flux:heading>
         </button>
 
@@ -46,17 +48,20 @@
     </div>
 
     <div class="grid gap-4 p-4 sm:grid-cols-2" x-show="open" x-cloak>
-        <flux:field>
-            <flux:label>{{ $itemType === 'heading' ? __('Heading') : __('Label') }}</flux:label>
-            <flux:input wire:model="{{ $base }}.label" x-on:input="title = $event.target.value" :placeholder="$itemType === 'heading' ? __('e.g. Guides') : null" />
-            <flux:error name="{{ $base }}.label" />
-        </flux:field>
+        @unless ($isAccount)
+            <flux:field>
+                <flux:label>{{ $itemType === 'heading' ? __('Heading') : __('Label') }}</flux:label>
+                <flux:input wire:model="{{ $base }}.label" x-on:input="title = $event.target.value" :placeholder="$itemType === 'heading' ? __('e.g. Guides') : null" />
+                <flux:error name="{{ $base }}.label" />
+            </flux:field>
+        @endunless
 
         <flux:field>
             <flux:label>{{ __('Type') }}</flux:label>
             <flux:select wire:model.live="{{ $base }}.type">
                 <flux:select.option value="page">{{ __('Page') }}</flux:select.option>
                 <flux:select.option value="link">{{ __('Custom Link') }}</flux:select.option>
+                <flux:select.option value="account">{{ __('Account') }}</flux:select.option>
                 @if ($sidebarFields)
                     <flux:select.option value="heading">{{ __('Group heading') }}</flux:select.option>
                 @endif
@@ -64,7 +69,22 @@
             <flux:error name="{{ $base }}.type" />
         </flux:field>
 
-        @unless ($itemType === 'heading')
+        @if ($isAccount)
+            <flux:field>
+                <flux:label>{{ __('Appearance') }}</flux:label>
+                <flux:select wire:model.live="{{ $base }}.appearance">
+                    <flux:select.option value="link">{{ __('Link') }}</flux:select.option>
+                    <flux:select.option value="button">{{ __('Button') }}</flux:select.option>
+                </flux:select>
+                <flux:error name="{{ $base }}.appearance" />
+            </flux:field>
+
+            <div class="sm:col-span-2">
+                <flux:text variant="subtle">{{ __('Shows “Log in” (and “Sign up” when registration is open) to visitors, and “Account” to signed-in members. Members log out from their account page.') }}</flux:text>
+            </div>
+        @endif
+
+        @unless ($itemType === 'heading' || $isAccount)
             <flux:field>
                 <flux:label>{{ __('Appearance') }}</flux:label>
                 <flux:select wire:model.live="{{ $base }}.appearance">
@@ -125,7 +145,7 @@
             @endif
         @endunless
 
-        @if ($sidebarFields && $itemType !== 'heading')
+        @if ($sidebarFields && $itemType !== 'heading' && ! $isAccount)
             <flux:field>
                 <flux:label>{{ __('Icon') }}</flux:label>
                 <flux:select variant="listbox" wire:model="{{ $base }}.icon" placeholder="{{ __('No icon') }}" clearable>

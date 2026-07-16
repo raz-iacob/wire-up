@@ -127,6 +127,18 @@ it('adds a header menu item to the current locale', function (): void {
         ->and($menus[0]['items']['en'][0]['type'])->toBe('page');
 });
 
+it('saves a header account link without requiring a label', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-menus')
+        ->call('addItem', 'header', 'account')
+        ->set('menus.0.items.en.0.label', '')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(savedMenuItems('header')[0]['type'])->toBe('account');
+});
+
 it('persists an icon-only header link with its fetched svg', function (): void {
     Http::fake(['unpkg.com/*' => Http::response('<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /></svg>')]);
 

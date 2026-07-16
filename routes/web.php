@@ -29,6 +29,8 @@ Route::group(['prefix' => resolve('localization')->setLocale()], function (): vo
             ->name('verification.verify')
             ->middleware(['signed', 'throttle:6,1']);
 
+        Route::livewire('account', 'pages::account')->name('account');
+
         Route::post('logout', [SessionController::class, 'destroy'])->name('logout');
     });
 });

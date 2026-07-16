@@ -9,6 +9,7 @@ return [
      */
     'reserved_prefixes' => [
         'admin',
+        'account',
         'login',
         'logout',
         'register',
