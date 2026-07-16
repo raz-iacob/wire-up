@@ -45,7 +45,7 @@ final class SeoService
 
     public function robots(Page|Record|null $content): string
     {
-        if (SettingsService::current()->noindex() || $content?->isNoindex()) {
+        if (SettingsService::current()->noindex() || $content?->isNoindex() || $content?->isMembersOnly()) {
             return 'noindex, nofollow';
         }
 
@@ -355,7 +355,7 @@ final class SeoService
             ->published()
             ->with($with)
             ->get()
-            ->reject(fn (Page $page): bool => $page->isNoindex())
+            ->reject(fn (Page $page): bool => $page->isNoindex() || $page->isMembersOnly())
             ->values();
     }
 
@@ -373,7 +373,7 @@ final class SeoService
             ->published()
             ->with($with)
             ->get()
-            ->reject(fn (Record $record): bool => $record->isNoindex())
+            ->reject(fn (Record $record): bool => $record->isNoindex() || $record->isMembersOnly())
             ->values();
     }
 

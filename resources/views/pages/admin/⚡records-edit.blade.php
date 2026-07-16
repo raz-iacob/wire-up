@@ -71,6 +71,8 @@ return new class extends Component
 
     public bool $noindex = false;
 
+    public bool $members_only = false;
+
     public bool $showPreview = false;
 
     public ?string $previewToken = null;
@@ -97,6 +99,7 @@ return new class extends Component
         $this->activeLocales = resolve('localization')->getActiveLocales();
         $this->publishedLocales = array_values(array_intersect($record->published_locales, array_keys($this->activeLocales)));
         $this->noindex = (bool) ($record->metadata['noindex'] ?? false);
+        $this->members_only = (bool) ($record->metadata['members_only'] ?? false);
         $this->data = is_array($record->data) ? $record->data : [];
 
         $this->media['og_image'] = $this->mediaForRole('og_image');
@@ -185,6 +188,7 @@ return new class extends Component
                 ...($this->record->metadata ?? []),
                 'published_locales' => array_values($validated['publishedLocales'] ?? []),
                 'noindex' => $this->noindex,
+                'members_only' => $this->members_only,
             ],
         ]);
 
@@ -243,6 +247,7 @@ return new class extends Component
             'categories' => ['array'],
             'categories.*' => ['integer', Rule::exists('categories', 'id')],
             'noindex' => ['boolean'],
+            'members_only' => ['boolean'],
             'media' => ['array'],
             'media.og_image' => ['array'],
             'media.og_image.*' => ['array'],
@@ -659,6 +664,23 @@ return new class extends Component
                         </div>
                     </flux:accordion.content>
                 </flux:accordion.item>
+
+                @if (config('site.allow_registration'))
+                    <flux:accordion.item>
+                        <flux:accordion.heading>
+                            <div class="flex items-center justify-between">
+                                {{ __('Members only') }}
+                                <flux:text>
+                                    <span x-text="$wire.members_only ? @js(__('Yes')) : @js(__('No'))">{{ $members_only ? __('Yes') : __('No') }}</span>
+                                </flux:text>
+                            </div>
+                        </flux:accordion.heading>
+
+                        <flux:accordion.content class="mt-3">
+                            <flux:switch wire:model="members_only" label="{{ __('Require visitors to sign in to view this record.') }}" align="left" />
+                        </flux:accordion.content>
+                    </flux:accordion.item>
+                @endif
 
                 @if (count($activeLocales) > 1)
                     <flux:accordion.item>

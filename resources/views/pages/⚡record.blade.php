@@ -28,6 +28,11 @@ return new class extends Component
             $this->unpublished = ! $this->record->isLiveInLocale();
         } else {
             $this->record = $query->publishedInLocale()->firstOrFail();
+
+            if ($this->record->isMembersOnly() && auth()->guest()) {
+                session()->put('url.intended', url()->full());
+                $this->redirect(route('login'));
+            }
         }
     }
 

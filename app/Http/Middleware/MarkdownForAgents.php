@@ -26,6 +26,10 @@ final class MarkdownForAgents
 
         $content = $this->resolveContent($request);
 
+        if ($content !== null && $content->isMembersOnly() && auth()->guest()) {
+            $content = null;
+        }
+
         abort_if($content === null, 404);
 
         return response(ContentMarkdown::current()->render($content), 200, [

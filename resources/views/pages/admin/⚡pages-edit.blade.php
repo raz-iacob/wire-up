@@ -48,6 +48,8 @@ return new class extends Component
 
     public bool $noindex = false;
 
+    public bool $members_only = false;
+
     /**
      * @var array<string, mixed>
      */
@@ -92,6 +94,7 @@ return new class extends Component
         $this->publishedLocales = array_values(array_intersect($page->published_locales, array_keys($this->activeLocales)));
         $this->og_image = $this->mediaForRole('og_image');
         $this->noindex = (bool) ($page->metadata['noindex'] ?? false);
+        $this->members_only = (bool) ($page->metadata['members_only'] ?? false);
         $this->layout = [
             'hideHeader' => false,
             'hideFooter' => false,
@@ -184,6 +187,7 @@ return new class extends Component
             'og_image.*.*.metadata.caption' => ['nullable', 'string', 'max:500'],
             'og_image.*.*.metadata.alt' => ['nullable', 'string', 'max:255'],
             'noindex' => ['boolean'],
+            'members_only' => ['boolean'],
             'layout' => ['array'],
             'layout.hideHeader' => ['boolean'],
             'layout.hideFooter' => ['boolean'],
@@ -241,7 +245,7 @@ return new class extends Component
         }
 
         $action->handle($this->page, [
-            ...Arr::except($validated, ['publishedLocales', 'blocks', 'layout', 'noindex', 'categories']),
+            ...Arr::except($validated, ['publishedLocales', 'blocks', 'layout', 'noindex', 'members_only', 'categories']),
             'blocks' => $this->blocks,
             'og_image' => $this->og_image,
             'categories' => array_map(intval(...), $this->categories),
@@ -249,6 +253,7 @@ return new class extends Component
                 ...($this->page->metadata ?? []),
                 'published_locales' => array_values($validated['publishedLocales'] ?? []),
                 'noindex' => (bool) ($validated['noindex'] ?? false),
+                'members_only' => (bool) ($validated['members_only'] ?? false),
                 'layout' => $this->layoutMetadata(),
             ],
         ]);
@@ -560,6 +565,23 @@ return new class extends Component
                         </div>
                     </flux:accordion.content>
                 </flux:accordion.item>
+
+                @if (config('site.allow_registration'))
+                    <flux:accordion.item>
+                        <flux:accordion.heading>
+                            <div class="flex items-center justify-between">
+                                {{ __('Members only') }}
+                                <flux:text>
+                                    <span x-text="$wire.members_only ? @js(__('Yes')) : @js(__('No'))">{{ $members_only ? __('Yes') : __('No') }}</span>
+                                </flux:text>
+                            </div>
+                        </flux:accordion.heading>
+
+                        <flux:accordion.content class="mt-3">
+                            <flux:switch wire:model="members_only" label="{{ __('Require visitors to sign in to view this page.') }}" align="left" />
+                        </flux:accordion.content>
+                    </flux:accordion.item>
+                @endif
 
                 @if (count($activeLocales) > 1)
                     <flux:accordion.item>

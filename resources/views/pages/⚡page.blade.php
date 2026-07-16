@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Page;
-use Livewire\Component;
 use Illuminate\View\View;
+use Livewire\Component;
 
 return new class extends Component
 {
@@ -21,6 +21,11 @@ return new class extends Component
             $this->unpublished = ! $this->page->isLiveInLocale();
         } else {
             $this->page = $query->publishedInLocale()->firstOrFail();
+
+            if ($this->page->isMembersOnly() && auth()->guest()) {
+                session()->put('url.intended', url()->full());
+                $this->redirect(route('login'));
+            }
         }
     }
 
