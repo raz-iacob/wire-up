@@ -11,6 +11,7 @@ use App\Ai\Tools\DraftOnlyTool;
 use App\Ai\Tools\McpResourceTool;
 use App\Mcp\Servers\WireUpServer;
 use App\Mcp\Tools\CreatePageTool;
+use App\Mcp\Tools\CreateRecordTool;
 use Illuminate\Support\Collection;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
@@ -110,7 +111,7 @@ final class SiteAssistant implements Agent, Conversational, HasTools
         $tools = self::visible(WireUpServer::toolClasses())
             ->map(fn (string $class): object => match (true) {
                 is_a($class, RequiresConfirmation::class, true) => new ConfirmationTool(resolve($class)),
-                $class === CreatePageTool::class => new DraftOnlyTool(resolve($class)),
+                in_array($class, [CreatePageTool::class, CreateRecordTool::class], true) => new DraftOnlyTool(resolve($class)),
                 default => resolve($class),
             });
 

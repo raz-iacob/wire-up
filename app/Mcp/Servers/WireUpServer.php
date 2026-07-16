@@ -5,22 +5,30 @@ declare(strict_types=1);
 namespace App\Mcp\Servers;
 
 use App\Mcp\Resources\BlockTypesResource;
+use App\Mcp\Tools\CreateContentTypeTool;
 use App\Mcp\Tools\CreatePageTool;
+use App\Mcp\Tools\CreateRecordTool;
 use App\Mcp\Tools\GetMenusTool;
 use App\Mcp\Tools\GetPageTool;
+use App\Mcp\Tools\GetRecordTool;
 use App\Mcp\Tools\GetSettingsTool;
 use App\Mcp\Tools\ImportMediaFromUrlTool;
 use App\Mcp\Tools\ImportPexelsMediaTool;
+use App\Mcp\Tools\ListContentTypesTool;
 use App\Mcp\Tools\ListMediaTool;
 use App\Mcp\Tools\ListPagesTool;
+use App\Mcp\Tools\ListRecordsTool;
 use App\Mcp\Tools\PublishPageTool;
+use App\Mcp\Tools\PublishRecordTool;
 use App\Mcp\Tools\ReadWebpageTool;
 use App\Mcp\Tools\ScaffoldSiteTool;
 use App\Mcp\Tools\SearchPexelsTool;
+use App\Mcp\Tools\UpdateContentTypeTool;
 use App\Mcp\Tools\UpdateDesignTool;
 use App\Mcp\Tools\UpdateIdentityTool;
 use App\Mcp\Tools\UpdateMenuTool;
 use App\Mcp\Tools\UpdatePageBlocksTool;
+use App\Mcp\Tools\UpdateRecordTool;
 use App\Mcp\Tools\UpdateSocialTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
@@ -49,9 +57,18 @@ Typical workflow for building or replicating a site:
    `update-page-blocks`.
 5. Wire the pages into navigation with `get-menus` + `update-menu` (header and
    footer), and set social profile links with `update-social`.
-6. Verify your work by fetching the page URL with an `Accept: text/markdown`
-   header — every page serves a markdown representation of its content.
-7. Publish with `publish-page` when the page looks right.
+6. For repeating, structured content (products, services, blog posts, events),
+   use content types. A content type is a reusable blueprint of fields; each
+   entry is a record with its own URL under the type's prefix. List and inspect
+   them with `list-content-types`, create one (from a preset or custom fields)
+   with `create-content-type`, and adjust its blueprint with
+   `update-content-type`. Then manage its records with `list-records`,
+   `get-record`, `create-record`, `update-record`, and `publish-record`. Records
+   carry both custom field values and their own content blocks.
+7. Verify your work by fetching the page or record URL with an
+   `Accept: text/markdown` header — every page and record serves a markdown
+   representation of its content.
+8. Publish with `publish-page` / `publish-record` when the content looks right.
 MD)]
 final class WireUpServer extends Server
 {
@@ -65,6 +82,14 @@ final class WireUpServer extends Server
         CreatePageTool::class,
         UpdatePageBlocksTool::class,
         PublishPageTool::class,
+        ListContentTypesTool::class,
+        CreateContentTypeTool::class,
+        UpdateContentTypeTool::class,
+        ListRecordsTool::class,
+        GetRecordTool::class,
+        CreateRecordTool::class,
+        UpdateRecordTool::class,
+        PublishRecordTool::class,
         ListMediaTool::class,
         ImportMediaFromUrlTool::class,
         ReadWebpageTool::class,

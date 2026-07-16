@@ -12,6 +12,7 @@ use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Tools\CreatePageTool;
 use App\Mcp\Tools\GetPageTool;
 use App\Mcp\Tools\PublishPageTool;
+use App\Mcp\Tools\PublishRecordTool;
 use App\Models\Page;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
@@ -61,6 +62,8 @@ it('exposes every WireUp tool and the block-types resource to the assistant', fu
 
     expect($names->all())->toEqualCanonicalizing([
         'list-pages', 'get-page', 'scaffold-site', 'create-page', 'update-page-blocks', 'publish-page',
+        'list-content-types', 'create-content-type', 'update-content-type',
+        'list-records', 'get-record', 'create-record', 'update-record', 'publish-record',
         'list-media', 'import-media-from-url', 'read-webpage', 'search-pexels', 'import-pexels-media',
         'get-settings', 'update-design', 'update-identity',
         'get-menus', 'update-menu', 'update-social',
@@ -73,13 +76,16 @@ it('wraps tools for the SDK by their assistant policy', function (): void {
 
     expect($tools->first(fn (object $t): bool => $t->name() === 'get-page'))->toBeInstanceOf(GetPageTool::class)
         ->and($tools->first(fn (object $t): bool => $t->name() === 'create-page'))->toBeInstanceOf(DraftOnlyTool::class)
+        ->and($tools->first(fn (object $t): bool => $t->name() === 'create-record'))->toBeInstanceOf(DraftOnlyTool::class)
         ->and($tools->first(fn (object $t): bool => $t->name() === 'publish-page'))->toBeInstanceOf(ConfirmationTool::class)
+        ->and($tools->first(fn (object $t): bool => $t->name() === 'publish-record'))->toBeInstanceOf(ConfirmationTool::class)
         ->and($tools->first(fn (object $t): bool => $t->name() === 'block-types'))->toBeInstanceOf(McpResourceTool::class);
 });
 
 it('marks only publishing as requiring confirmation', function (): void {
-    expect(SiteAssistant::confirmableToolNames())->toBe(['publish-page'])
+    expect(SiteAssistant::confirmableToolNames())->toBe(['publish-page', 'publish-record'])
         ->and(SiteAssistant::confirmableToolClass('publish-page'))->toBe(PublishPageTool::class)
+        ->and(SiteAssistant::confirmableToolClass('publish-record'))->toBe(PublishRecordTool::class)
         ->and(SiteAssistant::confirmableToolClass('create-page'))->toBeNull();
 });
 
