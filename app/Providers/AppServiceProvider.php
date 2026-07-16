@@ -94,6 +94,24 @@ final class AppServiceProvider extends ServiceProvider
             config()->set('ai.default', $aiProvider);
             config()->set('ai.providers.'.$aiProvider.'.key', $aiApiKey);
         }
+
+        $mailHost = config('site.mail_host');
+        $mailUsername = config('site.mail_username');
+        $mailPassword = config('site.mail_password');
+        $mailFrom = config('site.mail_from_address');
+
+        if (is_string($mailHost) && $mailHost !== '' && is_string($mailUsername) && $mailUsername !== '' && is_string($mailPassword) && $mailPassword !== '' && is_string($mailFrom) && $mailFrom !== '') {
+            $mailFromName = config('site.mail_from_name');
+
+            config()->set('mail.default', 'smtp');
+            config()->set('mail.mailers.smtp.host', $mailHost);
+            config()->set('mail.mailers.smtp.port', (int) config('site.mail_port', 587));
+            config()->set('mail.mailers.smtp.username', $mailUsername);
+            config()->set('mail.mailers.smtp.password', $mailPassword);
+            config()->set('mail.mailers.smtp.scheme', config('site.mail_encryption') === 'ssl' ? 'smtps' : null);
+            config()->set('mail.from.address', $mailFrom);
+            config()->set('mail.from.name', is_string($mailFromName) && $mailFromName !== '' ? $mailFromName : config()->string('app.name'));
+        }
     }
 
     private function configureModels(): void

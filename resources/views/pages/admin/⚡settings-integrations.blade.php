@@ -7,6 +7,7 @@ use App\Livewire\Forms\AssistantIntegrationForm;
 use App\Livewire\Forms\CustomCodeForm;
 use App\Livewire\Forms\GoogleAnalyticsIntegrationForm;
 use App\Livewire\Forms\GoogleMapsIntegrationForm;
+use App\Livewire\Forms\MailIntegrationForm;
 use App\Livewire\Forms\PexelsIntegrationForm;
 use App\Livewire\Forms\SlackIntegrationForm;
 use Flux\Flux;
@@ -24,6 +25,8 @@ return new class extends Component
     public SlackIntegrationForm $slackForm;
 
     public AssistantIntegrationForm $assistantForm;
+
+    public MailIntegrationForm $mailForm;
 
     public CustomCodeForm $customCodeForm;
 
@@ -54,6 +57,55 @@ return new class extends Component
         $this->assistantForm->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : 'claude-opus-4-8';
         $this->customCodeForm->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
         $this->customCodeForm->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
+
+        $this->mailForm->mail_provider = array_key_exists((string) config('site.mail_provider'), config()->array('mail_providers')) ? config()->string('site.mail_provider') : 'gmail';
+        $this->mailForm->mail_host = is_string(config('site.mail_host')) ? config()->string('site.mail_host') : '';
+        $this->mailForm->mail_port = is_numeric(config('site.mail_port')) ? (int) config('site.mail_port') : 587;
+        $this->mailForm->mail_username = is_string(config('site.mail_username')) ? config()->string('site.mail_username') : '';
+        $this->mailForm->mail_password = is_string(config('site.mail_password')) ? config()->string('site.mail_password') : '';
+        $this->mailForm->mail_encryption = in_array(config('site.mail_encryption'), ['tls', 'ssl'], true) ? config()->string('site.mail_encryption') : 'tls';
+        $this->mailForm->mail_from_address = is_string(config('site.mail_from_address')) ? config()->string('site.mail_from_address') : '';
+        $this->mailForm->mail_from_name = is_string(config('site.mail_from_name')) ? config()->string('site.mail_from_name') : '';
+    }
+
+    public function updatedMailFormMailProvider(string $value): void
+    {
+        $preset = config('mail_providers.'.$value);
+
+        if (! is_array($preset) || $value === 'custom') {
+            return;
+        }
+
+        $this->mailForm->mail_host = (string) ($preset['host'] ?? '');
+        $this->mailForm->mail_port = (int) ($preset['port'] ?? 587);
+        $this->mailForm->mail_encryption = (string) ($preset['encryption'] ?? 'tls');
+        $this->mailForm->mail_username = (string) ($preset['username'] ?? '');
+    }
+
+    public function connectMail(UpdateSettingsAction $action): void
+    {
+        $this->authorize('settings.edit');
+
+        $this->mailForm->mail_host = mb_trim($this->mailForm->mail_host);
+        $this->mailForm->mail_from_address = mb_trim($this->mailForm->mail_from_address);
+
+        $validated = $this->mailForm->validate();
+
+        $action->handle([
+            'mail_provider' => $validated['mail_provider'],
+            'mail_host' => $validated['mail_host'],
+            'mail_port' => $validated['mail_port'],
+            'mail_username' => $validated['mail_username'],
+            'mail_password' => $validated['mail_password'],
+            'mail_encryption' => $validated['mail_encryption'],
+            'mail_from_address' => $validated['mail_from_address'],
+            'mail_from_name' => mb_trim((string) $validated['mail_from_name']),
+        ]);
+
+        $this->dispatch('integrations-updated');
+
+        Flux::modal('integration-mail')->close();
+        Flux::toast(__('Email connected.'), variant: 'success');
     }
 
     public function connectPexels(UpdateSettingsAction $action): void
@@ -140,6 +192,7 @@ return new class extends Component
             'google-maps' => ['google_maps_api_key'],
             'slack' => ['slack_webhook_url'],
             'assistant' => ['ai_api_key'],
+            'mail' => ['mail_host', 'mail_username', 'mail_password', 'mail_from_address', 'mail_from_name'],
             default => [],
         };
 
@@ -153,6 +206,7 @@ return new class extends Component
             'google-maps' => $this->googleMapsForm->reset('google_maps_api_key'),
             'slack' => $this->slackForm->reset('slack_webhook_url'),
             'assistant' => $this->assistantForm->reset('ai_api_key'),
+            'mail' => $this->mailForm->reset('mail_host', 'mail_username', 'mail_password', 'mail_from_address', 'mail_from_name'),
             default => null,
         };
 
@@ -299,7 +353,69 @@ return new class extends Component
                     <flux:text>{{ __('Let an AI model build and fill your site from a chat — pages, blocks, design and more.') }}</flux:text>
                 </div>
             </flux:card>
+
+            @php($mailConnected = $this->mailForm->mail_password !== '')
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
+                        <flux:icon name="envelope" class="size-6 text-accent" />
+                    </div>
+                    <flux:modal.trigger name="integration-mail">
+                        <flux:button size="sm" :variant="$mailConnected ? 'primary' : 'outline'" :icon="$mailConnected ? 'check' : null">
+                            {{ $mailConnected ? __('Connected') : __('Connect') }}
+                        </flux:button>
+                    </flux:modal.trigger>
+                </div>
+
+                <div class="space-y-1">
+                    <flux:heading size="lg">{{ __('Email') }}</flux:heading>
+                    <flux:text>{{ __('Send form notifications and system email through your own SMTP provider.') }}</flux:text>
+                </div>
+            </flux:card>
         </div>
+
+        <flux:modal name="integration-mail" class="w-full md:max-w-lg">
+            <form wire:submit="connectMail" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Connect email (SMTP)') }}</flux:heading>
+                    <flux:text class="mt-2">{{ __('Pick a provider or choose Custom SMTP, then add your credentials. Form notifications and system email will send from your account.') }}</flux:text>
+                </div>
+
+                <flux:select wire:model.live="mailForm.mail_provider" :label="__('Provider')">
+                    @foreach (config('mail_providers') as $key => $preset)
+                        <flux:select.option value="{{ $key }}">{{ $preset['label'] }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                <div x-show="$wire.mailForm.mail_provider === 'custom'" x-cloak class="space-y-6">
+                    <flux:input wire:model="mailForm.mail_host" :label="__('SMTP host')" placeholder="smtp.example.com" />
+                    <div class="grid grid-cols-2 gap-4">
+                        <flux:input type="number" wire:model="mailForm.mail_port" :label="__('Port')" />
+                        <flux:select wire:model="mailForm.mail_encryption" :label="__('Encryption')">
+                            <flux:select.option value="tls">{{ __('TLS (STARTTLS)') }}</flux:select.option>
+                            <flux:select.option value="ssl">SSL</flux:select.option>
+                        </flux:select>
+                    </div>
+                </div>
+
+                <flux:input wire:model="mailForm.mail_username" :label="__('Username')" :placeholder="__('Usually your email address or API user')" />
+                <flux:input wire:model="mailForm.mail_password" type="password" viewable :label="__('Password or API key')" :placeholder="__('Paste your SMTP password or API key…')" />
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <flux:input wire:model="mailForm.mail_from_address" type="email" :label="__('From address')" placeholder="hello@yoursite.com" />
+                    <flux:input wire:model="mailForm.mail_from_name" :label="__('From name')" :placeholder="__('Your Site')" />
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    @if ($this->mailForm->mail_password !== '')
+                        <flux:button variant="subtle" wire:click="disconnect('mail')">{{ __('Disconnect') }}</flux:button>
+                    @else
+                        <span></span>
+                    @endif
+                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
 
         <flux:modal name="integration-pexels" class="w-full md:max-w-lg">
             <form wire:submit="connectPexels" class="space-y-6">

@@ -429,3 +429,142 @@ it('does not touch the ai config when no assistant key is saved', function (): v
 
     expect(config('ai.default'))->toBe('openai');
 });
+
+it('connects email over custom smtp by persisting the settings', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('mailForm.mail_provider', 'custom')
+        ->set('mailForm.mail_host', '  smtp.example.com  ')
+        ->set('mailForm.mail_port', 2525)
+        ->set('mailForm.mail_username', 'user@example.com')
+        ->set('mailForm.mail_password', 'secret-key')
+        ->set('mailForm.mail_encryption', 'tls')
+        ->set('mailForm.mail_from_address', '  hello@example.com  ')
+        ->set('mailForm.mail_from_name', 'Example Site')
+        ->call('connectMail')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('mail_host'))->toBe('smtp.example.com')
+        ->and(Settings::get('mail_port'))->toBe(2525)
+        ->and(Settings::get('mail_username'))->toBe('user@example.com')
+        ->and(Settings::get('mail_password'))->toBe('secret-key')
+        ->and(Settings::get('mail_from_address'))->toBe('hello@example.com')
+        ->and(Settings::get('mail_provider'))->toBe('custom');
+});
+
+it('prefills host, port, encryption and username when a provider preset is chosen', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('mailForm.mail_provider', 'resend')
+        ->assertSet('mailForm.mail_host', 'smtp.resend.com')
+        ->assertSet('mailForm.mail_port', 465)
+        ->assertSet('mailForm.mail_encryption', 'ssl')
+        ->assertSet('mailForm.mail_username', 'resend');
+});
+
+it('rejects invalid email connection settings', function (string $field, mixed $value, string $rule): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('mailForm.mail_provider', 'custom')
+        ->set('mailForm.mail_host', 'smtp.example.com')
+        ->set('mailForm.mail_username', 'user')
+        ->set('mailForm.mail_password', 'secret')
+        ->set('mailForm.mail_from_address', 'hi@example.com')
+        ->set('mailForm.mail_from_name', 'Site')
+        ->set("mailForm.{$field}", $value)
+        ->call('connectMail')
+        ->assertHasErrors(["mailForm.{$field}" => $rule]);
+})->with([
+    'blank host' => ['mail_host', '', 'required'],
+    'bad host' => ['mail_host', 'not a host!', 'regex'],
+    'bad port' => ['mail_port', 70000, 'between'],
+    'blank password' => ['mail_password', '', 'required'],
+    'bad encryption' => ['mail_encryption', 'starttls', 'in'],
+    'bad from address' => ['mail_from_address', 'not-an-email', 'email'],
+]);
+
+it('disconnects email by clearing the credentials', function (): void {
+    Settings::set([
+        'mail_host' => 'smtp.example.com',
+        'mail_username' => 'user',
+        'mail_password' => 'secret',
+        'mail_from_address' => 'hi@example.com',
+        'mail_from_name' => 'Site',
+    ]);
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->call('disconnect', 'mail')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('mail_password'))->toBe('')
+        ->and(Settings::get('mail_host'))->toBe('');
+});
+
+it('hydrates the saved email settings on mount', function (): void {
+    Settings::set([
+        'mail_provider' => 'sendgrid',
+        'mail_host' => 'smtp.sendgrid.net',
+        'mail_password' => 'sg-secret',
+        'mail_encryption' => 'tls',
+    ]);
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->assertSet('mailForm.mail_provider', 'sendgrid')
+        ->assertSet('mailForm.mail_host', 'smtp.sendgrid.net')
+        ->assertSet('mailForm.mail_password', 'sg-secret')
+        ->assertSet('mailForm.mail_encryption', 'tls');
+});
+
+it('bridges the saved email settings into the mail config at boot', function (): void {
+    Settings::set([
+        'mail_host' => 'smtp.example.com',
+        'mail_port' => 587,
+        'mail_username' => 'user',
+        'mail_password' => 'secret',
+        'mail_encryption' => 'tls',
+        'mail_from_address' => 'hi@example.com',
+        'mail_from_name' => 'Example Site',
+    ]);
+
+    new AppServiceProvider(app())->boot();
+
+    expect(config('mail.default'))->toBe('smtp')
+        ->and(config('mail.mailers.smtp.host'))->toBe('smtp.example.com')
+        ->and(config('mail.mailers.smtp.port'))->toBe(587)
+        ->and(config('mail.mailers.smtp.username'))->toBe('user')
+        ->and(config('mail.mailers.smtp.password'))->toBe('secret')
+        ->and(config('mail.mailers.smtp.scheme'))->toBeNull()
+        ->and(config('mail.from.address'))->toBe('hi@example.com')
+        ->and(config('mail.from.name'))->toBe('Example Site');
+});
+
+it('uses the smtps scheme for ssl and falls back to the app name for the from name', function (): void {
+    Settings::set([
+        'mail_host' => 'smtp.resend.com',
+        'mail_port' => 465,
+        'mail_username' => 'resend',
+        'mail_password' => 'secret',
+        'mail_encryption' => 'ssl',
+        'mail_from_address' => 'hi@example.com',
+        'mail_from_name' => '',
+    ]);
+
+    new AppServiceProvider(app())->boot();
+
+    expect(config('mail.mailers.smtp.scheme'))->toBe('smtps')
+        ->and(config('mail.from.name'))->toBe(config('app.name'));
+});
+
+it('does not touch the mail config when no email settings are saved', function (): void {
+    Settings::set(['mail_host' => '', 'mail_password' => '']);
+    config()->set('mail.default', 'log');
+
+    new AppServiceProvider(app())->boot();
+
+    expect(config('mail.default'))->toBe('log');
+});
