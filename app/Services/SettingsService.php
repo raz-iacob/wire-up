@@ -190,6 +190,22 @@ final class SettingsService
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function interfaceTranslationLocales(): array
+    {
+        return resolve('localization')->getActiveLocaleCodes()
+            ->reject(fn (string $code): bool => $code === 'en')
+            ->values()
+            ->all();
+    }
+
+    public function showsInterfaceTranslations(): bool
+    {
+        return $this->allowsRegistration() && $this->interfaceTranslationLocales() !== [];
+    }
+
+    /**
      * @return array<string, string>
      */
     public function authPageOptions(): array

@@ -6,11 +6,13 @@ namespace App\Providers;
 
 use App\Models\Settings;
 use App\Models\User;
+use App\Services\DatabaseTranslationLoader;
 use App\Services\LocalizationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -25,6 +27,11 @@ final class AppServiceProvider extends ServiceProvider
         $this->app->singleton('localization', LocalizationService::class);
 
         $this->app->make(Repository::class)->set('app.default_locale', $this->app->make(Repository::class)->string('app.locale', 'en'));
+
+        $this->app->extend('translation.loader', fn (): DatabaseTranslationLoader => new DatabaseTranslationLoader(
+            $this->app->make(Filesystem::class),
+            (string) $this->app->make('path.lang'),
+        ));
     }
 
     public function boot(): void

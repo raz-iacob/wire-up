@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Services\SettingsService;
 use App\Services\UpdateService;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -20,6 +21,12 @@ return new class extends Component
     {
         return resolve(UpdateService::class)->updateAvailable();
     }
+
+    #[Computed]
+    public function showTranslations(): bool
+    {
+        return SettingsService::current()->showsInterfaceTranslations();
+    }
 };
 ?>
 
@@ -37,6 +44,9 @@ return new class extends Component
         <flux:sidebar.item :href="route('admin.settings-identity')" :current="request()->routeIs('admin.settings-identity')" wire:navigate.hover>{{ __('Identity') }}</flux:sidebar.item>
         <flux:sidebar.item :href="route('admin.settings-design')" :current="request()->routeIs('admin.settings-design')" wire:navigate.hover>{{ __('Design') }}</flux:sidebar.item>
         <flux:sidebar.item :href="route('admin.settings-menus')" :current="request()->routeIs('admin.settings-menus')" wire:navigate.hover>{{ __('Menus') }}</flux:sidebar.item>
+        @if ($this->showTranslations)
+            <flux:sidebar.item :href="route('admin.settings-translations')" :current="request()->routeIs('admin.settings-translations')" wire:navigate.hover>{{ __('Translations') }}</flux:sidebar.item>
+        @endif
         <flux:sidebar.item :href="route('admin.settings-content-types')" :current="request()->routeIs('admin.settings-content-types')" wire:navigate.hover>{{ __('Content Types') }}</flux:sidebar.item>
         <flux:sidebar.item :href="route('admin.settings-social')" :current="request()->routeIs('admin.settings-social')" wire:navigate.hover>{{ __('Social') }}</flux:sidebar.item>
         <flux:sidebar.item :href="route('admin.settings-integrations')" :current="request()->routeIs('admin.settings-integrations')" wire:navigate.hover>{{ __('App Integrations') }}</flux:sidebar.item>

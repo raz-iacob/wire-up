@@ -47,6 +47,7 @@ Route::middleware('can:settings.view')->group(function (): void {
     Route::livewire('settings/identity', 'pages::admin.settings-identity')->name('settings-identity');
     Route::livewire('settings/design', 'pages::admin.settings-design')->name('settings-design');
     Route::livewire('settings/menus', 'pages::admin.settings-menus')->name('settings-menus');
+    Route::livewire('settings/translations', 'pages::admin.settings-translations')->name('settings-translations');
     Route::livewire('settings/social', 'pages::admin.settings-social')->name('settings-social');
     Route::livewire('settings/integrations', 'pages::admin.settings-integrations')->name('settings-integrations');
     Route::livewire('settings/updates', 'pages::admin.settings-updates')->name('settings-updates');
