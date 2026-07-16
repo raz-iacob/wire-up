@@ -23,6 +23,8 @@ return new class extends Component
 
     public ?string $logo = null;
 
+    public ?string $logoDark = null;
+
     public bool $transparent;
 
     public int $year;
@@ -42,6 +44,7 @@ return new class extends Component
         $this->brand = $service->title() ?: config()->string('app.name');
         $this->tagline = $service->description();
         $this->logo = $service->logoUrl('logo_footer');
+        $this->logoDark = $service->logoUrl('logo_footer_dark');
 
         $this->year = (int) now()->year;
     }
@@ -60,7 +63,7 @@ return new class extends Component
         @case('centered')
             <div class="mx-auto max-w-3xl px-6 py-10 text-center">
                 <div class="flex justify-center">
-                    <x-site.brand :logo="$logo" :brand="$brand" />
+                    <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" />
                 </div>
                 <x-site.nav :items="$items" class="mt-4 justify-center" />
                 <x-site.social :links="$social" :variant="$socialVariant" class="mt-4 justify-center" />
@@ -74,7 +77,7 @@ return new class extends Component
             <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                 <div class="grid gap-8 py-12 sm:grid-cols-2 md:grid-cols-3">
                     <div class="space-y-4">
-                        <x-site.brand :logo="$logo" :brand="$brand" />
+                        <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" />
                         @if ($tagline !== '')
                             <p class="max-w-xs text-sm opacity-70">{{ $tagline }}</p>
                         @endif
@@ -103,7 +106,7 @@ return new class extends Component
             <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                 <div class="flex flex-wrap items-start justify-between gap-6 py-10">
                     <div class="space-y-4">
-                        <x-site.brand :logo="$logo" :brand="$brand" />
+                        <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" />
                         <x-site.social :links="$social" :variant="$socialVariant" />
                     </div>
                     <x-site.nav :items="$items" />

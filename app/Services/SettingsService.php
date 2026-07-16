@@ -379,6 +379,11 @@ final class SettingsService
         return $this->paletteFromTheme($theme === '' ? config()->string('theme.default_dark') : $theme, 'site.colors_dark');
     }
 
+    public function themeToggleEnabled(): bool
+    {
+        return $this->darkThemeColors() !== [] && (bool) config('site.header_theme_toggle', false);
+    }
+
     public function themeCss(): string
     {
         $source = $this->themeColors() ?: config()->array('theme.presets.default.colors');

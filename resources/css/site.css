@@ -8,6 +8,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+[x-cloak] {
+    display: none;
+}
+
 @theme {
     --animate-marquee: marquee 18s linear infinite;
 }

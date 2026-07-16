@@ -24,6 +24,8 @@ return new class extends Component
 
     public ?string $logo = null;
 
+    public ?string $logoDark = null;
+
     public bool $transparent;
 
     public string $position;
@@ -58,6 +60,7 @@ return new class extends Component
 
         $this->brand = $service->title() ?: config()->string('app.name');
         $this->logo = $service->logoUrl('logo_header');
+        $this->logoDark = $service->logoUrl('logo_header_dark');
 
         $this->position = $this->transparent ? 'absolute inset-x-0 top-0 z-40' : ($sticky ? 'sticky top-0 z-40 shadow-sm' : 'relative');
 
@@ -101,10 +104,11 @@ return new class extends Component
         @case('centered')
             <div class="relative mx-auto max-w-(--wire-container) px-(--wire-gutter) py-8 text-center space-y-6">
                 <div class="absolute inset-e-6 top-4 max-md:hidden">
+                    <x-site.theme-toggle />
                     <x-site.language-picker :languages="$this->languages" />
                 </div>
                 <div class="flex justify-center">
-                    <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
+                    <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
                 </div>
                 <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" class="mt-3 justify-center max-md:hidden" />
             </div>
@@ -112,10 +116,11 @@ return new class extends Component
 
         @case('split')
             <div class="mx-auto grid max-w-(--wire-container) grid-cols-3 items-center gap-6 px-(--wire-gutter) py-4">
-                <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
+                <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
                 <x-site.nav :items="$links" :size="$navSize" :hover="$navHover" class="justify-center max-md:hidden" />
                 <div class="flex items-center justify-end gap-4 max-md:hidden">
                     <x-site.nav :items="$buttons" :size="$navSize" :hover="$navHover" />
+                    <x-site.theme-toggle />
                     <x-site.language-picker :languages="$this->languages" />
                 </div>
             </div>
@@ -123,15 +128,16 @@ return new class extends Component
 
         @case('minimal')
             <div class="mx-auto flex max-w-(--wire-container) items-center justify-between px-(--wire-gutter) py-4">
-                <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
+                <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
             </div>
             @break
 
         @default
             <div class="mx-auto flex max-w-(--wire-container) items-center justify-between gap-6 px-(--wire-gutter) py-4">
-                <x-site.brand :logo="$logo" :brand="$brand" :size="$logoSize" />
+                <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
                 <div class="flex items-center gap-6 max-md:hidden">
                     <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" />
+                    <x-site.theme-toggle />
                     <x-site.language-picker :languages="$this->languages" />
                 </div>
             </div>
@@ -174,7 +180,10 @@ return new class extends Component
             >
                 <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" class="flex-col items-start gap-4" />
 
-                <x-site.language-picker :languages="$this->languages" align="start" />
+                <div class="flex items-center gap-4">
+                    <x-site.theme-toggle />
+                    <x-site.language-picker :languages="$this->languages" align="start" />
+                </div>
             </div>
         </div>
     @endif

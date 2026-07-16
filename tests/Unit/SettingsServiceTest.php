@@ -25,6 +25,17 @@ function publishedPage(string $slug): Page
     return $page->load('slugs');
 }
 
+it('enables the theme toggle only with a dark theme and the setting on', function (): void {
+    Settings::set(['theme_dark' => 'midnight', 'header_theme_toggle' => true]);
+    expect((new SettingsService)->themeToggleEnabled())->toBeTrue();
+
+    Settings::set(['theme_dark' => 'midnight', 'header_theme_toggle' => false]);
+    expect((new SettingsService)->themeToggleEnabled())->toBeFalse();
+
+    Settings::set(['theme_dark' => 'none', 'header_theme_toggle' => true]);
+    expect((new SettingsService)->themeToggleEnabled())->toBeFalse();
+});
+
 it('returns the configured contact email', function (): void {
     Settings::set(['contact_email' => 'owner@example.com']);
 

@@ -320,6 +320,34 @@ it('stores the header and footer logo items on update', function (): void {
         ->and(Settings::get('logo_footer')['id'])->toBe($footer->id);
 });
 
+it('persists the header theme toggle flag', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->assertSet('header_theme_toggle', false)
+        ->set('header_theme_toggle', true)
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('header_theme_toggle'))->toBeTrue();
+});
+
+it('stores the dark-mode header and footer logo items on update', function (): void {
+    $headerDark = Media::factory()->create();
+    $footerDark = Media::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-design')
+        ->set('logo_header_dark', ['id' => $headerDark->id, 'source' => $headerDark->source])
+        ->set('logo_footer_dark', ['id' => $footerDark->id, 'source' => $footerDark->source])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('logo_header_dark')['id'])->toBe($headerDark->id)
+        ->and(Settings::get('logo_footer_dark')['id'])->toBe($footerDark->id);
+});
+
 it('persists a preset dark mode theme and defaults to the default dark preset', function (): void {
     $this->actingAsAdmin();
 

@@ -41,7 +41,7 @@
     @endif
     <style>{!! $site->themeCss() !!}</style>
     @if ($site->darkThemeColors() !== [])
-    <script>(()=>{const f=new URLSearchParams(window.location.search).get('_scheme'),m=window.matchMedia('(prefers-color-scheme: dark)'),s=()=>{const d=f?f==='dark':m.matches;document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d)};s();m.addEventListener('change',s);document.addEventListener('livewire:navigated',s);})()</script>
+    <script>(()=>{const K='wireup-scheme',q=new URLSearchParams(window.location.search).get('_scheme'),m=window.matchMedia('(prefers-color-scheme: dark)'),g=()=>{try{return localStorage.getItem(K)}catch(e){return null}},s=()=>{const c=q||g(),d=c?c==='dark':m.matches;document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);document.dispatchEvent(new CustomEvent('scheme-changed',{detail:{dark:d}}))};window.wireupToggleScheme=()=>{const d=!document.documentElement.classList.contains('dark');try{localStorage.setItem(K,d?'dark':'light')}catch(e){}s()};s();m.addEventListener('change',()=>{if(!q&&!g())s()});document.addEventListener('livewire:navigated',s)})()</script>
     @endif
     @if ($site->customCss() !== '')
     <style>{!! $site->customCss() !!}</style>

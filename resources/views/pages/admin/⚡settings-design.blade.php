@@ -51,6 +51,8 @@ return new class extends Component
 
     public bool $header_sticky = false;
 
+    public bool $header_theme_toggle = false;
+
     public string $header_logo_size;
 
     public string $header_nav_size;
@@ -82,6 +84,16 @@ return new class extends Component
      */
     public ?array $logo_footer = null;
 
+    /**
+     * @var array<string, mixed>|null
+     */
+    public ?array $logo_header_dark = null;
+
+    /**
+     * @var array<string, mixed>|null
+     */
+    public ?array $logo_footer_dark = null;
+
     public function mount(): void
     {
         /** @var array<string, mixed> $meta */
@@ -104,6 +116,7 @@ return new class extends Component
         $this->header_layout = is_string($meta['header_layout'] ?? null) ? $meta['header_layout'] : config()->string('theme.default_header_layout');
         $this->header_transparent = (bool) ($meta['header_transparent'] ?? false);
         $this->header_sticky = (bool) ($meta['header_sticky'] ?? false);
+        $this->header_theme_toggle = (bool) ($meta['header_theme_toggle'] ?? false);
         $this->header_logo_size = is_string($meta['header_logo_size'] ?? null) ? $meta['header_logo_size'] : config()->string('theme.default_header_logo_size');
         $this->header_nav_size = is_string($meta['header_nav_size'] ?? null) ? $meta['header_nav_size'] : config()->string('theme.default_header_nav_size');
         $this->header_nav_hover = is_string($meta['header_nav_hover'] ?? null) ? $meta['header_nav_hover'] : config()->string('theme.default_header_nav_hover');
@@ -115,6 +128,8 @@ return new class extends Component
 
         $this->logo_header = is_array($meta['logo_header'] ?? null) ? $meta['logo_header'] : null;
         $this->logo_footer = is_array($meta['logo_footer'] ?? null) ? $meta['logo_footer'] : null;
+        $this->logo_header_dark = is_array($meta['logo_header_dark'] ?? null) ? $meta['logo_header_dark'] : null;
+        $this->logo_footer_dark = is_array($meta['logo_footer_dark'] ?? null) ? $meta['logo_footer_dark'] : null;
         $this->auth_image = is_array($meta['auth_image'] ?? null) ? $meta['auth_image'] : null;
     }
 
@@ -138,6 +153,7 @@ return new class extends Component
             'header_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.header_layouts')))],
             'header_transparent' => ['boolean'],
             'header_sticky' => ['boolean'],
+            'header_theme_toggle' => ['boolean'],
             'header_logo_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.element_sizes')))],
             'header_nav_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.element_sizes')))],
             'header_nav_hover' => ['required', 'string', Rule::in(array_keys(config()->array('theme.nav_hover_states')))],
@@ -150,6 +166,10 @@ return new class extends Component
             'logo_header.id' => ['nullable', 'integer', 'exists:media,id'],
             'logo_footer' => ['nullable', 'array'],
             'logo_footer.id' => ['nullable', 'integer', 'exists:media,id'],
+            'logo_header_dark' => ['nullable', 'array'],
+            'logo_header_dark.id' => ['nullable', 'integer', 'exists:media,id'],
+            'logo_footer_dark' => ['nullable', 'array'],
+            'logo_footer_dark.id' => ['nullable', 'integer', 'exists:media,id'],
             'auth_image' => ['nullable', 'array'],
             'auth_image.id' => ['nullable', 'integer', 'exists:media,id'],
         ];
@@ -166,7 +186,7 @@ return new class extends Component
             'body_font_custom.regex' => __('Use only letters, numbers and spaces for the font name.'),
         ]);
 
-        $metadata = Arr::only($validated, ['theme', 'theme_dark', 'heading_font', 'body_font', 'heading_font_custom', 'body_font_custom', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
+        $metadata = Arr::only($validated, ['theme', 'theme_dark', 'heading_font', 'body_font', 'heading_font_custom', 'body_font_custom', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_theme_toggle', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
         $metadata['heading_font_custom'] = mb_trim((string) ($validated['heading_font_custom'] ?? ''));
         $metadata['body_font_custom'] = mb_trim((string) ($validated['body_font_custom'] ?? ''));
         $metadata['custom_css'] = mb_trim((string) ($validated['custom_css'] ?? ''));
@@ -183,6 +203,8 @@ return new class extends Component
             ...$metadata,
             'logo_header' => $this->logo_header,
             'logo_footer' => $this->logo_footer,
+            'logo_header_dark' => $this->logo_header_dark,
+            'logo_footer_dark' => $this->logo_footer_dark,
             'auth_image' => $this->auth_image,
         ]);
 
@@ -342,6 +364,10 @@ return new class extends Component
                         <div :class="navPreviewSize" class="flex items-center gap-3" :style="`font-family:${bodyFont}`">
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
+                            <span x-cloak x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'" class="inline-flex items-center" data-test="preview-theme-toggle">
+                                <flux:icon.moon x-show="!previewDark" class="size-4" />
+                                <flux:icon.sun x-show="previewDark" class="size-4" />
+                            </span>
                             <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Sign up') }}</span>
                         </div>
                     </div>
@@ -354,6 +380,10 @@ return new class extends Component
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
                             <span>{{ __('Pricing') }}</span>
+                            <span x-cloak x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'" class="inline-flex items-center" data-test="preview-theme-toggle">
+                                <flux:icon.moon x-show="!previewDark" class="size-4" />
+                                <flux:icon.sun x-show="previewDark" class="size-4" />
+                            </span>
                             <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Sign up') }}</span>
                         </div>
                     </div>
@@ -367,7 +397,11 @@ return new class extends Component
                             <span>{{ __('About') }}</span>
                             <span>{{ __('Pricing') }}</span>
                         </div>
-                        <div class="flex justify-end">
+                        <div class="flex items-center justify-end gap-2">
+                            <span x-cloak x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'" class="inline-flex items-center" data-test="preview-theme-toggle">
+                                <flux:icon.moon x-show="!previewDark" class="size-4" />
+                                <flux:icon.sun x-show="previewDark" class="size-4" />
+                            </span>
                             <span class="px-2.5 py-1 text-xs font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Sign up') }}</span>
                         </div>
                     </div>
@@ -687,6 +721,7 @@ return new class extends Component
                     <div class="grid sm:grid-cols-2 gap-4">
                         <flux:switch wire:model="header_transparent" align="left" label="{{ __('Transparent background') }}" description="{{ __('Header sits over the page content.') }}" />
                         <flux:switch wire:model="header_sticky" align="left" label="{{ __('Sticky header') }}" description="{{ __('Header stays fixed at the top on scroll.') }}" />
+                        <flux:switch wire:model="header_theme_toggle" align="left" label="{{ __('Light / dark toggle') }}" description="{{ __('Show a theme switch in the header. Needs a dark theme.') }}" />
                     </div>
 
                     <div class="grid sm:grid-cols-2 gap-4">
@@ -770,20 +805,37 @@ return new class extends Component
 
             <div class="space-y-6">
                 <flux:heading size="sm">{{ __('Logos') }}</flux:heading>
-                <livewire:admin.media-selector
-                    wire:model="logo_header"
-                    name="logo_header"
-                    type="image"
-                    :crops="['default' => ['label' => __('Header logo')]]"
-                    label="{{ __('Header logo') }}"
-                />
-                <livewire:admin.media-selector
-                    wire:model="logo_footer"
-                    name="logo_footer"
-                    type="image"
-                    :crops="['default' => ['label' => __('Footer logo')]]"
-                    label="{{ __('Footer logo') }}"
-                />
+                <flux:text class="!mt-1">{{ __('Add a dark-mode logo to swap it when the dark theme is active. Optional — the main logo is used when none is set.') }}</flux:text>
+                <div class="space-y-6">
+                    <livewire:admin.media-selector
+                        wire:model="logo_header"
+                        name="logo_header"
+                        type="image"
+                        :crops="['default' => ['label' => __('Header logo')]]"
+                        label="{{ __('Header logo') }}"
+                    />
+                    <livewire:admin.media-selector
+                        wire:model="logo_header_dark"
+                        name="logo_header_dark"
+                        type="image"
+                        :crops="['default' => ['label' => __('Header logo (dark)')]]"
+                        label="{{ __('Header logo — dark mode') }}"
+                    />
+                    <livewire:admin.media-selector
+                        wire:model="logo_footer"
+                        name="logo_footer"
+                        type="image"
+                        :crops="['default' => ['label' => __('Footer logo')]]"
+                        label="{{ __('Footer logo') }}"
+                    />
+                    <livewire:admin.media-selector
+                        wire:model="logo_footer_dark"
+                        name="logo_footer_dark"
+                        type="image"
+                        :crops="['default' => ['label' => __('Footer logo (dark)')]]"
+                        label="{{ __('Footer logo — dark mode') }}"
+                    />
+                </div>
             </div>
 
             <flux:separator variant="subtle" />
