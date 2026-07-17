@@ -26,6 +26,7 @@ return [
     'platforms' => [
         'facebook' => ['label' => 'Facebook URL', 'placeholder' => 'https://facebook.com/yourpage', 'icon' => 'facebook'],
         'linkedin' => ['label' => 'LinkedIn URL', 'placeholder' => 'https://linkedin.com/company/yourcompany', 'icon' => 'linkedin'],
+        'github' => ['label' => 'GitHub URL', 'placeholder' => 'https://github.com/yourorg', 'icon' => 'github'],
         'x' => ['label' => 'X (Twitter) URL', 'placeholder' => 'https://x.com/yourhandle', 'icon' => 'x-twitter'],
         'youtube' => ['label' => 'YouTube URL', 'placeholder' => 'https://youtube.com/@yourchannel', 'icon' => 'youtube'],
         'instagram' => ['label' => 'Instagram URL', 'placeholder' => 'https://instagram.com/yourhandle', 'icon' => 'instagram'],
