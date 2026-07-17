@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Prompts\ReplicateSitePrompt;
 use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Tools\CreateContentTypeTool;
 use App\Mcp\Tools\CreatePageTool;
@@ -40,6 +41,10 @@ use Laravel\Mcp\Server\Attributes\Version;
 #[Instructions(<<<'MD'
 Wire-Up is a block-based site builder. Pages are composed of ordered content
 blocks (hero, rich text, gallery, pricing, and so on), each storing its data as JSON.
+
+To rebuild an existing website end to end, start with the `replicate-site` prompt —
+it lays out the full playbook (read the source, match the design, scaffold the pages,
+recreate collections as records, and publish) for a given URL.
 
 Typical workflow for building or replicating a site:
 
@@ -111,6 +116,13 @@ final class WireUpServer extends Server
     ];
 
     /**
+     * @var array<int, class-string<Server\Prompt>>
+     */
+    public const array PROMPTS = [
+        ReplicateSitePrompt::class,
+    ];
+
+    /**
      * @var array<int, class-string<Server\Tool>>
      */
     protected array $tools = self::TOOLS;
@@ -119,6 +131,11 @@ final class WireUpServer extends Server
      * @var array<int, class-string<Server\Resource>>
      */
     protected array $resources = self::RESOURCES;
+
+    /**
+     * @var array<int, class-string<Server\Prompt>>
+     */
+    protected array $prompts = self::PROMPTS;
 
     /**
      * @return array<int, class-string<Server\Tool>>
