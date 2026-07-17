@@ -155,3 +155,25 @@ it('includes social links and platforms in get-settings', function (): void {
         ->assertSee('facebook.com/acme')
         ->assertSee('social_platforms');
 });
+
+it('places an account menu item that expands by auth state', function (): void {
+    WireUpServer::tool(UpdateMenuTool::class, [
+        'menu' => 'header',
+        'items' => [['type' => 'account', 'appearance' => 'button']],
+    ])
+        ->assertOk()
+        ->assertSee('"type":"account"');
+
+    $item = collect(Settings::get('menus'))->firstWhere('key', 'header')['items']['en'][0];
+
+    expect($item['type'])->toBe('account')
+        ->and($item['appearance'])->toBe('button')
+        ->and(collect(SettingsService::current()->menu('header'))->pluck('label')->all())->toContain(__('Log in'));
+});
+
+it('rejects an icon appearance on an account menu item', function (): void {
+    WireUpServer::tool(UpdateMenuTool::class, [
+        'menu' => 'header',
+        'items' => [['type' => 'account', 'appearance' => 'icon']],
+    ])->assertHasErrors(['appearance must be link or button']);
+});

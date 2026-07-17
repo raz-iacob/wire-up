@@ -15,6 +15,14 @@ final class UiStrings
     }
 
     /**
+     * @return array<int, string>
+     */
+    public static function strings(): array
+    {
+        return array_merge([], ...array_map(fn (array $group): array => $group['strings'], self::catalog()));
+    }
+
+    /**
      * @return array<string, array<int, string>>
      */
     private static function areas(): array

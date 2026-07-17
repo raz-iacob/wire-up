@@ -9,6 +9,7 @@ use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Tools\CreateContentTypeTool;
 use App\Mcp\Tools\CreatePageTool;
 use App\Mcp\Tools\CreateRecordTool;
+use App\Mcp\Tools\GetInterfaceTranslationsTool;
 use App\Mcp\Tools\GetMenusTool;
 use App\Mcp\Tools\GetPageTool;
 use App\Mcp\Tools\GetRecordTool;
@@ -27,6 +28,7 @@ use App\Mcp\Tools\SearchPexelsTool;
 use App\Mcp\Tools\UpdateContentTypeTool;
 use App\Mcp\Tools\UpdateDesignTool;
 use App\Mcp\Tools\UpdateIdentityTool;
+use App\Mcp\Tools\UpdateInterfaceTranslationsTool;
 use App\Mcp\Tools\UpdateMenuTool;
 use App\Mcp\Tools\UpdatePageBlocksTool;
 use App\Mcp\Tools\UpdateRecordTool;
@@ -106,6 +108,8 @@ final class WireUpServer extends Server
         GetMenusTool::class,
         UpdateMenuTool::class,
         UpdateSocialTool::class,
+        GetInterfaceTranslationsTool::class,
+        UpdateInterfaceTranslationsTool::class,
     ];
 
     /**

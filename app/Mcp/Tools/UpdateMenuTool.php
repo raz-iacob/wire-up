@@ -90,7 +90,7 @@ final class UpdateMenuTool extends Tool
 
             'items' => $schema->array()
                 ->items($schema->object())
-                ->description('The complete ordered item list: [{"type": "page"|"link"|"heading", "label": "...", "page": <page id, for type page>, "url": "<https://, /path or #anchor, for type link>", "target": "_self"|"_blank", "appearance": "link"|"button", "badge": "..."}].')
+                ->description('The complete ordered item list: [{"type": "page"|"link"|"heading"|"account", "label": "...", "page": <page id, for type page>, "url": "<https://, /path or #anchor, for type link>", "target": "_self"|"_blank", "appearance": "link"|"button", "badge": "..."}]. An "account" item needs no label/url/page — it auto-shows Log in (and Sign up when registration is open) to visitors and Account to signed-in members.')
                 ->required(),
 
             'locale' => $schema->string()
@@ -109,8 +109,30 @@ final class UpdateMenuTool extends Tool
     {
         $type = $item['type'] ?? 'page';
 
-        if (! in_array($type, ['page', 'link', 'heading'], true)) {
-            return "Item {$position}: unknown type \"{$type}\". Use page, link, or heading.";
+        if (! in_array($type, ['page', 'link', 'heading', 'account'], true)) {
+            return "Item {$position}: unknown type \"{$type}\". Use page, link, heading, or account.";
+        }
+
+        if ($type === 'account') {
+            $appearance = $item['appearance'] ?? 'link';
+
+            if (! in_array($appearance, ['link', 'button'], true)) {
+                return "Item {$position}: appearance must be link or button.";
+            }
+
+            return [
+                'type' => 'account',
+                'appearance' => $appearance,
+                'target' => '_self',
+                'label' => mb_trim((string) ($item['label'] ?? '')),
+                'page_id' => null,
+                'url' => '',
+                'icon' => '',
+                'icon_name' => '',
+                'icon_svg' => '',
+                'badge' => '',
+                'badgeColor' => 'zinc',
+            ];
         }
 
         $label = mb_trim((string) ($item['label'] ?? ''));

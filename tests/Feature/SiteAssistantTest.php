@@ -67,6 +67,7 @@ it('exposes every WireUp tool and the block-types resource to the assistant', fu
         'list-media', 'import-media-from-url', 'read-webpage', 'search-pexels', 'import-pexels-media',
         'get-settings', 'update-design', 'update-identity',
         'get-menus', 'update-menu', 'update-social',
+        'get-interface-translations', 'update-interface-translations',
         'block-types',
     ]);
 });

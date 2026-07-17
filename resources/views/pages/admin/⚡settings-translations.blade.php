@@ -144,7 +144,7 @@ return new class extends Component
      */
     private function allStrings(): array
     {
-        return array_merge([], ...array_map(fn (array $group): array => $group['strings'], UiStrings::catalog()));
+        return UiStrings::strings();
     }
 };
 ?>
