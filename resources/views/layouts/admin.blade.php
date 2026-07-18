@@ -82,7 +82,7 @@
                         <flux:navmenu.separator />
 
                         <flux:navmenu.item icon="user" href="{{ route('admin.account-profile') }}" iconVariant="outline" wire:navigate>{{ __('Account') }}</flux:navmenu.item>
-                        <flux:navmenu.item icon="information-circle" href="#" iconVariant="outline">{{ __('Help') }}</flux:navmenu.item>
+                        <flux:navmenu.item icon="information-circle" href="{{ route('admin.help') }}" iconVariant="outline" wire:navigate>{{ __('Help') }}</flux:navmenu.item>
 
                         {{-- @if (session()->has('impersonate'))
                         <livewire:admin.components.stop-impersonating />
@@ -126,7 +126,7 @@
                         <flux:navmenu.separator />
 
                         <flux:navmenu.item icon="user" href="{{ route('admin.account-profile') }}" iconVariant="outline" wire:navigate>{{ __('Account') }}</flux:navmenu.item>
-                        <flux:navmenu.item icon="information-circle" href="#" iconVariant="outline">{{ __('Help') }}</flux:navmenu.item>
+                        <flux:navmenu.item icon="information-circle" href="{{ route('admin.help') }}" iconVariant="outline" wire:navigate>{{ __('Help') }}</flux:navmenu.item>
 
                         {{-- @if (session()->has('impersonate'))
                         <livewire:admin.components.stop-impersonating />
