@@ -349,7 +349,7 @@ return new class extends Component
         }
 
         if (is_array($this->media) && array_is_list($this->media)) {
-            $this->media = $this->normalizeMediaItem($this->media[0] ?? null);
+            $this->media = $this->normalizeMediaItem($this->media[0]);
 
             return;
         }

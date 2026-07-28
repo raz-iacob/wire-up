@@ -18,8 +18,8 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - larastan/larastan (LARASTAN) - v3
 - laravel/mcp (MCP) - v0
 - laravel/pint (PINT) - v1
-- pestphp/pest (PEST) - v4
-- phpunit/phpunit (PHPUNIT) - v12
+- pestphp/pest (PEST) - v5
+- phpunit/phpunit (PHPUNIT) - v13
 - rector/rector (RECTOR) - v2
 - prettier (PRETTIER) - v3
 - tailwindcss (TAILWINDCSS) - v4
@@ -360,18 +360,29 @@ it('has emails', function (string $email) {
 ]);
 </code-snippet>
 
-=== pest/v4 rules ===
+=== pest/v5 rules ===
 
-## Pest 4
+## Pest 5
 
-- Pest 4 is a huge upgrade to Pest and offers: browser testing, smoke testing, visual regression testing, test sharding, and faster type coverage.
+- Pest 5 builds on PHPUnit 13 and offers: browser testing, smoke testing, visual regression testing, test sharding, and faster type coverage.
 - Browser testing is incredibly powerful and useful for this project.
 - Browser tests should live in `tests/Browser/`.
 - Use the `search-docs` tool for detailed guidance on utilizing these features.
 
+### Test Impact Analysis (Tia)
+
+- `composer test` runs with `--tia`, which records a dependency graph and replays cached results for tests unaffected by your changes. A replay reports the same coverage as a full run.
+- Use `composer test:unit:fresh` to force a full uncached run when you suspect the graph is stale.
+- The graph lives outside the repository, in `~/.pest/tia/`. Delete that directory to reset it.
+- Tia's coverage merge unserializes the whole cached coverage graph and needs ~700 MB. `phpunit.xml` sets `<ini name="memory_limit" value="-1"/>` so this holds even when the `-d memory_limit=-1` on the composer script does not reach the process; do not remove it.
+
+### Coverage
+
+- `phpunit.xml` sets `includeUncoveredFiles="false"`. Do not re-enable it: the merged-coverage path used by `--parallel` would then report lines that pcov never marks executable (heredoc and `return match` bodies), permanently failing the `--exactly=100.0` gate.
+
 ### Browser Testing
 
-- You can use Laravel features like `Event::fake()`, `assertAuthenticated()`, and model factories within Pest 4 browser tests, as well as `RefreshDatabase` (when needed) to ensure a clean state for each test.
+- You can use Laravel features like `Event::fake()`, `assertAuthenticated()`, and model factories within Pest browser tests, as well as `RefreshDatabase` (when needed) to ensure a clean state for each test.
 - Interact with the page (click, type, scroll, select, submit, drag-and-drop, touch gestures, etc.) when appropriate to complete the test.
 - If requested, test on multiple browsers (Chrome, Firefox, Safari).
 - If requested, test on different devices and viewports (like iPhone 14 Pro, tablets, or custom breakpoints).

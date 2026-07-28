@@ -70,13 +70,7 @@ final class SettingsService
         $ordered = [];
 
         foreach (self::BUILTIN_MENUS as $builtin) {
-            $ordered[] = $byKey[$builtin] ?? [
-                'key' => $builtin,
-                'name' => ucfirst($builtin),
-                'builtin' => true,
-                'display' => self::normalizeMenuDisplay(null),
-                'items' => [],
-            ];
+            $ordered[] = $byKey[$builtin] ?? self::emptyBuiltinMenu($builtin);
 
             unset($byKey[$builtin]);
         }
@@ -614,6 +608,20 @@ final class SettingsService
         return array_key_exists($variant, config()->array('social.icon_variants'))
             ? $variant
             : config()->string('social.default_icon_variant', 'solid');
+    }
+
+    /**
+     * @return array{key: string, name: string, builtin: bool, display: array{background: bool, position: string, sticky: bool, mobile: string}, items: array<string, array<int, mixed>>}
+     */
+    private static function emptyBuiltinMenu(string $key): array
+    {
+        return [
+            'key' => $key,
+            'name' => ucfirst($key),
+            'builtin' => true,
+            'display' => self::normalizeMenuDisplay(null),
+            'items' => [],
+        ];
     }
 
     /**
