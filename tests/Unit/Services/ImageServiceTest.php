@@ -28,6 +28,12 @@ it('throws 404 for missing file in setSourceFile', function (): void {
     expect(fn (): ImageService => ImageService::make('missing.jpg'))->toThrow(Exception::class);
 });
 
+it('throws 404 when the source file is not a readable image', function (): void {
+    Storage::disk(config('filesystems.media'))->put('not-an-image.jpg', 'this is plain text, not an image');
+
+    expect(fn (): ImageService => ImageService::make('not-an-image.jpg'))->toThrow(Exception::class);
+});
+
 it('parses and applies options from string', function (): void {
     $service = ImageService::make('test-image.jpg')->applyOptionsString('w=100,h=100,crop=10-10-20-20,q=80,fm=webp');
 

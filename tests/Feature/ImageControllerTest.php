@@ -5,9 +5,8 @@ declare(strict_types=1);
 use App\Models\Settings;
 use App\Services\ImageService;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Image;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Drivers\Gd\Driver as GdDriver;
-use Intervention\Image\ImageManager;
 
 beforeEach(function (): void {
     Storage::fake(config('filesystems.media'));
@@ -26,12 +25,11 @@ it('can grab an image from storage and apply optional formatting', function (): 
 
     $this->assertSame('image/webp', $response->headers->get('Content-Type'));
 
-    $manager = new ImageManager(new GdDriver);
-    $image = $manager->decodeBinary($response->getFile()->getContent());
+    $image = Image::fromBytes($response->getFile()->getContent());
 
     expect($image->width())->toBeLessThanOrEqual(50)
         ->and($image->height())->toBeLessThanOrEqual(50)
-        ->and($image->origin()->mediaType())->toBe('image/webp');
+        ->and($image->mimeType())->toBe('image/webp');
 });
 
 it('rejects requests without a valid signature', function (): void {

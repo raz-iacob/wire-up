@@ -6,26 +6,23 @@ namespace App\Services;
 
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Response;
+use Illuminate\Image\Image as ProcessedImage;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Image;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
-use Intervention\Image\Drivers\Gd\Driver as GdDriver;
-use Intervention\Image\Encoders\GifEncoder;
-use Intervention\Image\Encoders\JpegEncoder;
-use Intervention\Image\Encoders\PngEncoder;
-use Intervention\Image\Encoders\WebpEncoder;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Interfaces\ImageInterface;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 final class ImageService
 {
-    private ImageInterface $image;
+    private ProcessedImage $image;
 
-    private static ?ImageManager $manager = null;
+    private int $sourceWidth = 0;
+
+    private int $sourceHeight = 0;
 
     /**
      * @var array{
@@ -130,11 +127,17 @@ final class ImageService
      */
     public function setSourceFile(string $fileKey): self
     {
-        $stream = Storage::disk(config('filesystems.media'))->readStream($fileKey);
+        $contents = Storage::disk(config('filesystems.media'))->get($fileKey);
 
-        abort_if(empty($stream), 404);
+        abort_if($contents === null || $contents === '', 404);
 
-        $this->image = $this->manager()->decodeStream($stream);
+        $dimensions = @getimagesizefromstring($contents);
+
+        abort_if($dimensions === false, 404);
+
+        [$this->sourceWidth, $this->sourceHeight] = $dimensions;
+
+        $this->image = Image::fromBytes($contents);
 
         return $this;
     }
@@ -191,22 +194,19 @@ final class ImageService
         $crop = $this->parseCrop($options['crop'] ?? '');
 
         if ($crop !== null && $crop !== []) {
-            $imageWidth = $this->image->width();
-            $imageHeight = $this->image->height();
+            $width = min($crop['width'], $this->sourceWidth);
+            $height = min($crop['height'], $this->sourceHeight);
 
-            $width = min($crop['width'], $imageWidth);
-            $height = min($crop['height'], $imageHeight);
-
-            $this->image->crop(
+            $this->image = $this->image->crop(
                 width: $width,
                 height: $height,
-                x: min($crop['offset_x'], max(0, $imageWidth - $width)),
-                y: min($crop['offset_y'], max(0, $imageHeight - $height)),
+                x: min($crop['offset_x'], max(0, $this->sourceWidth - $width)),
+                y: min($crop['offset_y'], max(0, $this->sourceHeight - $height)),
             );
         }
 
         if (Arr::hasAny($options, ['w', 'h'])) {
-            $this->image->scaleDown(
+            $this->image = $this->image->scale(
                 width: isset($options['w']) ? min((int) $options['w'], 1920) : null,
                 height: isset($options['h']) ? min((int) $options['h'], 1920) : null,
             );
@@ -222,14 +222,14 @@ final class ImageService
     {
         $quality = (int) ($this->options['q'] ?? 80);
         $format = $this->options['fm'] ?? 'jpg';
-        [$mime, $encoder] = match (mb_strtolower($format)) {
-            'png' => ['image/png', new PngEncoder],
-            'gif' => ['image/gif', new GifEncoder],
-            'webp' => ['image/webp', new WebpEncoder(quality: $quality)],
-            default => ['image/jpeg', new JpegEncoder(quality: $quality)],
+        [$mime, $encoded] = match (mb_strtolower($format)) {
+            'png' => ['image/png', $this->image->toPng()],
+            'gif' => ['image/gif', $this->image->toGif()],
+            'webp' => ['image/webp', $this->image->toWebp()->quality($quality)],
+            default => ['image/jpeg', $this->image->toJpg()->quality($quality)],
         };
 
-        return [$this->image->encode($encoder)->toString(), $mime];
+        return [$encoded->toBytes(), $mime];
     }
 
     private static function cacheRoot(): string
@@ -291,10 +291,5 @@ final class ImageService
         }
 
         return $normalized;
-    }
-
-    private function manager(): ImageManager
-    {
-        return self::$manager ??= new ImageManager(new GdDriver);
     }
 }
