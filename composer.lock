@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "058d2d2718afb8db701697a9ad9656e8",
+    "content-hash": "03884b81316b759aa4d7f6189e85b003",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -9526,69 +9526,6 @@
             "time": "2024-05-16T03:13:13+00:00"
         },
         {
-            "name": "mrpunyapal/peststan",
-            "version": "0.2.12",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/MrPunyapal/PestStan.git",
-                "reference": "a18bf927fcff6dbb5ddb749e20b294486587b35c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/MrPunyapal/PestStan/zipball/a18bf927fcff6dbb5ddb749e20b294486587b35c",
-                "reference": "a18bf927fcff6dbb5ddb749e20b294486587b35c",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^8.2",
-                "phpstan/phpstan": "^2.0"
-            },
-            "require-dev": {
-                "laravel/pao": "^1.0",
-                "laravel/pint": "^1.18",
-                "mrpunyapal/rector-pest": "^0.2.0",
-                "pestphp/pest": "^3.0 || ^4.0 || ^5.0",
-                "phpstan/extension-installer": "^1.4",
-                "phpstan/phpstan-strict-rules": "^2.0",
-                "rector/rector": "^2.0"
-            },
-            "type": "phpstan-extension",
-            "extra": {
-                "phpstan": {
-                    "includes": [
-                        "extension.neon"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "PestStan\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHPStan extension for Pest PHP testing framework",
-            "keywords": [
-                "PHPStan",
-                "pest",
-                "static-analysis",
-                "testing"
-            ],
-            "support": {
-                "issues": "https://github.com/MrPunyapal/PestStan/issues",
-                "source": "https://github.com/MrPunyapal/PestStan/tree/0.2.12"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/mrpunyapal",
-                    "type": "github"
-                }
-            ],
-            "time": "2026-07-17T19:10:40+00:00"
-        },
-        {
             "name": "mrpunyapal/rector-pest",
             "version": "0.2.17",
             "source": {
@@ -10080,6 +10017,83 @@
                 }
             ],
             "time": "2026-07-18T17:10:45+00:00"
+        },
+        {
+            "name": "pestphp/pest-plugin-agent",
+            "version": "v5.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pestphp/pest-plugin-agent.git",
+                "reference": "10eeeb9d96a815c0f41049663a2afe0c48760674"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pestphp/pest-plugin-agent/zipball/10eeeb9d96a815c0f41049663a2afe0c48760674",
+                "reference": "10eeeb9d96a815c0f41049663a2afe0c48760674",
+                "shasum": ""
+            },
+            "require": {
+                "pestphp/pest": "^5.0.0",
+                "pestphp/pest-plugin": "^5.0.0",
+                "php": "^8.4"
+            },
+            "conflict": {
+                "pestphp/pest": "<5.0.0"
+            },
+            "require-dev": {
+                "pestphp/pest-dev-tools": "^5.0.0",
+                "pestphp/pest-plugin-browser": "^5.0.0",
+                "pestphp/pest-plugin-type-coverage": "^5.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "pest": {
+                    "plugins": [
+                        "Pest\\Agent\\Plugin"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Autoload.php"
+                ],
+                "psr-4": {
+                    "Pest\\Agent\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "AI agent verification plugin for Pest",
+            "keywords": [
+                "Agent",
+                "framework",
+                "pest",
+                "php",
+                "plugin",
+                "test",
+                "testing",
+                "unit"
+            ],
+            "support": {
+                "source": "https://github.com/pestphp/pest-plugin-agent/tree/v5.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=66BYDWAT92N6L",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/nunomaduro",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.patreon.com/nunomaduro",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2026-07-21T07:48:55+00:00"
         },
         {
             "name": "pestphp/pest-plugin-arch",

@@ -8,7 +8,8 @@
     "nightwatch": false,
     "packages": [
         "livewire/blaze",
-        "barryvdh/laravel-debugbar"
+        "barryvdh/laravel-debugbar",
+        "pestphp/pest-plugin-agent"
     ],
     "sail": false,
     "skills": [
@@ -19,6 +20,7 @@
         "pest-testing",
         "tailwindcss-development",
         "blaze-optimize",
-        "debug-using-debugbar"
+        "debug-using-debugbar",
+        "pest-plugin-agent"
     ]
 }
