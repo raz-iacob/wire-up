@@ -1,17 +1,24 @@
 {
     "agents": [
-        "copilot"
+        "claude_code"
     ],
     "cloud": false,
     "guidelines": true,
-    "herd_mcp": false,
     "mcp": true,
+    "nightwatch": false,
+    "packages": [
+        "livewire/blaze",
+        "barryvdh/laravel-debugbar"
+    ],
     "sail": false,
     "skills": [
         "ai-sdk-development",
         "laravel-best-practices",
         "fluxui-development",
         "livewire-development",
-        "tailwindcss-development"
+        "pest-testing",
+        "tailwindcss-development",
+        "blaze-optimize",
+        "debug-using-debugbar"
     ]
 }

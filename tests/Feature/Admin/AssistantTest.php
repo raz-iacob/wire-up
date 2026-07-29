@@ -21,7 +21,8 @@ function seedAssistantMessage(string $conversationId, int $userId, string $role,
     DB::table('agent_conversation_messages')->insert([
         'id' => (string) Str::uuid7(),
         'conversation_id' => $conversationId,
-        'user_id' => $userId,
+        'participant_type' => (new User)->getMorphClass(),
+        'participant_id' => $userId,
         'agent' => SiteAssistant::class,
         'role' => $role,
         'content' => $content,
@@ -205,7 +206,7 @@ it('loads prior conversation history on mount', function (): void {
     $user = User::factory()->create(['role' => 'owner']);
     $this->actingAs($user);
 
-    $conversationId = resolve(ConversationStore::class)->storeConversation($user->id, 'Earlier chat');
+    $conversationId = resolve(ConversationStore::class)->storeConversation((new User)->getMorphClass(), $user->id, 'Earlier chat');
     seedAssistantMessage($conversationId, $user->id, 'user', 'Make a hero section');
     seedAssistantMessage($conversationId, $user->id, 'assistant', 'Added a **hero** to the home page.');
 
@@ -220,7 +221,7 @@ it('rebuilds tool activity chips when reloading a past chat', function (): void 
     $user = User::factory()->create(['role' => 'owner']);
     $this->actingAs($user);
 
-    $conversationId = resolve(ConversationStore::class)->storeConversation($user->id, 'Earlier chat');
+    $conversationId = resolve(ConversationStore::class)->storeConversation((new User)->getMorphClass(), $user->id, 'Earlier chat');
     seedAssistantMessage($conversationId, $user->id, 'user', 'Build an About page');
     seedAssistantMessage($conversationId, $user->id, 'assistant', 'Done — added the page.', ['create-page', 'update-page-blocks', 'publish-page']);
 
@@ -236,7 +237,7 @@ it('starts a new conversation', function (): void {
     $user = User::factory()->create(['role' => 'owner']);
     $this->actingAs($user);
 
-    $conversationId = resolve(ConversationStore::class)->storeConversation($user->id, 'Earlier chat');
+    $conversationId = resolve(ConversationStore::class)->storeConversation((new User)->getMorphClass(), $user->id, 'Earlier chat');
     seedAssistantMessage($conversationId, $user->id, 'assistant', 'Previous reply.');
 
     Livewire::test('admin.assistant')

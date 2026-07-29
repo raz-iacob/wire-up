@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "66be1eee062f804fd5f44e94ac63cee7",
+    "content-hash": "058d2d2718afb8db701697a9ad9656e8",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -62,16 +62,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.389.1",
+            "version": "3.389.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "98506321be0157d78a2c44424a8fce3a4842081d"
+                "reference": "784e0fb95e752e55c4654b5800b900c78f6d3990"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/98506321be0157d78a2c44424a8fce3a4842081d",
-                "reference": "98506321be0157d78a2c44424a8fce3a4842081d",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/784e0fb95e752e55c4654b5800b900c78f6d3990",
+                "reference": "784e0fb95e752e55c4654b5800b900c78f6d3990",
                 "shasum": ""
             },
             "require": {
@@ -153,9 +153,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.389.1"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.389.2"
             },
-            "time": "2026-07-27T18:09:06+00:00"
+            "time": "2026-07-28T18:10:25+00:00"
         },
         {
             "name": "brick/math",
@@ -1399,16 +1399,16 @@
         },
         {
             "name": "laravel/ai",
-            "version": "v0.9.1",
+            "version": "v0.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/ai.git",
-                "reference": "2760a62bff6ab515cdf10222f61b7973356450e1"
+                "reference": "47f0ffdb86639f710eb93fcdf1bd07635599f270"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/ai/zipball/2760a62bff6ab515cdf10222f61b7973356450e1",
-                "reference": "2760a62bff6ab515cdf10222f61b7973356450e1",
+                "url": "https://api.github.com/repos/laravel/ai/zipball/47f0ffdb86639f710eb93fcdf1bd07635599f270",
+                "reference": "47f0ffdb86639f710eb93fcdf1bd07635599f270",
                 "shasum": ""
             },
             "require": {
@@ -1425,13 +1425,15 @@
                 "php": "^8.3"
             },
             "require-dev": {
+                "driftingly/rector-laravel": "^2.5",
                 "laravel/mcp": "^0.8",
                 "laravel/pint": "^1.26",
                 "mockery/mockery": "^1.6.12",
                 "orchestra/testbench": "^10.6|^11.0",
                 "pestphp/pest": "^3.0|^4.0",
                 "pestphp/pest-plugin-laravel": "^3.0|^4.0",
-                "phpstan/phpstan": "^2.1"
+                "phpstan/phpstan": "^2.1",
+                "rector/rector": "^2.5"
             },
             "suggest": {
                 "laravel/mcp": "Required to use MCP client tools or MCP server tools with Laravel AI agents."
@@ -1469,7 +1471,7 @@
                 "issues": "https://github.com/laravel/ai/issues",
                 "source": "https://github.com/laravel/ai"
             },
-            "time": "2026-07-14T18:41:31+00:00"
+            "time": "2026-07-21T17:48:17+00:00"
         },
         {
             "name": "laravel/framework",
@@ -9227,16 +9229,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.29.3",
+            "version": "v1.30.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "da1d1111a6aa2e082d2a388b194afe1ba0a05d14"
+                "reference": "72a0540d1aa10b6c146bda2a22f3ae003123c0ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/da1d1111a6aa2e082d2a388b194afe1ba0a05d14",
-                "reference": "da1d1111a6aa2e082d2a388b194afe1ba0a05d14",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/72a0540d1aa10b6c146bda2a22f3ae003123c0ea",
+                "reference": "72a0540d1aa10b6c146bda2a22f3ae003123c0ea",
                 "shasum": ""
             },
             "require": {
@@ -9247,14 +9249,16 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.95.8",
-                "illuminate/view": "^12.62.0",
+                "composer/semver": "^3.4.4",
+                "friendsofphp/php-cs-fixer": "^3.95.17",
+                "illuminate/view": "^12.64.0",
                 "larastan/larastan": "^3.10.0",
                 "laravel-zero/framework": "^12.1.0",
                 "laravel/agent-detector": "^2.0.2",
+                "laravel/prompts": "^0.3.21",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^2.4.0",
-                "pestphp/pest": "^3.8.6"
+                "pestphp/pest": "^3.8.7"
             },
             "bin": [
                 "builds/pint"
@@ -9291,7 +9295,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2026-06-16T15:34:04+00:00"
+            "time": "2026-07-28T20:48:56+00:00"
         },
         {
             "name": "laravel/roster",
@@ -9889,16 +9893,16 @@
         },
         {
             "name": "pestphp/pest",
-            "version": "v5.0.0",
+            "version": "v5.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pestphp/pest.git",
-                "reference": "759ac63139e7e44d34366aec59f0d5fc165c36e8"
+                "reference": "6b2cd358e8a9d6d1abb93804b70e1c659bbc411b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pestphp/pest/zipball/759ac63139e7e44d34366aec59f0d5fc165c36e8",
-                "reference": "759ac63139e7e44d34366aec59f0d5fc165c36e8",
+                "url": "https://api.github.com/repos/pestphp/pest/zipball/6b2cd358e8a9d6d1abb93804b70e1c659bbc411b",
+                "reference": "6b2cd358e8a9d6d1abb93804b70e1c659bbc411b",
                 "shasum": ""
             },
             "require": {
@@ -9993,7 +9997,7 @@
             ],
             "support": {
                 "issues": "https://github.com/pestphp/pest/issues",
-                "source": "https://github.com/pestphp/pest/tree/v5.0.0"
+                "source": "https://github.com/pestphp/pest/tree/v5.0.1"
             },
             "funding": [
                 {
@@ -10005,7 +10009,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-07-24T00:48:21+00:00"
+            "time": "2026-07-28T17:28:46+00:00"
         },
         {
             "name": "pestphp/pest-plugin",
