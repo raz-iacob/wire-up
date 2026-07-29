@@ -61,5 +61,6 @@ return new class extends Component
         :name="'block-records-'.$blockId"
         :record-type-id="$recordTypeId"
         :max="$max"
-        :label="$label" />
+        :label="$label"
+    />
 </div>

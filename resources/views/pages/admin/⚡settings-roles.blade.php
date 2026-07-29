@@ -242,14 +242,21 @@ return new class extends Component
 ?>
 
 <x-admin.settings-layout>
-    <div class="grid md:grid-cols-5 gap-10 items-start">
+    <div class="grid items-start gap-10 md:grid-cols-5">
         <div class="space-y-4 md:col-span-3">
             <div>
                 <flux:label>{{ __('Roles') }}</flux:label>
-                <flux:text variant="subtle" class="mt-1">{{ __('Control what each role can do across the admin.') }}</flux:text>
+                <flux:text
+                    variant="subtle"
+                    class="mt-1"
+                >{{ __('Control what each role can do across the admin.') }}</flux:text>
             </div>
 
-            <form wire:submit="save" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="space-y-10">
+            <form
+                wire:submit="save"
+                wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+                class="space-y-10"
+            >
                 @error('roles')
                     <flux:callout variant="danger" icon="exclamation-triangle" :heading="$message" />
                 @enderror
@@ -261,8 +268,12 @@ return new class extends Component
                             class="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10"
                         >
                             <div x-data="{ open: @js((bool) $role['open']) }">
-                                <div class="flex items-center gap-2 bg-zinc-50 dark:bg-white/5 py-1.5 pl-3 pr-1.5">
-                                    <button type="button" x-on:click="open = ! open" class="flex min-w-0 flex-1 items-center gap-2 text-left">
+                                <div class="flex items-center gap-2 bg-zinc-50 py-1.5 pr-1.5 pl-3 dark:bg-white/5">
+                                    <button
+                                        type="button"
+                                        x-on:click="open = ! open"
+                                        class="flex min-w-0 flex-1 items-center gap-2 text-left"
+                                    >
                                         <flux:heading class="truncate text-sm!">
                                             {{ $role['name'] !== '' ? $role['name'] : __('Untitled role') }}
                                         </flux:heading>
@@ -273,20 +284,37 @@ return new class extends Component
                                         @endif
                                     </button>
 
-                                    <flux:button size="sm" variant="subtle" square x-on:click="open = ! open" :tooltip="__('Toggle')">
+                                    <flux:button
+                                        size="sm"
+                                        variant="subtle"
+                                        square
+                                        x-on:click="open = ! open"
+                                        :tooltip="__('Toggle')"
+                                    >
                                         <flux:icon name="chevron-down" variant="micro" x-show="! open" />
                                         <flux:icon name="chevron-up" variant="micro" x-show="open" x-cloak />
                                     </flux:button>
 
                                     @unless ($role['is_protected'])
-                                        <flux:button size="sm" variant="subtle" square icon="x-mark" :tooltip="__('Remove')" wire:click="confirmRemove('{{ $role['_key'] }}')" />
+                                        <flux:button
+                                            size="sm"
+                                            variant="subtle"
+                                            square
+                                            icon="x-mark"
+                                            :tooltip="__('Remove')"
+                                            wire:click="confirmRemove('{{ $role['_key'] }}')"
+                                        />
                                     @endunless
                                 </div>
 
                                 <div class="space-y-6 p-4" x-show="open" x-cloak>
                                     <flux:field>
                                         <flux:label>{{ __('Name') }}</flux:label>
-                                        <flux:input wire:model="roles.{{ $i }}.name" :readonly="$role['is_protected']" class="max-w-xs" />
+                                        <flux:input
+                                            wire:model="roles.{{ $i }}.name"
+                                            :readonly="$role['is_protected']"
+                                            class="max-w-xs"
+                                        />
                                         <flux:error name="roles.{{ $i }}.name" />
                                     </flux:field>
 
@@ -305,7 +333,10 @@ return new class extends Component
                                                     wire:key="grant-{{ $role['_key'] }}-{{ $resourceIndex }}"
                                                 >
                                                     @foreach ($resource['actions'] as $action)
-                                                        <flux:pillbox.option :value="$action" :label="$this->actionLabel($action)" />
+                                                        <flux:pillbox.option
+                                                            :value="$action"
+                                                            :label="$this->actionLabel($action)"
+                                                        />
                                                     @endforeach
                                                 </flux:pillbox>
                                             @endforeach
@@ -351,7 +382,8 @@ return new class extends Component
 
 @section('header-content')
     <flux:breadcrumbs class="hidden md:flex">
-        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
+            {{ __('Settings') }}</flux:breadcrumbs.item>
         <flux:breadcrumbs.item>{{ __('Roles') }}</flux:breadcrumbs.item>
     </flux:breadcrumbs>
 @endsection

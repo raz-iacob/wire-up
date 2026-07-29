@@ -52,10 +52,14 @@
     @if ($hasHeading)
         <div class="mx-auto mb-12 max-w-(--wire-container) px-(--wire-gutter)">
             @if (strip_tags($heading) !== '')
-                <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                    {!! $heading !!}
+                </div>
             @endif
             @if (strip_tags($intro) !== '')
-                <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                    {!! $intro !!}
+                </div>
             @endif
         </div>
     @endif
@@ -63,12 +67,25 @@
     @if ($items->isNotEmpty())
         @if ($layout === 'marquee')
             <div class="group w-full overflow-hidden">
-                <div class="flex w-max animate-marquee items-center group-hover:[animation-play-state:paused]">
+                <div class="animate-marquee flex w-max items-center group-hover:[animation-play-state:paused]">
                     @foreach ($items as $item)
-                        <x-site.blocks.sponsor-logo :item="$item" :grayscale="$grayscale" :show-name="$showNames" class="shrink-0 pr-12 md:pr-16" wire:key="sponsor-marquee-{{ $loop->index }}" />
+                        <x-site.blocks.sponsor-logo
+                            :item="$item"
+                            :grayscale="$grayscale"
+                            :show-name="$showNames"
+                            class="shrink-0 pr-12 md:pr-16"
+                            wire:key="sponsor-marquee-{{ $loop->index }}"
+                        />
                     @endforeach
                     @foreach ($items as $item)
-                        <x-site.blocks.sponsor-logo :item="$item" :grayscale="$grayscale" :show-name="$showNames" class="shrink-0 pr-12 md:pr-16" aria-hidden="true" wire:key="sponsor-marquee-clone-{{ $loop->index }}" />
+                        <x-site.blocks.sponsor-logo
+                            :item="$item"
+                            :grayscale="$grayscale"
+                            :show-name="$showNames"
+                            class="shrink-0 pr-12 md:pr-16"
+                            aria-hidden="true"
+                            wire:key="sponsor-marquee-clone-{{ $loop->index }}"
+                        />
                     @endforeach
                 </div>
             </div>
@@ -79,14 +96,20 @@
                     <div class="flex flex-col gap-6">
                         @if ($tier !== '')
                             <div class="flex items-center gap-4">
-                                <h3 class="text-sm font-semibold uppercase tracking-wider opacity-70">{{ $tier }}</h3>
+                                <h3 class="text-sm font-semibold tracking-wider uppercase opacity-70">{{ $tier }}</h3>
                                 <span class="h-px grow border-t border-dashed border-current/20"></span>
                             </div>
                         @endif
 
                         <div class="grid {{ $gridClassFor($tierCols) }} items-center gap-x-8 gap-y-10">
                             @foreach ($group as $item)
-                                <x-site.blocks.sponsor-logo :item="$item" :grayscale="$grayscale" :show-name="$showNames" :size="$sizeFor($tierCols)" wire:key="sponsor-grouped-{{ $tier }}-{{ $loop->index }}" />
+                                <x-site.blocks.sponsor-logo
+                                    :item="$item"
+                                    :grayscale="$grayscale"
+                                    :show-name="$showNames"
+                                    :size="$sizeFor($tierCols)"
+                                    wire:key="sponsor-grouped-{{ $tier }}-{{ $loop->index }}"
+                                />
                             @endforeach
                         </div>
                     </div>
@@ -96,7 +119,13 @@
             <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                 <div class="grid {{ $gridClassFor($columns) }} items-center gap-x-8 gap-y-10">
                     @foreach ($items as $item)
-                        <x-site.blocks.sponsor-logo :item="$item" :grayscale="$grayscale" :show-name="$showNames" :size="$sizeFor($columns)" wire:key="sponsor-grid-{{ $loop->index }}" />
+                        <x-site.blocks.sponsor-logo
+                            :item="$item"
+                            :grayscale="$grayscale"
+                            :show-name="$showNames"
+                            :size="$sizeFor($columns)"
+                            wire:key="sponsor-grid-{{ $loop->index }}"
+                        />
                     @endforeach
                 </div>
             </div>

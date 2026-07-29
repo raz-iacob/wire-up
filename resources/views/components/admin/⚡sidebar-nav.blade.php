@@ -37,7 +37,8 @@ return new class extends Component
                     :href="route('admin.records-index', $recordType)"
                     :current="request()->routeIs('admin.records-*') && request()->route('recordType')?->key === $recordType->key"
                     wire:navigate.hover
-                >{{ $recordType->name }}</flux:sidebar.item>
+                >
+                    {{ $recordType->name }}</flux:sidebar.item>
             @endcan
         @endforeach
     @endif

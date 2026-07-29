@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Services\SettingsService;
-use Livewire\Component;
-use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Component;
 
 return new class extends Component
 {
@@ -21,9 +21,7 @@ return new class extends Component
 
     public bool $remember = false;
 
-    public function mount(): void
-    {
-    }
+    public function mount(): void {}
 
     public function login(): void
     {
@@ -46,12 +44,20 @@ return new class extends Component
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
 
-        if(Auth::user()?->canAccessAdmin()) {
+        if (Auth::user()?->canAccessAdmin()) {
             $this->redirectIntended(default: route('admin.dashboard', absolute: false), navigate: true);
+
             return;
         }
-        
+
         $this->redirectIntended(default: route('home', absolute: false), navigate: true);
+    }
+
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Log In'))
+            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
     }
 
     protected function ensureIsNotRateLimited(): void
@@ -74,14 +80,7 @@ return new class extends Component
 
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->email) . '|' . request()->ip());
-    }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title(__('Log In'))
-            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
+        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
     }
 };
 ?>

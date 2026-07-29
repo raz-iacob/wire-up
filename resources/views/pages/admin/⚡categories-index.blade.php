@@ -92,48 +92,90 @@ return new class extends Component
         <div class="flex items-center gap-3">
             @can('categories.create')
                 <flux:modal.trigger name="add-new">
-                    <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+                    <flux:button
+                        variant="primary"
+                        class="shrink-0"
+                        size="sm"
+                        icon="plus"
+                        iconVariant="outline"
+                    >{{ __('Add') }}</flux:button>
                 </flux:modal.trigger>
             @endcan
 
-            <div class="w-full md:w-52 sm:shrink-0">
-                <flux:input icon="magnifying-glass" wire:model.live="search" size="sm" placeholder="{{ __('Search...') }}" clearable />
+            <div class="w-full sm:shrink-0 md:w-52">
+                <flux:input
+                    icon="magnifying-glass"
+                    wire:model.live="search"
+                    size="sm"
+                    placeholder="{{ __('Search...') }}"
+                    clearable
+                />
             </div>
         </div>
 
-        <flux:table class="md:table-fixed md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->categories" container:class="max-h-[calc(100dvh-12rem)]">
+        <flux:table
+            class="max-h-[calc(100dvh-12rem)] md:w-full md:table-fixed"
+            :paginate="$this->categories"
+            container:class="max-h-[calc(100dvh-12rem)]"
+        >
             <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
-                <flux:table.column sortable :sorted="$sortBy === 'name'" :direction="$sortDirection" wire:click="sort('name')">{{ __('Name') }}</flux:table.column>
+                <flux:table.column
+                    sortable
+                    :sorted="$sortBy === 'name'"
+                    :direction="$sortDirection"
+                    wire:click="sort('name')"
+                >
+                    {{ __('Name') }}</flux:table.column>
                 <flux:table.column class="w-24">{{ __('Used') }}</flux:table.column>
-                <flux:table.column class="w-1/6" sortable :sorted="$sortBy === 'updated_at'" :direction="$sortDirection" wire:click="sort('updated_at')">{{ __('Last updated') }}</flux:table.column>
+                <flux:table.column
+                    class="w-1/6"
+                    sortable
+                    :sorted="$sortBy === 'updated_at'"
+                    :direction="$sortDirection"
+                    wire:click="sort('updated_at')"
+                >
+                    {{ __('Last updated') }}</flux:table.column>
                 <flux:table.column class="w-10"></flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
                 @foreach ($this->categories as $row)
-                <flux:table.row wire:key="{{ $row->id }}">
-                    <flux:table.cell>
-                        <a href="{{ route('admin.categories-edit', $row) }}" wire:navigate class="flex min-w-0 items-center gap-2">
-                            <flux:text variant="strong" class="truncate hover:underline">{{ $row->name !== '' ? $row->name : __('Untitled') }}</flux:text>
-                        </a>
-                    </flux:table.cell>
-                    <flux:table.cell>{{ $row->records_count + $row->pages_count }}</flux:table.cell>
-                    <flux:table.cell>{{ $row->updated_at?->format('M d, Y H:i') }}</flux:table.cell>
-                    <flux:table.cell>
-                        <flux:dropdown class="flex justify-end">
-                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
-                            <flux:menu>
-                                @can('categories.edit')
-                                    <flux:menu.item icon="pencil" href="{{ route('admin.categories-edit', $row) }}">{{ __('Edit') }}</flux:menu.item>
-                                @endcan
-                                @can('categories.delete')
-                                    <flux:menu.separator />
-                                    <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">{{ __('Delete') }}</flux:menu.item>
-                                @endcan
-                            </flux:menu>
-                        </flux:dropdown>
-                    </flux:table.cell>
-                </flux:table.row>
+                    <flux:table.row wire:key="{{ $row->id }}">
+                        <flux:table.cell>
+                            <a
+                                href="{{ route('admin.categories-edit', $row) }}"
+                                wire:navigate
+                                class="flex min-w-0 items-center gap-2"
+                            >
+                                <flux:text
+                                    variant="strong"
+                                    class="truncate hover:underline"
+                                >{{ $row->name !== '' ? $row->name : __('Untitled') }}</flux:text>
+                            </a>
+                        </flux:table.cell>
+                        <flux:table.cell>{{ $row->records_count + $row->pages_count }}</flux:table.cell>
+                        <flux:table.cell>{{ $row->updated_at?->format('M d, Y H:i') }}</flux:table.cell>
+                        <flux:table.cell>
+                            <flux:dropdown class="flex justify-end">
+                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
+                                <flux:menu>
+                                    @can('categories.edit')
+                                        <flux:menu.item icon="pencil" href="{{ route('admin.categories-edit', $row) }}">
+                                            {{ __('Edit') }}</flux:menu.item>
+                                    @endcan
+                                    @can('categories.delete')
+                                        <flux:menu.separator />
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            wire:click="confirmDelete({{ $row->id }})"
+                                        >
+                                            {{ __('Delete') }}</flux:menu.item>
+                                    @endcan
+                                </flux:menu>
+                            </flux:dropdown>
+                        </flux:table.cell>
+                    </flux:table.row>
                 @endforeach
             </flux:table.rows>
         </flux:table>
@@ -143,7 +185,7 @@ return new class extends Component
         <flux:heading size="lg" class="mb-6">{{ __('Add a new category') }}</flux:heading>
         <form wire:submit="create" class="space-y-6">
             <flux:input wire:model="name" label="{{ __('Name') }}" badge="Required" autofocus />
-            <div class="flex mt-6">
+            <div class="mt-6 flex">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary">{{ __('Create') }}</flux:button>
             </div>
@@ -155,8 +197,10 @@ return new class extends Component
             <div>
                 <flux:heading size="lg" class="mb-6">{{ __('Confirm delete') }}</flux:heading>
                 <flux:text>
-                    {{ __('Are you sure you want to delete') }}
-                    "<span class="text-black dark:text-white">{{ $this->categories->find($selectedId)?->name }}</span>" ?
+                    {{ __('Are you sure you want to delete') }} "<span
+                        class="text-black dark:text-white"
+                        >{{ $this->categories->find($selectedId)?->name }}</span
+                    >" ?
                 </flux:text>
                 <flux:text>{{ __('This action cannot be reversed.') }}</flux:text>
             </div>
@@ -165,7 +209,10 @@ return new class extends Component
                 <flux:modal.close>
                     <flux:button>{{ __('No, Keep it.') }}</flux:button>
                 </flux:modal.close>
-                <flux:button wire:click="delete({{ $selectedId }})" variant="danger">{{ __('Yes, Delete it!') }}</flux:button>
+                <flux:button
+                    wire:click="delete({{ $selectedId }})"
+                    variant="danger"
+                >{{ __('Yes, Delete it!') }}</flux:button>
             </div>
         </div>
     </flux:modal>

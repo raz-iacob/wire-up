@@ -18,8 +18,18 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
-    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" />
+    <x-forms.texteditor-translated
+        name="{{ $c }}.heading"
+        :locale="$locale"
+        :multi-locale="$multiLocale"
+        label="{{ __('Heading') }}"
+    />
+    <x-forms.texteditor-translated
+        name="{{ $c }}.intro"
+        :locale="$locale"
+        :multi-locale="$multiLocale"
+        label="{{ __('Subheading') }}"
+    />
 
     <flux:textarea wire:model.blur="{{ $c }}.code" label="{{ __('Code') }}" rows="12" class="font-mono text-sm" />
 
@@ -30,7 +40,11 @@
             @endforeach
         </flux:select>
 
-        <flux:input wire:model.blur="{{ $c }}.filename" label="{{ __('Filename') }}" placeholder="{{ __('Optional, e.g. app/Models/Page.php') }}" />
+        <flux:input
+            wire:model.blur="{{ $c }}.filename"
+            label="{{ __('Filename') }}"
+            placeholder="{{ __('Optional, e.g. app/Models/Page.php') }}"
+        />
     </div>
 
     <flux:switch wire:model.live="{{ $c }}.wrap" label="{{ __('Wrap long lines') }}" align="left" />

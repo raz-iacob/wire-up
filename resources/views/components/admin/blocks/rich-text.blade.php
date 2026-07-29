@@ -5,10 +5,20 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
-    <x-forms.texteditor-translated name="{{ $c }}.body" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Text') }}" />
+    <x-forms.texteditor-translated
+        name="{{ $c }}.heading"
+        :locale="$locale"
+        :multi-locale="$multiLocale"
+        label="{{ __('Heading') }}"
+    />
+    <x-forms.texteditor-translated
+        name="{{ $c }}.body"
+        :locale="$locale"
+        :multi-locale="$multiLocale"
+        label="{{ __('Text') }}"
+    />
 
-    <div class="grid md:grid-cols-2 gap-4">
+    <div class="grid gap-4 md:grid-cols-2">
         <flux:radio.group wire:model.lazy="{{ $c }}.width" variant="segmented" label="{{ __('Width') }}">
             <flux:radio value="normal" label="{{ __('Normal') }}" />
             <flux:radio value="narrow" label="{{ __('Narrow') }}" />

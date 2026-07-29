@@ -11,7 +11,13 @@
 
 <figure {{ $attributes->class('m-0 flex flex-col items-center gap-3') }}>
     @if ($item['link'] !== '')
-        <a href="{{ $item['link'] }}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center" @if ($item['name'] !== '') title="{{ $item['name'] }}" @endif>
+        <a
+            href="{{ $item['link'] }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-center"
+            @if ($item['name'] !== '') title="{{ $item['name'] }}" @endif
+        >
             <img src="{{ $item['logo'] }}" alt="{{ $item['alt'] }}" loading="lazy" class="{{ $imgClass }}" />
         </a>
     @else

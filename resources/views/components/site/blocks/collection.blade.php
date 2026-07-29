@@ -33,7 +33,8 @@
         :button-url="$buttonUrl"
         :button-text="$buttonText"
         :button-new-tab="$buttonNewTab"
-        wire:key="collection-{{ $blockKey }}" />
+        wire:key="collection-{{ $blockKey }}"
+    />
 @else
     @php
         $records = resolve(\App\Services\RecordCollectionQuery::class)->resolve($content);
@@ -52,15 +53,24 @@
                     x-data="{
                         atStart: true,
                         atEnd: false,
-                        scroll(dir) { const t = this.$refs.track; t.scrollBy({ left: dir * t.clientWidth * 0.8, behavior: 'smooth' }); },
-                        update() { const t = this.$refs.track; this.atStart = t.scrollLeft <= 1; this.atEnd = Math.ceil(t.scrollLeft + t.offsetWidth) >= t.scrollWidth; },
+                        scroll(dir) {
+                            const t = this.$refs.track;
+                            t.scrollBy({ left: dir * t.clientWidth * 0.8, behavior: 'smooth' });
+                        },
+                        update() {
+                            const t = this.$refs.track;
+                            this.atStart = t.scrollLeft <= 1;
+                            this.atEnd = Math.ceil(t.scrollLeft + t.offsetWidth) >= t.scrollWidth;
+                        },
                     }"
                     x-init="$nextTick(() => update())"
                 >
                     @if ($hasHeading || $hasButton || $records->count() > 1)
                         <div class="mx-auto flex max-w-(--wire-container) flex-wrap items-center justify-between gap-4 px-(--wire-gutter)">
                             @if ($hasHeading)
-                                <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                                    {!! $heading !!}
+                                </div>
                             @endif
 
                             <div class="flex items-center gap-3">
@@ -69,14 +79,30 @@
                                         href="{{ $buttonUrl }}"
                                         @if ($buttonNewTab) target="_blank" rel="noopener noreferrer" @endif
                                         class="inline-flex items-center justify-center rounded-(--wire-radius) border px-6 py-2.5 text-sm font-medium transition hover:opacity-80"
-                                        style="border-color:var(--wire-primary-bg);color:var(--wire-primary-bg)"
+                                        style="border-color: var(--wire-primary-bg); color: var(--wire-primary-bg)"
                                     >{{ strip_tags($buttonText) }}</a>
                                 @endif
 
                                 @if ($records->count() > 1)
                                     <div class="hidden gap-2 sm:flex">
-                                        <flux:button square variant="subtle" icon="chevron-left" x-on:click="scroll(-1)" x-bind:disabled="atStart" class="disabled:opacity-40" :aria-label="__('Previous')" />
-                                        <flux:button square variant="subtle" icon="chevron-right" x-on:click="scroll(1)" x-bind:disabled="atEnd" class="disabled:opacity-40" :aria-label="__('Next')" />
+                                        <flux:button
+                                            square
+                                            variant="subtle"
+                                            icon="chevron-left"
+                                            x-on:click="scroll(-1)"
+                                            x-bind:disabled="atStart"
+                                            class="disabled:opacity-40"
+                                            :aria-label="__('Previous')"
+                                        />
+                                        <flux:button
+                                            square
+                                            variant="subtle"
+                                            icon="chevron-right"
+                                            x-on:click="scroll(1)"
+                                            x-bind:disabled="atEnd"
+                                            class="disabled:opacity-40"
+                                            :aria-label="__('Next')"
+                                        />
                                     </div>
                                 @endif
                             </div>
@@ -94,8 +120,16 @@
                         ])
                     >
                         @foreach ($records as $record)
-                            <div class="w-[80vw] shrink-0 snap-start sm:w-72 lg:w-80" wire:key="collection-{{ $block->id }}-{{ $record->id }}">
-                                <x-site.blocks.collection-item :record="$record" :show-image="$showImage" :fields="$displayFields" layout="grid" />
+                            <div
+                                class="w-[80vw] shrink-0 snap-start sm:w-72 lg:w-80"
+                                wire:key="collection-{{ $block->id }}-{{ $record->id }}"
+                            >
+                                <x-site.blocks.collection-item
+                                    :record="$record"
+                                    :show-image="$showImage"
+                                    :fields="$displayFields"
+                                    layout="grid"
+                                />
                             </div>
                         @endforeach
                     </div>
@@ -103,7 +137,9 @@
             @else
                 <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                     @if ($hasHeading)
-                        <div class="mb-10 tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-10 text-(length:--wire-heading-size) tracking-tight">
+                            {!! $heading !!}
+                        </div>
                     @endif
 
                     <x-site.blocks.collection-records
@@ -112,7 +148,8 @@
                         :columns="$columns"
                         :show-image="$showImage"
                         :fields="$displayFields"
-                        :block-id="$block->id" />
+                        :block-id="$block->id"
+                    />
 
                     @if ($hasButton)
                         <div class="mt-10 flex justify-center">
@@ -120,7 +157,7 @@
                                 href="{{ $buttonUrl }}"
                                 @if ($buttonNewTab) target="_blank" rel="noopener noreferrer" @endif
                                 class="inline-flex items-center justify-center rounded-(--wire-radius) border px-6 py-2.5 text-sm font-medium transition hover:opacity-80"
-                                style="border-color:var(--wire-primary-bg);color:var(--wire-primary-bg)"
+                                style="border-color: var(--wire-primary-bg); color: var(--wire-primary-bg)"
                             >{{ strip_tags($buttonText) }}</a>
                         </div>
                     @endif

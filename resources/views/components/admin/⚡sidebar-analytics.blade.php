@@ -23,6 +23,12 @@ return new class extends Component
 
 <div>
     @if ($this->configured())
-        <flux:sidebar.item icon="chart-bar" :href="route('admin.analytics')" :current="request()->routeIs('admin.analytics')" wire:navigate.hover>{{ __('Analytics') }}</flux:sidebar.item>
+        <flux:sidebar.item
+            icon="chart-bar"
+            :href="route('admin.analytics')"
+            :current="request()->routeIs('admin.analytics')"
+            wire:navigate.hover
+        >
+            {{ __('Analytics') }}</flux:sidebar.item>
     @endif
 </div>

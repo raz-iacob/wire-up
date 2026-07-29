@@ -39,8 +39,15 @@
             x-data="{
                 atStart: true,
                 atEnd: false,
-                scroll(dir) { const t = this.$refs.track; t.scrollBy({ left: dir * t.clientWidth * 0.8, behavior: 'smooth' }); },
-                update() { const t = this.$refs.track; this.atStart = t.scrollLeft <= 1; this.atEnd = Math.ceil(t.scrollLeft + t.offsetWidth) >= t.scrollWidth; },
+                scroll(dir) {
+                    const t = this.$refs.track;
+                    t.scrollBy({ left: dir * t.clientWidth * 0.8, behavior: 'smooth' });
+                },
+                update() {
+                    const t = this.$refs.track;
+                    this.atStart = t.scrollLeft <= 1;
+                    this.atEnd = Math.ceil(t.scrollLeft + t.offsetWidth) >= t.scrollWidth;
+                },
             }"
             x-init="$nextTick(() => update())"
         >
@@ -49,10 +56,14 @@
                     @if ($hasHeading)
                         <div>
                             @if (strip_tags($heading) !== '')
-                                <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                                    {!! $heading !!}
+                                </div>
                             @endif
                             @if (strip_tags($intro) !== '')
-                                <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                                    {!! $intro !!}
+                                </div>
                             @endif
                         </div>
                     @endif
@@ -63,8 +74,24 @@
                             'absolute right-6 top-0' => $hasHeading,
                             'justify-end' => ! $hasHeading,
                         ])>
-                            <flux:button square variant="subtle" icon="chevron-left" x-on:click="scroll(-1)" x-bind:disabled="atStart" class="disabled:opacity-40" :aria-label="__('Previous')" />
-                            <flux:button square variant="subtle" icon="chevron-right" x-on:click="scroll(1)" x-bind:disabled="atEnd" class="disabled:opacity-40" :aria-label="__('Next')" />
+                            <flux:button
+                                square
+                                variant="subtle"
+                                icon="chevron-left"
+                                x-on:click="scroll(-1)"
+                                x-bind:disabled="atStart"
+                                class="disabled:opacity-40"
+                                :aria-label="__('Previous')"
+                            />
+                            <flux:button
+                                square
+                                variant="subtle"
+                                icon="chevron-right"
+                                x-on:click="scroll(1)"
+                                x-bind:disabled="atEnd"
+                                class="disabled:opacity-40"
+                                :aria-label="__('Next')"
+                            />
                         </div>
                     @endif
                 </div>
@@ -74,26 +101,40 @@
                 <div
                     x-ref="track"
                     x-on:scroll="update()"
-                    class="mt-8 flex items-stretch gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory px-[max(var(--wire-gutter),calc((100%-var(--wire-container))/2+var(--wire-gutter)))] pb-2 scroll-pl-[max(var(--wire-gutter),calc((100%-var(--wire-container))/2+var(--wire-gutter)))] scrollbar-none [&::-webkit-scrollbar]:hidden"
+                    class="[&::-webkit-scrollbar]:hidden mt-8 flex snap-x snap-mandatory scroll-pl-[max(var(--wire-gutter),calc((100%-var(--wire-container))/2+var(--wire-gutter)))] scrollbar-none items-stretch gap-6 overflow-x-auto scroll-smooth px-[max(var(--wire-gutter),calc((100%-var(--wire-container))/2+var(--wire-gutter)))] pb-2"
                 >
                     @foreach ($items as $item)
-                        <article class="wire-card flex w-[86vw] shrink-0 snap-start flex-col gap-5 rounded-(--wire-radius) p-8 shadow-sm sm:w-96 md:w-120" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
+                        <article
+                            class="wire-card flex w-[86vw] shrink-0 snap-start flex-col gap-5 rounded-(--wire-radius) p-8 shadow-sm sm:w-96 md:w-120"
+                            style="background-color:{{ $cardBg }};color:{{ $cardText }}"
+                        >
                             @if ($item['rating'] > 0)
                                 <div class="flex gap-0.5">
                                     @for ($star = 1; $star <= 5; $star++)
-                                        <flux:icon name="star" variant="{{ $star <= $item['rating'] ? 'solid' : 'outline' }}" class="size-5 {{ $star <= $item['rating'] ? $starColor : 'text-current/20' }}" />
+                                        <flux:icon
+                                            name="star"
+                                            variant="{{ $star <= $item['rating'] ? 'solid' : 'outline' }}"
+                                            class="size-5 {{ $star <= $item['rating'] ? $starColor : 'text-current/20' }}"
+                                        />
                                     @endfor
                                 </div>
                             @endif
 
                             @if (strip_tags($item['quote']) !== '')
-                                <div class="grow leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</div>
+                                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 grow leading-relaxed *:first:mt-0 *:last:mb-0">
+                                    {!! $item['quote'] !!}
+                                </div>
                             @endif
 
                             @if ($item['author'] !== '' || $item['avatar'])
                                 <div class="flex items-center gap-3">
                                     @if ($item['avatar'])
-                                        <img src="{{ $item['avatar'] }}" alt="{{ $item['alt'] }}" loading="lazy" class="size-10 shrink-0 rounded-full object-cover" />
+                                        <img
+                                            src="{{ $item['avatar'] }}"
+                                            alt="{{ $item['alt'] }}"
+                                            loading="lazy"
+                                            class="size-10 shrink-0 rounded-full object-cover"
+                                        />
                                     @endif
 
                                     @if ($item['author'] !== '' || $item['role'] !== '')
@@ -119,19 +160,31 @@
                 <div class="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
                     <div class="lg:sticky lg:top-24">
                         @if (strip_tags($heading) !== '')
-                            <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                                {!! $heading !!}
+                            </div>
                         @endif
                         @if (strip_tags($intro) !== '')
-                            <div class="mt-4 max-w-prose leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-4 max-w-prose leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                                {!! $intro !!}
+                            </div>
                         @endif
                     </div>
 
                     @if ($items->isNotEmpty())
                         <div class="flex flex-col gap-6">
                             @foreach ($items as $item)
-                                <article class="wire-card flex items-start gap-5 rounded-(--wire-radius) p-6 shadow-sm" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
+                                <article
+                                    class="wire-card flex items-start gap-5 rounded-(--wire-radius) p-6 shadow-sm"
+                                    style="background-color:{{ $cardBg }};color:{{ $cardText }}"
+                                >
                                     @if ($item['avatar'])
-                                        <img src="{{ $item['avatar'] }}" alt="{{ $item['alt'] }}" loading="lazy" class="size-14 shrink-0 rounded-full object-cover" />
+                                        <img
+                                            src="{{ $item['avatar'] }}"
+                                            alt="{{ $item['alt'] }}"
+                                            loading="lazy"
+                                            class="size-14 shrink-0 rounded-full object-cover"
+                                        />
                                     @endif
 
                                     <div class="min-w-0">
@@ -144,12 +197,18 @@
                                         @if ($item['rating'] > 0)
                                             <div class="mt-3 flex gap-0.5">
                                                 @for ($star = 1; $star <= 5; $star++)
-                                                    <flux:icon name="star" variant="{{ $star <= $item['rating'] ? 'solid' : 'outline' }}" class="size-5 {{ $star <= $item['rating'] ? $starColor : 'text-current/20' }}" />
+                                                    <flux:icon
+                                                        name="star"
+                                                        variant="{{ $star <= $item['rating'] ? 'solid' : 'outline' }}"
+                                                        class="size-5 {{ $star <= $item['rating'] ? $starColor : 'text-current/20' }}"
+                                                    />
                                                 @endfor
                                             </div>
                                         @endif
                                         @if (strip_tags($item['quote']) !== '')
-                                            <div class="mt-3 leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</div>
+                                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed *:first:mt-0 *:last:mb-0">
+                                                {!! $item['quote'] !!}
+                                            </div>
                                         @endif
                                     </div>
                                 </article>
@@ -161,10 +220,14 @@
                 @if ($hasHeading)
                     <div>
                         @if (strip_tags($heading) !== '')
-                            <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                                {!! $heading !!}
+                            </div>
                         @endif
                         @if (strip_tags($intro) !== '')
-                            <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                                {!! $intro !!}
+                            </div>
                         @endif
                     </div>
                 @endif
@@ -177,19 +240,30 @@
                                     @if ($item['rating'] > 0)
                                         <div class="flex gap-1">
                                             @for ($star = 1; $star <= 5; $star++)
-                                                <flux:icon name="star" variant="{{ $star <= $item['rating'] ? 'solid' : 'outline' }}" class="size-6 {{ $star <= $item['rating'] ? $starColor : 'text-current/20' }}" />
+                                                <flux:icon
+                                                    name="star"
+                                                    variant="{{ $star <= $item['rating'] ? 'solid' : 'outline' }}"
+                                                    class="size-6 {{ $star <= $item['rating'] ? $starColor : 'text-current/20' }}"
+                                                />
                                             @endfor
                                         </div>
                                     @endif
 
                                     @if (strip_tags($item['quote']) !== '')
-                                        <blockquote class="text-2xl font-medium leading-relaxed tracking-tight [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</blockquote>
+                                        <blockquote class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 text-2xl leading-relaxed font-medium tracking-tight *:first:mt-0 *:last:mb-0">
+                                            {!! $item['quote'] !!}
+                                        </blockquote>
                                     @endif
 
                                     @if ($item['author'] !== '' || $item['avatar'])
                                         <figcaption class="flex items-center gap-4">
                                             @if ($item['avatar'])
-                                                <img src="{{ $item['avatar'] }}" alt="{{ $item['alt'] }}" loading="lazy" class="size-12 shrink-0 rounded-full object-cover" />
+                                                <img
+                                                    src="{{ $item['avatar'] }}"
+                                                    alt="{{ $item['alt'] }}"
+                                                    loading="lazy"
+                                                    class="size-12 shrink-0 rounded-full object-cover"
+                                                />
                                             @endif
 
                                             @if ($item['author'] !== '' || $item['role'] !== '')
@@ -210,23 +284,37 @@
                     @else
                         <div class="grid grid-cols-1 gap-6 {{ $gridCols }} {{ $hasHeading ? 'mt-12' : '' }}">
                             @foreach ($items as $item)
-                                <article class="wire-card flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm" style="background-color:{{ $cardBg }};color:{{ $cardText }}">
+                                <article
+                                    class="wire-card flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm"
+                                    style="background-color:{{ $cardBg }};color:{{ $cardText }}"
+                                >
                                     @if ($item['rating'] > 0)
                                         <div class="flex gap-0.5">
                                             @for ($star = 1; $star <= 5; $star++)
-                                                <flux:icon name="star" variant="{{ $star <= $item['rating'] ? 'solid' : 'outline' }}" class="size-5 {{ $star <= $item['rating'] ? $starColor : 'text-current/20' }}" />
+                                                <flux:icon
+                                                    name="star"
+                                                    variant="{{ $star <= $item['rating'] ? 'solid' : 'outline' }}"
+                                                    class="size-5 {{ $star <= $item['rating'] ? $starColor : 'text-current/20' }}"
+                                                />
                                             @endfor
                                         </div>
                                     @endif
 
                                     @if (strip_tags($item['quote']) !== '')
-                                        <div class="grow leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['quote'] !!}</div>
+                                        <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 grow leading-relaxed *:first:mt-0 *:last:mb-0">
+                                            {!! $item['quote'] !!}
+                                        </div>
                                     @endif
 
                                     @if ($item['author'] !== '' || $item['avatar'])
                                         <div class="flex items-center gap-3">
                                             @if ($item['avatar'])
-                                                <img src="{{ $item['avatar'] }}" alt="{{ $item['alt'] }}" loading="lazy" class="size-10 shrink-0 rounded-full object-cover" />
+                                                <img
+                                                    src="{{ $item['avatar'] }}"
+                                                    alt="{{ $item['alt'] }}"
+                                                    loading="lazy"
+                                                    class="size-10 shrink-0 rounded-full object-cover"
+                                                />
                                             @endif
 
                                             @if ($item['author'] !== '' || $item['role'] !== '')

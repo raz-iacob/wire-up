@@ -7,9 +7,8 @@
     $isRight = $display['position'] === 'right';
 
     $links = collect($menu['items'])->filter(fn (array $item): bool => $item['type'] !== 'heading')->values();
-    $currentUrl = rtrim(url()->current(), '/');
+    $currentUrl = mb_rtrim(url()->current(), '/');
 
-    // Current location for the toggle button: "Group › Item".
     $activeItem = '';
     $activeGroup = '';
     $group = '';
@@ -20,7 +19,7 @@
             continue;
         }
 
-        if ($candidate['url'] !== '' && rtrim($candidate['url'], '/') === $currentUrl) {
+        if ($candidate['url'] !== '' && mb_rtrim($candidate['url'], '/') === $currentUrl) {
             $activeItem = $candidate['label'];
             $activeGroup = $group;
 
@@ -31,10 +30,14 @@
     $fallbackLabel = data_get(collect($menu['items'])->firstWhere('type', 'heading'), 'label') ?: __('Menu');
 @endphp
 
-<aside data-site-sidebar x-data="{ open: false }" @class([
-    'w-full',
-    'md:sticky md:top-24 md:self-start' => $display['sticky'],
-])>
+<aside
+    data-site-sidebar
+    x-data="{ open: false }"
+    @class([
+        'w-full',
+        'md:sticky md:top-24 md:self-start' => $display['sticky'],
+    ])
+>
     {{-- Desktop: the full vertical panel --}}
     <div class="hidden md:block">
         <div @class(['rounded-(--wire-radius) bg-(--wire-card-bg) p-6 text-(--wire-card-text)' => $background])>
@@ -103,7 +106,12 @@
                 ])
             >
                 <div @class(['flex', 'justify-start' => $isRight, 'justify-end' => ! $isRight])>
-                    <button type="button" x-on:click="open = false" aria-label="{{ __('Close menu') }}" class="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current">
+                    <button
+                        type="button"
+                        x-on:click="open = false"
+                        aria-label="{{ __('Close menu') }}"
+                        class="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                    >
                         <flux:icon name="x-mark" class="size-6" />
                     </button>
                 </div>

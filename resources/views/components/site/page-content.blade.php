@@ -35,15 +35,18 @@
 <article @class(['flex w-full flex-col', $gapClass, $bottomClass])>
     @foreach ($blocks as $index => $block)
         @php
-            $anchor = $block->type->hasAnchor() ? trim((string) ($block->content['anchor'] ?? '')) : '';
+            $anchor = $block->type->hasAnchor() ? mb_trim((string) ($block->content['anchor'] ?? '')) : '';
             $isFullWidthHero = $block->type === \App\Enums\BlockType::HERO
                 && ($block->content['width'] ?? 'full') !== 'container';
         @endphp
-        <div @class([
-            'scroll-mt-24' => $anchor !== '',
-            $flushTopClass => $isFullWidthHero && $index > 0,
-            $flushBottomClass => $isFullWidthHero && $index < $lastIndex,
-        ]) @if ($anchor !== '') id="{{ $anchor }}" @endif>
+        <div
+            @class([
+                'scroll-mt-24' => $anchor !== '',
+                $flushTopClass => $isFullWidthHero && $index > 0,
+                $flushBottomClass => $isFullWidthHero && $index < $lastIndex,
+            ])
+            @if ($anchor !== '') id="{{ $anchor }}" @endif
+        >
             @includeIf($block->type->frontendView(), ['block' => $block, 'pad' => $padClass])
         </div>
     @endforeach

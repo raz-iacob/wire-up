@@ -5,7 +5,7 @@
     $total = $locales->count();
 @endphp
 
-<div class="flex items-center gap-1 whitespace-nowrap cursor-default">
+<div class="flex cursor-default items-center gap-1 whitespace-nowrap">
     @foreach ($locales->take(4) as $code => $meta)
         <flux:tooltip content="{{ $meta['name'] ?? $code }}">
             <flux:badge class="uppercase" size="sm" :color="in_array($code, $active, true) ? 'green' : 'zinc'">
@@ -20,7 +20,11 @@
             <flux:menu class="max-w-2xl flex-wrap">
                 @foreach ($locales->skip(4) as $code => $meta)
                     <flux:tooltip content="{{ $meta['name'] ?? $code }}">
-                        <flux:badge class="uppercase my-0.5" size="sm" :color="in_array($code, $active, true) ? 'green' : 'zinc'">
+                        <flux:badge
+                            class="my-0.5 uppercase"
+                            size="sm"
+                            :color="in_array($code, $active, true) ? 'green' : 'zinc'"
+                        >
                             {{ $code }}
                         </flux:badge>
                     </flux:tooltip>

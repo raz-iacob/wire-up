@@ -291,8 +291,10 @@ return new class extends Component
     @if ($previewFontsUrl)
         <link id="design-preview-fonts" rel="stylesheet" href="{{ $previewFontsUrl }}" />
     @endif
-    <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
-        class="grid md:grid-cols-5 gap-10 items-start"
+    <form
+        wire:submit="update"
+        wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+        class="grid items-start gap-10 md:grid-cols-5"
         x-data="{
             fonts: @js($fontStacks),
             headingSizes: @js(config('theme.heading_sizes')),
@@ -336,79 +338,182 @@ return new class extends Component
         }"
         x-effect="
             const fams = new Set();
-            if ($wire.heading_font === 'custom' && $wire.heading_font_custom.trim()) fams.add($wire.heading_font_custom.trim());
+            if ($wire.heading_font === 'custom' && $wire.heading_font_custom.trim())
+                fams.add($wire.heading_font_custom.trim());
             if ($wire.body_font === 'custom' && $wire.body_font_custom.trim()) fams.add($wire.body_font_custom.trim());
             let link = document.getElementById('design-preview-custom-fonts');
-            if (! fams.size) { if (link) link.remove(); }
-            else {
-                const href = 'https://fonts.googleapis.com/css2?' + [...fams].map(f => 'family=' + f.replace(/ +/g, '+')).join('&') + '&display=swap';
-                if (! link) { link = document.createElement('link'); link.id = 'design-preview-custom-fonts'; link.rel = 'stylesheet'; document.head.appendChild(link); }
+            if (! fams.size) {
+                if (link) link.remove();
+            } else {
+                const href =
+                    'https://fonts.googleapis.com/css2?' +
+                    [...fams].map((f) => 'family=' + f.replace(/ +/g, '+')).join('&') +
+                    '&display=swap';
+                if (! link) {
+                    link = document.createElement('link');
+                    link.id = 'design-preview-custom-fonts';
+                    link.rel = 'stylesheet';
+                    document.head.appendChild(link);
+                }
                 if (link.getAttribute('href') !== href) link.setAttribute('href', href);
             }
-        ">
-
-        <div class="order-2 md:col-span-2 md:sticky md:top-4">
+        "
+    >
+        <div class="order-2 md:sticky md:top-4 md:col-span-2">
             <flux:text class="mb-6">{{ __('Design the look of your public site — colours, fonts, and shape.') }}</flux:text>
             <div class="mb-2 flex items-center justify-end gap-1" x-cloak x-show="$wire.theme_dark !== 'none'">
-                <flux:button size="sm" variant="subtle" icon="sun" data-test="preview-scheme-light" x-on:click="previewDark = false" x-bind:data-active="! previewDark" class="data-[active=true]:text-accent" :tooltip="__('Light preview')" />
-                <flux:button size="sm" variant="subtle" icon="moon" data-test="preview-scheme-dark" x-on:click="previewDark = true" x-bind:data-active="previewDark" class="data-[active=true]:text-accent" :tooltip="__('Dark preview')" />
+                <flux:button
+                    size="sm"
+                    variant="subtle"
+                    icon="sun"
+                    data-test="preview-scheme-light"
+                    x-on:click="previewDark = false"
+                    x-bind:data-active="! previewDark"
+                    class="data-[active=true]:text-accent"
+                    :tooltip="__('Light preview')"
+                />
+                <flux:button
+                    size="sm"
+                    variant="subtle"
+                    icon="moon"
+                    data-test="preview-scheme-dark"
+                    x-on:click="previewDark = true"
+                    x-bind:data-active="previewDark"
+                    class="data-[active=true]:text-accent"
+                    :tooltip="__('Dark preview')"
+                />
             </div>
-            <div x-cloak class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 select-none">
-
+            <div x-cloak class="overflow-hidden rounded-xl border border-zinc-200 select-none dark:border-zinc-700">
                 <div class="relative transition-shadow" :class="$wire.header_sticky ? 'shadow-md' : ''">
-                    <div data-test="header-variant" x-show="$wire.header_layout === 'simple'" class="flex items-center justify-between gap-4 px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
+                    <div
+                        data-test="header-variant"
+                        x-show="$wire.header_layout === 'simple'"
+                        class="flex items-center justify-between gap-4 px-4 py-3"
+                        :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }"
+                    >
                         <span class="flex items-center gap-2">
-                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" :class="logoPreviewClass" />
-                            <span x-show="! $wire.logo_header?.preview" class="font-bold text-sm">{{ $brand }}</span>
+                            <img
+                                x-cloak
+                                x-show="$wire.logo_header?.preview"
+                                :src="logoSrc($wire.logo_header)"
+                                alt="{{ $brand }}"
+                                :class="logoPreviewClass"
+                            />
+                            <span x-show="! $wire.logo_header?.preview" class="text-sm font-bold">{{ $brand }}</span>
                         </span>
                         <div :class="navPreviewSize" class="flex items-center gap-3" :style="`font-family:${bodyFont}`">
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
-                            <span x-cloak x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'" class="inline-flex items-center" data-test="preview-theme-toggle">
-                                <flux:icon.moon x-show="!previewDark" class="size-4" />
+                            <span
+                                x-cloak
+                                x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'"
+                                class="inline-flex items-center"
+                                data-test="preview-theme-toggle"
+                            >
+                                <flux:icon.moon x-show="! previewDark" class="size-4" />
                                 <flux:icon.sun x-show="previewDark" class="size-4" />
                             </span>
-                            <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Sign up') }}</span>
+                            <span
+                                class="px-2.5 py-1 font-medium"
+                                :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`"
+                            >{{ __('Sign up') }}</span>
                         </div>
                     </div>
-                    <div data-test="header-variant" x-show="$wire.header_layout === 'centered'" class="px-4 py-3 text-center" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
+                    <div
+                        data-test="header-variant"
+                        x-show="$wire.header_layout === 'centered'"
+                        class="px-4 py-3 text-center"
+                        :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }"
+                    >
                         <div class="flex justify-center">
-                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" :class="logoPreviewClass" />
-                            <span x-show="! $wire.logo_header?.preview" class="font-bold text-sm">{{ $brand }}</span>
+                            <img
+                                x-cloak
+                                x-show="$wire.logo_header?.preview"
+                                :src="logoSrc($wire.logo_header)"
+                                alt="{{ $brand }}"
+                                :class="logoPreviewClass"
+                            />
+                            <span x-show="! $wire.logo_header?.preview" class="text-sm font-bold">{{ $brand }}</span>
                         </div>
-                        <div :class="navPreviewSize" class="flex items-center justify-center gap-4 mt-2" :style="`font-family:${bodyFont}`">
+                        <div
+                            :class="navPreviewSize"
+                            class="mt-2 flex items-center justify-center gap-4"
+                            :style="`font-family:${bodyFont}`"
+                        >
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
                             <span>{{ __('Pricing') }}</span>
-                            <span x-cloak x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'" class="inline-flex items-center" data-test="preview-theme-toggle">
-                                <flux:icon.moon x-show="!previewDark" class="size-4" />
+                            <span
+                                x-cloak
+                                x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'"
+                                class="inline-flex items-center"
+                                data-test="preview-theme-toggle"
+                            >
+                                <flux:icon.moon x-show="! previewDark" class="size-4" />
                                 <flux:icon.sun x-show="previewDark" class="size-4" />
                             </span>
-                            <span class="px-2.5 py-1 font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Sign up') }}</span>
+                            <span
+                                class="px-2.5 py-1 font-medium"
+                                :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`"
+                            >{{ __('Sign up') }}</span>
                         </div>
                     </div>
-                    <div data-test="header-variant" x-show="$wire.header_layout === 'split'" class="grid grid-cols-3 items-center gap-2 px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
+                    <div
+                        data-test="header-variant"
+                        x-show="$wire.header_layout === 'split'"
+                        class="grid grid-cols-3 items-center gap-2 px-4 py-3"
+                        :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }"
+                    >
                         <span class="flex items-center gap-2">
-                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" :class="logoPreviewClass" />
-                            <span x-show="! $wire.logo_header?.preview" class="font-bold text-sm">{{ $brand }}</span>
+                            <img
+                                x-cloak
+                                x-show="$wire.logo_header?.preview"
+                                :src="logoSrc($wire.logo_header)"
+                                alt="{{ $brand }}"
+                                :class="logoPreviewClass"
+                            />
+                            <span x-show="! $wire.logo_header?.preview" class="text-sm font-bold">{{ $brand }}</span>
                         </span>
-                        <div :class="navPreviewSize" class="flex items-center justify-center gap-4" :style="`font-family:${bodyFont}`">
+                        <div
+                            :class="navPreviewSize"
+                            class="flex items-center justify-center gap-4"
+                            :style="`font-family:${bodyFont}`"
+                        >
                             <span>{{ __('Home') }}</span>
                             <span>{{ __('About') }}</span>
                             <span>{{ __('Pricing') }}</span>
                         </div>
                         <div class="flex items-center justify-end gap-2">
-                            <span x-cloak x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'" class="inline-flex items-center" data-test="preview-theme-toggle">
-                                <flux:icon.moon x-show="!previewDark" class="size-4" />
+                            <span
+                                x-cloak
+                                x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'"
+                                class="inline-flex items-center"
+                                data-test="preview-theme-toggle"
+                            >
+                                <flux:icon.moon x-show="! previewDark" class="size-4" />
                                 <flux:icon.sun x-show="previewDark" class="size-4" />
                             </span>
-                            <span class="px-2.5 py-1 text-xs font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Sign up') }}</span>
+                            <span
+                                class="px-2.5 py-1 text-xs font-medium"
+                                :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`"
+                            >{{ __('Sign up') }}</span>
                         </div>
                     </div>
-                    <div data-test="header-variant" x-show="$wire.header_layout === 'minimal'" class="flex items-center justify-between px-4 py-3" :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }">
+                    <div
+                        data-test="header-variant"
+                        x-show="$wire.header_layout === 'minimal'"
+                        class="flex items-center justify-between px-4 py-3"
+                        :style="{ background: headerBg, color: c.header_text, fontFamily: headingFont }"
+                    >
                         <span class="flex items-center gap-2">
-                            <img x-cloak x-show="$wire.logo_header?.preview" :src="logoSrc($wire.logo_header)" alt="{{ $brand }}" :class="logoPreviewClass" />
-                            <span x-show="! $wire.logo_header?.preview" class="font-bold text-sm">{{ $brand }}</span>
+                            <img
+                                x-cloak
+                                x-show="$wire.logo_header?.preview"
+                                :src="logoSrc($wire.logo_header)"
+                                alt="{{ $brand }}"
+                                :class="logoPreviewClass"
+                            />
+                            <span x-show="! $wire.logo_header?.preview" class="text-sm font-bold">{{ $brand }}</span>
                         </span>
                         <div class="flex items-center gap-1.5">
                             <span class="h-0.5 w-4 rounded-full" :style="`background:${c.header_text}`"></span>
@@ -416,42 +521,96 @@ return new class extends Component
                             <span class="h-0.5 w-2 rounded-full" :style="`background:${c.header_text}`"></span>
                         </div>
                     </div>
-                    <div x-cloak x-show="$wire.header_sticky" class="absolute top-1 right-1 rounded px-1.5 py-0.5 text-[0.55rem] font-medium bg-zinc-800/70 text-white">{{ __('Sticky') }}</div>
+                    <div
+                        x-cloak
+                        x-show="$wire.header_sticky"
+                        class="absolute top-1 right-1 rounded bg-zinc-800/70 px-1.5 py-0.5 text-[0.55rem] font-medium text-white"
+                    >
+                        {{ __('Sticky') }}
+                    </div>
                 </div>
 
                 <div data-test="preview-body" class="px-4 py-6" :style="`background:${c.background}; color:${c.text}`">
                     <div class="space-y-3 text-center">
-                        <h1 class="font-bold" :style="`font-family:${headingFont}; font-size:${headingSize}`">{{ __('Build something great') }}</h1>
-                        <p class="mx-auto max-w-xs" :style="`color:${c.muted}; font-family:${bodyFont}; font-size:${bodySize}`">{{ __('A clean starting point for your next project, themed to your brand.') }}</p>
+                        <h1 class="font-bold" :style="`font-family:${headingFont}; font-size:${headingSize}`">
+                            {{ __('Build something great') }}
+                        </h1>
+                        <p
+                            class="mx-auto max-w-xs"
+                            :style="`color:${c.muted}; font-family:${bodyFont}; font-size:${bodySize}`"
+                        >
+                            {{ __('A clean starting point for your next project, themed to your brand.') }}
+                        </p>
                         <div class="flex items-center justify-center gap-2 pt-2" :style="`font-family:${bodyFont}`">
-                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Get started') }}</span>
-                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.secondary_bg}; color:${c.secondary_text}; border:${borderWidth} solid ${c.secondary_border}; border-radius:${radius}`">{{ __('Learn more') }}</span>
+                            <span
+                                class="px-2 py-1 text-[10px] font-medium"
+                                :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`"
+                            >{{ __('Get started') }}</span>
+                            <span
+                                class="px-2 py-1 text-[10px] font-medium"
+                                :style="`background:${c.secondary_bg}; color:${c.secondary_text}; border:${borderWidth} solid ${c.secondary_border}; border-radius:${radius}`"
+                            >{{ __('Learn more') }}</span>
                         </div>
                         <div class="mx-auto flex max-w-xs items-center gap-2 pt-2" :style="`font-family:${bodyFont}`">
-                            <span class="flex-1 px-2 py-1 text-left text-[10px]" :style="`background:${c.input_bg}; color:${c.input_text}; border:${borderWidth} solid ${c.input_border}; border-radius:${radius}`">name@email.com</span>
-                            <span class="px-2 py-1 text-[10px] font-medium" :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`">{{ __('Subscribe') }}</span>
+                            <span
+                                class="flex-1 px-2 py-1 text-left text-[10px]"
+                                :style="`background:${c.input_bg}; color:${c.input_text}; border:${borderWidth} solid ${c.input_border}; border-radius:${radius}`"
+                            >name@email.com</span>
+                            <span
+                                class="px-2 py-1 text-[10px] font-medium"
+                                :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`"
+                            >{{ __('Subscribe') }}</span>
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-3 pt-6">
                         @for ($i = 0; $i < 3; $i++)
-                            <div class="space-y-1.5 p-3 text-left" :style="`background:${c.card_bg}; border:${borderWidth} solid ${c.card_border}; border-radius:${radius}`">
-                                <div class="text-[0.65rem] font-semibold" :style="`color:${c.card_text}; font-family:${headingFont}`">{{ __('Card title') }}</div>
-                                <div class="text-[0.6rem] leading-snug" :style="`color:${c.card_text}; font-family:${bodyFont}`">{{ __('A short supporting line of text.') }}</div>
+                            <div
+                                class="space-y-1.5 p-3 text-left"
+                                :style="`background:${c.card_bg}; border:${borderWidth} solid ${c.card_border}; border-radius:${radius}`"
+                            >
+                                <div
+                                    class="text-[0.65rem] font-semibold"
+                                    :style="`color:${c.card_text}; font-family:${headingFont}`"
+                                >
+                                    {{ __('Card title') }}
+                                </div>
+                                <div
+                                    class="text-[0.6rem] leading-snug"
+                                    :style="`color:${c.card_text}; font-family:${bodyFont}`"
+                                >
+                                    {{ __('A short supporting line of text.') }}
+                                </div>
                             </div>
                         @endfor
                     </div>
                 </div>
 
-                <div data-test="footer-variant" x-show="$wire.footer_layout === 'simple'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
+                <div
+                    data-test="footer-variant"
+                    x-show="$wire.footer_layout === 'simple'"
+                    :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }"
+                >
                     <div class="flex items-start justify-between gap-4 px-4 py-4 text-[10px]">
                         <div class="space-y-2">
                             <span class="flex items-center gap-2">
-                                <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-4 w-auto object-contain" />
-                                <span x-show="! $wire.logo_footer?.preview" class="text-sm font-semibold">{{ $brand }}</span>
+                                <img
+                                    x-cloak
+                                    x-show="$wire.logo_footer?.preview"
+                                    :src="logoSrc($wire.logo_footer)"
+                                    alt="{{ $brand }}"
+                                    class="h-4 w-auto object-contain"
+                                />
+                                <span
+                                    x-show="! $wire.logo_footer?.preview"
+                                    class="text-sm font-semibold"
+                                >{{ $brand }}</span>
                             </span>
                             <div class="flex items-center gap-2 opacity-70">
                                 @foreach (['facebook', 'x-twitter', 'instagram'] as $exIcon)
-                                    <span class="size-3 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
+                                    <span
+                                        class="size-3 bg-current mask-contain mask-center mask-no-repeat"
+                                        style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"
+                                    ></span>
                                 @endforeach
                             </div>
                         </div>
@@ -461,15 +620,28 @@ return new class extends Component
                             <span>{{ __('Contact') }}</span>
                         </div>
                     </div>
-                    <div :style="`font-size:${copyrightSize}`" class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 opacity-60">
+                    <div
+                        :style="`font-size:${copyrightSize}`"
+                        class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 opacity-60"
+                    >
                         <span>&copy; {{ now()->year }} {{ $brand }}, {{ __('All Rights Reserved') }}</span>
                         <span>{{ __('Made with Wire-Up') }}</span>
                     </div>
                 </div>
-                <div data-test="footer-variant" x-show="$wire.footer_layout === 'centered'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
-                    <div class="px-4 py-5 text-center text-xs space-y-3">
+                <div
+                    data-test="footer-variant"
+                    x-show="$wire.footer_layout === 'centered'"
+                    :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }"
+                >
+                    <div class="space-y-3 px-4 py-5 text-center text-xs">
                         <div class="flex justify-center">
-                            <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-4 w-auto object-contain" />
+                            <img
+                                x-cloak
+                                x-show="$wire.logo_footer?.preview"
+                                :src="logoSrc($wire.logo_footer)"
+                                alt="{{ $brand }}"
+                                class="h-4 w-auto object-contain"
+                            />
                             <span x-show="! $wire.logo_footer?.preview" class="font-semibold">{{ $brand }}</span>
                         </div>
                         <div class="flex items-center justify-center gap-4 opacity-80">
@@ -479,59 +651,101 @@ return new class extends Component
                         </div>
                         <div class="flex items-center justify-center gap-2">
                             @foreach (['facebook', 'x-twitter', 'instagram'] as $exIcon)
-                                <span class="size-3 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
+                                <span
+                                    class="size-3 bg-current mask-contain mask-center mask-no-repeat"
+                                    style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"
+                                ></span>
                             @endforeach
                         </div>
                     </div>
-                    <div :style="`font-size:${copyrightSize}`" class="border-t border-current/10 px-4 py-2.5 text-center opacity-60">
+                    <div
+                        :style="`font-size:${copyrightSize}`"
+                        class="border-t border-current/10 px-4 py-2.5 text-center opacity-60"
+                    >
                         &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
                     </div>
                 </div>
-                <div data-test="footer-variant" x-show="$wire.footer_layout === 'columns'" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }">
+                <div
+                    data-test="footer-variant"
+                    x-show="$wire.footer_layout === 'columns'"
+                    :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont }"
+                >
                     <div class="grid grid-cols-3 gap-4 px-4 py-4 text-[10px]">
                         <div class="space-y-3">
-                            <img x-cloak x-show="$wire.logo_footer?.preview" :src="logoSrc($wire.logo_footer)" alt="{{ $brand }}" class="h-4 w-auto object-contain" />
+                            <img
+                                x-cloak
+                                x-show="$wire.logo_footer?.preview"
+                                :src="logoSrc($wire.logo_footer)"
+                                alt="{{ $brand }}"
+                                class="h-4 w-auto object-contain"
+                            />
                             <div x-show="! $wire.logo_footer?.preview" class="font-semibold">{{ $brand }}</div>
-                            <div class="opacity-60 text-[0.65rem] leading-relaxed">{{ __('Building something great.') }}</div>
+                            <div class="text-[0.65rem] leading-relaxed opacity-60">
+                                {{ __('Building something great.') }}
+                            </div>
                             <div class="flex items-center gap-2 opacity-70">
                                 @foreach (['facebook', 'x-twitter', 'instagram'] as $exIcon)
-                                    <span class="size-3 bg-current mask-center mask-no-repeat mask-contain" style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"></span>
+                                    <span
+                                        class="size-3 bg-current mask-contain mask-center mask-no-repeat"
+                                        style="mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}'); -webkit-mask-image:url('{{ Vite::asset("resources/images/socials/{$exIcon}-solid.svg") }}');"
+                                    ></span>
                                 @endforeach
                             </div>
                         </div>
                         <div class="space-y-1.5">
-                            <div class="font-semibold border-b border-current/20 pb-1 mb-2">{{ __('Product') }}</div>
+                            <div class="mb-2 border-b border-current/20 pb-1 font-semibold">{{ __('Product') }}</div>
                             <div class="opacity-70">{{ __('Features') }}</div>
                             <div class="opacity-70">{{ __('Pricing') }}</div>
                             <div class="opacity-70">{{ __('Changelog') }}</div>
                         </div>
                         <div class="space-y-1.5">
-                            <div class="font-semibold border-b border-current/20 pb-1 mb-2">{{ __('Company') }}</div>
+                            <div class="mb-2 border-b border-current/20 pb-1 font-semibold">{{ __('Company') }}</div>
                             <div class="opacity-70">{{ __('About') }}</div>
                             <div class="opacity-70">{{ __('Blog') }}</div>
                             <div class="opacity-70">{{ __('Contact') }}</div>
                         </div>
                     </div>
-                    <div :style="`font-size:${copyrightSize}`" class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 opacity-60">
+                    <div
+                        :style="`font-size:${copyrightSize}`"
+                        class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 opacity-60"
+                    >
                         <span>&copy; {{ now()->year }} {{ $brand }}, {{ __('All Rights Reserved') }}</span>
                         <span>{{ __('Made with Wire-Up') }}</span>
                     </div>
                 </div>
-                <div data-test="footer-variant" x-show="$wire.footer_layout === 'minimal'" class="px-4 py-3 text-center opacity-60" :style="{ background: footerBg, color: c.footer_text, fontFamily: bodyFont, fontSize: copyrightSize }">
+                <div
+                    data-test="footer-variant"
+                    x-show="$wire.footer_layout === 'minimal'"
+                    class="px-4 py-3 text-center opacity-60"
+                    :style="{
+                        background: footerBg,
+                        color: c.footer_text,
+                        fontFamily: bodyFont,
+                        fontSize: copyrightSize,
+                    }"
+                >
                     &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
                 </div>
             </div>
         </div>
 
-        <div class="order-1 md:col-span-3 space-y-8">
-            <flux:select variant="listbox" wire:model="theme" label="{{ __('Theme Colors') }}" description="{{ __('Choose from pre-designed color schemes or create your own custom palette.') }}">
+        <div class="order-1 space-y-8 md:col-span-3">
+            <flux:select
+                variant="listbox"
+                wire:model="theme"
+                label="{{ __('Theme Colors') }}"
+                description="{{ __('Choose from pre-designed color schemes or create your own custom palette.') }}"
+            >
                 @foreach ($presets as $key => $preset)
                     <flux:select.option value="{{ $key }}">
                         <span class="flex w-full items-center gap-3">
                             <span class="flex-1">{{ $preset['label'] }}</span>
                             <span class="flex items-center gap-1">
                                 @foreach (['background', 'primary_bg', 'header_bg', 'text'] as $s)
-                                    <span class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30" style="background-color: {{ $preset['colors'][$s] }}"></span>
+                                    <span
+                                        class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30"
+                                        style="background-color: {{ $preset['colors'][$s] }}"
+                                    ></span>
                                 @endforeach
                             </span>
                         </span>
@@ -542,7 +756,10 @@ return new class extends Component
                         <span class="flex-1">{{ __('Custom') }}</span>
                         <span class="flex items-center gap-1">
                             @foreach (['background', 'primary_bg', 'header_bg', 'text'] as $s)
-                                <span class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30" style="background-color: {{ $colors[$s] ?? '#cccccc' }}"></span>
+                                <span
+                                    class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30"
+                                    style="background-color: {{ $colors[$s] ?? '#cccccc' }}"
+                                ></span>
                             @endforeach
                         </span>
                     </span>
@@ -553,7 +770,7 @@ return new class extends Component
                 @foreach ($slotsByGroup as $group => $groupSlots)
                     <div class="space-y-3">
                         <flux:heading size="sm">{{ __($group) }}</flux:heading>
-                        <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="grid gap-4 sm:grid-cols-2">
                             @foreach ($groupSlots as $slot => $def)
                                 <flux:color-picker wire:model="colors.{{ $slot }}" label="{{ __($def['label']) }}" />
                             @endforeach
@@ -562,7 +779,12 @@ return new class extends Component
                 @endforeach
             </div>
 
-            <flux:select variant="listbox" wire:model="theme_dark" label="{{ __('Dark mode') }}" description="{{ __('Optional palette for visitors whose device prefers dark mode.') }}">
+            <flux:select
+                variant="listbox"
+                wire:model="theme_dark"
+                label="{{ __('Dark mode') }}"
+                description="{{ __('Optional palette for visitors whose device prefers dark mode.') }}"
+            >
                 <flux:select.option value="none">{{ __('Off') }}</flux:select.option>
                 @foreach ($presets as $key => $preset)
                     <flux:select.option value="{{ $key }}">
@@ -570,7 +792,10 @@ return new class extends Component
                             <span class="flex-1">{{ $preset['label'] }}</span>
                             <span class="flex items-center gap-1">
                                 @foreach (['background', 'primary_bg', 'header_bg', 'text'] as $s)
-                                    <span class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30" style="background-color: {{ $preset['colors'][$s] }}"></span>
+                                    <span
+                                        class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30"
+                                        style="background-color: {{ $preset['colors'][$s] }}"
+                                    ></span>
                                 @endforeach
                             </span>
                         </span>
@@ -581,7 +806,10 @@ return new class extends Component
                         <span class="flex-1">{{ __('Custom') }}</span>
                         <span class="flex items-center gap-1">
                             @foreach (['background', 'primary_bg', 'header_bg', 'text'] as $s)
-                                <span class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30" style="background-color: {{ $colors_dark[$s] ?? '#cccccc' }}"></span>
+                                <span
+                                    class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30"
+                                    style="background-color: {{ $colors_dark[$s] ?? '#cccccc' }}"
+                                ></span>
                             @endforeach
                         </span>
                     </span>
@@ -592,9 +820,12 @@ return new class extends Component
                 @foreach ($slotsByGroup as $group => $groupSlots)
                     <div class="space-y-3">
                         <flux:heading size="sm">{{ __($group) }} — {{ __('Dark mode') }}</flux:heading>
-                        <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="grid gap-4 sm:grid-cols-2">
                             @foreach ($groupSlots as $slot => $def)
-                                <flux:color-picker wire:model="colors_dark.{{ $slot }}" label="{{ __($def['label']) }}" />
+                                <flux:color-picker
+                                    wire:model="colors_dark.{{ $slot }}"
+                                    label="{{ __($def['label']) }}"
+                                />
                             @endforeach
                         </div>
                     </div>
@@ -613,7 +844,11 @@ return new class extends Component
                     <flux:select.option value="custom">{{ __('Custom') }}</flux:select.option>
                 </flux:select>
                 <div x-show="$wire.heading_font === 'custom'" x-cloak>
-                    <flux:input wire:model="heading_font_custom" label="{{ __('Custom Google font') }}" placeholder="{{ __('Exact Google Fonts family name.') }}" />
+                    <flux:input
+                        wire:model="heading_font_custom"
+                        label="{{ __('Custom Google font') }}"
+                        placeholder="{{ __('Exact Google Fonts family name.') }}"
+                    />
                 </div>
 
                 <flux:select variant="listbox" searchable wire:model="body_font" label="{{ __('Body font') }}">
@@ -625,11 +860,15 @@ return new class extends Component
                     <flux:select.option value="custom">{{ __('Custom') }}</flux:select.option>
                 </flux:select>
                 <div x-show="$wire.body_font === 'custom'" x-cloak>
-                    <flux:input wire:model="body_font_custom" label="{{ __('Custom Google font') }}" placeholder="{{ __('Exact Google Fonts family name.') }}" />
+                    <flux:input
+                        wire:model="body_font_custom"
+                        label="{{ __('Custom Google font') }}"
+                        placeholder="{{ __('Exact Google Fonts family name.') }}"
+                    />
                 </div>
             </div>
 
-            <div class="grid sm:grid-cols-2 gap-6">
+            <div class="grid gap-6 sm:grid-cols-2">
                 <flux:select variant="listbox" wire:model="heading_size" label="{{ __('Heading size') }}">
                     @foreach (array_keys(config('theme.heading_sizes')) as $key)
                         <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>
@@ -673,8 +912,13 @@ return new class extends Component
                         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                             @foreach (config('theme.header_layouts') as $key => $layout)
                                 <label class="group cursor-pointer">
-                                    <input type="radio" wire:model="header_layout" value="{{ $key }}" class="sr-only peer" />
-                                    <div class="overflow-hidden rounded-lg border-2 transition peer-checked:border-zinc-900 dark:peer-checked:border-zinc-100 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500">
+                                    <input
+                                        type="radio"
+                                        wire:model="header_layout"
+                                        value="{{ $key }}"
+                                        class="peer sr-only"
+                                    />
+                                    <div class="overflow-hidden rounded-lg border-2 border-zinc-200 transition peer-checked:border-zinc-900 hover:border-zinc-400 dark:border-zinc-700 dark:peer-checked:border-zinc-100 dark:hover:border-zinc-500">
                                         @if ($key === 'simple')
                                             <svg viewBox="0 0 80 24" class="w-full" xmlns="http://www.w3.org/2000/svg">
                                                 <rect width="80" height="24" fill="#f4f4f5" class="dark:fill-zinc-800" />
@@ -710,7 +954,7 @@ return new class extends Component
                                             </svg>
                                         @endif
                                     </div>
-                                    <div class="mt-1.5 text-center text-xs text-zinc-600 dark:text-zinc-400 peer-checked:font-semibold peer-checked:text-zinc-900 dark:peer-checked:text-zinc-100">
+                                    <div class="mt-1.5 text-center text-xs text-zinc-600 peer-checked:font-semibold peer-checked:text-zinc-900 dark:text-zinc-400 dark:peer-checked:text-zinc-100">
                                         {{ $layout['label'] }}
                                     </div>
                                 </label>
@@ -718,13 +962,28 @@ return new class extends Component
                         </div>
                     </flux:field>
 
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <flux:switch wire:model="header_transparent" align="left" label="{{ __('Transparent background') }}" description="{{ __('Header sits over the page content.') }}" />
-                        <flux:switch wire:model="header_sticky" align="left" label="{{ __('Sticky header') }}" description="{{ __('Header stays fixed at the top on scroll.') }}" />
-                        <flux:switch wire:model="header_theme_toggle" align="left" label="{{ __('Light / dark toggle') }}" description="{{ __('Show a theme switch in the header. Needs a dark theme.') }}" />
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <flux:switch
+                            wire:model="header_transparent"
+                            align="left"
+                            label="{{ __('Transparent background') }}"
+                            description="{{ __('Header sits over the page content.') }}"
+                        />
+                        <flux:switch
+                            wire:model="header_sticky"
+                            align="left"
+                            label="{{ __('Sticky header') }}"
+                            description="{{ __('Header stays fixed at the top on scroll.') }}"
+                        />
+                        <flux:switch
+                            wire:model="header_theme_toggle"
+                            align="left"
+                            label="{{ __('Light / dark toggle') }}"
+                            description="{{ __('Show a theme switch in the header. Needs a dark theme.') }}"
+                        />
                     </div>
 
-                    <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="grid gap-4 sm:grid-cols-2">
                         <flux:select variant="listbox" wire:model="header_logo_size" label="{{ __('Logo size') }}">
                             @foreach (config('theme.element_sizes') as $value => $label)
                                 <flux:select.option value="{{ $value }}">{{ __($label) }}</flux:select.option>
@@ -735,7 +994,11 @@ return new class extends Component
                                 <flux:select.option value="{{ $value }}">{{ __($label) }}</flux:select.option>
                             @endforeach
                         </flux:select>
-                        <flux:select variant="listbox" wire:model="header_nav_hover" label="{{ __('Link hover effect') }}">
+                        <flux:select
+                            variant="listbox"
+                            wire:model="header_nav_hover"
+                            label="{{ __('Link hover effect') }}"
+                        >
                             @foreach (config('theme.nav_hover_states') as $value => $label)
                                 <flux:select.option value="{{ $value }}">{{ __($label) }}</flux:select.option>
                             @endforeach
@@ -749,8 +1012,13 @@ return new class extends Component
                         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                             @foreach (config('theme.footer_layouts') as $key => $layout)
                                 <label class="group cursor-pointer">
-                                    <input type="radio" wire:model="footer_layout" value="{{ $key }}" class="sr-only peer" />
-                                    <div class="overflow-hidden rounded-lg border-2 transition peer-checked:border-zinc-900 dark:peer-checked:border-zinc-100 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500">
+                                    <input
+                                        type="radio"
+                                        wire:model="footer_layout"
+                                        value="{{ $key }}"
+                                        class="peer sr-only"
+                                    />
+                                    <div class="overflow-hidden rounded-lg border-2 border-zinc-200 transition peer-checked:border-zinc-900 hover:border-zinc-400 dark:border-zinc-700 dark:peer-checked:border-zinc-100 dark:hover:border-zinc-500">
                                         @if ($key === 'simple')
                                             <svg viewBox="0 0 80 20" class="w-full" xmlns="http://www.w3.org/2000/svg">
                                                 <rect width="80" height="20" fill="#f4f4f5" class="dark:fill-zinc-800" />
@@ -787,7 +1055,7 @@ return new class extends Component
                                             </svg>
                                         @endif
                                     </div>
-                                    <div class="mt-1.5 text-center text-xs text-zinc-600 dark:text-zinc-400 peer-checked:font-semibold peer-checked:text-zinc-900 dark:peer-checked:text-zinc-100">
+                                    <div class="mt-1.5 text-center text-xs text-zinc-600 peer-checked:font-semibold peer-checked:text-zinc-900 dark:text-zinc-400 dark:peer-checked:text-zinc-100">
                                         {{ $layout['label'] }}
                                     </div>
                                 </label>
@@ -796,7 +1064,12 @@ return new class extends Component
                     </flux:field>
 
                     <div>
-                        <flux:switch wire:model="footer_transparent" align="left" label="{{ __('Transparent background') }}" description="{{ __('Footer sits over the page content.') }}" />
+                        <flux:switch
+                            wire:model="footer_transparent"
+                            align="left"
+                            label="{{ __('Transparent background') }}"
+                            description="{{ __('Footer sits over the page content.') }}"
+                        />
                     </div>
                 </div>
             </div>
@@ -849,8 +1122,8 @@ return new class extends Component
                     <div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
                         @foreach (config('theme.auth_layouts') as $key => $layout)
                             <label class="group cursor-pointer">
-                                <input type="radio" wire:model="auth_layout" value="{{ $key }}" class="sr-only peer" />
-                                <div class="overflow-hidden rounded-lg border-2 transition peer-checked:border-zinc-900 dark:peer-checked:border-zinc-100 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500">
+                                <input type="radio" wire:model="auth_layout" value="{{ $key }}" class="peer sr-only" />
+                                <div class="overflow-hidden rounded-lg border-2 border-zinc-200 transition peer-checked:border-zinc-900 hover:border-zinc-400 dark:border-zinc-700 dark:peer-checked:border-zinc-100 dark:hover:border-zinc-500">
                                     @if ($key === 'simple')
                                         <svg viewBox="0 0 80 56" class="w-full" xmlns="http://www.w3.org/2000/svg">
                                             <rect width="80" height="56" fill="#f4f4f5" class="dark:fill-zinc-800" />
@@ -889,7 +1162,7 @@ return new class extends Component
                                         </svg>
                                     @endif
                                 </div>
-                                <div class="mt-1.5 text-center text-xs text-zinc-600 dark:text-zinc-400 peer-checked:font-semibold peer-checked:text-zinc-900 dark:peer-checked:text-zinc-100">
+                                <div class="mt-1.5 text-center text-xs text-zinc-600 peer-checked:font-semibold peer-checked:text-zinc-900 dark:text-zinc-400 dark:peer-checked:text-zinc-100">
                                     {{ $layout['label'] }}
                                 </div>
                             </label>
@@ -919,7 +1192,10 @@ return new class extends Component
                 <flux:heading size="sm">{{ __('Custom CSS') }}</flux:heading>
                 <flux:text>{{ __('Add custom CSS rules that apply across the whole site.') }}</flux:text>
                 <flux:modal.trigger name="site-custom-css">
-                    <flux:button icon="code-bracket" variant="filled">{{ $custom_css !== '' ? __('Edit custom CSS') : __('Add custom CSS') }}</flux:button>
+                    <flux:button
+                        icon="code-bracket"
+                        variant="filled"
+                    >{{ $custom_css !== '' ? __('Edit custom CSS') : __('Add custom CSS') }}</flux:button>
                 </flux:modal.trigger>
             </div>
 
@@ -929,7 +1205,12 @@ return new class extends Component
                         <flux:heading size="lg">{{ __('Custom CSS') }}</flux:heading>
                         <flux:text class="mt-2">{{ __('These rules are added to every page on your site.') }}</flux:text>
                     </div>
-                    <flux:textarea wire:model="custom_css" rows="12" class="font-mono text-sm" placeholder=".my-class &#123; color: red; &#125;" />
+                    <flux:textarea
+                        wire:model="custom_css"
+                        rows="12"
+                        class="font-mono text-sm"
+                        placeholder=".my-class &#123; color: red; &#125;"
+                    />
                     <div class="flex justify-end">
                         <flux:modal.close>
                             <flux:button variant="primary">{{ __('Done') }}</flux:button>
@@ -939,9 +1220,7 @@ return new class extends Component
             </flux:modal>
 
             <div class="flex items-center gap-4">
-                <flux:button type="submit" variant="primary" icon="check">
-                    {{ __('Update') }}
-                </flux:button>
+                <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
             </div>
         </div>
     </form>
@@ -952,15 +1231,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
             {{ __('Settings') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('Design') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('Design') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('Design') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>
+                {{ __('Settings') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

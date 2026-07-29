@@ -3,9 +3,7 @@
     <x-site.head :title="isset($title) ? $title : null" />
 
     <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
-        <div
-            class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 md:max-w-none md:grid-cols-2 md:px-0"
-        >
+        <div class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 md:max-w-none md:grid-cols-2 md:px-0">
             @php
                 $settings = resolve(App\Services\SettingsService::class);
                 $authImage = $settings->authImageUrl();

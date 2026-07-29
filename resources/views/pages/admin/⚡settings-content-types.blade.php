@@ -250,6 +250,13 @@ return new class extends Component
         Flux::modal('confirm-delete-type')->close();
     }
 
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Content Types'))
+            ->layout('layouts::admin');
+    }
+
     private function assertUniquePrefixes(): void
     {
         $counts = array_count_values(array_map(fn (array $type): string => $type['slug_prefix'], $this->types));
@@ -479,25 +486,25 @@ return new class extends Component
 
         return $key;
     }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title(__('Content Types'))
-            ->layout('layouts::admin');
-    }
 };
 ?>
 
 <x-admin.settings-layout>
-    <div class="grid md:grid-cols-5 gap-10 items-start">
+    <div class="grid items-start gap-10 md:grid-cols-5">
         <div class="space-y-4 md:col-span-3">
             <div>
                 <flux:label>{{ __('Content types') }}</flux:label>
-                <flux:text variant="subtle" class="mt-1">{{ __('Reusable types of content such as products, services or events, each with its own fields and pages.') }}</flux:text>
+                <flux:text
+                    variant="subtle"
+                    class="mt-1"
+                >{{ __('Reusable types of content such as products, services or events, each with its own fields and pages.') }}</flux:text>
             </div>
 
-            <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="space-y-10">
+            <form
+                wire:submit="update"
+                wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+                class="space-y-10"
+            >
                 <div class="space-y-4">
                     @if ($types === [])
                         <flux:text variant="subtle">{{ __('No content types yet. Add a preset or a custom type below.') }}</flux:text>
@@ -510,7 +517,12 @@ return new class extends Component
                     @endif
 
                     <flux:dropdown>
-                        <flux:button type="button" size="sm" icon="plus" icon-trailing="chevron-down">{{ __('Add') }}</flux:button>
+                        <flux:button
+                            type="button"
+                            size="sm"
+                            icon="plus"
+                            icon-trailing="chevron-down"
+                        >{{ __('Add') }}</flux:button>
 
                         <flux:menu>
                             @foreach ($this->availablePresets as $preset)
@@ -523,14 +535,13 @@ return new class extends Component
                                 <flux:menu.separator />
                             @endif
 
-                            <flux:menu.item icon="pencil-square" wire:click="addCustom">{{ __('Custom type') }}</flux:menu.item>
+                            <flux:menu.item icon="pencil-square" wire:click="addCustom">
+                                {{ __('Custom type') }}</flux:menu.item>
                         </flux:menu>
                     </flux:dropdown>
                 </div>
                 <div>
-                    <flux:button type="submit" variant="primary" icon="check">
-                        {{ __('Update') }}
-                    </flux:button>
+                    <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
                 </div>
             </form>
         </div>
@@ -562,7 +573,8 @@ return new class extends Component
 
 @section('header-content')
     <flux:breadcrumbs class="hidden md:flex">
-        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
+            {{ __('Settings') }}</flux:breadcrumbs.item>
         <flux:breadcrumbs.item>{{ __('Content Types') }}</flux:breadcrumbs.item>
     </flux:breadcrumbs>
 @endsection

@@ -72,9 +72,13 @@ return new class extends Component
 @endphp
 
 <x-admin.settings-layout>
-    <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-start">
+    <form
+        wire:submit="update"
+        wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+        class="grid items-start gap-10 md:grid-cols-5"
+    >
         <div class="space-y-10 md:col-span-3">
-            <div class="grid sm:grid-cols-2 gap-6">
+            <div class="grid gap-6 sm:grid-cols-2">
                 @foreach ($platforms as $key => $platform)
                     <flux:input
                         wire:model="links.{{ $key }}"
@@ -85,16 +89,19 @@ return new class extends Component
                 @endforeach
             </div>
 
-            <flux:radio.group wire:model="variant" variant="segmented" label="{{ __('Icon style') }}" description="{{ __('How the social icons render in your footer.') }}">
+            <flux:radio.group
+                wire:model="variant"
+                variant="segmented"
+                label="{{ __('Icon style') }}"
+                description="{{ __('How the social icons render in your footer.') }}"
+            >
                 @foreach ($iconVariants as $value => $label)
                     <flux:radio value="{{ $value }}" label="{{ __($label) }}" />
                 @endforeach
             </flux:radio.group>
 
             <div>
-                <flux:button type="submit" variant="primary" icon="check">
-                    {{ __('Update') }}
-                </flux:button>
+                <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
             </div>
         </div>
     </form>
@@ -105,15 +112,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
             {{ __('Settings') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('Social') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('Social') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('Social') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>
+                {{ __('Settings') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

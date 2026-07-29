@@ -92,12 +92,12 @@
         ],
         "lint": [
             "rector",
-            "pint --parallel",
+            "pint --parallel --blade",
             "npm run lint"
         ],
         "test:type-coverage": "@php -d memory_limit=-1 vendor/bin/pest --type-coverage --min=100",
         "test:lint": [
-            "pint --parallel --test",
+            "pint --parallel --test --blade",
             "rector --dry-run",
             "npm run test:lint"
         ],

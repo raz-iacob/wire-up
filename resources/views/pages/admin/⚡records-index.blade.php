@@ -177,133 +177,200 @@ return new class extends Component
         <div class="flex items-center gap-3">
             @can('records.'.$recordType->key.'.create')
                 <flux:modal.trigger name="add-new">
-                    <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+                    <flux:button
+                        variant="primary"
+                        class="shrink-0"
+                        size="sm"
+                        icon="plus"
+                        iconVariant="outline"
+                    >{{ __('Add') }}</flux:button>
                 </flux:modal.trigger>
             @endcan
 
             <flux:dropdown position="bottom" align="start">
-                <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
+                <flux:button
+                    class="shrink-0"
+                    size="sm"
+                    icon="funnel"
+                    iconVariant="outline"
+                >{{ __('Filter') }}</flux:button>
 
                 <flux:menu>
                     <flux:menu.submenu heading="{{ __('Status') }}">
                         <flux:menu.radio.group wire:model.live="status" heading="{{ __('Status') }}">
                             <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
-                            @foreach(ContentStatus::cases() as $statusOption)
-                            <flux:menu.radio value="{{ $statusOption->value }}">{{ $statusOption->label() }}</flux:menu.radio>
+                            @foreach (ContentStatus::cases() as $statusOption)
+                                <flux:menu.radio value="{{ $statusOption->value }}">
+                                    {{ $statusOption->label() }}</flux:menu.radio>
                             @endforeach
                         </flux:menu.radio.group>
                     </flux:menu.submenu>
                 </flux:menu>
             </flux:dropdown>
 
-            <div class="w-full md:w-52 sm:shrink-0">
-                <flux:input icon="magnifying-glass" wire:model.live="search" size="sm" placeholder="{{ __('Search...') }}" clearable />
+            <div class="w-full sm:shrink-0 md:w-52">
+                <flux:input
+                    icon="magnifying-glass"
+                    wire:model.live="search"
+                    size="sm"
+                    placeholder="{{ __('Search...') }}"
+                    clearable
+                />
             </div>
         </div>
 
-        <flux:table class="md:table-fixed md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->records" container:class="max-h-[calc(100dvh-12rem)]">
+        <flux:table
+            class="max-h-[calc(100dvh-12rem)] md:w-full md:table-fixed"
+            :paginate="$this->records"
+            container:class="max-h-[calc(100dvh-12rem)]"
+        >
             <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
-                <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection" wire:click="sort('title')" class="w-[28rem]">{{ __('Title') }}</flux:table.column>
-                @foreach($this->columnFields as $field)
+                <flux:table.column
+                    sortable
+                    :sorted="$sortBy === 'title'"
+                    :direction="$sortDirection"
+                    wire:click="sort('title')"
+                    class="w-[28rem]"
+                >
+                    {{ __('Title') }}</flux:table.column>
+                @foreach ($this->columnFields as $field)
                     @php($fieldSortable = (bool) ($field['sortable'] ?? false) && ! (\App\Enums\FieldType::tryFrom($field['type'])?->isMedia() ?? false))
                     @php($fieldLabel = $this->recordType->fieldLabel($field))
                     @if ($fieldSortable)
-                        <flux:table.column sortable :sorted="$sortBy === $field['key']" :direction="$sortDirection" wire:click="sort('{{ $field['key'] }}')">{{ $fieldLabel }}</flux:table.column>
+                        <flux:table.column
+                            sortable
+                            :sorted="$sortBy === $field['key']"
+                            :direction="$sortDirection"
+                            wire:click="sort('{{ $field['key'] }}')"
+                        >
+                            {{ $fieldLabel }}</flux:table.column>
                     @else
                         <flux:table.column>{{ $fieldLabel }}</flux:table.column>
                     @endif
                 @endforeach
-                @if($this->hasMultipleActiveLocales())
-                <flux:table.column>{{ __('Languages') }}</flux:table.column>
+                @if ($this->hasMultipleActiveLocales())
+                    <flux:table.column>{{ __('Languages') }}</flux:table.column>
                 @endif
                 <flux:table.column>{{ __('Status') }}</flux:table.column>
-                <flux:table.column sortable :sorted="$sortBy === 'updated_at'" :direction="$sortDirection" wire:click="sort('updated_at')">{{ __('Last updated') }}</flux:table.column>
+                <flux:table.column
+                    sortable
+                    :sorted="$sortBy === 'updated_at'"
+                    :direction="$sortDirection"
+                    wire:click="sort('updated_at')"
+                >
+                    {{ __('Last updated') }}</flux:table.column>
                 <flux:table.column class="w-10"></flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
                 @foreach ($this->records as $row)
-                <flux:table.row wire:key="{{ $row->id }}">
-                    <flux:table.cell>
-                        <a href="{{ route('admin.records-edit', [$this->recordType, $row]) }}" class="flex min-w-0 items-center gap-3">
-                            @if($this->recordType->hasImageField())
-                            @php($thumbnail = $row->primaryImageUrl(200))
-                            <div class="size-9 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
-                                @if($thumbnail)
-                                    <img src="{{ $thumbnail }}" alt="" class="size-full object-cover" loading="lazy" />
-                                @else
-                                    <div class="flex size-full items-center justify-center text-zinc-300 dark:text-zinc-600">
-                                        <flux:icon name="photo" class="size-4" />
+                    <flux:table.row wire:key="{{ $row->id }}">
+                        <flux:table.cell>
+                            <a
+                                href="{{ route('admin.records-edit', [$this->recordType, $row]) }}"
+                                class="flex min-w-0 items-center gap-3"
+                            >
+                                @if ($this->recordType->hasImageField())
+                                    @php($thumbnail = $row->primaryImageUrl(200))
+                                    <div class="size-9 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
+                                        @if ($thumbnail)
+                                            <img
+                                                src="{{ $thumbnail }}"
+                                                alt=""
+                                                class="size-full object-cover"
+                                                loading="lazy"
+                                            />
+                                        @else
+                                            <div class="flex size-full items-center justify-center text-zinc-300 dark:text-zinc-600">
+                                                <flux:icon name="photo" class="size-4" />
+                                            </div>
+                                        @endif
                                     </div>
                                 @endif
-                            </div>
-                            @endif
-                            <flux:text variant="strong" class="truncate hover:underline">{{ $row->title !== '' ? $row->title : __('Untitled') }}</flux:text>
-                        </a>
-                    </flux:table.cell>
+                                <flux:text
+                                    variant="strong"
+                                    class="truncate hover:underline"
+                                >{{ $row->title !== '' ? $row->title : __('Untitled') }}</flux:text>
+                            </a>
+                        </flux:table.cell>
 
-                    @foreach($this->columnFields as $field)
-                    <flux:table.cell class="whitespace-nowrap">{{ $row->columnValue($field) }}</flux:table.cell>
-                    @endforeach
+                        @foreach ($this->columnFields as $field)
+                            <flux:table.cell class="whitespace-nowrap">{{ $row->columnValue($field) }}</flux:table.cell>
+                        @endforeach
 
-                    @if($this->hasMultipleActiveLocales())
-                    <flux:table.cell class="whitespace-nowrap">
-                        <x-admin.language-codes :active="$row->published_locales" />
-                    </flux:table.cell>
-                    @endif
+                        @if ($this->hasMultipleActiveLocales())
+                            <flux:table.cell class="whitespace-nowrap">
+                                <x-admin.language-codes :active="$row->published_locales" />
+                            </flux:table.cell>
+                        @endif
 
-                    <flux:table.cell>
-                        <flux:badge color="{{ $row->computed_status->color() }}" size="sm">
-                            {{ $row->computed_status->label() }}
-                        </flux:badge>
-                    </flux:table.cell>
+                        <flux:table.cell>
+                            <flux:badge color="{{ $row->computed_status->color() }}" size="sm">
+                                {{ $row->computed_status->label() }}
+                            </flux:badge>
+                        </flux:table.cell>
 
-                    <flux:table.cell>
-                        {{ $row->updated_at?->format('M d, Y H:i') }}
-                    </flux:table.cell>
+                        <flux:table.cell> {{ $row->updated_at?->format('M d, Y H:i') }} </flux:table.cell>
 
-                    <flux:table.cell>
-                        <flux:dropdown class="flex justify-end">
-                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
-                            <flux:menu>
-                                @if ($row->slug !== '')
-                                    <flux:menu.item icon="eye" href="{{ route('record', [$recordType->slug_prefix, $row->slug]) }}" target="_blank">
-                                        {{ __('View') }}
-                                    </flux:menu.item>
-                                @endif
+                        <flux:table.cell>
+                            <flux:dropdown class="flex justify-end">
+                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
+                                <flux:menu>
+                                    @if ($row->slug !== '')
+                                        <flux:menu.item
+                                            icon="eye"
+                                            href="{{ route('record', [$recordType->slug_prefix, $row->slug]) }}"
+                                            target="_blank"
+                                        >
+                                            {{ __('View') }}
+                                        </flux:menu.item>
+                                    @endif
 
-                                @can('records.'.$recordType->key.'.create')
-                                    <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $row->id }})">
-                                        {{ __('Duplicate') }}
-                                    </flux:menu.item>
-                                @endcan
+                                    @can('records.'.$recordType->key.'.create')
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            wire:click="duplicate({{ $row->id }})"
+                                        >
+                                            {{ __('Duplicate') }}
+                                        </flux:menu.item>
+                                    @endcan
 
-                                @can('records.'.$recordType->key.'.edit')
-                                    <flux:menu.item icon="pencil" href="{{ route('admin.records-edit', [$this->recordType, $row]) }}">
-                                        {{ __('Edit') }}
-                                    </flux:menu.item>
-                                @endcan
+                                    @can('records.'.$recordType->key.'.edit')
+                                        <flux:menu.item
+                                            icon="pencil"
+                                            href="{{ route('admin.records-edit', [$this->recordType, $row]) }}"
+                                        >
+                                            {{ __('Edit') }}
+                                        </flux:menu.item>
+                                    @endcan
 
-                                @can('records.'.$recordType->key.'.delete')
-                                    <flux:menu.separator />
-                                    <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">
-                                        {{ __('Delete') }}
-                                    </flux:menu.item>
-                                @endcan
-                            </flux:menu>
-                        </flux:dropdown>
-                    </flux:table.cell>
-                </flux:table.row>
+                                    @can('records.'.$recordType->key.'.delete')
+                                        <flux:menu.separator />
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            wire:click="confirmDelete({{ $row->id }})"
+                                        >
+                                            {{ __('Delete') }}
+                                        </flux:menu.item>
+                                    @endcan
+                                </flux:menu>
+                            </flux:dropdown>
+                        </flux:table.cell>
+                    </flux:table.row>
                 @endforeach
             </flux:table.rows>
         </flux:table>
     </div>
 
     <flux:modal name="add-new" class="md:w-96">
-        <flux:heading size="lg" class="mb-6">{{ __('Add a new :name', ['name' => \Illuminate\Support\Str::singular($recordType->name)]) }}</flux:heading>
+        <flux:heading
+            size="lg"
+            class="mb-6"
+        >{{ __('Add a new :name', ['name' => \Illuminate\Support\Str::singular($recordType->name)]) }}</flux:heading>
         <form wire:submit="create" class="space-y-6">
             <flux:input wire:model="title" label="{{ __('Title') }}" badge="Required" autofocus />
-            <div class="flex mt-6">
+            <div class="mt-6 flex">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary">{{ __('Create') }}</flux:button>
             </div>
@@ -319,7 +386,11 @@ return new class extends Component
                 <flux:modal.close>
                     <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
                 </flux:modal.close>
-                <flux:button type="submit" variant="primary" icon="document-duplicate">{{ __('Duplicate') }}</flux:button>
+                <flux:button
+                    type="submit"
+                    variant="primary"
+                    icon="document-duplicate"
+                >{{ __('Duplicate') }}</flux:button>
             </div>
         </form>
     </flux:modal>
@@ -329,8 +400,10 @@ return new class extends Component
             <div>
                 <flux:heading size="lg" class="mb-6">{{ __('Confirm delete') }}</flux:heading>
                 <flux:text>
-                    {{ __('Are you sure you want to delete') }}
-                    "<span class="text-black dark:text-white">{{ $this->records->find($selectedId)?->title }}</span>" ?
+                    {{ __('Are you sure you want to delete') }} "<span
+                        class="text-black dark:text-white"
+                        >{{ $this->records->find($selectedId)?->title }}</span
+                    >" ?
                 </flux:text>
                 <flux:text>{{ __('This action cannot be reversed.') }}</flux:text>
             </div>
@@ -339,7 +412,10 @@ return new class extends Component
                 <flux:modal.close>
                     <flux:button>{{ __('No, Keep it.') }}</flux:button>
                 </flux:modal.close>
-                <flux:button wire:click="delete({{ $selectedId }})" variant="danger">{{ __('Yes, Delete it!') }}</flux:button>
+                <flux:button
+                    wire:click="delete({{ $selectedId }})"
+                    variant="danger"
+                >{{ __('Yes, Delete it!') }}</flux:button>
             </div>
         </div>
     </flux:modal>

@@ -159,17 +159,26 @@ return new class extends Component
                     @foreach ($group['strings'] as $string)
                         @php($hash = md5($string))
                         <div wire:key="tr-{{ $locale }}-{{ $hash }}" class="space-y-1.5">
-                            <label for="tr-{{ $locale }}-{{ $hash }}" class="block text-sm font-medium text-zinc-800 dark:text-white">{{ $string }}</label>
+                            <label
+                                for="tr-{{ $locale }}-{{ $hash }}"
+                                class="block text-sm font-medium text-zinc-800 dark:text-white"
+                            >{{ $string }}</label>
                             <textarea
                                 id="tr-{{ $locale }}-{{ $hash }}"
                                 x-data="{ original: '' }"
-                                x-init="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px'"
-                                x-on:input="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px'"
+                                x-init="
+                                    $el.style.height = 'auto';
+                                    $el.style.height = $el.scrollHeight + 'px';
+                                "
+                                x-on:input="
+                                    $el.style.height = 'auto';
+                                    $el.style.height = $el.scrollHeight + 'px';
+                                "
                                 x-on:focus="original = $el.value"
                                 x-on:blur="if ($el.value.trim() !== original.trim()) $wire.saveString(@js($hash), $el.value.trim())"
                                 rows="1"
                                 placeholder="{{ __('Write the :language translation here', ['language' => $this->localeNames[$locale]]) }}"
-                                class="block w-full resize-none overflow-hidden rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-xs placeholder:text-zinc-400 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder:text-zinc-500"
+                                class="focus:border-accent focus:ring-accent block w-full resize-none overflow-hidden rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-xs placeholder:text-zinc-400 focus:ring-1 focus:outline-none dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder:text-zinc-500"
                             >{{ $translations[$locale][$hash] ?? '' }}</textarea>
                         </div>
                     @endforeach
@@ -200,7 +209,10 @@ return new class extends Component
             <div>
                 <flux:heading size="xl">{{ $this->untranslatedCount }}</flux:heading>
                 <flux:text>{{ __('left to translate') }}</flux:text>
-                <flux:text variant="subtle" class="mt-1">{{ __(':done of :total done', ['done' => $this->totalCount - $this->untranslatedCount, 'total' => $this->totalCount]) }}</flux:text>
+                <flux:text
+                    variant="subtle"
+                    class="mt-1"
+                >{{ __(':done of :total done', ['done' => $this->totalCount - $this->untranslatedCount, 'total' => $this->totalCount]) }}</flux:text>
             </div>
         </flux:card>
     </div>
@@ -211,15 +223,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
             {{ __('Settings') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('Translations') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('Translations') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('Translations') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>
+                {{ __('Settings') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

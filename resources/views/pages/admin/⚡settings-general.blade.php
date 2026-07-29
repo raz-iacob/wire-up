@@ -124,7 +124,11 @@ return new class extends Component
 ?>
 
 <x-admin.settings-layout>
-    <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-start">
+    <form
+        wire:submit="update"
+        wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+        class="grid items-start gap-10 md:grid-cols-5"
+    >
         <div class="space-y-10 md:col-span-3">
             <flux:select
                 variant="listbox"
@@ -158,7 +162,10 @@ return new class extends Component
                 :description="__('Pick the languages your site supports. The default language is always kept active.')"
             >
                 @foreach ($this->allLocales as $localeOption)
-                    <flux:pillbox.option :value="$localeOption->code" :label="$localeOption->endonym ? $localeOption->name.' ('.$localeOption->endonym.')' : $localeOption->name" />
+                    <flux:pillbox.option
+                        :value="$localeOption->code"
+                        :label="$localeOption->endonym ? $localeOption->name.' ('.$localeOption->endonym.')' : $localeOption->name"
+                    />
                 @endforeach
             </flux:pillbox>
 
@@ -171,7 +178,8 @@ return new class extends Component
                 :description="__('Used to format money fields across your site.')"
             >
                 @foreach ($this->currencies as $code => $meta)
-                    <flux:select.option :value="$code">{{ $code }} — {{ $meta['name'] }} ({{ $meta['symbol'] }})</flux:select.option>
+                    <flux:select.option :value="$code">
+                        {{ $code }} — {{ $meta['name'] }} ({{ $meta['symbol'] }})</flux:select.option>
                 @endforeach
             </flux:select>
 
@@ -185,9 +193,7 @@ return new class extends Component
             />
 
             <div class="flex items-center gap-4">
-                <flux:button type="submit" variant="primary" icon="check">
-                    {{ __('Update') }}
-                </flux:button>
+                <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
             </div>
         </div>
     </form>
@@ -198,15 +204,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
             {{ __('Settings') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('General') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('General') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('General') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>
+                {{ __('Settings') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

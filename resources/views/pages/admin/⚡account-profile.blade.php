@@ -155,17 +155,23 @@ return new class extends Component
             <div class="grow">
                 <flux:file-upload wire:model="photo" :label="__('Profile photo')" accept="image/png, image/jpeg">
                     <flux:text class="mb-3">{{ __('Recommanded 300 x 300') }}</flux:text>
-                    <flux:button size="sm" variant="filled" x-on:click.prevent="$el.closest('[data-flux-file-upload]').querySelector('input[type=file]').click()">
+                    <flux:button
+                        size="sm"
+                        variant="filled"
+                        x-on:click.prevent="
+                            $el.closest('[data-flux-file-upload]').querySelector('input[type=file]').click()
+                        "
+                    >
                         {{ ($user->photo_url || $photo) ? __('Change') : __('Upload') }}
                     </flux:button>
-                    @if(($user->photo_url || $photo) && ! $photoRemoved)
+                    @if (($user->photo_url || $photo) && ! $photoRemoved)
                         <flux:button size="sm" variant="filled" class="ms-3" wire:click="removePhoto">
                             {{ __('Remove') }}
                         </flux:button>
                     @endif
                 </flux:file-upload>
             </div>
-            <div class="relative flex items-center justify-center size-20 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-white/10 overflow-hidden">
+            <div class="relative flex size-20 items-center justify-center overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/10">
                 @if ($photo)
                     <img src="{{ $photo?->temporaryUrl() }}" class="size-full object-cover" />
                 @elseif ($user->photo_url && ! $photoRemoved)
@@ -186,7 +192,7 @@ return new class extends Component
                     <flux:text class="mt-4">
                         {{ __('Your email address is unverified.') }}
 
-                        <flux:link class="text-sm cursor-pointer" wire:click.prevent="resendVerificationLink">
+                        <flux:link class="cursor-pointer text-sm" wire:click.prevent="resendVerificationLink">
                             {{ __('Click here to re-send the verification email.') }}
                         </flux:link>
                     </flux:text>
@@ -197,14 +203,18 @@ return new class extends Component
         <flux:button variant="primary" type="submit">{{ __('Update') }}</flux:button>
     </form>
 
-    <section class="mt-12 md:mt-20 space-y-6">
+    <section class="mt-12 space-y-6 md:mt-20">
         <div class="relative mb-5">
             <flux:heading>{{ __('Delete account') }}</flux:heading>
             <flux:subheading>{{ __('Delete your account and all of its resources') }}</flux:subheading>
         </div>
 
         <flux:modal.trigger name="confirm-user-deletion">
-            <flux:button variant="danger" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')">
+            <flux:button
+                variant="danger"
+                x-data=""
+                x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
+            >
                 {{ __('Delete account') }}
             </flux:button>
         </flux:modal.trigger>
@@ -238,15 +248,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.account-profile') }}" wire:navigate>
             {{ __('Account') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('Profile') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('Profile') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('Profile') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.account-profile') }}" wire:navigate>{{ __('Account') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.account-profile') }}" wire:navigate>
+                {{ __('Account') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

@@ -115,7 +115,7 @@ it('marks a members-only page as noindex', function (): void {
 
     $this->actingAs(User::factory()->member()->create())
         ->get(route('page', 'members-page'))
-        ->assertSee('<meta name="robots" content="noindex, nofollow">', false);
+        ->assertSee('<meta name="robots" content="noindex, nofollow" />', false);
 });
 
 it('leaves members-only content out of the sitemap', function (): void {

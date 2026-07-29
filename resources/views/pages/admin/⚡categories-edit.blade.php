@@ -76,27 +76,34 @@ return new class extends Component
 };
 ?>
 
-<form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-stretch">
+<form
+    wire:submit="update"
+    wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+    class="grid items-stretch gap-10 md:grid-cols-5"
+>
     <div class="md:col-span-3">
-        <div class="max-w-5xl space-y-6 mb-10">
+        <div class="mb-10 max-w-5xl space-y-6">
             <flux:fieldset class="pb-6">
                 <flux:legend>{{ __('Category') }}</flux:legend>
                 <flux:description>{{ __('The name shown wherever this category is used.') }}</flux:description>
 
-                <div class="flex flex-col gap-6 mt-6">
+                <div class="mt-6 flex flex-col gap-6">
                     <div class="md:w-1/2">
-                        <x-forms.input-translated name="name" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Name') }}" />
+                        <x-forms.input-translated
+                            name="name"
+                            :$locale
+                            :multi-locale="count($activeLocales) > 1"
+                            label="{{ __('Name') }}"
+                        />
                     </div>
                 </div>
             </flux:fieldset>
         </div>
     </div>
-    <div class="mb-10 md:mb-0 md:col-span-2">
+    <div class="mb-10 md:col-span-2 md:mb-0">
         <flux:card class="flex flex-col gap-6 md:sticky md:top-24">
             <div class="grid grid-cols-2 gap-4">
-                <flux:button type="submit" variant="primary" icon="check">
-                    {{ __('Update') }}
-                </flux:button>
+                <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
                 <flux:button wire:navigate href="{{ route('admin.categories-index') }}" icon="arrow-left">
                     {{ __('Back') }}
                 </flux:button>
@@ -114,15 +121,15 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.categories-index') }}" wire:navigate>
             {{ __('Categories') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ $category->name !== '' ? $category->name : __('Untitled') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ $category->name !== '' ? $category->name : __('Untitled') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
-        <flux:navbar.item icon-trailing="chevron-down">{{ Str::limit($category->name !== '' ? $category->name : __('Untitled'), 22) }}</flux:navbar.item>
+        <flux:navbar.item icon-trailing="chevron-down">
+            {{ Str::limit($category->name !== '' ? $category->name : __('Untitled'), 22) }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.categories-index') }}" wire:navigate>{{ __('Categories') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.categories-index') }}" wire:navigate>
+                {{ __('Categories') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

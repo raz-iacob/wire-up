@@ -26,24 +26,24 @@
         ->values();
 @endphp
 
-<section
-    @class([
-        'w-full',
-        'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
-        ($pad ?? 'py-16') => $hasBg,
-    ])
->
+<section @class([
+    'w-full',
+    'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+    ($pad ?? 'py-16') => $hasBg,
+])>
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         <div @class([
             'md:grid md:grid-cols-2 md:items-center md:gap-10' => $image,
         ])>
             <div class="flex flex-col gap-5">
                 @if ($heading)
-                    <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                    <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                        {!! $heading !!}
+                    </div>
                 @endif
 
                 @if (strip_tags($body) !== '')
-                    <div class="max-w-none leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 *:first:mt-0 *:last:mb-0">
+                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 max-w-none leading-relaxed *:first:mt-0 *:last:mb-0">
                         {!! $body !!}
                     </div>
                 @endif

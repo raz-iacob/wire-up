@@ -306,7 +306,7 @@ return new class extends Component
 ?>
 
 <div>
-    <div class="fixed bottom-6 end-6 z-30">
+    <div class="fixed end-6 bottom-6 z-30">
         <flux:modal.trigger name="assistant">
             <flux:tooltip :content="__('AI Assistant')" position="left" class="contents">
                 <flux:button
@@ -348,7 +348,11 @@ return new class extends Component
         <div
             x-data
             x-init="
-                const pin = (force = false) => { if (force || $el.scrollHeight - $el.scrollTop - $el.clientHeight < 150) { $el.scrollTop = $el.scrollHeight; } };
+                const pin = (force = false) => {
+                    if (force || $el.scrollHeight - $el.scrollTop - $el.clientHeight < 150) {
+                        $el.scrollTop = $el.scrollHeight;
+                    }
+                };
                 $nextTick(() => pin(true));
                 new MutationObserver(() => pin()).observe($el, { childList: true, subtree: true, characterData: true });
                 window.addEventListener('modal-show', () => $nextTick(() => pin(true)));
@@ -356,11 +360,14 @@ return new class extends Component
             class="-mx-2 flex flex-1 flex-col space-y-4 overflow-y-auto px-2 py-4"
         >
             @forelse ($messages as $index => $message)
-                <div wire:key="assistant-message-{{ $index }}" @class([
-                    'flex',
-                    'justify-end' => $message['role'] === 'user',
-                    'justify-start' => $message['role'] !== 'user',
-                ])>
+                <div
+                    wire:key="assistant-message-{{ $index }}"
+                    @class([
+                        'flex',
+                        'justify-end' => $message['role'] === 'user',
+                        'justify-start' => $message['role'] !== 'user',
+                    ])
+                >
                     @if ($message['role'] === 'user')
                         <div class="max-w-[85%] rounded-2xl rounded-br-sm bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-white dark:text-zinc-900">
                             {{ $message['content'] }}
@@ -389,17 +396,28 @@ return new class extends Component
                             @endif
 
                             @foreach ($message['pending'] ?? [] as $pendingIndex => $action)
-                                <div wire:key="pending-{{ $index }}-{{ $pendingIndex }}" class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/60">
+                                <div
+                                    wire:key="pending-{{ $index }}-{{ $pendingIndex }}"
+                                    class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/60"
+                                >
                                     <div class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
                                         <flux:icon icon="megaphone" variant="micro" class="shrink-0 text-zinc-400" />
                                         <span>{{ $this->confirmLabel($action) }}</span>
                                     </div>
                                     @if ($action['status'] === 'awaiting')
                                         <div class="mt-3 flex gap-2">
-                                            <flux:button size="xs" variant="primary" wire:click="confirmAction({{ $index }}, {{ $pendingIndex }})">
+                                            <flux:button
+                                                size="xs"
+                                                variant="primary"
+                                                wire:click="confirmAction({{ $index }}, {{ $pendingIndex }})"
+                                            >
                                                 {{ __('Confirm') }}
                                             </flux:button>
-                                            <flux:button size="xs" variant="subtle" wire:click="rejectAction({{ $index }}, {{ $pendingIndex }})">
+                                            <flux:button
+                                                size="xs"
+                                                variant="subtle"
+                                                wire:click="rejectAction({{ $index }}, {{ $pendingIndex }})"
+                                            >
                                                 {{ __('Cancel') }}
                                             </flux:button>
                                         </div>
@@ -416,7 +434,11 @@ return new class extends Component
                     @endif
                 </div>
             @empty
-                <div wire:loading.remove wire:target="send" class="m-auto flex flex-col items-center justify-center gap-3 text-center">
+                <div
+                    wire:loading.remove
+                    wire:target="send"
+                    class="m-auto flex flex-col items-center justify-center gap-3 text-center"
+                >
                     <flux:icon icon="sparkles" class="size-8 text-zinc-400" />
                     <flux:text class="max-w-xs">
                         {{ __('Ask me to build pages, edit content, adjust the design or set up your menus.') }}
@@ -491,76 +513,81 @@ return new class extends Component
     </flux:modal>
 
     @script
-    <script>
-        window.assistantTypewriter = function (el) {
-            if (el.dataset.tw) return;
-            el.dataset.tw = '1';
+        <script>
+            window.assistantTypewriter = function (el) {
+                if (el.dataset.tw) return;
+                el.dataset.tw = '1';
 
-            let textNodes = [];
-            let walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-            while (walker.nextNode()) textNodes.push(walker.currentNode);
+                let textNodes = [];
+                let walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+                while (walker.nextNode()) textNodes.push(walker.currentNode);
 
-            let words = [];
-            textNodes.forEach(function (node) {
-                if (! node.textContent) return;
-                let frag = document.createDocumentFragment();
-                node.textContent.split(/(\s+)/).forEach(function (part) {
-                    if (part === '') return;
-                    let span = document.createElement('span');
-                    span.textContent = part;
-                    if (/\S/.test(part)) {
-                        span.style.opacity = '0';
-                        span.style.transition = 'opacity 220ms ease';
-                        words.push(span);
-                    }
-                    frag.appendChild(span);
+                let words = [];
+                textNodes.forEach(function (node) {
+                    if (!node.textContent) return;
+                    let frag = document.createDocumentFragment();
+                    node.textContent.split(/(\s+)/).forEach(function (part) {
+                        if (part === '') return;
+                        let span = document.createElement('span');
+                        span.textContent = part;
+                        if (/\S/.test(part)) {
+                            span.style.opacity = '0';
+                            span.style.transition = 'opacity 220ms ease';
+                            words.push(span);
+                        }
+                        frag.appendChild(span);
+                    });
+                    node.replaceWith(frag);
                 });
-                node.replaceWith(frag);
+
+                el.style.visibility = 'visible';
+
+                let i = 0;
+                let step = function () {
+                    if (window.assistantAborted) {
+                        words.forEach(function (word) {
+                            word.style.opacity = '1';
+                        });
+                        return;
+                    }
+                    for (let n = 0; n < 2 && i < words.length; n++, i++) {
+                        words[i].style.opacity = '1';
+                    }
+                    if (i < words.length) setTimeout(step, 24);
+                };
+                step();
+            };
+
+            let inFlight = null;
+
+            $wire.$interceptRequest(function (intercept) {
+                let request = intercept && intercept.request ? intercept.request : intercept;
+                inFlight = request;
+
+                let clear = function () {
+                    if (inFlight === request) inFlight = null;
+                };
+
+                if (intercept && typeof intercept.onFinish === 'function') intercept.onFinish(clear);
+                if (intercept && typeof intercept.onError === 'function') intercept.onError(clear);
+                if (intercept && typeof intercept.onCancel === 'function') intercept.onCancel(clear);
             });
 
-            el.style.visibility = 'visible';
+            window.assistantStop = function () {
+                window.assistantAborted = true;
 
-            let i = 0;
-            let step = function () {
-                if (window.assistantAborted) {
-                    words.forEach(function (word) { word.style.opacity = '1'; });
-                    return;
+                try {
+                    if (inFlight) {
+                        if (typeof inFlight.cancel === 'function') inFlight.cancel();
+                        else if (inFlight.controller && typeof inFlight.controller.abort === 'function')
+                            inFlight.controller.abort();
+                    }
+                } catch (error) {
+                    // Nothing else to do — the reveal has already been completed.
                 }
-                for (let n = 0; n < 2 && i < words.length; n++, i++) {
-                    words[i].style.opacity = '1';
-                }
-                if (i < words.length) setTimeout(step, 24);
+
+                inFlight = null;
             };
-            step();
-        };
-
-        let inFlight = null;
-
-        $wire.$interceptRequest(function (intercept) {
-            let request = intercept && intercept.request ? intercept.request : intercept;
-            inFlight = request;
-
-            let clear = function () { if (inFlight === request) inFlight = null; };
-
-            if (intercept && typeof intercept.onFinish === 'function') intercept.onFinish(clear);
-            if (intercept && typeof intercept.onError === 'function') intercept.onError(clear);
-            if (intercept && typeof intercept.onCancel === 'function') intercept.onCancel(clear);
-        });
-
-        window.assistantStop = function () {
-            window.assistantAborted = true;
-
-            try {
-                if (inFlight) {
-                    if (typeof inFlight.cancel === 'function') inFlight.cancel();
-                    else if (inFlight.controller && typeof inFlight.controller.abort === 'function') inFlight.controller.abort();
-                }
-            } catch (error) {
-                // Nothing else to do — the reveal has already been completed.
-            }
-
-            inFlight = null;
-        };
-    </script>
+        </script>
     @endscript
 </div>

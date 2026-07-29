@@ -9,9 +9,7 @@
                     <livewire:shared.logo class="h-9 text-black dark:text-white" />
                     <span class="sr-only">{{ config('app.name', 'WireUp') }}</span>
                 </a>
-                <div class="flex flex-col gap-6">
-                    {{ $slot }}
-                </div>
+                <div class="flex flex-col gap-6">{{ $slot }}</div>
             </div>
         </div>
         @fluxScripts

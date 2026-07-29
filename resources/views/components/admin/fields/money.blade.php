@@ -12,8 +12,15 @@
     @include('components.admin.fields.partials.label')
     <flux:input.group>
         <flux:input.group.prefix>{{ $currency->currencySymbol() }}</flux:input.group.prefix>
-        <flux:input mask:dynamic="$money($input, '.', ',', {{ $currency->currencyDecimals() }})" wire:model.lazy="{{ $path }}" :required="$required" inputmode="decimal" />
+        <flux:input
+            mask:dynamic="$money($input, '.', ',', {{ $currency->currencyDecimals() }})"
+            wire:model.lazy="{{ $path }}"
+            :required="$required"
+            inputmode="decimal"
+        />
     </flux:input.group>
-    @if($help)<flux:description>{{ $help }}</flux:description>@endif
+    @if ($help)
+        <flux:description>{{ $help }}</flux:description>
+    @endif
     <flux:error name="{{ $path }}" />
 </flux:field>

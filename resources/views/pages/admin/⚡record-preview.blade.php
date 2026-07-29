@@ -58,6 +58,18 @@ return new class extends Component
         $this->record = $record;
     }
 
+    public function render(): View
+    {
+        return $this->view()
+            ->layout('layouts.app')
+            ->title($this->recordTitle !== '' ? $this->recordTitle : $this->record->recordType->name)
+            ->layoutData([
+                'description' => $this->recordDescription,
+                'siteLayout' => Page::normalizeLayout([]),
+                'page' => null,
+            ]);
+    }
+
     /**
      * @param  array<string, array<string, array<int, array<string, mixed>>>>  $snapshot
      * @return EloquentCollection<int, Media>
@@ -105,18 +117,6 @@ return new class extends Component
         }
 
         return $result;
-    }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->layout('layouts.app')
-            ->title($this->recordTitle !== '' ? $this->recordTitle : $this->record->recordType->name)
-            ->layoutData([
-                'description' => $this->recordDescription,
-                'siteLayout' => Page::normalizeLayout([]),
-                'page' => null,
-            ]);
     }
 };
 ?>

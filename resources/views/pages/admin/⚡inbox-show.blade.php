@@ -84,9 +84,9 @@ return new class extends Component
 };
 ?>
 
-<div class="grid md:grid-cols-5 gap-10 items-stretch">
+<div class="grid items-stretch gap-10 md:grid-cols-5">
     <div class="md:col-span-3">
-        <div class="max-w-5xl space-y-6 mb-10">
+        <div class="mb-10 max-w-5xl space-y-6">
             <flux:fieldset class="pb-6">
                 <div class="flex items-center justify-between gap-3">
                     <flux:legend class="mb-0!">{{ $submission->name ?: __('Unknown sender') }}</flux:legend>
@@ -111,7 +111,7 @@ return new class extends Component
 
                 <flux:fieldset>
                     <flux:legend>{{ __('Message') }}</flux:legend>
-                    <flux:text class="mt-4 whitespace-pre-line leading-relaxed">{{ $submission->message }}</flux:text>
+                    <flux:text class="mt-4 leading-relaxed whitespace-pre-line">{{ $submission->message }}</flux:text>
                 </flux:fieldset>
             @endif
 
@@ -124,16 +124,26 @@ return new class extends Component
                     · {{ $submission->countryName() }}
                 @endif
                 @if ($submission->page)
-                    · <a class="underline" href="{{ route('admin.pages-edit', $submission->page->id) }}" wire:navigate>{{ $submission->page->title }}</a>
+                    ·
+                    <a
+                        class="underline"
+                        href="{{ route('admin.pages-edit', $submission->page->id) }}"
+                        wire:navigate
+                    >{{ $submission->page->title }}</a>
                 @endif
             </flux:text>
         </div>
     </div>
 
-    <div class="mb-10 md:mb-0 md:col-span-2">
+    <div class="mb-10 md:col-span-2 md:mb-0">
         <flux:card class="flex flex-col gap-6 md:sticky md:top-24">
             @if ($submission->email)
-                <flux:button :href="'mailto:'.$submission->email" variant="primary" icon="arrow-uturn-left" class="w-full">
+                <flux:button
+                    :href="'mailto:'.$submission->email"
+                    variant="primary"
+                    icon="arrow-uturn-left"
+                    class="w-full"
+                >
                     {{ __('Reply') }}
                 </flux:button>
             @endif
@@ -149,9 +159,7 @@ return new class extends Component
                 @endcan
             </div>
 
-            <flux:text size="sm">
-                {{ __('Read') }} {{ $submission->read_at?->diffForHumans() }}
-            </flux:text>
+            <flux:text size="sm"> {{ __('Read') }} {{ $submission->read_at?->diffForHumans() }} </flux:text>
         </flux:card>
     </div>
 
@@ -180,7 +188,8 @@ return new class extends Component
         <flux:breadcrumbs.item>{{ $submission->name ?: __('Message') }}</flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
-        <flux:navbar.item icon-trailing="chevron-down">{{ Str::limit($submission->name ?: __('Message'), 22) }}</flux:navbar.item>
+        <flux:navbar.item icon-trailing="chevron-down">
+            {{ Str::limit($submission->name ?: __('Message'), 22) }}</flux:navbar.item>
 
         <flux:navmenu>
             <flux:navmenu.item :href="route('admin.inbox-index')" wire:navigate>{{ __('Inbox') }}</flux:navmenu.item>

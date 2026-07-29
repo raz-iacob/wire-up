@@ -13,17 +13,27 @@ return new class extends Component
     public mixed $media = null;
 
     public string $name = 'cover';
+
     public ?string $type = null;
+
     public string $locale = 'en';
+
     public bool $multiLocale = false;
+
     public ?string $label = null;
+
     public ?string $note = null;
+
     public bool $multiple = false;
+
     public int $max = 30;
+
     public bool $withCaption = false;
+
     public ?int $replaceIndex = null;
 
     public bool $showRemoveModal = false;
+
     public ?int $removeIndex = null;
 
     /**
@@ -100,42 +110,6 @@ return new class extends Component
 
         $this->media = $selectedMedia[0] ?? null;
         $this->replaceIndex = null;
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $incoming
-     * @return array<int, array<string, mixed>>
-     */
-    private function preserveExistingPivotData(array $incoming): array
-    {
-        $existing = [];
-
-        foreach ($this->selectedItems() as $item) {
-            if (isset($item['id'])) {
-                $existing[$item['id']] = [
-                    'crop' => $item['crop'] ?? [],
-                    'metadata' => $item['metadata'] ?? [],
-                ];
-            }
-        }
-
-        return array_map(function (array $item) use ($existing): array {
-            $previous = isset($item['id']) ? ($existing[$item['id']] ?? null) : null;
-
-            if ($previous === null) {
-                return $item;
-            }
-
-            if (empty($item['crop']) && ! empty($previous['crop'])) {
-                $item['crop'] = $previous['crop'];
-            }
-
-            if (empty($item['metadata']) && ! empty($previous['metadata'])) {
-                $item['metadata'] = $previous['metadata'];
-            }
-
-            return $item;
-        }, $incoming);
     }
 
     public function confirmRemove(?int $index = null): void
@@ -293,6 +267,42 @@ return new class extends Component
     }
 
     /**
+     * @param  array<int, array<string, mixed>>  $incoming
+     * @return array<int, array<string, mixed>>
+     */
+    private function preserveExistingPivotData(array $incoming): array
+    {
+        $existing = [];
+
+        foreach ($this->selectedItems() as $item) {
+            if (isset($item['id'])) {
+                $existing[$item['id']] = [
+                    'crop' => $item['crop'] ?? [],
+                    'metadata' => $item['metadata'] ?? [],
+                ];
+            }
+        }
+
+        return array_map(function (array $item) use ($existing): array {
+            $previous = isset($item['id']) ? ($existing[$item['id']] ?? null) : null;
+
+            if ($previous === null) {
+                return $item;
+            }
+
+            if (empty($item['crop']) && ! empty($previous['crop'])) {
+                $item['crop'] = $previous['crop'];
+            }
+
+            if (empty($item['metadata']) && ! empty($previous['metadata'])) {
+                $item['metadata'] = $previous['metadata'];
+            }
+
+            return $item;
+        }, $incoming);
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     private function selectionForLibrary(?int $replaceIndex = null): array
@@ -406,39 +416,46 @@ return new class extends Component
 <div wire:key="{{ $this->targetKey() }}" x-data="mediaCropper($wire)">
     <div class="mb-3 flex flex-col md:flex-row md:items-center md:justify-between">
         <div class="flex items-center gap-3">
-            @if($label)
+            @if ($label)
                 <flux:label>{{ $label }}</flux:label>
             @endif
 
-            @if($multiLocale)
+            @if ($multiLocale)
                 <flux:tooltip content="{{ __('Change language') }}">
-                    <flux:badge size="sm" class="text-xs py-0.5!" as="button" wire:click="$dispatch('change-locale')">{{ strtoupper($locale) }}</flux:badge>
+                    <flux:badge
+                        size="sm"
+                        class="py-0.5! text-xs"
+                        as="button"
+                        wire:click="$dispatch('change-locale')"
+                    >{{ strtoupper($locale) }}</flux:badge>
                 </flux:tooltip>
             @endif
         </div>
 
-        @if($note)
+        @if ($note)
             <flux:subheading>{{ $note }}</flux:subheading>
         @endif
     </div>
 
-    <flux:card class="block appearance-none rounded-lg border border-zinc-200 border-b-zinc-300/80 bg-white p-4 text-base shadow-xs disabled:border-b-zinc-200 disabled:shadow-none dark:border-white/10 dark:bg-white/10 dark:disabled:border-white/5 dark:shadow-none md:text-sm">
-        @if($this->selectedItems() === [])
+    <flux:card class="block appearance-none rounded-lg border border-zinc-200 border-b-zinc-300/80 bg-white p-4 text-base shadow-xs disabled:border-b-zinc-200 disabled:shadow-none md:text-sm dark:border-white/10 dark:bg-white/10 dark:shadow-none dark:disabled:border-white/5">
+        @if ($this->selectedItems() === [])
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <flux:button variant="filled" wire:click="openLibrary">{{ $this->buttonText }}</flux:button>
-                <div class="space-y-1 grow">
+                <div class="grow space-y-1">
                     <flux:heading size="sm">{{ __('No media selected') }}</flux:heading>
                     <flux:subheading>
-                        {{ $multiple
+                        {{
+                            $multiple
                             ? __('Choose up to :max items from the media library.', ['max' => $max])
-                            : __('Choose one item from the media library.') }}
+                            : __('Choose one item from the media library.')
+                        }}
                     </flux:subheading>
                 </div>
             </div>
         @else
             <div class="flex flex-col gap-4">
-                <div class="grid grid-cols-1 gap-3" @if($multiple) wire:sort="reorderMedia" @endif>
-                    @foreach($this->selectedItems() as $index => $item)
+                <div class="grid grid-cols-1 gap-3" @if ($multiple) wire:sort="reorderMedia" @endif>
+                    @foreach ($this->selectedItems() as $index => $item)
                         @php
                             $primaryKey = array_key_first($crops);
                             $primaryDef = $primaryKey !== null ? ($crops[$primaryKey] ?? []) : [];
@@ -447,7 +464,7 @@ return new class extends Component
                             $isSvg = ($item['mime_type'] ?? null) === 'image/svg+xml';
                             $isCroppable = $isImage && ! $isSvg;
                             $hasPreview = $isImage || ! empty($item['thumbnail']);
-                            $extension = strtoupper(pathinfo((string) ($item['filename'] ?? ''), PATHINFO_EXTENSION));
+                            $extension = mb_strtoupper(pathinfo((string) ($item['filename'] ?? ''), PATHINFO_EXTENSION));
 
                             $filename = $item['filename'] ?? __('Untitled media');
                             $tailLength = 7;
@@ -471,11 +488,11 @@ return new class extends Component
                         @endphp
                         <div
                             wire:key="{{ $this->targetKey() }}-{{ $item['id'] }}-{{ $index }}"
-                            @if($multiple) wire:sort:item="{{ $item['id'] }}" @endif
-                            class="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 dark:border-white/10 dark:bg-white/5 md:flex-row md:items-start md:gap-4"
+                            @if ($multiple) wire:sort:item="{{ $item['id'] }}" @endif
+                            class="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 md:flex-row md:items-start md:gap-4 dark:border-white/10 dark:bg-white/5"
                         >
-                            <div class="flex flex-col md:flex-row items-center gap-3 md:shrink-0">
-                                @if($multiple)
+                            <div class="flex flex-col items-center gap-3 md:shrink-0 md:flex-row">
+                                @if ($multiple)
                                     <button
                                         type="button"
                                         wire:sort:handle
@@ -491,14 +508,18 @@ return new class extends Component
                                     wire:click="openLibrary({{ $index }})"
                                     title="{{ __('Change') }}"
                                     style="aspect-ratio: {{ $isImage ? (($primaryDef['w'] ?? 16).' / '.($primaryDef['h'] ?? 9)) : '1 / 1' }}"
-                                    class="group relative h-32 w-full md:w-40 shrink-0 overflow-hidden rounded-lg border border-black/80 bg-black/80 dark:border-white/10 dark:bg-white/80"
+                                    class="group relative h-32 w-full shrink-0 overflow-hidden rounded-lg border border-black/80 bg-black/80 md:w-40 dark:border-white/10 dark:bg-white/80"
                                 >
-                                    @if($hasPreview && $previewSrc)
-                                        <img src="{{ $previewSrc }}" alt="{{ $item['alt_text'] ?? $item['filename'] ?? $name }}" class="size-full object-contain" />
+                                    @if ($hasPreview && $previewSrc)
+                                        <img
+                                            src="{{ $previewSrc }}"
+                                            alt="{{ $item['alt_text'] ?? $item['filename'] ?? $name }}"
+                                            class="size-full object-contain"
+                                        />
                                     @else
                                         <div class="flex size-full flex-col items-center justify-center gap-1 text-zinc-500 dark:text-zinc-400">
                                             <flux:icon name="{{ $item['icon'] ?? 'document' }}" class="size-8" />
-                                            @if($extension !== '')
+                                            @if ($extension !== '')
                                                 <span class="text-xs font-semibold uppercase">{{ $extension }}</span>
                                             @endif
                                         </div>
@@ -510,59 +531,89 @@ return new class extends Component
                             </div>
 
                             <div class="min-w-0 space-y-0.5 md:flex-1 md:pt-3">
-                                <flux:heading size="sm" class="flex max-w-11/12 overflow-hidden" title="{{ $filename }}">
+                                <flux:heading
+                                    size="sm"
+                                    class="flex max-w-11/12 overflow-hidden"
+                                    title="{{ $filename }}"
+                                >
                                     <span class="min-w-0 truncate">{{ $nameHead }}</span>
-                                    @if($nameTail !== '')
+                                    @if ($nameTail !== '')
                                         <span class="shrink-0 whitespace-nowrap">{{ $nameTail }}</span>
                                     @endif
                                 </flux:heading>
 
-                                @if(! empty($item['width']) && ! empty($item['height']))
-                                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('Original') }}: {{ $item['width'] }} × {{ $item['height'] }}</flux:text>
+                                @if (! empty($item['width']) && ! empty($item['height']))
+                                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400"
+                                        >{{ __('Original') }}: {{ $item['width'] }} × {{ $item['height'] }}</flux:text>
                                 @endif
 
-                                @if(! empty($item['duration']))
-                                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('Duration') }}: {{ gmdate('H:i:s', (int) $item['duration']) }}</flux:text>
+                                @if (! empty($item['duration']))
+                                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400"
+                                        >{{ __('Duration') }}: {{ gmdate('H:i:s', (int) $item['duration']) }}</flux:text>
                                 @endif
 
-                                @if($isCroppable)
-                                    @foreach($crops as $variantKey => $cropDef)
+                                @if ($isCroppable)
+                                    @foreach ($crops as $variantKey => $cropDef)
                                         @php
                                             $variantCrop = $item['crop'][$variantKey] ?? null;
                                             $variantW = $variantCrop['crop_w'] ?? null;
                                             $variantH = $variantCrop['crop_h'] ?? null;
                                         @endphp
-                                        @if($variantW && $variantH)
-                                            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ $cropDef['label'] ?? ucfirst($variantKey) }}: {{ $variantW }} × {{ $variantH }}</flux:text>
+                                        @if ($variantW && $variantH)
+                                            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400"
+                                                >{{ $cropDef['label'] ?? ucfirst($variantKey) }}: {{ $variantW }} × {{ $variantH }}</flux:text>
                                         @endif
                                     @endforeach
                                 @endif
 
-                                @if($withCaption)
+                                @if ($withCaption)
                                     <div class="pt-2">
                                         <flux:input
                                             size="sm"
                                             wire:key="{{ $this->targetKey() }}-caption-{{ $item['id'] }}"
                                             value="{{ data_get($item, 'metadata.caption', '') }}"
                                             x-on:blur="$wire.setCaption({{ $index }}, $event.target.value)"
-                                            placeholder="{{ __('Add a caption') }}" />
+                                            placeholder="{{ __('Add a caption') }}"
+                                        />
                                     </div>
                                 @endif
                             </div>
 
                             <flux:button.group class="md:shrink-0">
-                                <flux:button variant="filled" icon="arrows-right-left" square tooltip="{{ __('Change') }}" wire:click="openLibrary({{ $index }})" />
-                                @if($isCroppable)
-                                    <flux:button variant="filled" icon="scissors" square tooltip="{{ __('Crop') }}" x-on:click="start({{ $index }}, @js($item), @js($crops))" />
+                                <flux:button
+                                    variant="filled"
+                                    icon="arrows-right-left"
+                                    square
+                                    tooltip="{{ __('Change') }}"
+                                    wire:click="openLibrary({{ $index }})"
+                                />
+                                @if ($isCroppable)
+                                    <flux:button
+                                        variant="filled"
+                                        icon="scissors"
+                                        square
+                                        tooltip="{{ __('Crop') }}"
+                                        x-on:click="start({{ $index }}, @js($item), @js($crops))"
+                                    />
                                 @endif
-                                <flux:button variant="filled" icon="x-mark" square tooltip="{{ __('Remove') }}" wire:click="confirmRemove({{ $index }})" />
+                                <flux:button
+                                    variant="filled"
+                                    icon="x-mark"
+                                    square
+                                    tooltip="{{ __('Remove') }}"
+                                    wire:click="confirmRemove({{ $index }})"
+                                />
                             </flux:button.group>
                         </div>
                     @endforeach
                 </div>
             </div>
-            @if($multiple && count($this->selectedItems()) < $max)
-                <flux:button variant="filled" wire:click="openLibrary" class="mt-4">{{ __('Add more media') }}</flux:button>
+            @if ($multiple && count($this->selectedItems()) < $max)
+                <flux:button
+                    variant="filled"
+                    wire:click="openLibrary"
+                    class="mt-4"
+                >{{ __('Add more media') }}</flux:button>
             @endif
         @endif
     </flux:card>
@@ -575,7 +626,7 @@ return new class extends Component
             <div>
                 <flux:heading size="lg">{{ __('Remove media?') }}</flux:heading>
                 <flux:text class="mt-2">
-                    @if($removeItem)
+                    @if ($removeItem)
                         {{ __('":name" will be removed from this field. This does not delete it from the media library.', ['name' => $removeItem['filename'] ?? __('this item')]) }}
                     @else
                         {{ __('This item will be removed from this field. This does not delete it from the media library.') }}
@@ -597,13 +648,19 @@ return new class extends Component
         x-on:keydown.escape.window="close()"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
     >
-        <div class="flex max-h-[92vh] w-full max-w-5xl flex-col gap-4 rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-800" x-on:click.outside="close()">
+        <div
+            class="flex max-h-[92vh] w-full max-w-5xl flex-col gap-4 rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-800"
+            x-on:click.outside="close()"
+        >
             <div class="flex items-center justify-between">
                 <flux:heading size="lg">{{ __('Edit image crop') }}</flux:heading>
                 <flux:button icon="x-mark" variant="ghost" size="sm" square x-on:click="close()" />
             </div>
 
-            <div class="flex items-center gap-1 border-b border-zinc-200 dark:border-white/10" x-show="variants.length > 1">
+            <div
+                class="flex items-center gap-1 border-b border-zinc-200 dark:border-white/10"
+                x-show="variants.length > 1"
+            >
                 <template x-for="v in variants" :key="v.key">
                     <button
                         type="button"
@@ -626,8 +683,12 @@ return new class extends Component
             <div class="flex items-center justify-between gap-2">
                 <flux:button variant="primary" type="button" x-on:click="apply()">{{ __('Update') }}</flux:button>
                 <div class="text-right leading-tight">
-                    <flux:text class="text-zinc-500 dark:text-zinc-400"><span x-text="dims.w"></span> × <span x-text="dims.h"></span></flux:text>
-                    <flux:text class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('Ratio') }}: <span x-text="ratioLabel"></span></flux:text>
+                    <flux:text class="text-zinc-500 dark:text-zinc-400"
+                        ><span x-text="dims.w"></span> × <span x-text="dims.h"></span
+                    ></flux:text>
+                    <flux:text class="text-xs text-zinc-400 dark:text-zinc-500"
+                        >{{ __('Ratio') }}: <span x-text="ratioLabel"></span
+                    ></flux:text>
                 </div>
             </div>
         </div>

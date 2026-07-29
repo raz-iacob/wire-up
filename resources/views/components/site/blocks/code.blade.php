@@ -23,10 +23,14 @@
             @if ($hasHeading)
                 <div class="mb-8">
                     @if (strip_tags($heading) !== '')
-                        <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                            {!! $heading !!}
+                        </div>
                     @endif
                     @if (strip_tags($intro) !== '')
-                        <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                        <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                            {!! $intro !!}
+                        </div>
                     @endif
                 </div>
             @endif
@@ -41,9 +45,15 @@
                         type="button"
                         class="wire-code-copy"
                         aria-label="{{ __('Copy code') }}"
-                        x-on:click="navigator.clipboard.writeText($refs.code.textContent); copied = true; setTimeout(() => copied = false, 1600)"
+                        x-on:click="
+                            navigator.clipboard.writeText($refs.code.textContent);
+                            copied = true;
+                            setTimeout(() => (copied = false), 1600);
+                        "
                         x-text="copied ? @js(__('Copied')) : @js(__('Copy'))"
-                    >{{ __('Copy') }}</button>
+                    >
+                        {{ __('Copy') }}
+                    </button>
 
                     <pre @class(['wire-code-pre', 'whitespace-pre-wrap break-words' => $wrap, 'overflow-x-auto' => ! $wrap])><code x-ref="code" data-highlight class="language-{{ $language }}">{{ $code }}</code></pre>
                 </figure>

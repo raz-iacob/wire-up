@@ -15,7 +15,10 @@
         :locale="$mediaLocale"
         :multi-locale="$translatable && $multiLocale"
         :multiple="false"
-        :label="$label" />
-    @if($help)<flux:description class="mt-1">{{ $help }}</flux:description>@endif
+        :label="$label"
+    />
+    @if ($help)
+        <flux:description class="mt-1">{{ $help }}</flux:description>
+    @endif
     <flux:error name="media.{{ $key }}.{{ $mediaLocale }}" />
 </div>

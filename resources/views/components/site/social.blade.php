@@ -19,7 +19,7 @@
                 aria-label="{{ ucfirst($platform) }}"
             >
                 <span
-                    class="block size-5 bg-current mask-center mask-no-repeat mask-contain"
+                    class="block size-5 bg-current mask-contain mask-center mask-no-repeat"
                     style="mask-image:url('{{ $iconUrl }}'); -webkit-mask-image:url('{{ $iconUrl }}');"
                 ></span>
             </a>

@@ -24,10 +24,14 @@
     @if ($hasHeading)
         <div class="mx-auto mb-8 max-w-(--wire-container) px-(--wire-gutter)">
             @if (strip_tags($heading) !== '')
-                <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                    {!! $heading !!}
+                </div>
             @endif
             @if (strip_tags($intro) !== '')
-                <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                    {!! $intro !!}
+                </div>
             @endif
         </div>
     @endif
@@ -36,7 +40,11 @@
         <div @class(['mx-auto max-w-(--wire-container) px-(--wire-gutter)' => ! $full])>
             <figure class="m-0">
                 @if ($linkUrl)
-                    <a href="{{ $linkUrl }}" @if ($newTab) target="_blank" rel="noopener noreferrer" @endif class="block">
+                    <a
+                        href="{{ $linkUrl }}"
+                        @if ($newTab) target="_blank" rel="noopener noreferrer" @endif
+                        class="block"
+                    >
                         <picture class="contents">
                             @if ($imageMobile)
                                 <source media="(max-width: 767px)" srcset="{{ $imageMobile }}" />

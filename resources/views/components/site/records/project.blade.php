@@ -14,13 +14,13 @@
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter) py-16">
         <div class="flex max-w-3xl flex-col gap-5">
             @if (mb_trim($client) !== '')
-                <span class="text-sm font-bold uppercase tracking-wide text-(--wire-accent)">{{ $client }}</span>
+                <span class="text-sm font-bold tracking-wide text-(--wire-accent) uppercase">{{ $client }}</span>
             @endif
 
-            <h1 class="tracking-tight text-(length:--wire-heading-size)">{{ $heading }}</h1>
+            <h1 class="text-(length:--wire-heading-size) tracking-tight">{{ $heading }}</h1>
 
             @if (strip_tags($overview) !== '')
-                <div class="max-w-none leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 *:first:mt-0 *:last:mb-0">
+                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 max-w-none leading-relaxed *:first:mt-0 *:last:mb-0">
                     {!! $overview !!}
                 </div>
             @endif

@@ -35,7 +35,7 @@ return new class extends Component
     public int $visiblePages = 1;
 
     /**
-     * @return LengthAwarePaginator<int, \App\Models\Record>
+     * @return LengthAwarePaginator<int, App\Models\Record>
      */
     #[Computed]
     public function records(): LengthAwarePaginator
@@ -85,7 +85,9 @@ return new class extends Component
         ])>
             <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                 @if ($hasHeading)
-                    <div class="mb-10 tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                    <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-10 text-(length:--wire-heading-size) tracking-tight">
+                        {!! $heading !!}
+                    </div>
                 @endif
 
                 <div wire:loading.class="opacity-60" wire:target="loadMore, gotoPage, nextPage, previousPage">
@@ -95,7 +97,8 @@ return new class extends Component
                         :columns="$columns"
                         :show-image="$showImage"
                         :fields="$displayFields"
-                        :block-id="$blockId" />
+                        :block-id="$blockId"
+                    />
                 </div>
 
                 @if ($mode === 'paged')
@@ -106,7 +109,12 @@ return new class extends Component
                     @endif
                 @elseif ($records->hasMorePages())
                     <div class="mt-10 flex justify-center">
-                        <flux:button variant="filled" wire:click="loadMore" wire:loading.attr="disabled" wire:target="loadMore">
+                        <flux:button
+                            variant="filled"
+                            wire:click="loadMore"
+                            wire:loading.attr="disabled"
+                            wire:target="loadMore"
+                        >
                             {{ __('Load more') }}
                         </flux:button>
                     </div>
@@ -119,7 +127,7 @@ return new class extends Component
                             href="{{ $buttonUrl }}"
                             @if ($buttonNewTab) target="_blank" rel="noopener noreferrer" @endif
                             class="inline-flex items-center justify-center rounded-(--wire-radius) border px-6 py-2.5 text-sm font-medium transition hover:opacity-80"
-                            style="border-color:var(--wire-primary-bg);color:var(--wire-primary-bg)"
+                            style="border-color: var(--wire-primary-bg); color: var(--wire-primary-bg)"
                         >{{ strip_tags($buttonText) }}</a>
                     </div>
                 @endif

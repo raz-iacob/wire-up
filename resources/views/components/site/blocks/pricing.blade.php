@@ -37,7 +37,6 @@
         4 => 'sm:grid-cols-2 lg:grid-cols-4',
         default => 'sm:grid-cols-2 lg:grid-cols-3',
     };
-
 @endphp
 
 @if ($plans->isNotEmpty())
@@ -50,10 +49,14 @@
             @if ($hasHeading)
                 <div class="mb-12">
                     @if (strip_tags($heading) !== '')
-                        <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                            {!! $heading !!}
+                        </div>
                     @endif
                     @if (strip_tags($intro) !== '')
-                        <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                        <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                            {!! $intro !!}
+                        </div>
                     @endif
                 </div>
             @endif
@@ -91,7 +94,9 @@
                         @endif
 
                         @if (strip_tags($plan['features']) !== '')
-                            <div class="grow leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $plan['features'] !!}</div>
+                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&>p]:my-2 grow leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                                {!! $plan['features'] !!}
+                            </div>
                         @endif
 
                         @if ($plan['cta']['enabled'] && $plan['cta']['text'] !== '' && $plan['cta']['url'] !== null)

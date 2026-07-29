@@ -8,46 +8,100 @@
 @endphp
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <x-site.meta :page="$page" :title="$title" :description="$description" :site="$site" :site-name="$siteName" />
 
     @if ($favicon)
-    <link rel="icon" href="{{ $favicon }}" />
+        <link rel="icon" href="{{ $favicon }}" />
     @else
-    <link rel="icon" type="image/png" href="{{ Vite::asset('resources/images/favicon-96x96.png') }}" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="{{ Vite::asset('resources/images/favicon.svg') }}" />
-    <link rel="shortcut icon" href="{{ Vite::asset('resources/images/favicon.ico') }}" />
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ Vite::asset('resources/images/apple-touch-icon.png') }}" />
+        <link
+            rel="icon"
+            type="image/png"
+            href="{{ Vite::asset('resources/images/favicon-96x96.png') }}"
+            sizes="96x96"
+        />
+        <link rel="icon" type="image/svg+xml" href="{{ Vite::asset('resources/images/favicon.svg') }}" />
+        <link rel="shortcut icon" href="{{ Vite::asset('resources/images/favicon.ico') }}" />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="{{ Vite::asset('resources/images/apple-touch-icon.png') }}"
+        />
     @endif
     <meta name="apple-mobile-web-app-title" content="{{ $siteName }}" />
 
     @vite(['resources/css/site.css', 'resources/js/app.js'])
 
     @if ($gaId = $site->googleAnalyticsId())
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config',@js($gaId));</script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+            gtag('config', @js($gaId));
+        </script>
     @endif
 
     @if ($site->headScripts() !== '')
-    {!! $site->headScripts() !!}
+        {!! $site->headScripts() !!}
     @endif
 
     @if ($googleFonts)
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="{{ $googleFonts }}" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="{{ $googleFonts }}" rel="stylesheet" />
     @endif
-    <style>{!! $site->themeCss() !!}</style>
+    <style>
+        {!! $site->themeCss() !!}
+    </style>
     @if ($site->darkThemeColors() !== [])
-    <script>(()=>{const K='wireup-scheme',q=new URLSearchParams(window.location.search).get('_scheme'),m=window.matchMedia('(prefers-color-scheme: dark)'),g=()=>{try{return localStorage.getItem(K)}catch(e){return null}},s=()=>{const c=q||g(),d=c?c==='dark':m.matches;document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);document.dispatchEvent(new CustomEvent('scheme-changed',{detail:{dark:d}}))};window.wireupToggleScheme=()=>{const d=!document.documentElement.classList.contains('dark');try{localStorage.setItem(K,d?'dark':'light')}catch(e){}s()};s();m.addEventListener('change',()=>{if(!q&&!g())s()});document.addEventListener('livewire:navigated',s)})()</script>
+        <script>
+            (() => {
+                const K = 'wireup-scheme',
+                    q = new URLSearchParams(window.location.search).get('_scheme'),
+                    m = window.matchMedia('(prefers-color-scheme: dark)'),
+                    g = () => {
+                        try {
+                            return localStorage.getItem(K);
+                        } catch (e) {
+                            return null;
+                        }
+                    },
+                    s = () => {
+                        const c = q || g(),
+                            d = c ? c === 'dark' : m.matches;
+                        document.documentElement.classList.toggle('dark', d);
+                        document.documentElement.classList.toggle('light', !d);
+                        document.dispatchEvent(new CustomEvent('scheme-changed', { detail: { dark: d } }));
+                    };
+                window.wireupToggleScheme = () => {
+                    const d = !document.documentElement.classList.contains('dark');
+                    try {
+                        localStorage.setItem(K, d ? 'dark' : 'light');
+                    } catch (e) {}
+                    s();
+                };
+                s();
+                m.addEventListener('change', () => {
+                    if (!q && !g()) s();
+                });
+                document.addEventListener('livewire:navigated', s);
+            })();
+        </script>
     @endif
     @if ($site->customCss() !== '')
-    <style>{!! $site->customCss() !!}</style>
+        <style>
+            {!! $site->customCss() !!}
+        </style>
     @endif
     @if ($customCss !== '')
-    <style>{!! $customCss !!}</style>
+        <style>
+            {!! $customCss !!}
+        </style>
     @endif
 
     <title>{{ $title ? "$title | " : '' }}{{ $siteName }}</title>

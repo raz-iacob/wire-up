@@ -2,12 +2,22 @@
 
 @php
     $c = "blocks.{$index}.content";
-    $b = "\$wire.blocks[".json_encode((string) $index)."].content";
+    $b = '$wire.blocks['.json_encode((string) $index).'].content';
 @endphp
 
 <div class="flex flex-col gap-6">
-    <x-forms.texteditor-translated name="{{ $c }}.heading" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Heading') }}" />
-    <x-forms.texteditor-translated name="{{ $c }}.intro" :locale="$locale" :multi-locale="$multiLocale" label="{{ __('Subheading') }}" />
+    <x-forms.texteditor-translated
+        name="{{ $c }}.heading"
+        :locale="$locale"
+        :multi-locale="$multiLocale"
+        label="{{ __('Heading') }}"
+    />
+    <x-forms.texteditor-translated
+        name="{{ $c }}.intro"
+        :locale="$locale"
+        :multi-locale="$multiLocale"
+        label="{{ __('Subheading') }}"
+    />
 
     <flux:radio.group wire:model.live="{{ $c }}.source" variant="segmented" label="{{ __('Video source') }}">
         <flux:radio value="upload" icon="arrow-up-tray" label="{{ __('Uploaded') }}" />
@@ -22,7 +32,8 @@
             type="video"
             :locale="$locale"
             :multiple="false"
-            label="{{ __('Video') }}" />
+            label="{{ __('Video') }}"
+        />
     </div>
 
     <div x-show="{{ $b }}?.source === 'url'" x-cloak>
@@ -30,7 +41,8 @@
             wire:model.lazy="{{ $c }}.url"
             label="{{ __('Video URL') }}"
             placeholder="https://www.youtube.com/watch?v=..."
-            description="{{ __('A YouTube or Vimeo link, or a direct .mp4 / .webm URL.') }}" />
+            description="{{ __('A YouTube or Vimeo link, or a direct .mp4 / .webm URL.') }}"
+        />
     </div>
 
     <livewire:admin.media-selector
@@ -40,7 +52,8 @@
         type="image"
         :locale="$locale"
         :multiple="false"
-        label="{{ __('Poster image') }}" />
+        label="{{ __('Poster image') }}"
+    />
 
     <flux:radio.group wire:model.live="{{ $c }}.aspect" variant="segmented" label="{{ __('Aspect ratio') }}">
         <flux:radio value="16:9" label="{{ __('16:9') }}" />

@@ -145,10 +145,7 @@ return new class extends Component
             <flux:text variant="subtle">{{ __('Choose a content type first.') }}</flux:text>
         @else
             @if ($selected->isNotEmpty())
-                <div
-                    class="mb-4 flex flex-col gap-2"
-                    @if ($reorderable) wire:sort="reorder" @endif
-                >
+                <div class="mb-4 flex flex-col gap-2" @if ($reorderable) wire:sort="reorder" @endif>
                     @foreach ($selected as $record)
                         <div
                             wire:key="record-sel-{{ $this->name }}-{{ $record->id }}"
@@ -178,7 +175,10 @@ return new class extends Component
                             </div>
 
                             <div class="min-w-0 flex-1">
-                                <flux:heading size="sm" class="truncate">{{ $record->title !== '' ? $record->title : __('Untitled') }}</flux:heading>
+                                <flux:heading
+                                    size="sm"
+                                    class="truncate"
+                                >{{ $record->title !== '' ? $record->title : __('Untitled') }}</flux:heading>
                             </div>
 
                             <flux:button
@@ -200,7 +200,10 @@ return new class extends Component
                         {{ $selected->isEmpty() ? __('Select :name', ['name' => $recordType->name]) : __('Add more') }}
                     </flux:button>
                 @else
-                    <flux:text variant="subtle" class="text-sm">{{ __('Maximum of :max reached.', ['max' => $this->max]) }}</flux:text>
+                    <flux:text
+                        variant="subtle"
+                        class="text-sm"
+                    >{{ __('Maximum of :max reached.', ['max' => $this->max]) }}</flux:text>
                 @endif
 
                 @if ($selected->isNotEmpty() && $reorderable)

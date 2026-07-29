@@ -18,12 +18,14 @@
             <img src="{{ $dark }}" alt="{{ $brand }}" class="{{ $imgClass }} hidden dark:block" />
         @endif
     @else
-        <span @class([
-            'text-sm' => $size === 'sm',
-            'text-base' => $size === 'md',
-            'text-xl' => $size === 'lg',
-            'font-bold',
-            'tracking-tight'
-        ])>{{ $brand }}</span>
+        <span
+            @class([
+                'text-sm' => $size === 'sm',
+                'text-base' => $size === 'md',
+                'text-xl' => $size === 'lg',
+                'font-bold',
+                'tracking-tight',
+            ])
+        >{{ $brand }}</span>
     @endif
 </a>

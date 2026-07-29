@@ -77,7 +77,7 @@ return new class extends Component
         }
 
         $updates->markPending($tag);
-        dispatch(new \App\Jobs\RunSystemUpdate($tag));
+        dispatch(new App\Jobs\RunSystemUpdate($tag));
 
         Flux::modal('confirm-update')->close();
     }
@@ -137,7 +137,7 @@ return new class extends Component
 ?>
 
 <x-admin.settings-layout>
-    <div class="grid md:grid-cols-5 gap-10 items-start">
+    <div class="grid items-start gap-10 md:grid-cols-5">
         <div class="space-y-10 md:col-span-3">
             @php($state = $this->state())
 
@@ -149,7 +149,11 @@ return new class extends Component
 
                 <div class="space-y-3">
                     @can('settings.edit')
-                        <flux:button wire:click="checkNow" size="sm" icon="arrow-path">{{ __('Check now') }}</flux:button>
+                        <flux:button
+                            wire:click="checkNow"
+                            size="sm"
+                            icon="arrow-path"
+                        >{{ __('Check now') }}</flux:button>
                     @endcan
                     <flux:text>{{ __('Last checked :time', ['time' => $this->lastCheckedAt()?->diffForHumans() ?? __('never')]) }}</flux:text>
                 </div>
@@ -158,29 +162,41 @@ return new class extends Component
             @if (in_array($state['status'], ['pending', 'running'], true))
                 <div wire:poll.3s="refreshState">
                     <flux:callout icon="arrow-path" variant="secondary">
-                        <flux:callout.heading>{{ __('Updating to :tag…', ['tag' => (string) $state['tag']]) }}</flux:callout.heading>
-                        <flux:callout.text>{{ $state['step'] ?? __('Waiting for the queue worker to start the update…') }}</flux:callout.text>
+                        <flux:callout.heading>
+                            {{ __('Updating to :tag…', ['tag' => (string) $state['tag']]) }}</flux:callout.heading>
+                        <flux:callout.text>
+                            {{ $state['step'] ?? __('Waiting for the queue worker to start the update…') }}</flux:callout.text>
                     </flux:callout>
                 </div>
             @elseif ($state['status'] === 'finished')
                 <flux:callout icon="check-circle" variant="success">
-                    <flux:callout.heading>{{ __('Updated to :tag.', ['tag' => (string) $state['tag']]) }}</flux:callout.heading>
+                    <flux:callout.heading>
+                        {{ __('Updated to :tag.', ['tag' => (string) $state['tag']]) }}</flux:callout.heading>
                     <flux:callout.text>
                         @can('settings.edit')
-                            <flux:button wire:click="dismissState" size="sm" class="mt-1">{{ __('Dismiss') }}</flux:button>
+                            <flux:button
+                                wire:click="dismissState"
+                                size="sm"
+                                class="mt-1"
+                            >{{ __('Dismiss') }}</flux:button>
                         @endcan
                     </flux:callout.text>
                 </flux:callout>
             @elseif ($state['status'] === 'failed')
                 <flux:callout icon="exclamation-triangle" variant="danger">
-                    <flux:callout.heading>{{ __('Update to :tag failed at: :step', ['tag' => (string) $state['tag'], 'step' => (string) $state['step']]) }}</flux:callout.heading>
+                    <flux:callout.heading>
+                        {{ __('Update to :tag failed at: :step', ['tag' => (string) $state['tag'], 'step' => (string) $state['step']]) }}</flux:callout.heading>
                     <flux:callout.text>
                         {{ __('The public site is in maintenance mode. Fix the issue on the server, then run: php artisan up') }}
                         @if ($state['output'] !== null && $state['output'] !== '')
                             <pre class="mt-3 max-h-64 overflow-auto rounded-lg bg-zinc-900 p-3 text-xs text-zinc-100">{{ $state['output'] }}</pre>
                         @endif
                         @can('settings.edit')
-                            <flux:button wire:click="dismissState" size="sm" class="mt-3">{{ __('Dismiss') }}</flux:button>
+                            <flux:button
+                                wire:click="dismissState"
+                                size="sm"
+                                class="mt-3"
+                            >{{ __('Dismiss') }}</flux:button>
                         @endcan
                     </flux:callout.text>
                 </flux:callout>
@@ -190,7 +206,11 @@ return new class extends Component
                     <flux:callout.text>
                         {{ __('Check that a queue worker is running on the server.') }}
                         @can('settings.edit')
-                            <flux:button wire:click="dismissState" size="sm" class="mt-3">{{ __('Dismiss') }}</flux:button>
+                            <flux:button
+                                wire:click="dismissState"
+                                size="sm"
+                                class="mt-3"
+                            >{{ __('Dismiss') }}</flux:button>
                         @endcan
                     </flux:callout.text>
                 </flux:callout>
@@ -265,7 +285,10 @@ return new class extends Component
             </div>
             <div class="flex justify-end gap-2">
                 <flux:button variant="ghost" wire:click="cancelAutoUpdate">{{ __('Cancel') }}</flux:button>
-                <flux:button variant="primary" wire:click="confirmAutoUpdate">{{ $auto_update ? __('Enable') : __('Disable') }}</flux:button>
+                <flux:button
+                    variant="primary"
+                    wire:click="confirmAutoUpdate"
+                >{{ $auto_update ? __('Enable') : __('Disable') }}</flux:button>
             </div>
         </div>
     </flux:modal>
@@ -276,15 +299,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
             {{ __('Settings') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('Updates') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('Updates') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('Updates') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>
+                {{ __('Settings') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

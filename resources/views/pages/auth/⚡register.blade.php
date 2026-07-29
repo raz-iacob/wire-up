@@ -57,6 +57,13 @@ return new class extends Component
         $this->redirectIntended(default: route('home', absolute: false), navigate: true);
     }
 
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Register'))
+            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
+    }
+
     protected function ensureIsNotRateLimited(): void
     {
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
@@ -76,13 +83,6 @@ return new class extends Component
     protected function throttleKey(): string
     {
         return 'register|'.request()->ip();
-    }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title(__('Register'))
-            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
     }
 };
 ?>
@@ -134,9 +134,7 @@ return new class extends Component
         />
 
         <div class="flex items-center justify-end">
-            <flux:button type="submit" variant="primary" class="w-full">
-                {{ __('Create account') }}
-            </flux:button>
+            <flux:button type="submit" variant="primary" class="w-full"> {{ __('Create account') }} </flux:button>
         </div>
     </form>
 

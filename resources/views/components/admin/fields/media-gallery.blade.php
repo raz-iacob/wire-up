@@ -17,7 +17,10 @@
         :multiple="true"
         :with-caption="true"
         :crops="['default' => ['label' => __('Original'), 'q' => 80, 'fm' => 'jpg']]"
-        :label="$label" />
-    @if($help)<flux:description class="mt-1">{{ $help }}</flux:description>@endif
+        :label="$label"
+    />
+    @if ($help)
+        <flux:description class="mt-1">{{ $help }}</flux:description>
+    @endif
     <flux:error name="media.{{ $key }}.{{ $mediaLocale }}" />
 </div>

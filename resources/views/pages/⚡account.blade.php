@@ -125,7 +125,7 @@ return new class extends Component
 };
 ?>
 
-<div class="mx-auto w-full max-w-2xl px-(--wire-gutter) py-16 space-y-12">
+<div class="mx-auto w-full max-w-2xl space-y-12 px-(--wire-gutter) py-16">
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
             <flux:heading size="xl">{{ __('My account') }}</flux:heading>
@@ -165,9 +165,30 @@ return new class extends Component
     <form wire:submit="updatePassword" class="space-y-6">
         <flux:heading size="lg">{{ __('Password') }}</flux:heading>
 
-        <flux:input wire:model="current_password" :label="__('Current password')" type="password" required autocomplete="current-password" viewable />
-        <flux:input wire:model="password" :label="__('New password')" type="password" required autocomplete="new-password" viewable />
-        <flux:input wire:model="password_confirmation" :label="__('Confirm new password')" type="password" required autocomplete="new-password" viewable />
+        <flux:input
+            wire:model="current_password"
+            :label="__('Current password')"
+            type="password"
+            required
+            autocomplete="current-password"
+            viewable
+        />
+        <flux:input
+            wire:model="password"
+            :label="__('New password')"
+            type="password"
+            required
+            autocomplete="new-password"
+            viewable
+        />
+        <flux:input
+            wire:model="password_confirmation"
+            :label="__('Confirm new password')"
+            type="password"
+            required
+            autocomplete="new-password"
+            viewable
+        />
 
         <flux:button variant="primary" type="submit">{{ __('Update password') }}</flux:button>
     </form>

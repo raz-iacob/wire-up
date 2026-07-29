@@ -130,47 +130,6 @@ return new class extends Component
         $this->loadMedia();
     }
 
-    /**
-     * @param  array<int, array<string, mixed>|Media>  $media
-     * @return Collection<int, Media>
-     */
-    private function hydrateSelection(array $media): Collection
-    {
-        $ids = collect($media)
-            ->map(fn (array|Media $item): ?int => $item instanceof Media ? $item->id : (isset($item['id']) ? (int) $item['id'] : null))
-            ->filter()
-            ->values()
-            ->all();
-
-        return $this->selectionFromIds($ids);
-    }
-
-    /**
-     * @param  array<int, int>  $ids
-     * @return Collection<int, Media>
-     */
-    private function selectionFromIds(array $ids): Collection
-    {
-        if ($ids === []) {
-            return collect();
-        }
-
-        return Media::query()
-            ->whereIn('id', $ids)
-            ->get()
-            ->sortBy(fn (Media $item): int => (int) array_search($item->id, $ids, true))
-            ->values();
-    }
-
-    /**
-     * @param  Collection<int, Media>  $selected
-     */
-    private function syncSelected(Collection $selected): void
-    {
-        $this->selected = $selected->values();
-        $this->selectedIds = $selected->pluck('id')->all();
-    }
-
     public function selectMedia(Media $media, bool $deselect = true): void
     {
         if ($this->isSelected($media->id)) {
@@ -203,7 +162,7 @@ return new class extends Component
     }
 
     /**
-     * @param array<int, int> $mediaIds
+     * @param  array<int, int>  $mediaIds
      */
     public function selectMediaRange(array $mediaIds): void
     {
@@ -219,6 +178,7 @@ return new class extends Component
                     $this->selectMedia($media);
                 }
             }
+
             return;
         }
 
@@ -454,7 +414,7 @@ return new class extends Component
 
         try {
             $media = $action->handle($item);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             Flux::toast(
                 variant: 'danger',
                 heading: __('Import Failed'),
@@ -470,31 +430,6 @@ return new class extends Component
         $this->medias = collect();
         $this->loadMedia();
         $this->selectMedia($media, false);
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function pexelsAllowedKinds(): array
-    {
-        $supported = [MediaType::IMAGE->value, MediaType::VIDEO->value];
-
-        if ($this->allowedTypes === []) {
-            return $supported;
-        }
-
-        return array_values(array_intersect($supported, $this->allowedTypes));
-    }
-
-    private function resetPexels(): void
-    {
-        $this->pexelsMode = false;
-        $this->pexelsQuery = '';
-        $this->pexelsPage = 1;
-        $this->pexelsResults = [];
-        $this->pexelsPreview = null;
-        $this->pexelsHasMore = false;
-        $this->pexelsLoaded = false;
     }
 
     #[Renderless]
@@ -594,6 +529,72 @@ return new class extends Component
         return "style=\"top: {$top}px; z-index: {$index}; transform: rotate({$rotation}deg )\";\"";
     }
 
+    /**
+     * @param  array<int, array<string, mixed>|Media>  $media
+     * @return Collection<int, Media>
+     */
+    private function hydrateSelection(array $media): Collection
+    {
+        $ids = collect($media)
+            ->map(fn (array|Media $item): ?int => $item instanceof Media ? $item->id : (isset($item['id']) ? (int) $item['id'] : null))
+            ->filter()
+            ->values()
+            ->all();
+
+        return $this->selectionFromIds($ids);
+    }
+
+    /**
+     * @param  array<int, int>  $ids
+     * @return Collection<int, Media>
+     */
+    private function selectionFromIds(array $ids): Collection
+    {
+        if ($ids === []) {
+            return collect();
+        }
+
+        return Media::query()
+            ->whereIn('id', $ids)
+            ->get()
+            ->sortBy(fn (Media $item): int => (int) array_search($item->id, $ids, true))
+            ->values();
+    }
+
+    /**
+     * @param  Collection<int, Media>  $selected
+     */
+    private function syncSelected(Collection $selected): void
+    {
+        $this->selected = $selected->values();
+        $this->selectedIds = $selected->pluck('id')->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function pexelsAllowedKinds(): array
+    {
+        $supported = [MediaType::IMAGE->value, MediaType::VIDEO->value];
+
+        if ($this->allowedTypes === []) {
+            return $supported;
+        }
+
+        return array_values(array_intersect($supported, $this->allowedTypes));
+    }
+
+    private function resetPexels(): void
+    {
+        $this->pexelsMode = false;
+        $this->pexelsQuery = '';
+        $this->pexelsPage = 1;
+        $this->pexelsResults = [];
+        $this->pexelsPreview = null;
+        $this->pexelsHasMore = false;
+        $this->pexelsLoaded = false;
+    }
+
     /** @param array<int, array{file: TemporaryUploadedFile, metadata: array<string, mixed>}> $validatedFiles */
     private function uploadFiles(array $validatedFiles, CreateMediaAction $action): void
     {
@@ -652,7 +653,7 @@ return new class extends Component
 
                     $size = mb_strlen($jpeg, '8bit');
                     $mimeType = 'image/jpeg';
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     Flux::toast(
                         variant: 'danger',
                         heading: __('Upload Failed'),
@@ -736,388 +737,567 @@ return new class extends Component
 ?>
 
 <div>
-    <flux:modal wire:model.self="showLibrary" class="w-full max-w-7xl outline-0!" :closable="false" :dismissible="false">
+    <flux:modal
+        wire:model.self="showLibrary"
+        class="w-full max-w-7xl outline-0!"
+        :closable="false"
+        :dismissible="false"
+    >
         <div class="grid gap-6 md:grid-cols-7">
             <div class="md:col-span-5">
-                <div class="flex flex-col md:flex-row gap-4 md:gap-6 justify-between md:items-center mb-6">
+                <div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center md:gap-6">
                     <flux:heading class="text-lg!">{{ $pexelsMode ? __('Search Pexels') : __('Media Library') }}</flux:heading>
                     <div class="flex items-center gap-3">
-                        @if($pexelsMode)
-                            @if($this->pexelsHasBothKinds())
-                            <div class="w-full md:w-40 sm:shrink-0">
-                                <flux:select variant="listbox" wire:model.live="pexelsKind">
-                                    <flux:select.option value="image">{{ __('Photos') }}</flux:select.option>
-                                    <flux:select.option value="video">{{ __('Videos') }}</flux:select.option>
-                                </flux:select>
-                            </div>
+                        @if ($pexelsMode)
+                            @if ($this->pexelsHasBothKinds())
+                                <div class="w-full sm:shrink-0 md:w-40">
+                                    <flux:select variant="listbox" wire:model.live="pexelsKind">
+                                        <flux:select.option value="image">{{ __('Photos') }}</flux:select.option>
+                                        <flux:select.option value="video">{{ __('Videos') }}</flux:select.option>
+                                    </flux:select>
+                                </div>
                             @endif
-                            <div class="w-full md:w-52 sm:shrink-0">
-                                <flux:input icon="magnifying-glass" wire:model.live.debounce.500ms="pexelsQuery" placeholder="{{ __('Search Pexels...') }}" clearable />
+                            <div class="w-full sm:shrink-0 md:w-52">
+                                <flux:input
+                                    icon="magnifying-glass"
+                                    wire:model.live.debounce.500ms="pexelsQuery"
+                                    placeholder="{{ __('Search Pexels...') }}"
+                                    clearable
+                                />
                             </div>
                         @else
-                            <div class="w-full md:w-52 sm:shrink-0">
-                                <flux:select variant="listbox" wire:model.live="typeFilter" :disabled="$type !== null" placeholder="{{ __('Filter by type') }}">
+                            <div class="w-full sm:shrink-0 md:w-52">
+                                <flux:select
+                                    variant="listbox"
+                                    wire:model.live="typeFilter"
+                                    :disabled="$type !== null"
+                                    placeholder="{{ __('Filter by type') }}"
+                                >
                                     <flux:select.option value="">{{ __('All Media') }}</flux:select.option>
-                                    @foreach(($allowedTypes !== [] ? array_map([MediaType::class, 'from'], $allowedTypes) : MediaType::cases()) as $typeOption)
-                                    <flux:select.option value="{{ $typeOption->value }}">{{ $typeOption->label(true) }}</flux:select.option>
+                                    @foreach (($allowedTypes !== [] ? array_map([MediaType::class, 'from'], $allowedTypes) : MediaType::cases()) as $typeOption)
+                                        <flux:select.option value="{{ $typeOption->value }}">
+                                            {{ $typeOption->label(true) }}</flux:select.option>
                                     @endforeach
                                 </flux:select>
                             </div>
-                            <div class="w-full md:w-52 sm:shrink-0">
-                                <flux:input icon="magnifying-glass" wire:model.live="search" placeholder="{{ __('Search...') }}" clearable />
+                            <div class="w-full sm:shrink-0 md:w-52">
+                                <flux:input
+                                    icon="magnifying-glass"
+                                    wire:model.live="search"
+                                    placeholder="{{ __('Search...') }}"
+                                    clearable
+                                />
                             </div>
                         @endif
 
-                        @if($this->pexelsEnabled() && $this->pexelsSupported())
-                            @if($pexelsMode)
-                            <flux:button wire:click="togglePexels" square variant="filled" icon="x-mark" :tooltip="__('Back to library')" aria-label="{{ __('Back to library') }}" />
+                        @if ($this->pexelsEnabled() && $this->pexelsSupported())
+                            @if ($pexelsMode)
+                                <flux:button
+                                    wire:click="togglePexels"
+                                    square
+                                    variant="filled"
+                                    icon="x-mark"
+                                    :tooltip="__('Back to library')"
+                                    aria-label="{{ __('Back to library') }}"
+                                />
                             @else
-                            <flux:button wire:click="togglePexels" square variant="filled" :tooltip="__('Search in Pexels')" aria-label="{{ __('Search in Pexels') }}">
-                                <svg viewBox="0 0 48 48" class="size-4.5" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <path fill="#05A081" d="M8 0h32a8 8 0 0 1 8 8v32a8 8 0 0 1-8 8H8a8 8 0 0 1-8-8V8a8 8 0 0 1 8-8Z"/>
-                                    <path fill="#fff" d="M18 13h9a8.5 8.5 0 0 1 0 17h-4.5v5H18V13Zm4.5 4v9H27a4.5 4.5 0 1 0 0-9h-4.5Z"/>
-                                </svg>
-                            </flux:button>
+                                <flux:button
+                                    wire:click="togglePexels"
+                                    square
+                                    variant="filled"
+                                    :tooltip="__('Search in Pexels')"
+                                    aria-label="{{ __('Search in Pexels') }}"
+                                >
+                                    <svg viewBox="0 0 48 48" class="size-4.5" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path fill="#05A081" d="M8 0h32a8 8 0 0 1 8 8v32a8 8 0 0 1-8 8H8a8 8 0 0 1-8-8V8a8 8 0 0 1 8-8Z" />
+                                        <path fill="#fff" d="M18 13h9a8.5 8.5 0 0 1 0 17h-4.5v5H18V13Zm4.5 4v9H27a4.5 4.5 0 1 0 0-9h-4.5Z" />
+                                    </svg>
+                                </flux:button>
                             @endif
                         @endif
                     </div>
                 </div>
-                
+
                 <div @class(['hidden' => $pexelsMode])>
-                @php($acceptsVideo = $type === MediaType::VIDEO || in_array(MediaType::VIDEO->value, $allowedTypes, true))
-                @php($imageLimit = Number::fileSize($this->maxImageKilobytes() * 1024, precision: 0))
-                @php($videoLimit = Number::fileSize($this->maxVideoKilobytes() * 1024, precision: 0))
-                <flux:file-upload multiple>
-                    <flux:file-upload.dropzone
-                        heading="{{ __('Drop files or click to browse') }}"
-                        text="{{ $acceptsVideo ? __('Images up to :image, videos up to :video', ['image' => $imageLimit, 'video' => $videoLimit]) : __('JPG, PNG, GIF up to :image', ['image' => $imageLimit]) }}"
-                        with-progress
-                        inline
-                        class="justify-center"
-                    />
-                </flux:file-upload>
-
-                <div 
-                    x-data="mediaLibrary($wire)"
-                    class="mt-6 grid content-start min-h-100 overflow-y-auto overscroll-contain p-2 select-none md:h-[calc(100vh-22rem)] grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" wire:loading.class="opacity-60 animate-pulse" wire:target="loadMore">
-                    
-                    @if(!$loaded)
-                        @for($i = 0; $i < 10; $i++)
-                        <flux:skeleton animate="shimmer" class="size-full aspect-square rounded-sm" wire:loading />
-                        @endfor
-                    @endif
-
-                    @forelse ($medias as $media)
-                    <div class="relative cursor-pointer"
-                        wire:key="media-{{ $media['id'] }}"
-                        data-media-id="{{ $media['id'] }}"
-                        data-index="{{ $loop->index }}"
-                        @click="select({{ $media['id'] }}, {{ $loop->index }}, $event)"
-                        @mouseenter="hoverIndex = {{ $loop->index }}"
-                        @if($this->isSelected($media['id'])) data-selected @endif
-                    >
-                        <img 
-                            src="{{ $media['preview'] }}" alt="{{ $media['alt_text'] }}"
-                            class="w-full aspect-square object-contain bg-black/10 dark:bg-white/5 border border-zinc-200 dark:border-white/20 rounded-sm data-selected:outline-3 data-selected:outline-offset-3 data-selected:outline-sky-500 dark:data-selected:outline-sky-600 data-selected:opacity-60 data-selected:scale-95"
-                            :class="{ 'outline-4 outline-offset-2 outline-sky-400/40 dark:outline-sky-700/50 opacity-60': isInRange({{ $loop->index }}) }"
-                            loading="lazy"
-                            @if($this->isSelected($media['id'])) data-selected @endif
+                    @php($acceptsVideo = $type === MediaType::VIDEO || in_array(MediaType::VIDEO->value, $allowedTypes, true))
+                    @php($imageLimit = Number::fileSize($this->maxImageKilobytes() * 1024, precision: 0))
+                    @php($videoLimit = Number::fileSize($this->maxVideoKilobytes() * 1024, precision: 0))
+                    <flux:file-upload multiple>
+                        <flux:file-upload.dropzone
+                            heading="{{ __('Drop files or click to browse') }}"
+                            text="{{ $acceptsVideo ? __('Images up to :image, videos up to :video', ['image' => $imageLimit, 'video' => $videoLimit]) : __('JPG, PNG, GIF up to :image', ['image' => $imageLimit]) }}"
+                            with-progress
+                            inline
+                            class="justify-center"
                         />
-                        @if($media['icon'] !== 'photo')
-                        <div class="absolute bottom-2 right-2 bg-black/60 rounded-full p-1">
-                            <flux:icon name="{{ $media['icon'] }}" class="size-4 text-white" />
-                        </div>
-                        @if(!$media['thumbnail'])
-                        <div class="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 text-center pointer-events-none px-2 w-full">
-                            <flux:text class="text-sm break-all" variant="subtle">{{ $media['filename'] }}</flux:text>
-                        </div>
-                        @endif
-                        @endif
-                    </div>
-                    @empty
+                    </flux:file-upload>
 
-                    @if($loaded)
-                    <div class="col-span-full text-center py-10">
-                        <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No media found.') }}</flux:text>
-                    </div>
-                    @endif
-                    
-                    @endforelse
-
-                    @if($hasMore)
-                    <div wire:intersect.margin.100px="loadMore"></div>
-                    @endif
-                </div>
-                </div>
-
-                @if($pexelsMode)
-                <div class="mt-6 flex flex-col md:h-[calc(100vh-22rem)]">
-                    <div class="grid content-start min-h-100 grow overflow-y-auto overscroll-contain p-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-                        wire:loading.class="opacity-60 animate-pulse" wire:target="searchPexels, loadMorePexels, updatedPexelsQuery, updatedPexelsKind">
-
-                        @if(!$pexelsLoaded)
-                            @for($i = 0; $i < 10; $i++)
-                            <flux:skeleton animate="shimmer" class="size-full aspect-square rounded-sm" />
+                    <div
+                        x-data="mediaLibrary($wire)"
+                        class="mt-6 grid min-h-100 grid-cols-2 content-start gap-4 overflow-y-auto overscroll-contain p-2 select-none md:h-[calc(100vh-22rem)] md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                        wire:loading.class="opacity-60 animate-pulse"
+                        wire:target="loadMore"
+                    >
+                        @if (! $loaded)
+                            @for ($i = 0; $i < 10; $i++)
+                                <flux:skeleton
+                                    animate="shimmer"
+                                    class="aspect-square size-full rounded-sm"
+                                    wire:loading
+                                />
                             @endfor
                         @endif
 
-                        @forelse ($pexelsResults as $item)
-                        <div class="group relative cursor-pointer"
-                            wire:key="pexels-{{ $item['type'] }}-{{ $item['id'] }}"
-                            wire:click="previewPexels({{ $item['id'] }})"
-                        >
-                            <img
-                                src="{{ $item['thumb'] }}" alt="{{ $item['alt'] }}" loading="lazy"
-                                class="w-full aspect-square object-contain border border-zinc-200 dark:border-white/20 rounded-sm data-selected:outline-3 data-selected:outline-offset-3 data-selected:outline-sky-500 dark:data-selected:outline-sky-600"
-                                style="background-color: {{ $item['avg_color'] ?: 'transparent' }}"
-                                @if(($pexelsPreview['id'] ?? null) === $item['id']) data-selected @endif
-                            />
-
-                            @if($item['type'] === MediaType::VIDEO->value)
-                            <div class="absolute top-2 right-2 flex items-center gap-1 bg-black/60 rounded-full px-2 py-1">
-                                <flux:icon name="video-camera" class="size-3.5 text-white" />
-                                @if($item['duration'])
-                                <span class="text-[11px] leading-none text-white">{{ gmdate('i:s', (int) $item['duration']) }}</span>
+                        @forelse ($medias as $media)
+                            <div
+                                class="relative cursor-pointer"
+                                wire:key="media-{{ $media['id'] }}"
+                                data-media-id="{{ $media['id'] }}"
+                                data-index="{{ $loop->index }}"
+                                @click="select({{ $media['id'] }}, {{ $loop->index }}, $event)"
+                                @mouseenter="hoverIndex = {{ $loop->index }}"
+                                @if ($this->isSelected($media['id'])) data-selected @endif
+                            >
+                                <img
+                                    src="{{ $media['preview'] }}"
+                                    alt="{{ $media['alt_text'] }}"
+                                    class="aspect-square w-full rounded-sm border border-zinc-200 bg-black/10 object-contain data-selected:scale-95 data-selected:opacity-60 data-selected:outline-3 data-selected:outline-offset-3 data-selected:outline-sky-500 dark:border-white/20 dark:bg-white/5 dark:data-selected:outline-sky-600"
+                                    :class="{ 'outline-4 outline-offset-2 outline-sky-400/40 dark:outline-sky-700/50 opacity-60': isInRange({{ $loop->index }}) }"
+                                    loading="lazy"
+                                    @if ($this->isSelected($media['id'])) data-selected @endif
+                                />
+                                @if ($media['icon'] !== 'photo')
+                                    <div class="absolute right-2 bottom-2 rounded-full bg-black/60 p-1">
+                                        <flux:icon name="{{ $media['icon'] }}" class="size-4 text-white" />
+                                    </div>
+                                    @if (! $media['thumbnail'])
+                                        <div class="pointer-events-none absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 px-2 text-center">
+                                            <flux:text
+                                                class="text-sm break-all"
+                                                variant="subtle"
+                                            >{{ $media['filename'] }}</flux:text>
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
-                            @endif
-
-                            <div class="absolute inset-x-0 bottom-0 flex items-end bg-gradient-to-t from-black/75 to-transparent p-2 pt-6 opacity-0 group-hover:opacity-100 transition rounded-b-sm">
-                                <a href="{{ $item['photographer_url'] }}" target="_blank" rel="noopener noreferrer" @click.stop
-                                    class="text-xs text-white/90 hover:text-white truncate">
-                                    {{ $item['type'] === MediaType::VIDEO->value
-                                        ? __('Video by :name on Pexels', ['name' => $item['photographer']])
-                                        : __('Photo by :name on Pexels', ['name' => $item['photographer']]) }}
-                                </a>
-                            </div>
-                        </div>
                         @empty
-
-                        @if($pexelsLoaded)
-                        <div class="col-span-full text-center py-10">
-                            <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No results found on Pexels.') }}</flux:text>
-                        </div>
-                        @endif
+                            @if ($loaded)
+                                <div class="col-span-full py-10 text-center">
+                                    <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No media found.') }}</flux:text>
+                                </div>
+                            @endif
 
                         @endforelse
 
-                        @if($pexelsHasMore)
-                        <div wire:intersect.margin.100px="loadMorePexels"></div>
+                        @if ($hasMore)
+                            <div wire:intersect.margin.100px="loadMore"></div>
                         @endif
                     </div>
-
-                    <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer"
-                        class="mt-3 inline-flex items-center gap-1.5 self-start text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">
-                        {{ __('Photos provided by') }} <span class="font-semibold text-[#05A081]">Pexels</span>
-                    </a>
                 </div>
+
+                @if ($pexelsMode)
+                    <div class="mt-6 flex flex-col md:h-[calc(100vh-22rem)]">
+                        <div
+                            class="grid min-h-100 grow grid-cols-2 content-start gap-4 overflow-y-auto overscroll-contain p-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                            wire:loading.class="opacity-60 animate-pulse"
+                            wire:target="searchPexels, loadMorePexels, updatedPexelsQuery, updatedPexelsKind"
+                        >
+                            @if (! $pexelsLoaded)
+                                @for ($i = 0; $i < 10; $i++)
+                                    <flux:skeleton animate="shimmer" class="aspect-square size-full rounded-sm" />
+                                @endfor
+                            @endif
+
+                            @forelse ($pexelsResults as $item)
+                                <div
+                                    class="group relative cursor-pointer"
+                                    wire:key="pexels-{{ $item['type'] }}-{{ $item['id'] }}"
+                                    wire:click="previewPexels({{ $item['id'] }})"
+                                >
+                                    <img
+                                        src="{{ $item['thumb'] }}"
+                                        alt="{{ $item['alt'] }}"
+                                        loading="lazy"
+                                        class="aspect-square w-full rounded-sm border border-zinc-200 object-contain data-selected:outline-3 data-selected:outline-offset-3 data-selected:outline-sky-500 dark:border-white/20 dark:data-selected:outline-sky-600"
+                                        style="background-color: {{ $item['avg_color'] ?: 'transparent' }}"
+                                        @if (($pexelsPreview['id'] ?? null) === $item['id']) data-selected @endif
+                                    />
+
+                                    @if ($item['type'] === MediaType::VIDEO->value)
+                                        <div class="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-1">
+                                            <flux:icon name="video-camera" class="size-3.5 text-white" />
+                                            @if ($item['duration'])
+                                                <span class="text-[11px] leading-none text-white">{{ gmdate('i:s', (int) $item['duration']) }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    <div class="absolute inset-x-0 bottom-0 flex items-end rounded-b-sm bg-gradient-to-t from-black/75 to-transparent p-2 pt-6 opacity-0 transition group-hover:opacity-100">
+                                        <a
+                                            href="{{ $item['photographer_url'] }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            @click.stop
+                                            class="truncate text-xs text-white/90 hover:text-white"
+                                        >
+                                            {{
+                                                $item['type'] === MediaType::VIDEO->value
+                                                ? __('Video by :name on Pexels', ['name' => $item['photographer']])
+                                                : __('Photo by :name on Pexels', ['name' => $item['photographer']])
+                                            }}
+                                        </a>
+                                    </div>
+                                </div>
+                            @empty
+                                @if ($pexelsLoaded)
+                                    <div class="col-span-full py-10 text-center">
+                                        <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No results found on Pexels.') }}</flux:text>
+                                    </div>
+                                @endif
+
+                            @endforelse
+
+                            @if ($pexelsHasMore)
+                                <div wire:intersect.margin.100px="loadMorePexels"></div>
+                            @endif
+                        </div>
+
+                        <a
+                            href="https://www.pexels.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="mt-3 inline-flex items-center gap-1.5 self-start text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                        >
+                            {{ __('Photos provided by') }} <span class="font-semibold text-[#05A081]">Pexels</span>
+                        </a>
+                    </div>
                 @endif
             </div>
 
-            <div class="md:col-span-2 md:border-l md:border-zinc-200 md:dark:border-zinc-700 md:pl-6 flex flex-col gap-4 h-full relative">
-                @if($pexelsMode)
-                    @if($pexelsPreview)
-                    <div class="w-full bg-zinc-100 dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-800 rounded-sm overflow-hidden">
-                        @if($pexelsPreview['type'] === MediaType::VIDEO->value)
-                        <video src="{{ $pexelsPreview['download_url'] }}" poster="{{ $pexelsPreview['preview'] }}" class="w-full aspect-video object-contain bg-black" controls preload="none" playsinline></video>
-                        @else
-                        <img src="{{ $pexelsPreview['preview'] }}" alt="{{ $pexelsPreview['alt'] }}" class="w-full aspect-video object-contain" style="background-color: {{ $pexelsPreview['avg_color'] ?: 'transparent' }}" />
-                        @endif
-                    </div>
-
-                    <div class="grow mt-4 space-y-6">
-                        <div>
-                            <flux:heading size="lg" class="truncate">{{ $pexelsPreview['alt'] !== '' ? $pexelsPreview['alt'] : __('Photo by :name', ['name' => $pexelsPreview['photographer']]) }}</flux:heading>
-                            <flux:text>{{ $pexelsPreview['type'] === MediaType::VIDEO->value ? __('Video') : __('Photo') }}</flux:text>
-                        </div>
-
-                        <div>
-                            <flux:heading>{{ __('Information') }}</flux:heading>
-                            @if($pexelsPreview['width'] && $pexelsPreview['height'])
-                            <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                            <div class="flex items-center justify-between">
-                                <flux:text class="text-xs">{{ __('Dimensions') }}</flux:text>
-                                <flux:text class="text-xs">{{ $pexelsPreview['width'] }} x {{ $pexelsPreview['height'] }}</flux:text>
-                            </div>
-                            @endif
-                            @if($pexelsPreview['duration'])
-                            <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                            <div class="flex items-center justify-between">
-                                <flux:text class="text-xs">{{ __('Duration') }}</flux:text>
-                                <flux:text class="text-xs">{{ gmdate('H:i:s', (int) $pexelsPreview['duration']) }}</flux:text>
-                            </div>
-                            @endif
-                            <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                            <div class="flex items-center justify-between gap-2">
-                                <flux:text class="text-xs shrink-0">{{ __('Credit') }}</flux:text>
-                                <a href="{{ $pexelsPreview['photographer_url'] }}" target="_blank" rel="noopener noreferrer" class="text-xs truncate underline hover:no-underline text-zinc-500 dark:text-zinc-400">
-                                    {{ $pexelsPreview['type'] === MediaType::VIDEO->value
-                                        ? __('Video by :name on Pexels', ['name' => $pexelsPreview['photographer']])
-                                        : __('Photo by :name on Pexels', ['name' => $pexelsPreview['photographer']]) }}
-                                </a>
-                            </div>
-                            <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                            <div class="flex items-center justify-between gap-2">
-                                <flux:text class="text-xs shrink-0">{{ __('Source') }}</flux:text>
-                                <a href="{{ $pexelsPreview['pexels_url'] }}" target="_blank" rel="noopener noreferrer" class="text-xs truncate underline hover:no-underline text-zinc-500 dark:text-zinc-400">{{ __('View on Pexels') }}</a>
-                            </div>
-                        </div>
-                    </div>
-                    @else
-                    <div class="grow flex items-center justify-center text-center">
-                        <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('Select a Pexels result to preview it.') }}</flux:text>
-                    </div>
-                    @endif
-
-                    <div class="flex justify-between items-center gap-4 mt-6">
-                        <flux:button wire:click="togglePexels" class="w-full">{{ __('Back') }}</flux:button>
-                        @if($pexelsPreview)
-                        <flux:button variant="primary" wire:click="importFromPexels({{ $pexelsPreview['id'] }})" class="w-full">{{ __('Import') }}</flux:button>
-                        @endif
-                    </div>
-                @else
-                @if($selected->count() === 0)
-                <div wire:loading wire:target="selectMedia" class="grow">
-                    <div class="w-full aspect-video mb-8">
-                        <flux:skeleton animate="shimmer" class="size-full rounded-sm" />
-                    </div>
-                    <flux:skeleton.group animate="shimmer" class="space-y-6">
-                        <div>
-                            <flux:skeleton class="h-6 w-9/12 mb-1" />
-                            <flux:skeleton.line class="w-1/6" />
-                        </div>
-                        <flux:skeleton class="h-10 w-2/5 rounded-lg" />
-                        <div>
-                            <flux:heading>{{ __('Information') }}</flux:heading>
-                            <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                            <div class="flex items-center justify-between">
-                                <flux:text class="text-xs">{{ __('Type') }}</flux:text>
-                                <flux:skeleton.line class="w-1/4" />
-                            </div>
-                            <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                            <div class="flex items-center justify-between">
-                                <flux:text class="text-xs">{{ __('Uploaded at') }}</flux:text>
-                                <flux:skeleton.line class="w-1/4" />
-                            </div>
-                        </div>
-                    </flux:skeleton.group>
-                </div>
-                @endif
-                
-                @if($selected->count() > 0)
-                    @foreach ($selected as $media)
-                    <div wire:key="selected-media-{{ $media->id }}" class="flex items-center gap-4 w-full bg-zinc-100 dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-800 rounded-sm overflow-hidden {{ $loop->index > 0 ? 'absolute shadow-lg scale-93 origin-center left-1/2 -translate-x-1/2' : 'relative' }}" {!! $loop->index > 0 ? $this->stackStyle($media->id, $loop->index) : '' !!}>
-                        @if($loop->first && $media->type === MediaType::VIDEO)
-                        <video src="{{ Storage::disk(config('filesystems.media'))->url($media->source) }}" poster="{{ $media->preview }}" class="w-full aspect-video object-contain bg-black" controls autoplay muted loop playsinline></video>
-                        @elseif($loop->first && $media->type === MediaType::AUDIO)
-                        <div class="relative w-full aspect-video" x-data="{ playing: false }">
-                            <img src="{{ $media->preview }}" alt="{{ $media->alt_text }}" class="w-full aspect-video object-contain" />
-                            <audio x-ref="audio" src="{{ Storage::disk(config('filesystems.media'))->url($media->source) }}" preload="none" x-on:ended="playing = false"></audio>
-                            <button type="button" class="absolute inset-0 flex items-center justify-center" aria-label="{{ __('Play preview') }}" x-on:click="playing ? $refs.audio.pause() : $refs.audio.play(); playing = ! playing">
-                                <span class="flex size-14 items-center justify-center rounded-full bg-black/55 text-white transition hover:bg-black/70">
-                                    <flux:icon name="play" x-show="!playing" class="size-7" />
-                                    <flux:icon name="pause" x-show="playing" x-cloak class="size-7" />
-                                </span>
-                            </button>
-                            @if($media->filename)
-                            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-center pointer-events-none px-2 w-full">
-                                <flux:text class="text-xs break-all" variant="subtle">{{ $media->filename }}</flux:text>
-                            </div>
+            <div class="relative flex h-full flex-col gap-4 md:col-span-2 md:border-l md:border-zinc-200 md:pl-6 md:dark:border-zinc-700">
+                @if ($pexelsMode)
+                    @if ($pexelsPreview)
+                        <div class="w-full overflow-hidden rounded-sm border border-zinc-300 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-700">
+                            @if ($pexelsPreview['type'] === MediaType::VIDEO->value)
+                                <video
+                                    src="{{ $pexelsPreview['download_url'] }}"
+                                    poster="{{ $pexelsPreview['preview'] }}"
+                                    class="aspect-video w-full bg-black object-contain"
+                                    controls
+                                    preload="none"
+                                    playsinline
+                                ></video>
+                            @else
+                                <img
+                                    src="{{ $pexelsPreview['preview'] }}"
+                                    alt="{{ $pexelsPreview['alt'] }}"
+                                    class="aspect-video w-full object-contain"
+                                    style="background-color: {{ $pexelsPreview['avg_color'] ?: 'transparent' }}"
+                                />
                             @endif
                         </div>
-                        @else
-                        <img src="{{ $media->preview }}" alt="{{ $media->alt_text }}" class="w-full aspect-video object-contain" />
-                        @if($media->type->icon() !== 'photo' && !$media->thumbnail)
-                        <div class="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 text-center pointer-events-none px-2 w-full">
-                            <flux:text class="text-sm break-all" variant="subtle">{{ $media->filename }}</flux:text>
-                        </div>
-                        @endif
-                        @endif
-                    </div>
-                    @endforeach
 
-                    <div class="grow mt-4 space-y-6">
-                        @if($selected->count() === 1 && $firstMedia = $selected->first())
+                        <div class="mt-4 grow space-y-6">
                             <div>
-                                <flux:heading size="lg" class="truncate" title="{{ $firstMedia->filename }}">{{ $firstMedia->alt_text }}</flux:heading>
-                                <flux:text>{{ Number::fileSize($firstMedia->size) }}</flux:text>
+                                <flux:heading
+                                    size="lg"
+                                    class="truncate"
+                                >{{ $pexelsPreview['alt'] !== '' ? $pexelsPreview['alt'] : __('Photo by :name', ['name' => $pexelsPreview['photographer']]) }}</flux:heading>
+                                <flux:text>{{ $pexelsPreview['type'] === MediaType::VIDEO->value ? __('Video') : __('Photo') }}</flux:text>
                             </div>
-
-                            <flux:button.group>
-                                <flux:button icon="pencil" square tooltip="{{ __('Edit') }}" wire:click="edit"></flux:button>
-                                <flux:button icon="arrow-down-tray" square tooltip="{{ __('Download') }}" wire:click="download"></flux:button>
-                                <flux:button icon="trash" square tooltip="{{ __('Delete') }}" wire:click="confirmDelete"></flux:button>
-                            </flux:button.group>
 
                             <div>
                                 <flux:heading>{{ __('Information') }}</flux:heading>
-                                <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                                <div class="flex items-center justify-between">
-                                    <flux:text class="text-xs">{{ __('Type') }}</flux:text>
-                                    <flux:text class="text-xs">{{ $firstMedia->type->label() }}</flux:text>
-                                </div>
-                                @if($firstMedia->dimensions)
-                                <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                                <div class="flex items-center justify-between">
-                                    <flux:text class="text-xs">{{ __('Dimensions') }}</flux:text>
-                                    <flux:text class="text-xs">{{ $firstMedia->dimensions }}</flux:text>
-                                </div>
+                                @if ($pexelsPreview['width'] && $pexelsPreview['height'])
+                                    <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                    <div class="flex items-center justify-between">
+                                        <flux:text class="text-xs">{{ __('Dimensions') }}</flux:text>
+                                        <flux:text class="text-xs">{{ $pexelsPreview['width'] }} x {{ $pexelsPreview['height'] }}</flux:text>
+                                    </div>
                                 @endif
-                                @if($firstMedia->duration)
-                                <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                                <div class="flex items-center justify-between">
-                                    <flux:text class="text-xs">{{ __('Duration') }}</flux:text>
-                                    <flux:text class="text-xs">{{ gmdate('H:i:s', $firstMedia->duration) }}</flux:text>
-                                </div>
+                                @if ($pexelsPreview['duration'])
+                                    <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                    <div class="flex items-center justify-between">
+                                        <flux:text class="text-xs">{{ __('Duration') }}</flux:text>
+                                        <flux:text class="text-xs">{{ gmdate('H:i:s', (int) $pexelsPreview['duration']) }}</flux:text>
+                                    </div>
                                 @endif
-                                <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
-                                <div class="flex items-center justify-between">
-                                    <flux:text class="text-xs">{{ __('Uploaded at') }}</flux:text>
-                                    <flux:text class="text-xs">{{ $firstMedia->created_at?->format('j M Y, h:i A') }}</flux:text>
-                                </div>
-                                @if(($firstMedia->metadata['source'] ?? null) === 'pexels')
                                 <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
                                 <div class="flex items-center justify-between gap-2">
-                                    <flux:text class="text-xs shrink-0">{{ __('Credit') }}</flux:text>
-                                    <a href="{{ $firstMedia->metadata['photographer_url'] ?? 'https://www.pexels.com' }}" target="_blank" rel="noopener noreferrer" class="text-xs truncate underline hover:no-underline text-zinc-500 dark:text-zinc-400">
-                                        {{ __('Photo by :name on Pexels', ['name' => $firstMedia->metadata['photographer'] ?? '']) }}
+                                    <flux:text class="shrink-0 text-xs">{{ __('Credit') }}</flux:text>
+                                    <a
+                                        href="{{ $pexelsPreview['photographer_url'] }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="truncate text-xs text-zinc-500 underline hover:no-underline dark:text-zinc-400"
+                                    >
+                                        {{
+                                            $pexelsPreview['type'] === MediaType::VIDEO->value
+                                            ? __('Video by :name on Pexels', ['name' => $pexelsPreview['photographer']])
+                                            : __('Photo by :name on Pexels', ['name' => $pexelsPreview['photographer']])
+                                        }}
                                     </a>
                                 </div>
-                                @endif
+                                <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                <div class="flex items-center justify-between gap-2">
+                                    <flux:text class="shrink-0 text-xs">{{ __('Source') }}</flux:text>
+                                    <a
+                                        href="{{ $pexelsPreview['pexels_url'] }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="truncate text-xs text-zinc-500 underline hover:no-underline dark:text-zinc-400"
+                                    >{{ __('View on Pexels') }}</a>
+                                </div>
                             </div>
-                        @else
-                            <div>
-                                <flux:heading size="lg" class="truncate">{{ $selected->count() }} {{ __('Items selected') }}</flux:heading>
-                                <flux:text>{{ Number::fileSize($selected->sum('size')) }}</flux:text>
-                            </div>
+                        </div>
+                    @else
+                        <div class="flex grow items-center justify-center text-center">
+                            <flux:text
+                                size="sm"
+                                class="text-zinc-500 dark:text-zinc-400"
+                            >{{ __('Select a Pexels result to preview it.') }}</flux:text>
+                        </div>
+                    @endif
 
-                            <flux:button.group>
-                                <flux:button icon="x-mark" square tooltip="{{ __('Clear') }}" wire:click="clearSelection"></flux:button>
-                                <flux:button icon="arrow-down-tray" square tooltip="{{ __('Download') }}" wire:click="download"></flux:button>
-                                <flux:button icon="trash" square tooltip="{{ __('Delete') }}" wire:click="confirmDelete"></flux:button>
-                            </flux:button.group>
+                    <div class="mt-6 flex items-center justify-between gap-4">
+                        <flux:button wire:click="togglePexels" class="w-full">{{ __('Back') }}</flux:button>
+                        @if ($pexelsPreview)
+                            <flux:button
+                                variant="primary"
+                                wire:click="importFromPexels({{ $pexelsPreview['id'] }})"
+                                class="w-full"
+                            >{{ __('Import') }}</flux:button>
                         @endif
                     </div>
                 @else
-                    <div class="grow" wire:loading.remove wire:target="selectMedia">
-                        <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ $max > 1 ? __('No files selected.') : __('No file selected.') }}</flux:text>
-                    </div>
-                @endif
-
-                <div class="flex justify-between items-center gap-4 mt-6">
-                    <flux:button wire:click="$set('showLibrary', false)" class="w-full">
-                        {{ $target === 'media-gallery' ? __('Close') : __('Cancel') }}
-                    </flux:button>
-                    @if($target !== 'media-gallery' && $selected->count() > 0)
-                    <flux:button variant="primary" wire:click="insertMedia" class="w-full">
-                        {{ __('Insert') }}
-                    </flux:button>
+                    @if ($selected->count() === 0)
+                        <div wire:loading wire:target="selectMedia" class="grow">
+                            <div class="mb-8 aspect-video w-full">
+                                <flux:skeleton animate="shimmer" class="size-full rounded-sm" />
+                            </div>
+                            <flux:skeleton.group animate="shimmer" class="space-y-6">
+                                <div>
+                                    <flux:skeleton class="mb-1 h-6 w-9/12" />
+                                    <flux:skeleton.line class="w-1/6" />
+                                </div>
+                                <flux:skeleton class="h-10 w-2/5 rounded-lg" />
+                                <div>
+                                    <flux:heading>{{ __('Information') }}</flux:heading>
+                                    <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                    <div class="flex items-center justify-between">
+                                        <flux:text class="text-xs">{{ __('Type') }}</flux:text>
+                                        <flux:skeleton.line class="w-1/4" />
+                                    </div>
+                                    <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                    <div class="flex items-center justify-between">
+                                        <flux:text class="text-xs">{{ __('Uploaded at') }}</flux:text>
+                                        <flux:skeleton.line class="w-1/4" />
+                                    </div>
+                                </div>
+                            </flux:skeleton.group>
+                        </div>
                     @endif
-                </div>
 
-                @error('files')
-                    <div x-data x-init="$flux.toast({ variant: 'danger', heading: '{{ __('Upload Failed') }}', text: '{{ __('Try a smaller file or different format.') }}', duration: 10000 })"></div>
-                @enderror
+                    @if ($selected->count() > 0)
+                        @foreach ($selected as $media)
+                            <div
+                                wire:key="selected-media-{{ $media->id }}"
+                                class="flex items-center gap-4 w-full bg-zinc-100 dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-800 rounded-sm overflow-hidden {{ $loop->index > 0 ? 'absolute shadow-lg scale-93 origin-center left-1/2 -translate-x-1/2' : 'relative' }}"
+                                {!! $loop->index > 0 ? $this->stackStyle($media->id, $loop->index) : '' !!}
+                            >
+                                @if ($loop->first && $media->type === MediaType::VIDEO)
+                                    <video
+                                        src="{{ Storage::disk(config('filesystems.media'))->url($media->source) }}"
+                                        poster="{{ $media->preview }}"
+                                        class="aspect-video w-full bg-black object-contain"
+                                        controls
+                                        autoplay
+                                        muted
+                                        loop
+                                        playsinline
+                                    ></video>
+                                @elseif ($loop->first && $media->type === MediaType::AUDIO)
+                                    <div class="relative aspect-video w-full" x-data="{ playing: false }">
+                                        <img
+                                            src="{{ $media->preview }}"
+                                            alt="{{ $media->alt_text }}"
+                                            class="aspect-video w-full object-contain"
+                                        />
+                                        <audio
+                                            x-ref="audio"
+                                            src="{{ Storage::disk(config('filesystems.media'))->url($media->source) }}"
+                                            preload="none"
+                                            x-on:ended="playing = false"
+                                        ></audio>
+                                        <button
+                                            type="button"
+                                            class="absolute inset-0 flex items-center justify-center"
+                                            aria-label="{{ __('Play preview') }}"
+                                            x-on:click="
+                                                playing ? $refs.audio.pause() : $refs.audio.play();
+                                                playing = ! playing;
+                                            "
+                                        >
+                                            <span class="flex size-14 items-center justify-center rounded-full bg-black/55 text-white transition hover:bg-black/70">
+                                                <flux:icon name="play" x-show="! playing" class="size-7" />
+                                                <flux:icon name="pause" x-show="playing" x-cloak class="size-7" />
+                                            </span>
+                                        </button>
+                                        @if ($media->filename)
+                                            <div class="pointer-events-none absolute bottom-2 left-1/2 w-full -translate-x-1/2 px-2 text-center">
+                                                <flux:text
+                                                    class="text-xs break-all"
+                                                    variant="subtle"
+                                                >{{ $media->filename }}</flux:text>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <img
+                                        src="{{ $media->preview }}"
+                                        alt="{{ $media->alt_text }}"
+                                        class="aspect-video w-full object-contain"
+                                    />
+                                    @if ($media->type->icon() !== 'photo' && ! $media->thumbnail)
+                                        <div class="pointer-events-none absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 px-2 text-center">
+                                            <flux:text
+                                                class="text-sm break-all"
+                                                variant="subtle"
+                                            >{{ $media->filename }}</flux:text>
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        @endforeach
+
+                        <div class="mt-4 grow space-y-6">
+                            @if ($selected->count() === 1 && $firstMedia = $selected->first())
+                                <div>
+                                    <flux:heading
+                                        size="lg"
+                                        class="truncate"
+                                        title="{{ $firstMedia->filename }}"
+                                    >{{ $firstMedia->alt_text }}</flux:heading>
+                                    <flux:text>{{ Number::fileSize($firstMedia->size) }}</flux:text>
+                                </div>
+
+                                <flux:button.group>
+                                    <flux:button
+                                        icon="pencil"
+                                        square
+                                        tooltip="{{ __('Edit') }}"
+                                        wire:click="edit"
+                                    ></flux:button>
+                                    <flux:button
+                                        icon="arrow-down-tray"
+                                        square
+                                        tooltip="{{ __('Download') }}"
+                                        wire:click="download"
+                                    ></flux:button>
+                                    <flux:button
+                                        icon="trash"
+                                        square
+                                        tooltip="{{ __('Delete') }}"
+                                        wire:click="confirmDelete"
+                                    ></flux:button>
+                                </flux:button.group>
+
+                                <div>
+                                    <flux:heading>{{ __('Information') }}</flux:heading>
+                                    <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                    <div class="flex items-center justify-between">
+                                        <flux:text class="text-xs">{{ __('Type') }}</flux:text>
+                                        <flux:text class="text-xs">{{ $firstMedia->type->label() }}</flux:text>
+                                    </div>
+                                    @if ($firstMedia->dimensions)
+                                        <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                        <div class="flex items-center justify-between">
+                                            <flux:text class="text-xs">{{ __('Dimensions') }}</flux:text>
+                                            <flux:text class="text-xs">{{ $firstMedia->dimensions }}</flux:text>
+                                        </div>
+                                    @endif
+                                    @if ($firstMedia->duration)
+                                        <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                        <div class="flex items-center justify-between">
+                                            <flux:text class="text-xs">{{ __('Duration') }}</flux:text>
+                                            <flux:text class="text-xs">{{ gmdate('H:i:s', $firstMedia->duration) }}</flux:text>
+                                        </div>
+                                    @endif
+                                    <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                    <div class="flex items-center justify-between">
+                                        <flux:text class="text-xs">{{ __('Uploaded at') }}</flux:text>
+                                        <flux:text class="text-xs">{{ $firstMedia->created_at?->format('j M Y, h:i A') }}</flux:text>
+                                    </div>
+                                    @if (($firstMedia->metadata['source'] ?? null) === 'pexels')
+                                        <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                        <div class="flex items-center justify-between gap-2">
+                                            <flux:text class="shrink-0 text-xs">{{ __('Credit') }}</flux:text>
+                                            <a
+                                                href="{{ $firstMedia->metadata['photographer_url'] ?? 'https://www.pexels.com' }}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="truncate text-xs text-zinc-500 underline hover:no-underline dark:text-zinc-400"
+                                            >
+                                                {{ __('Photo by :name on Pexels', ['name' => $firstMedia->metadata['photographer'] ?? '']) }}
+                                            </a>
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <div>
+                                    <flux:heading size="lg" class="truncate"
+                                        >{{ $selected->count() }} {{ __('Items selected') }}</flux:heading>
+                                    <flux:text>{{ Number::fileSize($selected->sum('size')) }}</flux:text>
+                                </div>
+
+                                <flux:button.group>
+                                    <flux:button
+                                        icon="x-mark"
+                                        square
+                                        tooltip="{{ __('Clear') }}"
+                                        wire:click="clearSelection"
+                                    ></flux:button>
+                                    <flux:button
+                                        icon="arrow-down-tray"
+                                        square
+                                        tooltip="{{ __('Download') }}"
+                                        wire:click="download"
+                                    ></flux:button>
+                                    <flux:button
+                                        icon="trash"
+                                        square
+                                        tooltip="{{ __('Delete') }}"
+                                        wire:click="confirmDelete"
+                                    ></flux:button>
+                                </flux:button.group>
+                            @endif
+                        </div>
+                    @else
+                        <div class="grow" wire:loading.remove wire:target="selectMedia">
+                            <flux:text
+                                size="sm"
+                                class="text-zinc-500 dark:text-zinc-400"
+                            >{{ $max > 1 ? __('No files selected.') : __('No file selected.') }}</flux:text>
+                        </div>
+                    @endif
+
+                    <div class="mt-6 flex items-center justify-between gap-4">
+                        <flux:button wire:click="$set('showLibrary', false)" class="w-full">
+                            {{ $target === 'media-gallery' ? __('Close') : __('Cancel') }}
+                        </flux:button>
+                        @if ($target !== 'media-gallery' && $selected->count() > 0)
+                            <flux:button variant="primary" wire:click="insertMedia" class="w-full">
+                                {{ __('Insert') }}
+                            </flux:button>
+                        @endif
+                    </div>
+
+                    @error('files')
+                        <div
+                            x-data
+                            x-init="$flux.toast({ variant: 'danger', heading: '{{ __('Upload Failed') }}', text: '{{ __('Try a smaller file or different format.') }}', duration: 10000 })"
+                        ></div>
+                    @enderror
                 @endif
             </div>
         </div>
@@ -1159,56 +1339,64 @@ return new class extends Component
         @php($blocked = collect($usages)->filter(fn (array $usage): bool => $usage['labels'] !== []))
         @php($deletableCount = count($usages) - $blocked->count())
         <div class="space-y-6">
-            @if($blocked->isNotEmpty())
+            @if ($blocked->isNotEmpty())
                 <div>
                     <flux:heading size="lg">{{ $blocked->count() > 1 ? __('Files in use') : __('File in use') }}</flux:heading>
                     <flux:text class="mt-2">
-                        {{ $blocked->count() > 1
+                        {{
+                            $blocked->count() > 1
                             ? __(':count of the selected files are in use and can\'t be deleted.', ['count' => $blocked->count()])
-                            : __('This file is in use and can\'t be deleted.') }}
+                            : __('This file is in use and can\'t be deleted.')
+                        }}
                     </flux:text>
                 </div>
 
-                <div class="space-y-4 max-h-64 overflow-y-auto">
-                    @foreach($blocked as $usage)
-                    <div wire:key="usage-{{ $usage['id'] }}">
-                        @if($blocked->count() > 1)
-                        <flux:text class="font-medium break-all">{{ $usage['filename'] }}</flux:text>
-                        @endif
-                        <flux:text variant="subtle" class="text-sm">{{ __('Used in:') }}</flux:text>
-                        <ul class="mt-1 ml-1 space-y-1">
-                            @foreach($usage['labels'] as $label)
-                            <li class="flex items-start gap-2">
-                                <flux:icon name="link" class="size-3.5 mt-0.5 shrink-0 text-zinc-400" />
-                                <flux:text class="text-sm">{{ $label }}</flux:text>
-                            </li>
-                            @endforeach
-                        </ul>
-                    </div>
+                <div class="max-h-64 space-y-4 overflow-y-auto">
+                    @foreach ($blocked as $usage)
+                        <div wire:key="usage-{{ $usage['id'] }}">
+                            @if ($blocked->count() > 1)
+                                <flux:text class="font-medium break-all">{{ $usage['filename'] }}</flux:text>
+                            @endif
+                            <flux:text variant="subtle" class="text-sm">{{ __('Used in:') }}</flux:text>
+                            <ul class="mt-1 ml-1 space-y-1">
+                                @foreach ($usage['labels'] as $label)
+                                    <li class="flex items-start gap-2">
+                                        <flux:icon name="link" class="mt-0.5 size-3.5 shrink-0 text-zinc-400" />
+                                        <flux:text class="text-sm">{{ $label }}</flux:text>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endforeach
                 </div>
 
-                <flux:text variant="subtle" class="text-sm">{{ __('Remove it from those places first, then you can delete it.') }}</flux:text>
+                <flux:text
+                    variant="subtle"
+                    class="text-sm"
+                >{{ __('Remove it from those places first, then you can delete it.') }}</flux:text>
 
                 <div class="flex gap-2">
                     <flux:spacer />
                     <flux:modal.close>
                         <flux:button variant="ghost">{{ __('Close') }}</flux:button>
                     </flux:modal.close>
-                    @if($deletableCount > 0)
-                    <flux:button variant="danger" wire:click="deleteCurrentItem">{{ __('Delete the other :count', ['count' => $deletableCount]) }}</flux:button>
+                    @if ($deletableCount > 0)
+                        <flux:button
+                            variant="danger"
+                            wire:click="deleteCurrentItem"
+                        >{{ __('Delete the other :count', ['count' => $deletableCount]) }}</flux:button>
                     @endif
                 </div>
             @else
                 <div>
                     <flux:heading size="lg">{{ $selected->count() > 1 ? __('Delete files?') : __('Delete file?') }}</flux:heading>
                     <flux:text class="mt-2">
-                        @if($selected->count() > 1)
-                        {{ __('You\'re about to delete :count files.', ['count' => $selected->count()]) }}
+                        @if ($selected->count() > 1)
+                            {{ __('You\'re about to delete :count files.', ['count' => $selected->count()]) }}
                         @else
-                        {{ __('You\'re about to delete the file :filename', ['filename' => $selected->first()?->filename]) }}
+                            {{ __('You\'re about to delete the file :filename', ['filename' => $selected->first()?->filename]) }}
                         @endif
-                        <br>{{ __('Are you sure? This action cannot be reversed.') }}
+                        <br />{{ __('Are you sure? This action cannot be reversed.') }}
                     </flux:text>
                 </div>
                 <div class="flex gap-2">
@@ -1247,8 +1435,8 @@ return new class extends Component
             media.push(files[i]);
             metadata.push(await analyzeFile(files[i]));
         }
-        
-        if(media.length === 0) {
+
+        if (media.length === 0) {
             return;
         }
 
@@ -1258,20 +1446,26 @@ return new class extends Component
         let totalProgress = 0;
         let fileCount = media.length;
 
-        this.uploadMultiple('files', media, (uploadedFilename) => {
-            dropzone?.removeAttribute('data-loading');
-            this.call('save', metadata);
-        }, (error) => {
-            dropzone?.removeAttribute('data-loading');
-            console.log('Upload error', error);
-        }, (event) => {
-            const currentFileProgress = event.detail.progress || 0;
-            totalProgress = (totalProgress + currentFileProgress) / fileCount;
-            
-            const displayProgress = Math.floor(Math.min(totalProgress, 99));
-            updateProgress(displayProgress);
-            console.log('Cumulative Progress:', displayProgress);
-        });
+        this.uploadMultiple(
+            'files',
+            media,
+            (uploadedFilename) => {
+                dropzone?.removeAttribute('data-loading');
+                this.call('save', metadata);
+            },
+            (error) => {
+                dropzone?.removeAttribute('data-loading');
+                console.log('Upload error', error);
+            },
+            (event) => {
+                const currentFileProgress = event.detail.progress || 0;
+                totalProgress = (totalProgress + currentFileProgress) / fileCount;
+
+                const displayProgress = Math.floor(Math.min(totalProgress, 99));
+                updateProgress(displayProgress);
+                console.log('Cumulative Progress:', displayProgress);
+            },
+        );
     };
 
     const updateProgress = (progress) => {

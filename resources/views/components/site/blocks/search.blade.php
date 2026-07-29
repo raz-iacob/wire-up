@@ -11,4 +11,5 @@
     :content="$content"
     :heading="$block->text('heading')"
     :placeholder="$block->text('placeholder')"
-    wire:key="search-{{ $blockKey }}" />
+    wire:key="search-{{ $blockKey }}"
+/>

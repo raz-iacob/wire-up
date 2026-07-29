@@ -25,7 +25,9 @@
     @endif
 
     @if (strip_tags($item['body']) !== '')
-        <div class="grow leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $item['body'] !!}</div>
+        <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 grow leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+            {!! $item['body'] !!}
+        </div>
     @endif
 
     @if ($item['cta']['enabled'] && $item['cta']['text'] !== '' && $item['cta']['url'] !== null)

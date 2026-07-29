@@ -119,6 +119,13 @@ return new class extends Component
         $this->photo = null;
     }
 
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Edit').' '.$this->user->name)
+            ->layout('layouts::admin');
+    }
+
     private function isLastSuperAdmin(): bool
     {
         return User::query()
@@ -126,34 +133,31 @@ return new class extends Component
             ->whereHas('role', fn (Builder $query): Builder => $query->where('bypass', true))
             ->doesntExist();
     }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title(__('Edit').' '.$this->user->name)
-            ->layout('layouts::admin');
-    }
 };
 ?>
 
-<form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-stretch">
+<form
+    wire:submit="update"
+    wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+    class="grid items-stretch gap-10 md:grid-cols-5"
+>
     <div class="md:col-span-3">
-        <div class="max-w-5xl space-y-6 mb-10">
+        <div class="mb-10 max-w-5xl space-y-6">
             <flux:fieldset class="pb-6">
                 <flux:legend>{{ __('Account') }}</flux:legend>
                 <flux:description>{{ __('Update the user\'s name and email associated with this account.') }}</flux:description>
 
-                <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div class="mt-6 grid gap-6 md:grid-cols-2">
                     @if ($photo)
-                    <div class="flex items-center gap-3 md:col-span-2">
-                        <flux:avatar size="xl" :src="$photo" :name="$user->name" />
-                        <div class="flex flex-col gap-3">
-                            <flux:label>{{ __('Profile photo') }}</flux:label>
-                            <flux:button type="button" size="sm" variant="filled" wire:click="removePhoto">
-                                {{ __('Delete') }}
-                            </flux:button>
+                        <div class="flex items-center gap-3 md:col-span-2">
+                            <flux:avatar size="xl" :src="$photo" :name="$user->name" />
+                            <div class="flex flex-col gap-3">
+                                <flux:label>{{ __('Profile photo') }}</flux:label>
+                                <flux:button type="button" size="sm" variant="filled" wire:click="removePhoto">
+                                    {{ __('Delete') }}
+                                </flux:button>
+                            </div>
                         </div>
-                    </div>
                     @endif
                     <div>
                         <flux:input wire:model="name" label="{{ __('Full name') }}" />
@@ -170,18 +174,23 @@ return new class extends Component
                 <flux:legend>{{ __('Change password') }}</flux:legend>
                 <flux:description>{{ __('Ensure the account is using a long, random password to stay secure.') }}</flux:description>
 
-                <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div class="mt-6 grid gap-6 md:grid-cols-2">
                     <div>
                         <flux:input type="password" wire:model="password" viewable :label="__('Password')" />
                     </div>
                     <div>
-                        <flux:input type="password" wire:model="password_confirmation" viewable :label="__('Confirm Password')" />
+                        <flux:input
+                            type="password"
+                            wire:model="password_confirmation"
+                            viewable
+                            :label="__('Confirm Password')"
+                        />
                     </div>
                 </div>
             </flux:fieldset>
         </div>
     </div>
-    <div class="mb-10 md:mb-0 md:col-span-2">
+    <div class="mb-10 md:col-span-2 md:mb-0">
         <flux:card class="flex flex-col gap-6 md:sticky md:top-24">
             <flux:accordion>
                 <flux:accordion.item>
@@ -195,7 +204,11 @@ return new class extends Component
                     </flux:accordion.heading>
 
                     <flux:accordion.content class="mt-3">
-                        <flux:switch wire:model.live="active" label="{{ __('Allow this user to sign in') }}" align="left" />
+                        <flux:switch
+                            wire:model.live="active"
+                            label="{{ __('Allow this user to sign in') }}"
+                            align="left"
+                        />
                     </flux:accordion.content>
                 </flux:accordion.item>
 
@@ -215,7 +228,8 @@ return new class extends Component
                             :description="$user->id === auth()->id() ? __('You cannot change your own role.') : null"
                         >
                             @foreach ($this->roles as $roleOption)
-                                <flux:select.option :value="$roleOption->id">{{ $roleOption->name }}</flux:select.option>
+                                <flux:select.option :value="$roleOption->id">
+                                    {{ $roleOption->name }}</flux:select.option>
                             @endforeach
                         </flux:select>
                     </flux:accordion.content>
@@ -223,9 +237,7 @@ return new class extends Component
             </flux:accordion>
 
             <div class="grid grid-cols-2 gap-4">
-                <flux:button type="submit" variant="primary" icon="check">
-                    {{ __('Update') }}
-                </flux:button>
+                <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
                 <flux:button wire:navigate href="{{ route('admin.users-index') }}" icon="arrow-left">
                     {{ __('Back') }}
                 </flux:button>
@@ -243,15 +255,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.users-index') }}" wire:navigate>
             {{ __('Users') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ $user->name }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ $user->name }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ Str::limit($user->name, 22) }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.users-index') }}" wire:navigate>{{ __('Users') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.users-index') }}" wire:navigate>
+                {{ __('Users') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

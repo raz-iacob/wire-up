@@ -110,11 +110,21 @@
         'justify-end' => $valign === 'bottom',
     ])>
         @if ($heading)
-            <div class="max-w-3xl font-bold tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-[length:calc(var(--wire-heading-size)*1.2)] md:text-[length:calc(var(--wire-heading-size)*1.5)]" @if ($headingColor) style="color:{{ $headingColor }}" @endif>{!! $heading !!}</div>
+            <div
+                class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline max-w-3xl text-[length:calc(var(--wire-heading-size)*1.2)] font-bold tracking-tight md:text-[length:calc(var(--wire-heading-size)*1.5)]"
+                @if ($headingColor) style="color:{{ $headingColor }}" @endif
+            >
+                {!! $heading !!}
+            </div>
         @endif
 
         @if ($subheading)
-            <div class="max-w-2xl opacity-90 [&_a]:text-(--wire-accent) [&_a]:underline text-[length:calc(var(--wire-body-size)*1.1)] md:text-[length:calc(var(--wire-body-size)*1.25)]" @if ($subheadingColor) style="color:{{ $subheadingColor }}" @endif>{!! $subheading !!}</div>
+            <div
+                class="[&_a]:text-(--wire-accent) [&_a]:underline max-w-2xl text-[length:calc(var(--wire-body-size)*1.1)] opacity-90 md:text-[length:calc(var(--wire-body-size)*1.25)]"
+                @if ($subheadingColor) style="color:{{ $subheadingColor }}" @endif
+            >
+                {!! $subheading !!}
+            </div>
         @endif
 
         @if ($ctas->isNotEmpty())

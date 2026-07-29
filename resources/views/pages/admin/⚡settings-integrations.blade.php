@@ -254,7 +254,11 @@ return new class extends Component
                         </svg>
                     </div>
                     <flux:modal.trigger name="integration-pexels">
-                        <flux:button size="sm" :variant="$pexelsConnected ? 'primary' : 'outline'" :icon="$pexelsConnected ? 'check' : null">
+                        <flux:button
+                            size="sm"
+                            :variant="$pexelsConnected ? 'primary' : 'outline'"
+                            :icon="$pexelsConnected ? 'check' : null"
+                        >
                             {{ $pexelsConnected ? __('Connected') : __('Connect') }}
                         </flux:button>
                     </flux:modal.trigger>
@@ -277,7 +281,11 @@ return new class extends Component
                         </svg>
                     </div>
                     <flux:modal.trigger name="integration-google-analytics">
-                        <flux:button size="sm" :variant="$gaConnected ? 'primary' : 'outline'" :icon="$gaConnected ? 'check' : null">
+                        <flux:button
+                            size="sm"
+                            :variant="$gaConnected ? 'primary' : 'outline'"
+                            :icon="$gaConnected ? 'check' : null"
+                        >
                             {{ $gaConnected ? __('Connected') : __('Connect') }}
                         </flux:button>
                     </flux:modal.trigger>
@@ -299,7 +307,11 @@ return new class extends Component
                         </svg>
                     </div>
                     <flux:modal.trigger name="integration-google-maps">
-                        <flux:button size="sm" :variant="$mapsConnected ? 'primary' : 'outline'" :icon="$mapsConnected ? 'check' : null">
+                        <flux:button
+                            size="sm"
+                            :variant="$mapsConnected ? 'primary' : 'outline'"
+                            :icon="$mapsConnected ? 'check' : null"
+                        >
                             {{ $mapsConnected ? __('Connected') : __('Connect') }}
                         </flux:button>
                     </flux:modal.trigger>
@@ -323,7 +335,11 @@ return new class extends Component
                         </svg>
                     </div>
                     <flux:modal.trigger name="integration-slack">
-                        <flux:button size="sm" :variant="$slackConnected ? 'primary' : 'outline'" :icon="$slackConnected ? 'check' : null">
+                        <flux:button
+                            size="sm"
+                            :variant="$slackConnected ? 'primary' : 'outline'"
+                            :icon="$slackConnected ? 'check' : null"
+                        >
                             {{ $slackConnected ? __('Connected') : __('Connect') }}
                         </flux:button>
                     </flux:modal.trigger>
@@ -339,10 +355,14 @@ return new class extends Component
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
-                        <flux:icon name="sparkles" class="size-6 text-accent" />
+                        <flux:icon name="sparkles" class="text-accent size-6" />
                     </div>
                     <flux:modal.trigger name="integration-assistant">
-                        <flux:button size="sm" :variant="$assistantConnected ? 'primary' : 'outline'" :icon="$assistantConnected ? 'check' : null">
+                        <flux:button
+                            size="sm"
+                            :variant="$assistantConnected ? 'primary' : 'outline'"
+                            :icon="$assistantConnected ? 'check' : null"
+                        >
                             {{ $assistantConnected ? __('Connected') : __('Connect') }}
                         </flux:button>
                     </flux:modal.trigger>
@@ -358,10 +378,14 @@ return new class extends Component
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
-                        <flux:icon name="envelope" class="size-6 text-accent" />
+                        <flux:icon name="envelope" class="text-accent size-6" />
                     </div>
                     <flux:modal.trigger name="integration-mail">
-                        <flux:button size="sm" :variant="$mailConnected ? 'primary' : 'outline'" :icon="$mailConnected ? 'check' : null">
+                        <flux:button
+                            size="sm"
+                            :variant="$mailConnected ? 'primary' : 'outline'"
+                            :icon="$mailConnected ? 'check' : null"
+                        >
                             {{ $mailConnected ? __('Connected') : __('Connect') }}
                         </flux:button>
                     </flux:modal.trigger>
@@ -388,7 +412,11 @@ return new class extends Component
                 </flux:select>
 
                 <div x-show="$wire.mailForm.mail_provider === 'custom'" x-cloak class="space-y-6">
-                    <flux:input wire:model="mailForm.mail_host" :label="__('SMTP host')" placeholder="smtp.example.com" />
+                    <flux:input
+                        wire:model="mailForm.mail_host"
+                        :label="__('SMTP host')"
+                        placeholder="smtp.example.com"
+                    />
                     <div class="grid grid-cols-2 gap-4">
                         <flux:input type="number" wire:model="mailForm.mail_port" :label="__('Port')" />
                         <flux:select wire:model="mailForm.mail_encryption" :label="__('Encryption')">
@@ -398,17 +426,39 @@ return new class extends Component
                     </div>
                 </div>
 
-                <flux:input wire:model="mailForm.mail_username" :label="__('Username')" :placeholder="__('Usually your email address or API user')" />
-                <flux:input wire:model="mailForm.mail_password" type="password" viewable :label="__('Password or API key')" :placeholder="__('Paste your SMTP password or API key…')" />
+                <flux:input
+                    wire:model="mailForm.mail_username"
+                    :label="__('Username')"
+                    :placeholder="__('Usually your email address or API user')"
+                />
+                <flux:input
+                    wire:model="mailForm.mail_password"
+                    type="password"
+                    viewable
+                    :label="__('Password or API key')"
+                    :placeholder="__('Paste your SMTP password or API key…')"
+                />
 
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <flux:input wire:model="mailForm.mail_from_address" type="email" :label="__('From address')" placeholder="hello@yoursite.com" />
-                    <flux:input wire:model="mailForm.mail_from_name" :label="__('From name')" :placeholder="__('Your Site')" />
+                    <flux:input
+                        wire:model="mailForm.mail_from_address"
+                        type="email"
+                        :label="__('From address')"
+                        placeholder="hello@yoursite.com"
+                    />
+                    <flux:input
+                        wire:model="mailForm.mail_from_name"
+                        :label="__('From name')"
+                        :placeholder="__('Your Site')"
+                    />
                 </div>
 
                 <div class="flex items-center justify-between gap-4">
                     @if ($this->mailForm->mail_password !== '')
-                        <flux:button variant="subtle" wire:click="disconnect('mail')">{{ __('Disconnect') }}</flux:button>
+                        <flux:button
+                            variant="subtle"
+                            wire:click="disconnect('mail')"
+                        >{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
                     @endif
@@ -434,7 +484,10 @@ return new class extends Component
 
                 <div class="flex items-center justify-between gap-4">
                     @if ($this->pexelsForm->pexels_api_key !== '')
-                        <flux:button variant="subtle" wire:click="disconnect('pexels')">{{ __('Disconnect') }}</flux:button>
+                        <flux:button
+                            variant="subtle"
+                            wire:click="disconnect('pexels')"
+                        >{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
                     @endif
@@ -484,7 +537,10 @@ return new class extends Component
 
                 <div class="flex items-center justify-between gap-4">
                     @if ($this->googleAnalyticsForm->google_analytics_id !== '')
-                        <flux:button variant="subtle" wire:click="disconnect('google-analytics')">{{ __('Disconnect') }}</flux:button>
+                        <flux:button
+                            variant="subtle"
+                            wire:click="disconnect('google-analytics')"
+                        >{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
                     @endif
@@ -510,7 +566,10 @@ return new class extends Component
 
                 <div class="flex items-center justify-between gap-4">
                     @if ($this->googleMapsForm->google_maps_api_key !== '')
-                        <flux:button variant="subtle" wire:click="disconnect('google-maps')">{{ __('Disconnect') }}</flux:button>
+                        <flux:button
+                            variant="subtle"
+                            wire:click="disconnect('google-maps')"
+                        >{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
                     @endif
@@ -535,7 +594,10 @@ return new class extends Component
 
                 <div class="flex items-center justify-between gap-4">
                     @if ($this->slackForm->slack_webhook_url !== '')
-                        <flux:button variant="subtle" wire:click="disconnect('slack')">{{ __('Disconnect') }}</flux:button>
+                        <flux:button
+                            variant="subtle"
+                            wire:click="disconnect('slack')"
+                        >{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
                     @endif
@@ -584,7 +646,10 @@ return new class extends Component
 
                 <div class="flex items-center justify-between gap-4">
                     @if ($this->assistantForm->ai_api_key !== '')
-                        <flux:button variant="subtle" wire:click="disconnect('assistant')">{{ __('Disconnect') }}</flux:button>
+                        <flux:button
+                            variant="subtle"
+                            wire:click="disconnect('assistant')"
+                        >{{ __('Disconnect') }}</flux:button>
                     @else
                         <span></span>
                     @endif
@@ -595,16 +660,27 @@ return new class extends Component
 
         <flux:separator variant="subtle" />
 
-        <form wire:submit="updateCustomCode" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" data-warn-dirty-ignore="pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key,slack_webhook_url" class="max-w-3xl space-y-6">
+        <form
+            wire:submit="updateCustomCode"
+            wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+            data-warn-dirty-ignore="pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key,slack_webhook_url"
+            class="max-w-3xl space-y-6"
+        >
             <div class="space-y-3">
                 <flux:heading size="sm">{{ __('Custom code') }}</flux:heading>
                 <flux:text>{{ __('Paste tracking pixels, analytics or other third-party snippets. Code is added as-is to every page on your public site, so only add code from sources you trust.') }}</flux:text>
                 <div class="flex flex-wrap items-center gap-3">
                     <flux:modal.trigger name="site-head-scripts">
-                        <flux:button icon="code-bracket" variant="filled">{{ $this->customCodeForm->head_scripts !== '' ? __('Edit head code') : __('Add head code') }}</flux:button>
+                        <flux:button
+                            icon="code-bracket"
+                            variant="filled"
+                        >{{ $this->customCodeForm->head_scripts !== '' ? __('Edit head code') : __('Add head code') }}</flux:button>
                     </flux:modal.trigger>
                     <flux:modal.trigger name="site-body-scripts">
-                        <flux:button icon="code-bracket" variant="filled">{{ $this->customCodeForm->body_scripts !== '' ? __('Edit body code') : __('Add body code') }}</flux:button>
+                        <flux:button
+                            icon="code-bracket"
+                            variant="filled"
+                        >{{ $this->customCodeForm->body_scripts !== '' ? __('Edit body code') : __('Add body code') }}</flux:button>
                     </flux:modal.trigger>
                 </div>
             </div>
@@ -615,7 +691,12 @@ return new class extends Component
                         <flux:heading size="lg">{{ __('Custom head code') }}</flux:heading>
                         <flux:text class="mt-2">{{ __('Added inside the <head> tag on every page. Use for Facebook Pixel, BugHerd, verification tags and similar snippets.') }}</flux:text>
                     </div>
-                    <flux:textarea wire:model="customCodeForm.head_scripts" rows="12" class="font-mono text-sm" placeholder="&lt;script&gt;…&lt;/script&gt;" />
+                    <flux:textarea
+                        wire:model="customCodeForm.head_scripts"
+                        rows="12"
+                        class="font-mono text-sm"
+                        placeholder="&lt;script&gt;…&lt;/script&gt;"
+                    />
                     <div class="flex justify-end">
                         <flux:modal.close>
                             <flux:button variant="primary">{{ __('Done') }}</flux:button>
@@ -630,7 +711,12 @@ return new class extends Component
                         <flux:heading size="lg">{{ __('Custom body code') }}</flux:heading>
                         <flux:text class="mt-2">{{ __('Added just before the closing </body> tag on every page. Use for chat widgets and scripts that should load last.') }}</flux:text>
                     </div>
-                    <flux:textarea wire:model="customCodeForm.body_scripts" rows="12" class="font-mono text-sm" placeholder="&lt;script&gt;…&lt;/script&gt;" />
+                    <flux:textarea
+                        wire:model="customCodeForm.body_scripts"
+                        rows="12"
+                        class="font-mono text-sm"
+                        placeholder="&lt;script&gt;…&lt;/script&gt;"
+                    />
                     <div class="flex justify-end">
                         <flux:modal.close>
                             <flux:button variant="primary">{{ __('Done') }}</flux:button>
@@ -640,9 +726,7 @@ return new class extends Component
             </flux:modal>
 
             <div class="flex items-center gap-4">
-                <flux:button type="submit" variant="primary" icon="check">
-                    {{ __('Update') }}
-                </flux:button>
+                <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
             </div>
         </form>
     </div>
@@ -653,15 +737,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
             {{ __('Settings') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('App Integrations') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('App Integrations') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('App Integrations') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>
+                {{ __('Settings') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

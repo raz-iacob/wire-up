@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-use Flux\Flux;
-use App\Models\Page;
-use Livewire\Component;
-use App\Enums\ContentStatus;
-use App\Traits\WithSorting;
-use Livewire\Attributes\Url;
-use Livewire\WithPagination;
 use App\Actions\CreatePageAction;
 use App\Actions\DeletePageAction;
 use App\Actions\DuplicatePageAction;
+use App\Enums\ContentStatus;
+use App\Models\Page;
 use App\Services\SettingsService;
-use Livewire\Attributes\Computed;
-use Livewire\Attributes\Validate;
-use Illuminate\Contracts\View\View;
+use App\Traits\WithSorting;
+use Flux\Flux;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\View\View;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 return new class extends Component
 {
     use WithPagination, WithSorting;
 
-    #[Url(as: 'q', except: '')] 
+    #[Url(as: 'q', except: '')]
     public string $search = '';
 
     #[Url(as: 'status', except: '')]
@@ -109,12 +109,12 @@ return new class extends Component
             })
             ->when($this->search, fn (Builder $query, string $search): Builder => $query->whereTranslationLike('title', $search));
 
-        if($this->sortBy === 'title') {
+        if ($this->sortBy === 'title') {
             $paginator->orderByTranslation('title', $this->sortDirection);
         } else {
             $paginator->orderBy($this->sortBy, $this->sortDirection);
         }
-        
+
         return $paginator->paginate($this->perPage);
     }
 
@@ -143,99 +143,144 @@ return new class extends Component
         <div class="flex items-center gap-3">
             @can('pages.create')
                 <flux:modal.trigger name="add-new">
-                    <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+                    <flux:button
+                        variant="primary"
+                        class="shrink-0"
+                        size="sm"
+                        icon="plus"
+                        iconVariant="outline"
+                    >{{ __('Add') }}</flux:button>
                 </flux:modal.trigger>
             @endcan
 
             <flux:dropdown position="bottom" align="start">
-                <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
+                <flux:button
+                    class="shrink-0"
+                    size="sm"
+                    icon="funnel"
+                    iconVariant="outline"
+                >{{ __('Filter') }}</flux:button>
 
                 <flux:menu>
                     <flux:menu.submenu heading="{{ __('Status') }}">
                         <flux:menu.radio.group wire:model.live="status" heading="{{ __('Status') }}">
                             <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
-                            @foreach(ContentStatus::cases() as $status)
-                            <flux:menu.radio value="{{ $status->value }}">{{ $status->label() }}</flux:menu.radio>
+                            @foreach (ContentStatus::cases() as $status)
+                                <flux:menu.radio value="{{ $status->value }}">{{ $status->label() }}</flux:menu.radio>
                             @endforeach
                         </flux:menu.radio.group>
                     </flux:menu.submenu>
                 </flux:menu>
             </flux:dropdown>
-                
-            <div class="w-full md:w-52 sm:shrink-0">
-                <flux:input icon="magnifying-glass" wire:model.live="search" size="sm" placeholder="{{ __('Search...') }}" clearable />
+
+            <div class="w-full sm:shrink-0 md:w-52">
+                <flux:input
+                    icon="magnifying-glass"
+                    wire:model.live="search"
+                    size="sm"
+                    placeholder="{{ __('Search...') }}"
+                    clearable
+                />
             </div>
         </div>
 
-        <flux:table class="md:table-fixed md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->pages" container:class="max-h-[calc(100dvh-12rem)]">
+        <flux:table
+            class="max-h-[calc(100dvh-12rem)] md:w-full md:table-fixed"
+            :paginate="$this->pages"
+            container:class="max-h-[calc(100dvh-12rem)]"
+        >
             <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
-                <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection" wire:click="sort('title')">{{ __('Title') }}</flux:table.column>
-                @if($this->hasMultipleActiveLocales())
-                <flux:table.column class="w-1/5">{{ __('Languages') }}</flux:table.column>
+                <flux:table.column
+                    sortable
+                    :sorted="$sortBy === 'title'"
+                    :direction="$sortDirection"
+                    wire:click="sort('title')"
+                >
+                    {{ __('Title') }}</flux:table.column>
+                @if ($this->hasMultipleActiveLocales())
+                    <flux:table.column class="w-1/5">{{ __('Languages') }}</flux:table.column>
                 @endif
                 <flux:table.column class="w-1/6">{{ __('Status') }}</flux:table.column>
-                <flux:table.column class="w-1/6" sortable :sorted="$sortBy === 'updated_at'" :direction="$sortDirection" wire:click="sort('updated_at')">{{ __('Last updated') }}</flux:table.column>
+                <flux:table.column
+                    class="w-1/6"
+                    sortable
+                    :sorted="$sortBy === 'updated_at'"
+                    :direction="$sortDirection"
+                    wire:click="sort('updated_at')"
+                >
+                    {{ __('Last updated') }}</flux:table.column>
                 <flux:table.column class="w-10"></flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
                 @foreach ($this->pages as $row)
-                <flux:table.row wire:key="{{ $row->id }}">
-                    <flux:table.cell>
-                        <div class="flex min-w-0 items-center justify-between gap-2">
-                            <a href="{{ route('admin.pages-edit', $row->id) }}" class="flex min-w-0 items-center gap-2">
-                                <flux:text variant="strong" class="truncate hover:underline">{{ $row->title }}</flux:text>
-                            </a>
-                            @if ($row->id === $this->homePageId)
-                            <flux:badge size="sm" class="md:mr-6">{{ __('Homepage') }}</flux:badge>
-                            @endif
-                        </div>
-                    </flux:table.cell>
+                    <flux:table.row wire:key="{{ $row->id }}">
+                        <flux:table.cell>
+                            <div class="flex min-w-0 items-center justify-between gap-2">
+                                <a
+                                    href="{{ route('admin.pages-edit', $row->id) }}"
+                                    class="flex min-w-0 items-center gap-2"
+                                >
+                                    <flux:text
+                                        variant="strong"
+                                        class="truncate hover:underline"
+                                    >{{ $row->title }}</flux:text>
+                                </a>
+                                @if ($row->id === $this->homePageId)
+                                    <flux:badge size="sm" class="md:mr-6">{{ __('Homepage') }}</flux:badge>
+                                @endif
+                            </div>
+                        </flux:table.cell>
 
-                    @if($this->hasMultipleActiveLocales())
-                    <flux:table.cell class="whitespace-nowrap">
-                        <x-admin.language-codes :active="$row->published_locales" />
-                    </flux:table.cell>
-                    @endif
+                        @if ($this->hasMultipleActiveLocales())
+                            <flux:table.cell class="whitespace-nowrap">
+                                <x-admin.language-codes :active="$row->published_locales" />
+                            </flux:table.cell>
+                        @endif
 
-                    <flux:table.cell>
-                        <flux:badge color="{{ $row->computed_status->color() }}" size="sm">
-                            {{ $row->computed_status->label() }}
-                        </flux:badge>
-                    </flux:table.cell>
+                        <flux:table.cell>
+                            <flux:badge color="{{ $row->computed_status->color() }}" size="sm">
+                                {{ $row->computed_status->label() }}
+                            </flux:badge>
+                        </flux:table.cell>
 
-                    <flux:table.cell>
-                        {{ $row->updated_at?->format('M d, Y H:i') }}
-                    </flux:table.cell>
+                        <flux:table.cell> {{ $row->updated_at?->format('M d, Y H:i') }} </flux:table.cell>
 
-                    <flux:table.cell>
-                        <flux:dropdown class="flex justify-end">
-                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
-                            <flux:menu>
-                                <flux:menu.item icon="eye" href="{{ url($row->slug) }}" target="_blank">
-                                    {{ __('View') }}
-                                </flux:menu.item>
-                                @can('pages.create')
-                                    <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $row->id }})">
-                                        {{ __('Duplicate') }}
+                        <flux:table.cell>
+                            <flux:dropdown class="flex justify-end">
+                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
+                                <flux:menu>
+                                    <flux:menu.item icon="eye" href="{{ url($row->slug) }}" target="_blank">
+                                        {{ __('View') }}
                                     </flux:menu.item>
-                                @endcan
-                                @can('pages.edit')
-                                    <flux:menu.item icon="pencil" href="{{ route('admin.pages-edit', $row->id) }}">
-                                        {{ __('Edit') }}
-                                    </flux:menu.item>
-                                @endcan
+                                    @can('pages.create')
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            wire:click="duplicate({{ $row->id }})"
+                                        >
+                                            {{ __('Duplicate') }}
+                                        </flux:menu.item>
+                                    @endcan
+                                    @can('pages.edit')
+                                        <flux:menu.item icon="pencil" href="{{ route('admin.pages-edit', $row->id) }}">
+                                            {{ __('Edit') }}
+                                        </flux:menu.item>
+                                    @endcan
 
-                                @can('pages.delete')
-                                    <flux:menu.separator />
-                                    <flux:menu.item icon="trash" variant="danger" wire:click="confirmDelete({{ $row->id }})">
-                                        {{ __('Delete') }}
-                                    </flux:menu.item>
-                                @endcan
-                            </flux:menu>
-                        </flux:dropdown>
-                    </flux:table.cell>
-                </flux:table.row>
+                                    @can('pages.delete')
+                                        <flux:menu.separator />
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            wire:click="confirmDelete({{ $row->id }})"
+                                        >
+                                            {{ __('Delete') }}
+                                        </flux:menu.item>
+                                    @endcan
+                                </flux:menu>
+                            </flux:dropdown>
+                        </flux:table.cell>
+                    </flux:table.row>
                 @endforeach
             </flux:table.rows>
         </flux:table>
@@ -245,7 +290,7 @@ return new class extends Component
         <flux:heading size="lg" class="mb-6">{{ __('Add a new page') }}</flux:heading>
         <form wire:submit="create" class="space-y-6">
             <flux:input wire:model="title" label="{{ __('Title') }}" badge="Required" autofocus />
-            <div class="flex mt-6">
+            <div class="mt-6 flex">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary">{{ __('Create') }}</flux:button>
             </div>
@@ -261,7 +306,11 @@ return new class extends Component
                 <flux:modal.close>
                     <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
                 </flux:modal.close>
-                <flux:button type="submit" variant="primary" icon="document-duplicate">{{ __('Duplicate') }}</flux:button>
+                <flux:button
+                    type="submit"
+                    variant="primary"
+                    icon="document-duplicate"
+                >{{ __('Duplicate') }}</flux:button>
             </div>
         </form>
     </flux:modal>
@@ -271,8 +320,10 @@ return new class extends Component
             <div>
                 <flux:heading size="lg" class="mb-6">{{ __('Confirm delete') }}</flux:heading>
                 <flux:text>
-                    {{ __('Are you sure you want to delete') }} 
-                    "<span class="text-black dark:text-white">{{ $this->pages->find($selectedId)?->title }}</span>" ?
+                    {{ __('Are you sure you want to delete') }} "<span
+                        class="text-black dark:text-white"
+                        >{{ $this->pages->find($selectedId)?->title }}</span
+                    >" ?
                 </flux:text>
                 <flux:text>{{ __('This action cannot be reversed.') }}</flux:text>
             </div>
@@ -281,7 +332,10 @@ return new class extends Component
                 <flux:modal.close>
                     <flux:button>{{ __('No, Keep it.') }}</flux:button>
                 </flux:modal.close>
-                <flux:button wire:click="delete({{ $selectedId }})" variant="danger">{{ __('Yes, Delete it!') }}</flux:button>
+                <flux:button
+                    wire:click="delete({{ $selectedId }})"
+                    variant="danger"
+                >{{ __('Yes, Delete it!') }}</flux:button>
             </div>
         </div>
     </flux:modal>

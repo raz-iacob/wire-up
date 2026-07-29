@@ -75,7 +75,10 @@
                         <img :src="items[active].poster" :alt="items[active].alt" class="size-full object-contain" />
                         <template x-if="items[active].type === 'video'">
                             <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                <span class="flex size-14 items-center justify-center rounded-full bg-black/55 text-white"><flux:icon name="play" class="size-7" /></span>
+                                <span
+                                    class="flex size-14 items-center justify-center rounded-full bg-black/55 text-white"
+                                    ><flux:icon name="play" class="size-7"
+                                /></span>
                             </span>
                         </template>
                     </button>
@@ -90,7 +93,11 @@
                                     class="wire-card relative overflow-hidden rounded-(--wire-radius) bg-(--wire-card-bg) transition"
                                     wire:key="product-thumb-{{ $i }}"
                                 >
-                                    <img src="{{ $item['thumb'] }}" alt="" class="aspect-square size-full object-contain" />
+                                    <img
+                                        src="{{ $item['thumb'] }}"
+                                        alt=""
+                                        class="aspect-square size-full object-contain"
+                                    />
                                     @if ($item['type'] === 'video')
                                         <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
                                             <flux:icon name="play-circle" class="size-6 text-white drop-shadow" />
@@ -111,33 +118,68 @@
                         class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
                         x-on:click.self="close()"
                     >
-                        <button type="button" class="absolute right-4 top-4 text-white/70 hover:text-white" x-on:click="close()" aria-label="{{ __('Close') }}"><flux:icon name="x-mark" class="size-8" /></button>
+                        <button
+                            type="button"
+                            class="absolute top-4 right-4 text-white/70 hover:text-white"
+                            x-on:click="close()"
+                            aria-label="{{ __('Close') }}"
+                        >
+                            <flux:icon name="x-mark" class="size-8" />
+                        </button>
 
                         <template x-if="items.length > 1">
-                            <button type="button" class="absolute left-2 text-white/70 hover:text-white md:left-6" x-on:click="prev()" aria-label="{{ __('Previous') }}"><flux:icon name="chevron-left" class="size-10" /></button>
+                            <button
+                                type="button"
+                                class="absolute left-2 text-white/70 hover:text-white md:left-6"
+                                x-on:click="prev()"
+                                aria-label="{{ __('Previous') }}"
+                            >
+                                <flux:icon name="chevron-left" class="size-10" />
+                            </button>
                         </template>
                         <template x-if="items.length > 1">
-                            <button type="button" class="absolute right-2 text-white/70 hover:text-white md:right-6" x-on:click="next()" aria-label="{{ __('Next') }}"><flux:icon name="chevron-right" class="size-10" /></button>
+                            <button
+                                type="button"
+                                class="absolute right-2 text-white/70 hover:text-white md:right-6"
+                                x-on:click="next()"
+                                aria-label="{{ __('Next') }}"
+                            >
+                                <flux:icon name="chevron-right" class="size-10" />
+                            </button>
                         </template>
 
                         <div class="flex max-h-[90vh] w-full max-w-5xl flex-col items-center justify-center gap-3">
                             <template x-if="current.type === 'video'">
-                                <video class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)]" controls autoplay :src="current.full" :poster="current.poster"></video>
+                                <video
+                                    class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)]"
+                                    controls
+                                    autoplay
+                                    :src="current.full"
+                                    :poster="current.poster"
+                                ></video>
                             </template>
                             <template x-if="current.type !== 'video'">
-                                <img class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)] object-contain" :src="current.full" :alt="current.alt" />
+                                <img
+                                    class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)] object-contain"
+                                    :src="current.full"
+                                    :alt="current.alt"
+                                />
                             </template>
-                            <p class="text-center text-sm text-white/80" x-show="current.caption" x-text="current.caption"></p>
+                            <p
+                                class="text-center text-sm text-white/80"
+                                x-show="current.caption"
+                                x-text="current.caption"
+                            ></p>
                         </div>
                     </div>
                 </div>
             @endif
 
             <div @class(['flex flex-col gap-5', 'mt-6 md:mt-0' => $hasGallery])>
-                <h1 class="tracking-tight text-(length:--wire-heading-size)">{{ $heading }}</h1>
+                <h1 class="text-(length:--wire-heading-size) tracking-tight">{{ $heading }}</h1>
 
                 @if (strip_tags($overview) !== '')
-                    <div class="max-w-none leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 *:first:mt-0 *:last:mb-0">
+                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 max-w-none leading-relaxed *:first:mt-0 *:last:mb-0">
                         {!! $overview !!}
                     </div>
                 @endif
@@ -145,13 +187,13 @@
                 @if (is_numeric($price))
                     <div class="mt-2 flex flex-col gap-1">
                         <div class="flex items-center gap-3">
-                            <span class="font-(family-name:--wire-heading-font) tracking-tight text-(length:--wire-heading-size)">{{ $settings->formatMoney($price) }}</span>
+                            <span class="font-(family-name:--wire-heading-font) text-(length:--wire-heading-size) tracking-tight">{{ $settings->formatMoney($price) }}</span>
                             @if ($hasDiscount)
                                 <span class="rounded-full bg-current/10 px-2.5 py-1 text-sm font-bold text-(--wire-accent)">{{ $discountPct }}%</span>
                             @endif
                         </div>
                         @if ($hasDiscount)
-                            <span class="opacity-50 line-through">{{ $settings->formatMoney($compare) }}</span>
+                            <span class="line-through opacity-50">{{ $settings->formatMoney($compare) }}</span>
                         @endif
                     </div>
                 @endif

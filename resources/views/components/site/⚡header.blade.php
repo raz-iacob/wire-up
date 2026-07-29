@@ -100,9 +100,9 @@ return new class extends Component
         'bg-(--wire-header-bg)' => ! $transparent,
     ])
 >
-    @switch($layout)
-        @case('centered')
-            <div class="relative mx-auto max-w-(--wire-container) px-(--wire-gutter) py-8 text-center space-y-6">
+    @switch ($layout)
+        @case ('centered')
+            <div class="relative mx-auto max-w-(--wire-container) space-y-6 px-(--wire-gutter) py-8 text-center">
                 <div class="absolute inset-e-6 top-4 max-md:hidden">
                     <x-site.theme-toggle />
                     <x-site.language-picker :languages="$this->languages" />
@@ -110,11 +110,15 @@ return new class extends Component
                 <div class="flex justify-center">
                     <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
                 </div>
-                <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" class="mt-3 justify-center max-md:hidden" />
+                <x-site.nav
+                    :items="$items"
+                    :size="$navSize"
+                    :hover="$navHover"
+                    class="mt-3 justify-center max-md:hidden"
+                />
             </div>
             @break
-
-        @case('split')
+        @case ('split')
             <div class="mx-auto grid max-w-(--wire-container) grid-cols-3 items-center gap-6 px-(--wire-gutter) py-4">
                 <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
                 <x-site.nav :items="$links" :size="$navSize" :hover="$navHover" class="justify-center max-md:hidden" />
@@ -125,13 +129,11 @@ return new class extends Component
                 </div>
             </div>
             @break
-
-        @case('minimal')
+        @case ('minimal')
             <div class="mx-auto flex max-w-(--wire-container) items-center justify-between px-(--wire-gutter) py-4">
                 <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
             </div>
             @break
-
         @default
             <div class="mx-auto flex max-w-(--wire-container) items-center justify-between gap-6 px-(--wire-gutter) py-4">
                 <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
@@ -176,7 +178,7 @@ return new class extends Component
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="translate-x-0"
                 x-transition:leave-end="translate-x-full"
-                class="fixed inset-y-0 right-0 z-40 flex w-72 max-w-[80vw] flex-col gap-6 bg-(--wire-header-bg) px-6 pb-6 pt-20 text-(--wire-header-text) shadow-xl"
+                class="fixed inset-y-0 right-0 z-40 flex w-72 max-w-[80vw] flex-col gap-6 bg-(--wire-header-bg) px-6 pt-20 pb-6 text-(--wire-header-text) shadow-xl"
             >
                 <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" class="flex-col items-start gap-4" />
 

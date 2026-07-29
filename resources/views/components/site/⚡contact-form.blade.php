@@ -473,17 +473,27 @@ return new class extends Component
 
 <div>
     @if ($this->heading !== '')
-        <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $this->heading !!}</div>
+        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
+            {!! $this->heading !!}
+        </div>
     @endif
 
     @if (strip_tags($this->intro) !== '')
-        <div class="mb-6 leading-relaxed [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline">{!! $this->intro !!}</div>
+        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-6 leading-relaxed">
+            {!! $this->intro !!}
+        </div>
     @endif
 
     @if ($this->sent)
-        <div class="wire-field p-4 leading-relaxed [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline rounded-(--wire-radius) bg-(--wire-input-bg) text-(--wire-input-text)">{!! $this->successMessage !!}</div>
+        <div class="wire-field [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline rounded-(--wire-radius) bg-(--wire-input-bg) p-4 leading-relaxed text-(--wire-input-text)">
+            {!! $this->successMessage !!}
+        </div>
     @else
-        <form wire:submit="submit" novalidate @class(['flex flex-col gap-5', 'mx-auto max-w-xl' => $this->layout === 'stacked'])>
+        <form
+            wire:submit="submit"
+            novalidate
+            @class(['flex flex-col gap-5', 'mx-auto max-w-xl' => $this->layout === 'stacked'])
+        >
             @if ($this->layout === 'split')
                 <div class="md:grid md:grid-cols-2 md:items-start md:gap-8">
                     <div class="flex flex-col gap-5">
@@ -510,17 +520,30 @@ return new class extends Component
             @endif
 
             <div class="hidden" aria-hidden="true">
-                <label>{{ __('Leave this field empty') }}
-                    <input type="text" wire:model="website" tabindex="-1" autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other" />
+                <label
+                    >{{ __('Leave this field empty') }}
+                    <input
+                        type="text"
+                        wire:model="website"
+                        tabindex="-1"
+                        autocomplete="off"
+                        data-1p-ignore
+                        data-lpignore="true"
+                        data-form-type="other"
+                    />
                 </label>
             </div>
 
-            @error('form')<div class="px-3 py-2 text-sm font-medium rounded-(--wire-radius) bg-red-100 text-red-700">{{ $message }}</div>@enderror
+            @error('form')
+                <div class="rounded-(--wire-radius) bg-red-100 px-3 py-2 text-sm font-medium text-red-700">
+                    {{ $message }}
+                </div>
+            @enderror
 
             <div>
                 <button
                     type="submit"
-                    class="wire-btn inline-flex items-center justify-center px-6 py-3 text-base font-medium transition hover:opacity-90 disabled:opacity-50 rounded-(--wire-radius) bg-(--wire-primary-bg) text-(--wire-primary-text) [--wire-btn-border:var(--wire-primary-border)]"
+                    class="wire-btn inline-flex items-center justify-center rounded-(--wire-radius) bg-(--wire-primary-bg) px-6 py-3 text-base font-medium text-(--wire-primary-text) transition [--wire-btn-border:var(--wire-primary-border)] hover:opacity-90 disabled:opacity-50"
                     wire:loading.attr="disabled"
                     wire:target="submit"
                 >

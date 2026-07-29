@@ -11,23 +11,61 @@
     </flux:sidebar.header>
 
     <flux:sidebar.nav>
-        <flux:sidebar.item icon="squares-2x2" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate.hover>{{ __('Dashboard') }}</flux:sidebar.item>
+        <flux:sidebar.item
+            icon="squares-2x2"
+            :href="route('admin.dashboard')"
+            :current="request()->routeIs('admin.dashboard')"
+            wire:navigate.hover
+        >
+            {{ __('Dashboard') }}</flux:sidebar.item>
         <livewire:admin.sidebar-analytics />
         @can('inbox.view')
             @php($unreadSubmissions = \App\Models\Submission::query()->unread()->count())
-            <flux:sidebar.item icon="inbox" :href="route('admin.inbox-index')" :current="request()->routeIs('admin.inbox-*')" :badge="$unreadSubmissions > 0 ? $unreadSubmissions : null" wire:navigate.hover>{{ __('Inbox') }}</flux:sidebar.item>
+            <flux:sidebar.item
+                icon="inbox"
+                :href="route('admin.inbox-index')"
+                :current="request()->routeIs('admin.inbox-*')"
+                :badge="$unreadSubmissions > 0 ? $unreadSubmissions : null"
+                wire:navigate.hover
+            >
+                {{ __('Inbox') }}</flux:sidebar.item>
         @endcan
         @can('users.view')
-            <flux:sidebar.item icon="users" :href="route('admin.users-index')" :current="request()->routeIs('admin.users-*')" wire:navigate.hover>{{ __('Users') }}</flux:sidebar.item>
+            <flux:sidebar.item
+                icon="users"
+                :href="route('admin.users-index')"
+                :current="request()->routeIs('admin.users-*')"
+                wire:navigate.hover
+            >
+                {{ __('Users') }}</flux:sidebar.item>
         @endcan
         @can('pages.view')
-            <flux:sidebar.item icon="cursor-arrow-ripple" :href="route('admin.pages-index')" :current="request()->routeIs('admin.pages-*')" wire:navigate.hover>{{ __('Pages') }}</flux:sidebar.item>
+            <flux:sidebar.item
+                icon="cursor-arrow-ripple"
+                :href="route('admin.pages-index')"
+                :current="request()->routeIs('admin.pages-*')"
+                wire:navigate.hover
+            >
+                {{ __('Pages') }}</flux:sidebar.item>
         @endcan
         <livewire:admin.sidebar-nav />
         @can('categories.view')
-            <flux:sidebar.item icon="tag" :href="route('admin.categories-index')" :current="request()->routeIs('admin.categories-*')" wire:navigate.hover>{{ __('Categories') }}</flux:sidebar.item>
+            <flux:sidebar.item
+                icon="tag"
+                :href="route('admin.categories-index')"
+                :current="request()->routeIs('admin.categories-*')"
+                wire:navigate.hover
+            >
+                {{ __('Categories') }}</flux:sidebar.item>
         @endcan
-        <flux:sidebar.item icon="photo" class="cursor-pointer" x-on:click="Livewire.dispatch('select-media', { target: 'media-gallery', type: null, max: 50, media: null })">{{ __('Media') }}</flux:sidebar.item>
+        <flux:sidebar.item
+            icon="photo"
+            class="cursor-pointer"
+            x-on:click="
+                Livewire.dispatch('select-media', { target: 'media-gallery', type: null, max: 50, media: null })
+            "
+        >
+            {{ __('Media') }}</flux:sidebar.item>
         @can('settings.view')
             <livewire:admin.sidebar-settings />
         @endcan
@@ -37,6 +75,7 @@
 
     @inject('wireupUpdates', 'App\Services\UpdateService')
     <flux:text class="text-xs" variant="subtle">
-        {{ __('Made with') }} <a href="https://wire-up.dev" target="_blank">Wire-Up</a>@if ($wireupUpdates->currentVersion() !== null) {{ $wireupUpdates->currentVersion() }}@endif
+        {{ __('Made with') }} <a href="https://wire-up.dev" target="_blank">Wire-Up</a>
+        @if ($wireupUpdates->currentVersion() !== null) {{ $wireupUpdates->currentVersion() }}@endif
     </flux:text>
 </flux:sidebar>

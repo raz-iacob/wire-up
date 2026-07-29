@@ -52,7 +52,9 @@
 >
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         @if ($heading)
-            <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
+                {!! $heading !!}
+            </div>
         @endif
 
         @if ($items->isNotEmpty())
@@ -61,21 +63,39 @@
                     <figure class="m-0">
                         <div class="relative aspect-square overflow-hidden rounded-[calc(var(--wire-radius)*1.5)] bg-black/5 dark:bg-white/10">
                             @if ($lightbox || ! $item['isVideo'])
-                                <{{ $lightbox ? 'button' : 'div' }} class="size-full {{ $lightbox ? 'group cursor-zoom-in' : '' }}" @if ($lightbox) type="button" x-on:click="show({{ $i }})" @endif>
+                                <{{ $lightbox ? 'button' : 'div' }}
+                                    class="size-full {{ $lightbox ? 'group cursor-zoom-in' : '' }}"
+                                    @if ($lightbox) type="button" x-on:click="show({{ $i }})" @endif
+                                >
                                     @if ($item['poster'])
-                                        <img src="{{ $item['poster'] }}" alt="{{ $item['alt'] }}" loading="lazy" class="size-full object-cover transition group-hover:scale-105" />
+                                        <img
+                                            src="{{ $item['poster'] }}"
+                                            alt="{{ $item['alt'] }}"
+                                            loading="lazy"
+                                            class="size-full object-cover transition group-hover:scale-105"
+                                        />
                                     @else
-                                        <span class="flex size-full items-center justify-center text-current/60"><flux:icon name="video-camera" class="size-10" /></span>
+                                        <span class="flex size-full items-center justify-center text-current/60"
+                                            ><flux:icon name="video-camera" class="size-10"
+                                        /></span>
                                     @endif
 
                                     @if ($item['isVideo'])
                                         <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                            <span class="flex size-14 items-center justify-center rounded-full bg-black/55 text-white"><flux:icon name="play" class="size-7" /></span>
+                                            <span
+                                                class="flex size-14 items-center justify-center rounded-full bg-black/55 text-white"
+                                                ><flux:icon name="play" class="size-7"
+                                            /></span>
                                         </span>
                                     @endif
                                 </{{ $lightbox ? 'button' : 'div' }}>
                             @else
-                                <video class="size-full object-cover" controls preload="metadata" @if ($item['poster']) poster="{{ $item['poster'] }}" @endif>
+                                <video
+                                    class="size-full object-cover"
+                                    controls
+                                    preload="metadata"
+                                    @if ($item['poster']) poster="{{ $item['poster'] }}" @endif
+                                >
                                     <source src="{{ $item['full'] }}" />
                                 </video>
                             @endif
@@ -101,22 +121,52 @@
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
             x-on:click.self="close()"
         >
-            <button type="button" class="absolute right-4 top-4 text-white/70 hover:text-white" x-on:click="close()" aria-label="{{ __('Close') }}"><flux:icon name="x-mark" class="size-8" /></button>
+            <button
+                type="button"
+                class="absolute top-4 right-4 text-white/70 hover:text-white"
+                x-on:click="close()"
+                aria-label="{{ __('Close') }}"
+            >
+                <flux:icon name="x-mark" class="size-8" />
+            </button>
 
             <template x-if="items.length > 1">
-                <button type="button" class="absolute left-2 md:left-6 text-white/70 hover:text-white" x-on:click="prev()" aria-label="{{ __('Previous') }}"><flux:icon name="chevron-left" class="size-10" /></button>
+                <button
+                    type="button"
+                    class="absolute left-2 text-white/70 hover:text-white md:left-6"
+                    x-on:click="prev()"
+                    aria-label="{{ __('Previous') }}"
+                >
+                    <flux:icon name="chevron-left" class="size-10" />
+                </button>
             </template>
 
             <template x-if="items.length > 1">
-                <button type="button" class="absolute right-2 md:right-6 text-white/70 hover:text-white" x-on:click="next()" aria-label="{{ __('Next') }}"><flux:icon name="chevron-right" class="size-10" /></button>
+                <button
+                    type="button"
+                    class="absolute right-2 text-white/70 hover:text-white md:right-6"
+                    x-on:click="next()"
+                    aria-label="{{ __('Next') }}"
+                >
+                    <flux:icon name="chevron-right" class="size-10" />
+                </button>
             </template>
 
             <div class="flex max-h-[90vh] w-full max-w-5xl flex-col items-center justify-center gap-3">
                 <template x-if="current.isVideo">
-                    <video class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)]" controls autoplay :src="current.full"></video>
+                    <video
+                        class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)]"
+                        controls
+                        autoplay
+                        :src="current.full"
+                    ></video>
                 </template>
-                <template x-if="!current.isVideo">
-                    <img class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)] object-contain" :src="current.full" :alt="current.alt" />
+                <template x-if="! current.isVideo">
+                    <img
+                        class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)] object-contain"
+                        :src="current.full"
+                        :alt="current.alt"
+                    />
                 </template>
                 <p class="text-center text-sm text-white/80" x-show="current.caption" x-text="current.caption"></p>
             </div>

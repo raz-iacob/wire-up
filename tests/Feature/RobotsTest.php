@@ -34,14 +34,14 @@ it('marks the public site indexable by default', function (): void {
 
     $this->get(route('page', ['slug' => 'indexable-page']))
         ->assertOk()
-        ->assertSee('<meta name="robots" content="index, follow, max-image-preview:large">', false)
+        ->assertSee('<meta name="robots" content="index, follow, max-image-preview:large" />', false)
         ->assertDontSee('noindex', false);
 });
 
 it('marks the seeded welcome page noindex by default', function (): void {
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('<meta name="robots" content="noindex, nofollow">', false);
+        ->assertSee('<meta name="robots" content="noindex, nofollow" />', false);
 });
 
 it('adds the robots noindex meta tag on the public site when discouraged', function (): void {
@@ -49,5 +49,5 @@ it('adds the robots noindex meta tag on the public site when discouraged', funct
 
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('<meta name="robots" content="noindex, nofollow">', false);
+        ->assertSee('<meta name="robots" content="noindex, nofollow" />', false);
 });

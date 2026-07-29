@@ -109,7 +109,11 @@ return new class extends Component
                 {{ __('All Topics') }}
             </flux:button>
             @foreach ($categories as $key => $category)
-                <flux:button size="sm" wire:click="$set('topic', '{{ $key }}')" :variant="$topic === $key ? 'primary' : 'filled'">
+                <flux:button
+                    size="sm"
+                    wire:click="$set('topic', '{{ $key }}')"
+                    :variant="$topic === $key ? 'primary' : 'filled'"
+                >
                     {{ $category['label'] }}
                 </flux:button>
             @endforeach

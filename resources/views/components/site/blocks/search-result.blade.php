@@ -3,7 +3,12 @@
 @if ($layout === 'list')
     <a href="{{ $url }}" class="group flex items-start gap-6 py-6">
         @if ($image)
-            <img src="{{ $image }}" alt="{{ $title }}" loading="lazy" class="size-32 shrink-0 rounded-(--wire-radius) object-cover sm:size-44" />
+            <img
+                src="{{ $image }}"
+                alt="{{ $title }}"
+                loading="lazy"
+                class="size-32 shrink-0 rounded-(--wire-radius) object-cover sm:size-44"
+            />
         @endif
         <div class="min-w-0">
             <h3 class="text-lg font-semibold tracking-tight group-hover:text-(--wire-accent)">{{ $title }}</h3>
@@ -13,7 +18,10 @@
         </div>
     </a>
 @else
-    <a href="{{ $url }}" class="group wire-card flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm transition hover:shadow-md">
+    <a
+        href="{{ $url }}"
+        class="group wire-card flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm transition hover:shadow-md"
+    >
         @if ($image)
             <img src="{{ $image }}" alt="{{ $title }}" loading="lazy" class="aspect-4/3 w-full object-cover" />
         @endif

@@ -26,17 +26,6 @@ return new class extends Component
     }
 
     /**
-     * @return array{start: CarbonInterface, end: CarbonInterface}
-     */
-    private function period(): array
-    {
-        $start = $this->datesFilter?->getStartDate() ?? now()->subCentury();
-        $end = $this->datesFilter?->getEndDate() ?? now();
-
-        return ['start' => $start->copy()->startOfDay(), 'end' => $end->copy()->endOfDay()];
-    }
-
-    /**
      * @return array<int, array{key: string, name: string, icon: string, total: int, published: int}>
      */
     #[Computed]
@@ -109,7 +98,7 @@ return new class extends Component
     }
 
     /**
-     * @return array<int, array{title: string, type: string, updated: CarbonInterface, url: string, status: \App\Enums\ContentStatus, editor: string|null}>
+     * @return array<int, array{title: string, type: string, updated: CarbonInterface, url: string, status: App\Enums\ContentStatus, editor: string|null}>
      */
     #[Computed]
     public function recentActivity(): array
@@ -183,6 +172,17 @@ return new class extends Component
             ->title(__('Dashboard'))
             ->layout('layouts::admin');
     }
+
+    /**
+     * @return array{start: CarbonInterface, end: CarbonInterface}
+     */
+    private function period(): array
+    {
+        $start = $this->datesFilter?->getStartDate() ?? now()->subCentury();
+        $end = $this->datesFilter?->getEndDate() ?? now();
+
+        return ['start' => $start->copy()->startOfDay(), 'end' => $end->copy()->endOfDay()];
+    }
 };
 ?>
 
@@ -199,7 +199,12 @@ return new class extends Component
         <div class="flex w-full items-center gap-3 sm:w-auto">
             <flux:icon.loading wire:loading wire:target="datesFilter" class="size-5 shrink-0 text-zinc-400" />
             <div class="ml-4 w-full sm:w-64">
-                <flux:date-picker mode="range" wire:model.live="datesFilter" presets="today yesterday thisWeek last7Days thisMonth last30Days last3Months last6Months yearToDate allTime" :max="now()->format('Y-m-d')" />
+                <flux:date-picker
+                    mode="range"
+                    wire:model.live="datesFilter"
+                    presets="today yesterday thisWeek last7Days thisMonth last30Days last3Months last6Months yearToDate allTime"
+                    :max="now()->format('Y-m-d')"
+                />
             </div>
         </div>
     </div>
@@ -208,173 +213,233 @@ return new class extends Component
         @inject('wireupUpdates', 'App\Services\UpdateService')
         @if ($wireupUpdates->updateAvailable())
             <flux:callout inline icon="arrow-down-tray" color="cyan">
-                <flux:callout.heading>{{ __('Update available: :tag', ['tag' => (string) $wireupUpdates->latestVersion()]) }}</flux:callout.heading>
+                <flux:callout.heading>
+                    {{ __('Update available: :tag', ['tag' => (string) $wireupUpdates->latestVersion()]) }}</flux:callout.heading>
                 <x-slot name="actions">
-                    <flux:button :href="route('admin.settings-updates')" wire:navigate>{{ __('Review and update') }}</flux:button>
+                    <flux:button
+                        :href="route('admin.settings-updates')"
+                        wire:navigate
+                    >{{ __('Review and update') }}</flux:button>
                 </x-slot>
             </flux:callout>
         @endif
     @endcan
 
     @island
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        @php($media = $this->mediaStats())
-        <flux:card class="flex items-center gap-4">
-            <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
-                <flux:icon name="document-check" class="size-6" />
-            </div>
-            <div class="min-w-0">
-                <flux:heading size="xl" class="tabular-nums">{{ number_format($this->publishedContentCount) }}</flux:heading>
-                <flux:subheading>{{ __('Published items') }}</flux:subheading>
-            </div>
-        </flux:card>
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            @php($media = $this->mediaStats())
+            <flux:card class="flex items-center gap-4">
+                <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                    <flux:icon name="document-check" class="size-6" />
+                </div>
+                <div class="min-w-0">
+                    <flux:heading
+                        size="xl"
+                        class="tabular-nums"
+                    >{{ number_format($this->publishedContentCount) }}</flux:heading>
+                    <flux:subheading>{{ __('Published items') }}</flux:subheading>
+                </div>
+            </flux:card>
 
-        @can('inbox.view')
-            <a href="{{ route('admin.inbox-index') }}" wire:navigate class="block">
-                <flux:card class="flex h-full items-center gap-4 transition hover:shadow-md">
-                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                        <flux:icon name="envelope" class="size-6" />
-                    </div>
-                    <div class="min-w-0">
-                        <flux:heading size="xl" class="tabular-nums">{{ number_format($this->unreadMessages) }}</flux:heading>
-                        <flux:subheading>{{ __('Unread messages') }}</flux:subheading>
-                    </div>
-                </flux:card>
-            </a>
-        @endcan
+            @can('inbox.view')
+                <a href="{{ route('admin.inbox-index') }}" wire:navigate class="block">
+                    <flux:card class="flex h-full items-center gap-4 transition hover:shadow-md">
+                        <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                            <flux:icon name="envelope" class="size-6" />
+                        </div>
+                        <div class="min-w-0">
+                            <flux:heading
+                                size="xl"
+                                class="tabular-nums"
+                            >{{ number_format($this->unreadMessages) }}</flux:heading>
+                            <flux:subheading>{{ __('Unread messages') }}</flux:subheading>
+                        </div>
+                    </flux:card>
+                </a>
+            @endcan
 
-        <flux:card class="flex items-center gap-4">
-            <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
-                <flux:icon name="photo" class="size-6" />
-            </div>
-            <div class="min-w-0">
-                <flux:heading size="xl" class="tabular-nums">{{ \Illuminate\Support\Number::fileSize($media['bytes'], precision: 1) }}</flux:heading>
-                <flux:subheading>{{ trans_choice(':count file|:count files', $media['count'], ['count' => number_format($media['count'])]) }}</flux:subheading>
-            </div>
-        </flux:card>
+            <flux:card class="flex items-center gap-4">
+                <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                    <flux:icon name="photo" class="size-6" />
+                </div>
+                <div class="min-w-0">
+                    <flux:heading
+                        size="xl"
+                        class="tabular-nums"
+                    >{{ \Illuminate\Support\Number::fileSize($media['bytes'], precision: 1) }}</flux:heading>
+                    <flux:subheading>{{ trans_choice(':count file|:count files', $media['count'], ['count' => number_format($media['count'])]) }}</flux:subheading>
+                </div>
+            </flux:card>
 
-        <flux:card class="flex items-center gap-4">
-            <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                <flux:icon name="users" class="size-6" />
-            </div>
-            <div class="min-w-0">
-                <flux:heading size="xl" class="tabular-nums">{{ number_format($this->onlineUsers->count()) }}</flux:heading>
-                <flux:subheading>{{ __('Online now') }} · {{ __(':count total', ['count' => number_format($this->userCount)]) }}</flux:subheading>
-            </div>
-        </flux:card>
-    </div>
+            <flux:card class="flex items-center gap-4">
+                <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <flux:icon name="users" class="size-6" />
+                </div>
+                <div class="min-w-0">
+                    <flux:heading
+                        size="xl"
+                        class="tabular-nums"
+                    >{{ number_format($this->onlineUsers->count()) }}</flux:heading>
+                    <flux:subheading>{{ __('Online now') }} · {{ __(':count total', ['count' => number_format($this->userCount)]) }}</flux:subheading>
+                </div>
+            </flux:card>
+        </div>
     @endisland
 
     <div class="grid gap-6 lg:grid-cols-3">
         @island
-        <div class="space-y-6 lg:col-span-2">
-            <flux:card class="space-y-4">
-                <flux:heading size="lg">{{ __('Content') }}</flux:heading>
-                <div class="grid gap-3 sm:grid-cols-2">
-                    @foreach ($this->recordTypeStats as $stat)
-                        @can('records.'.$stat['key'].'.view')
-                            <a href="{{ route('admin.records-index', $stat['key']) }}" wire:navigate wire:key="stat-{{ $stat['key'] }}"
-                               class="flex items-center gap-3 rounded-xl border border-zinc-200 p-3 transition hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5">
-                                <flux:icon :name="$stat['icon']" class="size-5 shrink-0 text-zinc-400" />
+            <div class="space-y-6 lg:col-span-2">
+                <flux:card class="space-y-4">
+                    <flux:heading size="lg">{{ __('Content') }}</flux:heading>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        @foreach ($this->recordTypeStats as $stat)
+                            @can('records.'.$stat['key'].'.view')
+                                <a
+                                    href="{{ route('admin.records-index', $stat['key']) }}"
+                                    wire:navigate
+                                    wire:key="stat-{{ $stat['key'] }}"
+                                    class="flex items-center gap-3 rounded-xl border border-zinc-200 p-3 transition hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
+                                >
+                                    <flux:icon :name="$stat['icon']" class="size-5 shrink-0 text-zinc-400" />
+                                    <div class="min-w-0 flex-1">
+                                        <flux:heading size="sm" class="truncate">{{ $stat['name'] }}</flux:heading>
+                                        <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                            {{ __(':published live', ['published' => number_format($stat['published'])]) }} · {{ __(':total total', ['total' => number_format($stat['total'])]) }}
+                                        </flux:text>
+                                    </div>
+                                </a>
+                            @endcan
+                        @endforeach
+
+                        @can('pages.view')
+                            <a
+                                href="{{ route('admin.pages-index') }}"
+                                wire:navigate
+                                class="flex items-center gap-3 rounded-xl border border-zinc-200 p-3 transition hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
+                            >
+                                <flux:icon name="document" class="size-5 shrink-0 text-zinc-400" />
                                 <div class="min-w-0 flex-1">
-                                    <flux:heading size="sm" class="truncate">{{ $stat['name'] }}</flux:heading>
-                                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
-                                        {{ __(':published live', ['published' => number_format($stat['published'])]) }}
-                                        · {{ __(':total total', ['total' => number_format($stat['total'])]) }}
-                                    </flux:text>
+                                    <flux:heading size="sm" class="truncate">{{ __('Pages') }}</flux:heading>
+                                    <flux:text
+                                        size="sm"
+                                        class="text-zinc-500 dark:text-zinc-400"
+                                    >{{ __(':count total', ['count' => number_format(\App\Models\Page::query()->count())]) }}</flux:text>
                                 </div>
                             </a>
                         @endcan
-                    @endforeach
-
-                    @can('pages.view')
-                        <a href="{{ route('admin.pages-index') }}" wire:navigate
-                           class="flex items-center gap-3 rounded-xl border border-zinc-200 p-3 transition hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5">
-                            <flux:icon name="document" class="size-5 shrink-0 text-zinc-400" />
-                            <div class="min-w-0 flex-1">
-                                <flux:heading size="sm" class="truncate">{{ __('Pages') }}</flux:heading>
-                                <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __(':count total', ['count' => number_format(\App\Models\Page::query()->count())]) }}</flux:text>
-                            </div>
-                        </a>
-                    @endcan
-                </div>
-            </flux:card>
-
-            <flux:card class="space-y-4">
-                <flux:heading size="lg">{{ __('Recent activity') }}</flux:heading>
-                @if (empty($this->recentActivity))
-                    <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('Nothing edited yet.') }}</flux:text>
-                @else
-                    <div class="divide-y divide-zinc-100 dark:divide-white/5">
-                        @foreach ($this->recentActivity as $item)
-                            <a href="{{ $item['url'] }}" wire:navigate wire:key="activity-{{ $item['url'] }}" class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-                                <div class="min-w-0 flex-1">
-                                    <flux:heading size="sm" class="truncate">{{ $item['title'] }}</flux:heading>
-                                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
-                                        {{ $item['type'] }} · {{ $item['updated']?->diffForHumans() }}@if ($this->hasMultipleStaff && $item['editor']) · {{ __('by :name', ['name' => $item['editor']]) }}@endif
-                                    </flux:text>
-                                </div>
-                                <flux:badge size="sm" :color="$item['status']->color()">{{ $item['status']->label() }}</flux:badge>
-                            </a>
-                        @endforeach
                     </div>
-                @endif
-            </flux:card>
-        </div>
-        @endisland
+                </flux:card>
 
-        <div class="space-y-6">
-            @island
-            @can('inbox.view')
                 <flux:card class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <flux:heading size="lg">{{ __('Latest messages') }}</flux:heading>
-                        <flux:button size="sm" variant="ghost" inset :href="route('admin.inbox-index')" wire:navigate>{{ __('View all') }}</flux:button>
-                    </div>
-                    @if ($this->latestMessages->isEmpty())
-                        <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No messages yet.') }}</flux:text>
+                    <flux:heading size="lg">{{ __('Recent activity') }}</flux:heading>
+                    @if (empty($this->recentActivity))
+                        <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('Nothing edited yet.') }}</flux:text>
                     @else
                         <div class="divide-y divide-zinc-100 dark:divide-white/5">
-                            @foreach ($this->latestMessages as $message)
-                                <a href="{{ route('admin.inbox-show', $message) }}" wire:navigate wire:key="msg-{{ $message->id }}" class="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
+                            @foreach ($this->recentActivity as $item)
+                                <a
+                                    href="{{ $item['url'] }}"
+                                    wire:navigate
+                                    wire:key="activity-{{ $item['url'] }}"
+                                    class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+                                >
                                     <div class="min-w-0 flex-1">
-                                        <div class="flex gap-1 items-center">
-                                            <flux:heading size="sm" class="truncate">{{ $message->name ?: ($message->email ?: __('Anonymous')) }}</flux:heading> 
-                                            <span @class([
-                                                'shrink-0 rounded-full',
-                                                'size-2 bg-sky-500 animate-pulse' => $message->read_at === null,
-                                            ])></span>
-                                        </div>
-                                        <flux:text size="sm" class="truncate">{{ $message->subject ?: \Illuminate\Support\Str::limit(strip_tags((string) $message->message), 40) }}</flux:text>
+                                        <flux:heading size="sm" class="truncate">{{ $item['title'] }}</flux:heading>
+                                        <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                            {{ $item['type'] }} · {{ $item['updated']?->diffForHumans() }}
+                                            @if ($this->hasMultipleStaff && $item['editor']) ·{{ __('by :name', ['name' => $item['editor']]) }}@endif
+                                        </flux:text>
                                     </div>
-                                    <flux:text size="sm" class="shrink-0" variant="subtle">{{ $message->created_at->diffForHumans(short: true) }}</flux:text>
+                                    <flux:badge
+                                        size="sm"
+                                        :color="$item['status']->color()"
+                                    >{{ $item['status']->label() }}</flux:badge>
                                 </a>
                             @endforeach
                         </div>
                     @endif
                 </flux:card>
-            @endcan
+            </div>
+        @endisland
 
-            @can('users.view')
-                <flux:card class="space-y-4">
-                    <flux:heading size="lg">{{ __('Online now') }}</flux:heading>
-                    @if ($this->onlineUsers->isEmpty())
-                        <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No one else is online.') }}</flux:text>
-                    @else
-                        <div class="flex flex-col gap-3">
-                            @foreach ($this->onlineUsers as $user)
-                                <div class="flex items-center gap-3" wire:key="online-{{ $user->id }}">
-                                    <flux:avatar size="sm" :name="$user->name" :src="$user->photo_url" />
-                                    <div class="min-w-0 flex-1">
-                                        <flux:heading size="sm" class="truncate">{{ $user->name }}</flux:heading>
-                                        <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ $user->last_seen_at?->diffForHumans() }}</flux:text>
-                                    </div>
-                                </div>
-                            @endforeach
+        <div class="space-y-6">
+            @island
+                @can('inbox.view')
+                    <flux:card class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <flux:heading size="lg">{{ __('Latest messages') }}</flux:heading>
+                            <flux:button
+                                size="sm"
+                                variant="ghost"
+                                inset
+                                :href="route('admin.inbox-index')"
+                                wire:navigate
+                            >{{ __('View all') }}</flux:button>
                         </div>
-                    @endif
-                </flux:card>
-            @endcan
+                        @if ($this->latestMessages->isEmpty())
+                            <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No messages yet.') }}</flux:text>
+                        @else
+                            <div class="divide-y divide-zinc-100 dark:divide-white/5">
+                                @foreach ($this->latestMessages as $message)
+                                    <a
+                                        href="{{ route('admin.inbox-show', $message) }}"
+                                        wire:navigate
+                                        wire:key="msg-{{ $message->id }}"
+                                        class="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
+                                    >
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center gap-1">
+                                                <flux:heading
+                                                    size="sm"
+                                                    class="truncate"
+                                                >{{ $message->name ?: ($message->email ?: __('Anonymous')) }}</flux:heading>
+                                                <span
+                                                    @class([
+                                                        'shrink-0 rounded-full',
+                                                        'size-2 bg-sky-500 animate-pulse' => $message->read_at === null,
+                                                    ])
+                                                ></span>
+                                            </div>
+                                            <flux:text
+                                                size="sm"
+                                                class="truncate"
+                                            >{{ $message->subject ?: \Illuminate\Support\Str::limit(strip_tags((string) $message->message), 40) }}</flux:text>
+                                        </div>
+                                        <flux:text
+                                            size="sm"
+                                            class="shrink-0"
+                                            variant="subtle"
+                                        >{{ $message->created_at->diffForHumans(short: true) }}</flux:text>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
+                    </flux:card>
+                @endcan
+
+                @can('users.view')
+                    <flux:card class="space-y-4">
+                        <flux:heading size="lg">{{ __('Online now') }}</flux:heading>
+                        @if ($this->onlineUsers->isEmpty())
+                            <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No one else is online.') }}</flux:text>
+                        @else
+                            <div class="flex flex-col gap-3">
+                                @foreach ($this->onlineUsers as $user)
+                                    <div class="flex items-center gap-3" wire:key="online-{{ $user->id }}">
+                                        <flux:avatar size="sm" :name="$user->name" :src="$user->photo_url" />
+                                        <div class="min-w-0 flex-1">
+                                            <flux:heading size="sm" class="truncate">{{ $user->name }}</flux:heading>
+                                            <flux:text
+                                                size="sm"
+                                                class="text-zinc-500 dark:text-zinc-400"
+                                            >{{ $user->last_seen_at?->diffForHumans() }}</flux:text>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </flux:card>
+                @endcan
             @endisland
 
             <flux:card class="space-y-4">
@@ -389,7 +454,10 @@ return new class extends Component
                         <flux:subheading>{{ __('Pages') }}</flux:subheading>
                     </div>
                     <div>
-                        <flux:heading size="lg" class="tabular-nums">{{ number_format($new['messages']) }}</flux:heading>
+                        <flux:heading
+                            size="lg"
+                            class="tabular-nums"
+                        >{{ number_format($new['messages']) }}</flux:heading>
                         <flux:subheading>{{ __('Messages') }}</flux:subheading>
                     </div>
                     <div>

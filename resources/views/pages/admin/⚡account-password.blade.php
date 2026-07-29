@@ -75,15 +75,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.account-profile') }}" wire:navigate>
             {{ __('Account') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('Password') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('Password') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('Password') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.account-profile') }}" wire:navigate>{{ __('Account') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.account-profile') }}" wire:navigate>
+                {{ __('Account') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

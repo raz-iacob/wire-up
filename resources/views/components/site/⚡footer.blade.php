@@ -59,8 +59,8 @@ return new class extends Component
         'bg-(--wire-footer-bg)' => ! $transparent,
     ])
 >
-    @switch($layout)
-        @case('centered')
+    @switch ($layout)
+        @case ('centered')
             <div class="mx-auto max-w-3xl px-6 py-10 text-center">
                 <div class="flex justify-center">
                     <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" />
@@ -68,12 +68,17 @@ return new class extends Component
                 <x-site.nav :items="$items" class="mt-4 justify-center" />
                 <x-site.social :links="$social" :variant="$socialVariant" class="mt-4 justify-center" />
                 <div class="mt-6 border-t border-current/10 pt-4 text-[length:calc(var(--wire-body-size)*0.75)] opacity-70">
-                    &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp; <a href="https://wire-up.dev" target="_blank" rel="noopener noreferrer" class="hover:underline">{{ __('Made with Wire-Up') }}</a>
+                    &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp;
+                    <a
+                        href="https://wire-up.dev"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="hover:underline"
+                    >{{ __('Made with Wire-Up') }}</a>
                 </div>
             </div>
             @break
-
-        @case('columns')
+        @case ('columns')
             <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                 <div class="grid gap-8 py-12 sm:grid-cols-2 md:grid-cols-3">
                     <div class="space-y-4">
@@ -85,23 +90,37 @@ return new class extends Component
                     </div>
                     @if ($items !== [])
                         <div class="md:col-span-2">
-                            <x-site.nav :items="$items" class="flex-col items-start gap-3 md:flex-row md:flex-wrap md:gap-x-10" />
+                            <x-site.nav
+                                :items="$items"
+                                class="flex-col items-start gap-3 md:flex-row md:flex-wrap md:gap-x-10"
+                            />
                         </div>
                     @endif
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-4 border-t border-current/10 py-4 text-[length:calc(var(--wire-body-size)*0.75)] opacity-70">
                     <span>&copy; {{ $year }} {{ $brand }}. {{ __('All Rights Reserved') }}</span>
-                    <span><a href="https://wire-up.dev" target="_blank" rel="noopener noreferrer" class="hover:underline">{{ __('Made with Wire-Up') }}</a></span>
+                    <span
+                        ><a
+                            href="https://wire-up.dev"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:underline"
+                            >{{ __('Made with Wire-Up') }}</a
+                        ></span>
                 </div>
             </div>
             @break
-
-        @case('minimal')
+        @case ('minimal')
             <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter) py-6 text-center text-[length:calc(var(--wire-body-size)*0.75)] opacity-70">
-                &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp; <a href="https://wire-up.dev" target="_blank" rel="noopener noreferrer" class="hover:underline">{{ __('Made with Wire-Up') }}</a>
+                &copy; {{ $year }} {{ $brand }} &nbsp;|&nbsp;
+                <a
+                    href="https://wire-up.dev"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="hover:underline"
+                >{{ __('Made with Wire-Up') }}</a>
             </div>
             @break
-
         @default
             <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                 <div class="flex flex-wrap items-start justify-between gap-6 py-10">
@@ -113,7 +132,14 @@ return new class extends Component
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-4 border-t border-current/10 py-4 text-[calc(var(--wire-body-size)*0.85)] opacity-70">
                     <span>&copy; {{ $year }} {{ $brand }}. {{ __('All Rights Reserved') }}</span>
-                    <span><a href="https://wire-up.dev" target="_blank" rel="noopener noreferrer" class="hover:underline">{{ __('Made with Wire-Up') }}</a></span>
+                    <span
+                        ><a
+                            href="https://wire-up.dev"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:underline"
+                            >{{ __('Made with Wire-Up') }}</a
+                        ></span>
                 </div>
             </div>
     @endswitch

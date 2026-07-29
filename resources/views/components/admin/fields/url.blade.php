@@ -9,7 +9,15 @@
 
 <flux:field wire:key="field-{{ $key }}-{{ $translatable ? $locale : 'shared' }}">
     @include('components.admin.fields.partials.label')
-    <flux:input type="url" icon="link" wire:model.lazy="{{ $path }}" :required="$required" placeholder="https://example.com" />
-    @if($help)<flux:description>{{ $help }}</flux:description>@endif
+    <flux:input
+        type="url"
+        icon="link"
+        wire:model.lazy="{{ $path }}"
+        :required="$required"
+        placeholder="https://example.com"
+    />
+    @if ($help)
+        <flux:description>{{ $help }}</flux:description>
+    @endif
     <flux:error name="{{ $path }}" />
 </flux:field>

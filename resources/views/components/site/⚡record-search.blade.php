@@ -93,7 +93,9 @@ return new class extends Component
     ])>
         <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
             @if ($hasHeading)
-                <div class="mb-8 text-center tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-center text-(length:--wire-heading-size) tracking-tight">
+                    {!! $heading !!}
+                </div>
             @endif
 
             <form wire:submit="$refresh" class="mx-auto flex max-w-xl items-center gap-3">
@@ -102,8 +104,16 @@ return new class extends Component
                     type="search"
                     class="flex-1"
                     :placeholder="$placeholder !== '' ? $placeholder : __('Search')"
-                    :aria-label="$placeholder !== '' ? $placeholder : __('Search')" />
-                <flux:button type="submit" variant="primary" icon="magnifying-glass" square :aria-label="__('Search')" wire:loading.attr="disabled" />
+                    :aria-label="$placeholder !== '' ? $placeholder : __('Search')"
+                />
+                <flux:button
+                    type="submit"
+                    variant="primary"
+                    icon="magnifying-glass"
+                    square
+                    :aria-label="__('Search')"
+                    wire:loading.attr="disabled"
+                />
             </form>
 
             @if ($term !== '')
@@ -112,7 +122,10 @@ return new class extends Component
                 @else
                     <div class="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm font-medium">
                         @foreach ($groups as $group)
-                            <a href="#search-{{ $blockId }}-{{ $group['key'] }}" class="transition hover:text-(--wire-accent)">{{ number_format($group['total']) }} {{ $group['label'] }}</a>
+                            <a
+                                href="#search-{{ $blockId }}-{{ $group['key'] }}"
+                                class="transition hover:text-(--wire-accent)"
+                            >{{ number_format($group['total']) }} {{ $group['label'] }}</a>
                             @unless ($loop->last)
                                 <span class="text-zinc-400 dark:text-zinc-500" aria-hidden="true">&bull;</span>
                             @endunless
@@ -123,9 +136,16 @@ return new class extends Component
 
                     <div class="mt-12 space-y-14">
                         @foreach ($groups as $group)
-                            <div wire:key="search-group-{{ $blockId }}-{{ $group['key'] }}" id="search-{{ $blockId }}-{{ $group['key'] }}" class="scroll-mt-24">
+                            <div
+                                wire:key="search-group-{{ $blockId }}-{{ $group['key'] }}"
+                                id="search-{{ $blockId }}-{{ $group['key'] }}"
+                                class="scroll-mt-24"
+                            >
                                 <div class="mb-6 flex items-center gap-4">
-                                    <flux:heading size="sm" class="uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ $group['label'] }}</flux:heading>
+                                    <flux:heading
+                                        size="sm"
+                                        class="tracking-wide text-zinc-500 uppercase dark:text-zinc-400"
+                                    >{{ $group['label'] }}</flux:heading>
                                     <div class="h-px flex-1 bg-black/10 dark:bg-white/10"></div>
                                 </div>
 
@@ -137,7 +157,8 @@ return new class extends Component
                                             :url="$result['url']"
                                             :image="$showImage ? $result['image'] : null"
                                             :layout="$layout"
-                                            wire:key="search-result-{{ $blockId }}-{{ $group['key'] }}-{{ $i }}" />
+                                            wire:key="search-result-{{ $blockId }}-{{ $group['key'] }}-{{ $i }}"
+                                        />
                                     @endforeach
                                 </div>
                             </div>

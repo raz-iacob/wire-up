@@ -1,11 +1,13 @@
 @props(['socials' => [], 'justify' => 'start'])
 
 @if (! empty($socials))
-    <div {{ $attributes->class([
-        'flex items-center gap-4',
-        'justify-start' => $justify === 'start',
-        'justify-center' => $justify === 'center',
-    ]) }}>
+    <div {{
+        $attributes->class([
+            'flex items-center gap-4',
+            'justify-start' => $justify === 'start',
+            'justify-center' => $justify === 'center',
+        ])
+    }}>
         @foreach ($socials as $social)
             <a
                 href="{{ $social['href'] }}"
@@ -15,7 +17,7 @@
             >
                 @if ($social['kind'] === 'mask')
                     <span
-                        class="block size-5 bg-current mask-center mask-no-repeat mask-contain"
+                        class="block size-5 bg-current mask-contain mask-center mask-no-repeat"
                         style="mask-image:url('{{ $social['src'] }}'); -webkit-mask-image:url('{{ $social['src'] }}');"
                     ></span>
                 @else

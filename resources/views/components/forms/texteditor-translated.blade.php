@@ -2,19 +2,29 @@
 
 <flux:field wire:key="{{ $name }}-{{ $locale }}">
     <div class="flex items-center gap-3">
-        @if($label)
-        <flux:label>{{ $label }}</flux:label>
+        @if ($label)
+            <flux:label>{{ $label }}</flux:label>
         @endif
-        @if($multiLocale)
-        <flux:tooltip content="{{ __('Change language') }}">
-            <flux:badge size="sm" class="text-xs py-0.5!" as="button" inset="top bottom" x-on:click="$wire.dispatch('change-locale')">{{ strtoupper($locale) }}</flux:badge>
-        </flux:tooltip>
+        @if ($multiLocale)
+            <flux:tooltip content="{{ __('Change language') }}">
+                <flux:badge
+                    size="sm"
+                    class="py-0.5! text-xs"
+                    as="button"
+                    inset="top bottom"
+                    x-on:click="$wire.dispatch('change-locale')"
+                >{{ strtoupper($locale) }}</flux:badge>
+            </flux:tooltip>
         @endif
     </div>
 
     <div x-data="editorSource">
-        <flux:editor wire:model.lazy="{{ $name }}.{{ $locale }}" :required="$required" class="**:data-[slot=content]:min-h-25!">
-            <flux:editor.toolbar :items="$toolbar . ' | badge | source'" />
+        <flux:editor
+            wire:model.lazy="{{ $name }}.{{ $locale }}"
+            :required="$required"
+            class="**:data-[slot=content]:min-h-25!"
+        >
+            <flux:editor.toolbar :items="$toolbar.' | badge | source'" />
             <flux:editor.content />
             <textarea
                 x-ref="source"
@@ -22,9 +32,9 @@
                 data-editor-source
                 spellcheck="false"
                 x-on:change="syncSource($el)"
-                style="display:none"
+                style="display: none"
                 rows="8"
-                class="block w-full resize-y border-0 bg-transparent p-3 font-mono text-xs leading-relaxed text-zinc-700 focus:outline-none focus:ring-0 dark:text-zinc-300"
+                class="block w-full resize-y border-0 bg-transparent p-3 font-mono text-xs leading-relaxed text-zinc-700 focus:ring-0 focus:outline-none dark:text-zinc-300"
             ></textarea>
         </flux:editor>
     </div>

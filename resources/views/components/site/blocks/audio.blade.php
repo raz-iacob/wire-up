@@ -19,16 +19,23 @@
             @if ($hasHeading)
                 <div class="mb-8">
                     @if (strip_tags($heading) !== '')
-                        <div class="tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+                        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                            {!! $heading !!}
+                        </div>
                     @endif
                     @if (strip_tags($intro) !== '')
-                        <div class="mt-3 leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0">{!! $intro !!}</div>
+                        <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                            {!! $intro !!}
+                        </div>
                     @endif
                 </div>
             @endif
 
             <audio controls preload="metadata" class="w-full">
-                <source src="{{ $src }}" @if ($block->content['audio']['mime_type'] ?? null) type="{{ $block->content['audio']['mime_type'] }}" @endif />
+                <source
+                    src="{{ $src }}"
+                    @if ($block->content['audio']['mime_type'] ?? null) type="{{ $block->content['audio']['mime_type'] }}" @endif
+                />
             </audio>
         </div>
     </section>

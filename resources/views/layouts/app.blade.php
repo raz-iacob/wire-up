@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth [scrollbar-gutter:stable]">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="[scrollbar-gutter:stable] scroll-smooth">
     @php
         $siteLayout = array_merge([
             'hideHeader' => false,
@@ -25,7 +25,12 @@
         $rightMenus = $sidebarMenus->filter(fn (array $menu): bool => $menu['display']['position'] === 'right')->values();
         $hasSidebar = $sidebarMenus->isNotEmpty();
     @endphp
-    <x-site.head :title="isset($title) ? $title : null" :description="isset($description) ? $description : null" :custom-css="$siteLayout['customCss']" :page="$page ?? null" />
+    <x-site.head
+        :title="isset($title) ? $title : null"
+        :description="isset($description) ? $description : null"
+        :custom-css="$siteLayout['customCss']"
+        :page="$page ?? null"
+    />
     <body
         @class([
             'antialiased font-(family-name:--wire-body-font) bg-(--wire-body-bg) text-(--wire-body-text)',
@@ -33,7 +38,7 @@
         ])
         @if ($bodyStyle !== '') style="{{ $bodyStyle }}" @endif
     >
-        <div class="flex flex-col min-h-screen">
+        <div class="flex min-h-screen flex-col">
             @unless ($siteLayout['hideHeader'])
                 <livewire:site.header />
             @endunless
@@ -49,9 +54,7 @@
                             </div>
                         @endif
 
-                        <div class="min-w-0 flex-1 max-md:order-last">
-                            {{ $slot }}
-                        </div>
+                        <div class="min-w-0 flex-1 max-md:order-last">{{ $slot }}</div>
 
                         @if ($rightMenus->isNotEmpty())
                             <div class="flex shrink-0 flex-col gap-8 px-(--wire-gutter) md:w-1/6 md:ps-0">
@@ -74,14 +77,14 @@
         @stack('modals')
 
         @persist('toast')
-        <flux:toast />
+            <flux:toast />
         @endpersist
 
         @fluxScripts
 
         @php($bodyScripts = \App\Services\SettingsService::current()->bodyScripts())
         @if ($bodyScripts !== '')
-        {!! $bodyScripts !!}
+            {!! $bodyScripts !!}
         @endif
     </body>
 </html>

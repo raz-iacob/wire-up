@@ -136,8 +136,8 @@ it('emits canonical, Open Graph and JSON-LD on a public page', function (): void
     $this->get('/reach-us')
         ->assertOk()
         ->assertSee('<link rel="canonical"', false)
-        ->assertSee('<meta property="og:title" content="Contact">', false)
-        ->assertSee('<meta property="og:description" content="Reach our team.">', false)
+        ->assertSee('<meta property="og:title" content="Contact" />', false)
+        ->assertSee('<meta property="og:description" content="Reach our team." />', false)
         ->assertSee('application/ld+json', false)
         ->assertSee('"@type":"WebPage"', false);
 });
@@ -240,7 +240,7 @@ it('renders a noindex robots tag for a page-level noindex page only', function (
 
     $this->get('/private-page')
         ->assertOk()
-        ->assertSee('<meta name="robots" content="noindex, nofollow">', false);
+        ->assertSee('<meta name="robots" content="noindex, nofollow" />', false);
 
     $this->get('/indexable')
         ->assertOk()
@@ -286,8 +286,8 @@ it('emits per-record canonical, robots and WebPage JSON-LD on a published record
     $this->get('/services/consulting')
         ->assertOk()
         ->assertSee('<link rel="canonical"', false)
-        ->assertSee('<meta property="og:title" content="Consulting">', false)
-        ->assertSee('<meta property="og:description" content="We advise.">', false)
+        ->assertSee('<meta property="og:title" content="Consulting" />', false)
+        ->assertSee('<meta property="og:description" content="We advise." />', false)
         ->assertSee('"@type":"WebPage"', false)
         ->assertSee('"@type":"Service"', false)
         ->assertSee('content="index, follow', false);
@@ -358,7 +358,7 @@ it('renders a noindex robots tag for a page-level noindex record', function (): 
 
     $this->get('/services/secret')
         ->assertOk()
-        ->assertSee('<meta name="robots" content="noindex, nofollow">', false);
+        ->assertSee('<meta name="robots" content="noindex, nofollow" />', false);
 });
 
 it('skips published records with no slug in the llms index', function (): void {

@@ -20,13 +20,15 @@
                 data-editor-source
                 spellcheck="false"
                 x-on:change="syncSource($el)"
-                style="display:none"
+                style="display: none"
                 rows="8"
-                class="block w-full resize-y border-0 bg-transparent p-3 font-mono text-xs leading-relaxed text-zinc-700 focus:outline-none focus:ring-0 dark:text-zinc-300"
+                class="block w-full resize-y border-0 bg-transparent p-3 font-mono text-xs leading-relaxed text-zinc-700 focus:ring-0 focus:outline-none dark:text-zinc-300"
             ></textarea>
         </flux:editor>
     </div>
 
-    @if($help)<flux:description>{{ $help }}</flux:description>@endif
+    @if ($help)
+        <flux:description>{{ $help }}</flux:description>
+    @endif
     <flux:error name="{{ $path }}" />
 </flux:field>

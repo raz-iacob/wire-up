@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-use Flux\Flux;
+use App\Actions\InviteAdminAction;
+use App\Actions\UpdateUserAction;
 use App\Models\Role;
 use App\Models\User;
-use Livewire\Component;
 use App\Traits\WithSorting;
-use Livewire\Attributes\Url;
-use Illuminate\Validation\Rule;
-use Livewire\WithPagination;
-use App\Actions\UpdateUserAction;
-use Livewire\Attributes\Computed;
-use App\Actions\InviteAdminAction;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Contracts\View\View;
+use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 return new class extends Component
 {
@@ -106,12 +106,23 @@ return new class extends Component
         <div class="flex items-center gap-3">
             @can('users.create')
                 <flux:modal.trigger name="add-new">
-                    <flux:button variant="primary" class="shrink-0" size="sm" icon="plus" iconVariant="outline">{{ __('Add') }}</flux:button>
+                    <flux:button
+                        variant="primary"
+                        class="shrink-0"
+                        size="sm"
+                        icon="plus"
+                        iconVariant="outline"
+                    >{{ __('Add') }}</flux:button>
                 </flux:modal.trigger>
             @endcan
 
             <flux:dropdown position="bottom" align="start">
-                <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
+                <flux:button
+                    class="shrink-0"
+                    size="sm"
+                    icon="funnel"
+                    iconVariant="outline"
+                >{{ __('Filter') }}</flux:button>
 
                 <flux:menu>
                     <flux:menu.submenu heading="{{ __('Status') }}">
@@ -124,69 +135,104 @@ return new class extends Component
                 </flux:menu>
             </flux:dropdown>
 
-            <div class="w-full md:w-52 sm:shrink-0">
-                <flux:input icon="magnifying-glass" wire:model.live="search" size="sm" placeholder="{{ __('Search...') }}" clearable />
+            <div class="w-full sm:shrink-0 md:w-52">
+                <flux:input
+                    icon="magnifying-glass"
+                    wire:model.live="search"
+                    size="sm"
+                    placeholder="{{ __('Search...') }}"
+                    clearable
+                />
             </div>
         </div>
 
-        <flux:table class="md:table-fixed md:w-full max-h-[calc(100dvh-12rem)]" :paginate="$this->users" container:class="max-h-[calc(100dvh-12rem)]">
+        <flux:table
+            class="max-h-[calc(100dvh-12rem)] md:w-full md:table-fixed"
+            :paginate="$this->users"
+            container:class="max-h-[calc(100dvh-12rem)]"
+        >
             <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
-                <flux:table.column sortable :sorted="$sortBy === 'name'" :direction="$sortDirection" wire:click="sort('name')">{{ __('Name') }}</flux:table.column>
+                <flux:table.column
+                    sortable
+                    :sorted="$sortBy === 'name'"
+                    :direction="$sortDirection"
+                    wire:click="sort('name')"
+                >
+                    {{ __('Name') }}</flux:table.column>
                 <flux:table.column class="w-1/6">{{ __('Role') }}</flux:table.column>
                 <flux:table.column class="w-1/6">{{ __('Status') }}</flux:table.column>
-                <flux:table.column class="w-1/6" sortable :sorted="$sortBy === 'last_seen_at'" :direction="$sortDirection" wire:click="sort('last_seen_at')">{{ __('Last login') }}</flux:table.column>
+                <flux:table.column
+                    class="w-1/6"
+                    sortable
+                    :sorted="$sortBy === 'last_seen_at'"
+                    :direction="$sortDirection"
+                    wire:click="sort('last_seen_at')"
+                >
+                    {{ __('Last login') }}</flux:table.column>
                 <flux:table.column class="w-10"></flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
                 @foreach ($this->users as $row)
-                <flux:table.row wire:key="{{ $row->id }}">
-                    <flux:table.cell>
-                        <a href="{{ route('admin.users-edit', $row->id) }}" class="flex min-w-0 items-center gap-3">
-                            <flux:avatar :src="$row->photo_url" :name="$row->name" />
-                            <div class="min-w-0">
-                                <flux:text variant="strong" class="truncate hover:underline">{{ $row->name }}</flux:text>
-                                <flux:text class="truncate">{{ $row->email }}</flux:text>
-                            </div>
-                        </a>
-                    </flux:table.cell>
+                    <flux:table.row wire:key="{{ $row->id }}">
+                        <flux:table.cell>
+                            <a href="{{ route('admin.users-edit', $row->id) }}" class="flex min-w-0 items-center gap-3">
+                                <flux:avatar :src="$row->photo_url" :name="$row->name" />
+                                <div class="min-w-0">
+                                    <flux:text
+                                        variant="strong"
+                                        class="truncate hover:underline"
+                                    >{{ $row->name }}</flux:text>
+                                    <flux:text class="truncate">{{ $row->email }}</flux:text>
+                                </div>
+                            </a>
+                        </flux:table.cell>
 
-                    <flux:table.cell class="whitespace-nowrap">{{ $row->role?->name }}</flux:table.cell>
+                        <flux:table.cell class="whitespace-nowrap">{{ $row->role?->name }}</flux:table.cell>
 
-                    <flux:table.cell>
-                        <flux:badge color="{{ $row->active ? 'green' : 'zinc' }}" size="sm">
-                            {{ $row->active ? __('Active') : __('Disabled') }}
-                        </flux:badge>
-                    </flux:table.cell>
+                        <flux:table.cell>
+                            <flux:badge color="{{ $row->active ? 'green' : 'zinc' }}" size="sm">
+                                {{ $row->active ? __('Active') : __('Disabled') }}
+                            </flux:badge>
+                        </flux:table.cell>
 
-                    <flux:table.cell>
-                        {{ $row->last_seen_at?->format('M d, Y H:i') ?? __('Never') }}
-                    </flux:table.cell>
+                        <flux:table.cell>
+                            {{ $row->last_seen_at?->format('M d, Y H:i') ?? __('Never') }}
+                        </flux:table.cell>
 
-                    <flux:table.cell>
-                        <flux:dropdown class="flex justify-end">
-                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
-                            <flux:menu>
-                                @can('users.edit')
-                                <flux:menu.item icon="pencil" href="{{ route('admin.users-edit', $row->id) }}" >
-                                    {{ __('Edit') }}
-                                </flux:menu.item>
+                        <flux:table.cell>
+                            <flux:dropdown class="flex justify-end">
+                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
+                                <flux:menu>
+                                    @can('users.edit')
+                                        <flux:menu.item icon="pencil" href="{{ route('admin.users-edit', $row->id) }}">
+                                            {{ __('Edit') }}
+                                        </flux:menu.item>
 
-                                <flux:menu.separator />
-                                @if($row->active)
-                                <flux:menu.item icon="no-symbol" variant="danger" wire:click="toggleStatus({{ $row->id }})">
-                                    {{ __('Disable') }}
-                                </flux:menu.item>
-                                @else
-                                <flux:menu.item icon="check-circle" icon:variant="outline" class="hover:text-green-500!" wire:click="toggleStatus({{ $row->id }})">
-                                    {{ __('Enable') }}
-                                </flux:menu.item>
-                                @endif
-                                @endcan
-                            </flux:menu>
-                        </flux:dropdown>
-                    </flux:table.cell>
-                </flux:table.row>
+                                        <flux:menu.separator />
+                                        @if ($row->active)
+                                            <flux:menu.item
+                                                icon="no-symbol"
+                                                variant="danger"
+                                                wire:click="toggleStatus({{ $row->id }})"
+                                            >
+                                                {{ __('Disable') }}
+                                            </flux:menu.item>
+                                        @else
+                                            <flux:menu.item
+                                                icon="check-circle"
+                                                icon:variant="outline"
+                                                class="hover:text-green-500!"
+                                                wire:click="toggleStatus({{ $row->id }})"
+                                            >
+                                                {{ __('Enable') }}
+                                            </flux:menu.item>
+                                        @endif
+                                    @endcan
+                                </flux:menu>
+                            </flux:dropdown>
+                        </flux:table.cell>
+                    </flux:table.row>
                 @endforeach
             </flux:table.rows>
         </flux:table>
@@ -202,7 +248,7 @@ return new class extends Component
                     <flux:select.option :value="$assignable->id">{{ $assignable->name }}</flux:select.option>
                 @endforeach
             </flux:select>
-            <div class="flex mt-6">
+            <div class="mt-6 flex">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary">{{ __('Send Invite') }}</flux:button>
             </div>

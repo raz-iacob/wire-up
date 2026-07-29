@@ -171,13 +171,19 @@ return new class extends Component
                 </flux:heading>
 
                 <div class="w-full md:w-64">
-                    <flux:input icon="magnifying-glass" wire:model.live.debounce.400ms="search" placeholder="{{ __('Search…') }}" clearable />
+                    <flux:input
+                        icon="magnifying-glass"
+                        wire:model.live.debounce.400ms="search"
+                        placeholder="{{ __('Search…') }}"
+                        clearable
+                    />
                 </div>
             </div>
 
             <div
-                class="-mx-2 grid min-h-120 max-h-[60vh] content-start gap-1 overflow-y-auto overscroll-contain px-2"
-                wire:loading.class="opacity-60" wire:target="loadMore, updatedSearch"
+                class="-mx-2 grid max-h-[60vh] min-h-120 content-start gap-1 overflow-y-auto overscroll-contain px-2"
+                wire:loading.class="opacity-60"
+                wire:target="loadMore, updatedSearch"
             >
                 @forelse ($records as $record)
                     <button
@@ -202,7 +208,12 @@ return new class extends Component
 
                         <div class="size-11 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
                             @if ($record['thumbnail'])
-                                <img src="{{ $record['thumbnail'] }}" alt="" class="size-full object-cover" loading="lazy" />
+                                <img
+                                    src="{{ $record['thumbnail'] }}"
+                                    alt=""
+                                    class="size-full object-cover"
+                                    loading="lazy"
+                                />
                             @else
                                 <div class="flex size-full items-center justify-center text-zinc-300 dark:text-zinc-600">
                                     <flux:icon name="photo" class="size-5" />
@@ -219,7 +230,11 @@ return new class extends Component
                             @endif
                         </div>
 
-                        <flux:badge color="{{ $record['status']['color'] }}" size="sm" class="shrink-0">{{ $record['status']['label'] }}</flux:badge>
+                        <flux:badge
+                            color="{{ $record['status']['color'] }}"
+                            size="sm"
+                            class="shrink-0"
+                        >{{ $record['status']['label'] }}</flux:badge>
                     </button>
                 @empty
                     @if ($loaded)

@@ -55,6 +55,13 @@ return new class extends Component
         $this->redirectRoute('login', navigate: true);
     }
 
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Reset Password'))
+            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
+    }
+
     protected function ensureIsNotRateLimited(): void
     {
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
@@ -75,13 +82,6 @@ return new class extends Component
     {
         return Str::transliterate('reset|'.Str::lower($this->email).'|'.request()->ip());
     }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title(__('Reset Password'))
-            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
-    }
 };
 ?>
 
@@ -90,7 +90,7 @@ return new class extends Component
         <flux:heading size="xl">{{ __('Reset password') }}</flux:heading>
         <flux:subheading>{{ __('Please enter your new password below') }}</flux:subheading>
     </div>
-    
+
     <form method="POST" wire:submit="resetPassword" class="flex flex-col gap-6">
         <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
 
@@ -115,9 +115,7 @@ return new class extends Component
         />
 
         <div class="flex items-center justify-end">
-            <flux:button type="submit" variant="primary" class="w-full">
-                {{ __('Reset password') }}
-            </flux:button>
+            <flux:button type="submit" variant="primary" class="w-full"> {{ __('Reset password') }} </flux:button>
         </div>
     </form>
 </div>

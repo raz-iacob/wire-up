@@ -52,5 +52,6 @@ return new class extends Component
         :crops="$crops"
         :locale="$locale"
         :multi-locale="$multiLocale"
-        :label="$label" />
+        :label="$label"
+    />
 </div>

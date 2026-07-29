@@ -21,17 +21,6 @@ return new class extends Component
     }
 
     /**
-     * @return array{start: CarbonInterface, end: CarbonInterface}
-     */
-    private function period(): array
-    {
-        $start = $this->datesFilter?->getStartDate() ?? now()->subDays(30);
-        $end = $this->datesFilter?->getEndDate() ?? now();
-
-        return ['start' => $start->copy()->startOfDay(), 'end' => $end->copy()->endOfDay()];
-    }
-
-    /**
      * @return array{
      *     totals: array{activeUsers: int, newUsers: int, sessions: int, pageViews: int},
      *     timeseries: array<int, array{date: string, users: int}>,
@@ -52,7 +41,7 @@ return new class extends Component
                 'countries' => $analytics->topCountries($start, $end),
                 'pages' => $analytics->topPages($start, $end),
             ];
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }
@@ -62,6 +51,17 @@ return new class extends Component
         return $this->view()
             ->title(__('Analytics'))
             ->layout('layouts::admin');
+    }
+
+    /**
+     * @return array{start: CarbonInterface, end: CarbonInterface}
+     */
+    private function period(): array
+    {
+        $start = $this->datesFilter?->getStartDate() ?? now()->subDays(30);
+        $end = $this->datesFilter?->getEndDate() ?? now();
+
+        return ['start' => $start->copy()->startOfDay(), 'end' => $end->copy()->endOfDay()];
     }
 };
 ?>
@@ -75,7 +75,12 @@ return new class extends Component
         <div class="flex w-full items-center gap-3 sm:w-auto">
             <flux:icon.loading wire:loading wire:target="datesFilter" class="size-5 shrink-0 text-zinc-400" />
             <div class="ml-4 w-full sm:w-64">
-                <flux:date-picker mode="range" wire:model.live="datesFilter" presets="today yesterday thisWeek last7Days thisMonth last30Days last3Months last6Months yearToDate" :max="now()->format('Y-m-d')" />
+                <flux:date-picker
+                    mode="range"
+                    wire:model.live="datesFilter"
+                    presets="today yesterday thisWeek last7Days thisMonth last30Days last3Months last6Months yearToDate"
+                    :max="now()->format('Y-m-d')"
+                />
             </div>
         </div>
     </div>
@@ -83,7 +88,8 @@ return new class extends Component
     @if ($this->report === null)
         <flux:callout icon="exclamation-triangle" variant="warning">
             <flux:callout.heading>{{ __('Analytics unavailable') }}</flux:callout.heading>
-            <flux:callout.text>{{ __('Google Analytics did not respond. Check the connection in Settings → Integrations.') }}</flux:callout.text>
+            <flux:callout.text>
+                {{ __('Google Analytics did not respond. Check the connection in Settings → Integrations.') }}</flux:callout.text>
         </flux:callout>
     @else
         @php($totals = $this->report['totals'])
@@ -94,7 +100,10 @@ return new class extends Component
                     <flux:icon name="users" class="size-6" />
                 </div>
                 <div class="min-w-0">
-                    <flux:heading size="xl" class="tabular-nums">{{ number_format($totals['activeUsers']) }}</flux:heading>
+                    <flux:heading
+                        size="xl"
+                        class="tabular-nums"
+                    >{{ number_format($totals['activeUsers']) }}</flux:heading>
                     <flux:subheading>{{ __('Active users') }}</flux:subheading>
                 </div>
             </flux:card>
@@ -124,7 +133,10 @@ return new class extends Component
                     <flux:icon name="eye" class="size-6" />
                 </div>
                 <div class="min-w-0">
-                    <flux:heading size="xl" class="tabular-nums">{{ number_format($totals['pageViews']) }}</flux:heading>
+                    <flux:heading
+                        size="xl"
+                        class="tabular-nums"
+                    >{{ number_format($totals['pageViews']) }}</flux:heading>
                     <flux:subheading>{{ __('Page views') }}</flux:subheading>
                 </div>
             </flux:card>
@@ -165,7 +177,10 @@ return new class extends Component
                 @else
                     <div class="divide-y divide-zinc-100 dark:divide-white/10">
                         @foreach ($this->report['countries'] as $row)
-                            <div wire:key="country-{{ $loop->index }}" class="flex items-center justify-between gap-3 py-2.5">
+                            <div
+                                wire:key="country-{{ $loop->index }}"
+                                class="flex items-center justify-between gap-3 py-2.5"
+                            >
                                 <flux:text class="truncate">{{ $row['country'] }}</flux:text>
                                 <flux:text class="font-medium tabular-nums">{{ number_format($row['users']) }}</flux:text>
                             </div>
@@ -181,10 +196,16 @@ return new class extends Component
                 @else
                     <div class="divide-y divide-zinc-100 dark:divide-white/10">
                         @foreach ($this->report['pages'] as $row)
-                            <div wire:key="page-{{ $loop->index }}" class="flex items-center justify-between gap-3 py-2.5">
+                            <div
+                                wire:key="page-{{ $loop->index }}"
+                                class="flex items-center justify-between gap-3 py-2.5"
+                            >
                                 <div class="min-w-0 flex-1">
                                     <flux:heading size="sm" class="truncate">{{ $row['title'] }}</flux:heading>
-                                    <flux:text size="sm" class="truncate text-zinc-500 dark:text-zinc-400">{{ $row['path'] }}</flux:text>
+                                    <flux:text
+                                        size="sm"
+                                        class="truncate text-zinc-500 dark:text-zinc-400"
+                                    >{{ $row['path'] }}</flux:text>
                                 </div>
                                 <flux:text class="font-medium tabular-nums">{{ number_format($row['views']) }}</flux:text>
                             </div>

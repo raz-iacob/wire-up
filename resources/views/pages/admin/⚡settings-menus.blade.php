@@ -235,6 +235,13 @@ return new class extends Component
         Flux::toast(__('Menus have been updated.'), variant: 'success');
     }
 
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Menus'))
+            ->layout('layouts::admin');
+    }
+
     private function menuIndex(string $key): ?int
     {
         foreach ($this->menus as $index => $menu) {
@@ -244,13 +251,6 @@ return new class extends Component
         }
 
         return null;
-    }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title(__('Menus'))
-            ->layout('layouts::admin');
     }
 
     /**
@@ -500,17 +500,23 @@ return new class extends Component
     <form
         wire:submit="update"
         wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
-        class="grid md:grid-cols-5 gap-10 items-start"
+        class="grid items-start gap-10 md:grid-cols-5"
     >
         <div class="space-y-10 md:col-span-3">
             {{-- Built-in menus --}}
             @foreach ($builtinMenus as $i => $menu)
-                <x-admin.menu-builder-section :menu="$menu" :index="$i" :locale="$locale" :pages="$pages" :multi-locale="$multiLocale" />
+                <x-admin.menu-builder-section
+                    :menu="$menu"
+                    :index="$i"
+                    :locale="$locale"
+                    :pages="$pages"
+                    :multi-locale="$multiLocale"
+                />
             @endforeach
 
             {{-- Custom menus --}}
             <div>
-                <div class="flex items-center gap-3 mb-2">
+                <div class="mb-2 flex items-center gap-3">
                     <flux:label>{{ __('Custom menus') }}</flux:label>
                     @if ($multiLocale)
                         <x-admin.locale-switcher :locale="$locale" />
@@ -519,7 +525,13 @@ return new class extends Component
 
                 <div class="divide-y-2 divide-gray-200 dark:divide-white/20">
                     @forelse ($customMenus as $i => $menu)
-                        <x-admin.menu-builder-section :menu="$menu" :index="$i" :locale="$locale" :pages="$pages" :multi-locale="$multiLocale" />
+                        <x-admin.menu-builder-section
+                            :menu="$menu"
+                            :index="$i"
+                            :locale="$locale"
+                            :pages="$pages"
+                            :multi-locale="$multiLocale"
+                        />
                     @empty
                         <div class="mt-4">
                             <flux:text>{{ __('No custom menus yet. Add your first one below.') }}</flux:text>
@@ -533,9 +545,7 @@ return new class extends Component
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <flux:button type="submit" variant="primary" icon="check">
-                    {{ __('Update') }}
-                </flux:button>
+                <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
             </div>
         </div>
     </form>
@@ -596,15 +606,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
             {{ __('Settings') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('Menus') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('Menus') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('Menus') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>
+                {{ __('Settings') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection

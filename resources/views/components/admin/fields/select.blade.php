@@ -10,11 +10,19 @@
 
 <flux:field wire:key="field-{{ $key }}-{{ $translatable ? $locale : 'shared' }}">
     @include('components.admin.fields.partials.label')
-    <flux:select variant="listbox" wire:model="{{ $path }}" :required="$required" :placeholder="__('Choose an option')" clearable>
-        @foreach($options as $option)
+    <flux:select
+        variant="listbox"
+        wire:model="{{ $path }}"
+        :required="$required"
+        :placeholder="__('Choose an option')"
+        clearable
+    >
+        @foreach ($options as $option)
             <flux:select.option value="{{ $option }}">{{ $option }}</flux:select.option>
         @endforeach
     </flux:select>
-    @if($help)<flux:description>{{ $help }}</flux:description>@endif
+    @if ($help)
+        <flux:description>{{ $help }}</flux:description>
+    @endif
     <flux:error name="{{ $path }}" />
 </flux:field>

@@ -33,16 +33,16 @@
     $showDirections = $directions['enabled'] && $directions['text'] !== '' && $directions['url'] !== null;
 @endphp
 
-<section
-    @class([
-        'w-full',
-        'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
-        ($pad ?? 'py-16') => $hasBg,
-    ])
->
+<section @class([
+    'w-full',
+    'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+    ($pad ?? 'py-16') => $hasBg,
+])>
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         @if ($heading)
-            <div class="mb-8 tracking-tight [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size)">{!! $heading !!}</div>
+            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
+                {!! $heading !!}
+            </div>
         @endif
 
         <div @class([
@@ -72,7 +72,9 @@
                 @endif
 
                 @if (strip_tags($hours) !== '')
-                    <div class="opacity-90 [&_a]:text-(--wire-accent) [&_a]:underline [&_p]:whitespace-pre-wrap [&>p]:my-1 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 *:first:mt-0 *:last:mb-0">{!! $hours !!}</div>
+                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&_p]:whitespace-pre-wrap [&>p]:my-1 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 opacity-90 *:first:mt-0 *:last:mb-0">
+                        {!! $hours !!}
+                    </div>
                 @endif
 
                 @if ($phone !== '' || $email !== '')

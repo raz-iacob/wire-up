@@ -40,12 +40,17 @@
         <div @class(['md:flex md:items-start md:gap-10' => $photo])>
             @if ($photo)
                 <div class="wire-card aspect-square w-full max-w-xs overflow-hidden rounded-[calc(var(--wire-radius)*1.5)] bg-(--wire-card-bg) md:w-1/4 md:max-w-none md:shrink-0">
-                    <img src="{{ $imageUrl($photo, 900) }}" alt="{{ $photo->alt_text ?? $heading }}" loading="lazy" class="size-full object-cover" />
+                    <img
+                        src="{{ $imageUrl($photo, 900) }}"
+                        alt="{{ $photo->alt_text ?? $heading }}"
+                        loading="lazy"
+                        class="size-full object-cover"
+                    />
                 </div>
             @endif
 
             <div @class(['flex flex-col gap-5', 'mt-6 min-w-0 flex-1 md:mt-0' => $photo])>
-                <h1 class="tracking-tight text-(length:--wire-heading-size)">{{ $heading }}</h1>
+                <h1 class="text-(length:--wire-heading-size) tracking-tight">{{ $heading }}</h1>
 
                 @if ($when !== '' || mb_trim($location) !== '')
                     <div class="flex flex-col gap-2">
@@ -65,7 +70,7 @@
                 @endif
 
                 @if (strip_tags($overview) !== '')
-                    <div class="max-w-none leading-relaxed [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 *:first:mt-0 *:last:mb-0">
+                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 max-w-none leading-relaxed *:first:mt-0 *:last:mb-0">
                         {!! $overview !!}
                     </div>
                 @endif

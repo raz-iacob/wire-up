@@ -1,7 +1,7 @@
 @props(['items' => []])
 
 @php
-    $currentUrl = rtrim(url()->current(), '/');
+    $currentUrl = mb_rtrim(url()->current(), '/');
 
     $groups = [];
     $current = ['heading' => '', 'items' => []];
@@ -38,13 +38,16 @@
                     return;
                 }
 
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            this.active = entry.target.id;
-                        }
-                    });
-                }, { rootMargin: '0px 0px -65% 0px' });
+                const observer = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                this.active = entry.target.id;
+                            }
+                        });
+                    },
+                    { rootMargin: '0px 0px -65% 0px' },
+                );
 
                 targets.forEach((target) => observer.observe(target));
             },
@@ -53,7 +56,7 @@
         @foreach ($groups as $group)
             <div wire:key="navgroup-{{ $loop->index }}">
                 @if ($group['heading'] !== '')
-                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-60">{{ $group['heading'] }}</p>
+                    <p class="mb-2 text-xs font-semibold tracking-wide uppercase opacity-60">{{ $group['heading'] }}</p>
                 @endif
 
                 @if ($group['items'] !== [])
@@ -61,7 +64,7 @@
                         @foreach ($group['items'] as $item)
                             @php
                                 $fragment = \Illuminate\Support\Str::contains($item['url'], '#') ? \Illuminate\Support\Str::after($item['url'], '#') : '';
-                                $serverActive = $fragment === '' && $item['url'] !== '' && rtrim($item['url'], '/') === $currentUrl;
+                                $serverActive = $fragment === '' && $item['url'] !== '' && mb_rtrim($item['url'], '/') === $currentUrl;
                                 $badgeClasses = match ($item['badgeColor']) {
                                     'primary' => 'bg-(--wire-primary-bg) text-(--wire-primary-text)',
                                     'green' => 'bg-green-100 text-green-700',

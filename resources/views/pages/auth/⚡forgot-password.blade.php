@@ -3,20 +3,18 @@
 declare(strict_types=1);
 
 use App\Services\SettingsService;
-use Livewire\Component;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Component;
 
 return new class extends Component
 {
     public string $email = '';
 
-    public function mount(): void
-    {
-    }
+    public function mount(): void {}
 
     public function sendPasswordResetLink(): void
     {
@@ -30,11 +28,18 @@ return new class extends Component
 
         try {
             Password::sendResetLink($this->only('email'));
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             report($exception);
         }
 
         session()->flash('status', __('A reset link will be sent if the account exists.'));
+    }
+
+    public function render(): View
+    {
+        return $this->view()
+            ->title(__('Forgot password'))
+            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
     }
 
     protected function ensureIsNotRateLimited(): void
@@ -56,13 +61,6 @@ return new class extends Component
     protected function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
-    }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title(__('Forgot password'))
-            ->layout('layouts::auth.'.resolve(SettingsService::class)->authLayout());
     }
 };
 ?>

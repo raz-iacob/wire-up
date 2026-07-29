@@ -166,10 +166,24 @@ return new class extends Component
 ?>
 
 <x-admin.settings-layout>
-    <form wire:submit="update" wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}" class="grid md:grid-cols-5 gap-10 items-start">
+    <form
+        wire:submit="update"
+        wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
+        class="grid items-start gap-10 md:grid-cols-5"
+    >
         <div class="space-y-8 md:col-span-3">
-            <x-forms.input-translated name="title" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Title') }}" />
-            <x-forms.textarea-translated name="description" :$locale :multi-locale="count($activeLocales) > 1" label="{{ __('Tagline') }}" />
+            <x-forms.input-translated
+                name="title"
+                :$locale
+                :multi-locale="count($activeLocales) > 1"
+                label="{{ __('Title') }}"
+            />
+            <x-forms.textarea-translated
+                name="description"
+                :$locale
+                :multi-locale="count($activeLocales) > 1"
+                label="{{ __('Tagline') }}"
+            />
 
             <livewire:admin.media-selector
                 wire:model="favicon"
@@ -197,48 +211,58 @@ return new class extends Component
             />
 
             <div>
-                <flux:button type="submit" variant="primary" icon="check">
-                    {{ __('Update') }}
-                </flux:button>
+                <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
             </div>
         </div>
 
-        <div class="md:sticky md:top-20 md:col-span-2" x-data="{
-            faviconUrl() {
-                const f = $wire.favicon
-                if (! f) return null
-                const c = f.crop && f.crop.default
-                if (c && f.source) {
-                    const opts = `w=${c.w || 512},h=${c.h || 512},crop=${c.crop_w || 0}-${c.crop_h || 0}-${c.crop_x || 0}-${c.crop_y || 0},q=${c.q || 80},fm=${c.fm || 'png'}`
-                    return `/img/${opts}/${f.source}`
-                }
-                return f.preview || null
-            },
-            ogImageUrl() {
-                const f = $wire.default_og_image
-                if (! f) return null
-                const c = f.crop && f.crop.default
-                if (c && f.source) {
-                    const opts = `w=${c.w || 1200},h=${c.h || 630},crop=${c.crop_w || 0}-${c.crop_h || 0}-${c.crop_x || 0}-${c.crop_y || 0},q=${c.q || 80},fm=${c.fm || 'jpg'}`
-                    return `/img/${opts}/${f.source}`
-                }
-                return f.preview || null
-            }
-        }">
+        <div
+            class="md:sticky md:top-20 md:col-span-2"
+            x-data="{
+                faviconUrl() {
+                    const f = $wire.favicon;
+                    if (! f) return null;
+                    const c = f.crop && f.crop.default;
+                    if (c && f.source) {
+                        const opts = `w=${c.w || 512},h=${c.h || 512},crop=${c.crop_w || 0}-${c.crop_h || 0}-${c.crop_x || 0}-${c.crop_y || 0},q=${c.q || 80},fm=${c.fm || 'png'}`;
+                        return `/img/${opts}/${f.source}`;
+                    }
+                    return f.preview || null;
+                },
+                ogImageUrl() {
+                    const f = $wire.default_og_image;
+                    if (! f) return null;
+                    const c = f.crop && f.crop.default;
+                    if (c && f.source) {
+                        const opts = `w=${c.w || 1200},h=${c.h || 630},crop=${c.crop_w || 0}-${c.crop_h || 0}-${c.crop_x || 0}-${c.crop_y || 0},q=${c.q || 80},fm=${c.fm || 'jpg'}`;
+                        return `/img/${opts}/${f.source}`;
+                    }
+                    return f.preview || null;
+                },
+            }"
+        >
             <flux:text class="mb-3">{{ __('This is how your site will appear in search results.') }}</flux:text>
-            <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-5">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="flex items-center justify-center size-7 shrink-0 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-700">
+            <div class="rounded-lg border border-zinc-200 p-5 dark:border-zinc-700">
+                <div class="mb-2 flex items-center gap-3">
+                    <div class="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-700">
                         <img x-cloak x-show="faviconUrl()" :src="faviconUrl()" alt="" class="size-full object-cover" />
                         <flux:icon icon="globe-alt" variant="mini" class="text-zinc-400" x-show="! faviconUrl()" />
                     </div>
                     <div class="min-w-0">
-                        <flux:heading class="truncate text-sm!" x-text="$wire.title[$wire.locale] || '{{ __('Website title') }}'"></flux:heading>
+                        <flux:heading
+                            class="truncate text-sm!"
+                            x-text="$wire.title[$wire.locale] || '{{ __('Website title') }}'"
+                        ></flux:heading>
                         <flux:text class="text-xs">{{ str(config('app.url'))->after('://') }}</flux:text>
                     </div>
                 </div>
-                <flux:heading class="text-xl! text-blue-700 dark:text-blue-400" x-text="$wire.title[$wire.locale] || '{{ __('Website title') }}'"></flux:heading>
-                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400" x-text="$wire.description[$wire.locale] || '{{ __('Your site tagline goes here.') }}'"></flux:text>
+                <flux:heading
+                    class="text-xl! text-blue-700 dark:text-blue-400"
+                    x-text="$wire.title[$wire.locale] || '{{ __('Website title') }}'"
+                ></flux:heading>
+                <flux:text
+                    class="text-sm text-zinc-500 dark:text-zinc-400"
+                    x-text="$wire.description[$wire.locale] || '{{ __('Your site tagline goes here.') }}'"
+                ></flux:text>
             </div>
 
             <flux:text class="mt-6 mb-3">{{ __('And how it appears when shared on social media.') }}</flux:text>
@@ -249,10 +273,16 @@ return new class extends Component
                         <flux:icon icon="photo" class="text-zinc-400" />
                     </div>
                 </div>
-                <div class="border-t border-zinc-200 dark:border-zinc-700 px-4 py-3">
-                    <flux:text class="text-xs uppercase text-zinc-400">{{ str(config('app.url'))->after('://') }}</flux:text>
-                    <flux:heading class="truncate text-sm!" x-text="$wire.title[$wire.locale] || '{{ __('Website title') }}'"></flux:heading>
-                    <flux:text class="truncate text-xs text-zinc-500 dark:text-zinc-400" x-text="$wire.description[$wire.locale] || '{{ __('Your site tagline goes here.') }}'"></flux:text>
+                <div class="border-t border-zinc-200 px-4 py-3 dark:border-zinc-700">
+                    <flux:text class="text-xs text-zinc-400 uppercase">{{ str(config('app.url'))->after('://') }}</flux:text>
+                    <flux:heading
+                        class="truncate text-sm!"
+                        x-text="$wire.title[$wire.locale] || '{{ __('Website title') }}'"
+                    ></flux:heading>
+                    <flux:text
+                        class="truncate text-xs text-zinc-500 dark:text-zinc-400"
+                        x-text="$wire.description[$wire.locale] || '{{ __('Your site tagline goes here.') }}'"
+                    ></flux:text>
                 </div>
             </div>
         </div>
@@ -264,15 +294,14 @@ return new class extends Component
         <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
             {{ __('Settings') }}
         </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>
-            {{ __('Identity') }}
-        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item> {{ __('Identity') }} </flux:breadcrumbs.item>
     </flux:breadcrumbs>
     <flux:dropdown class="md:hidden">
         <flux:navbar.item icon-trailing="chevron-down">{{ __('Identity') }}</flux:navbar.item>
 
         <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>{{ __('Settings') }}</flux:navmenu.item>
+            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>
+                {{ __('Settings') }}</flux:navmenu.item>
         </flux:navmenu>
     </flux:dropdown>
 @endsection
