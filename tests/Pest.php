@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
 use Pest\Browser\Playwright\Playwright;
@@ -18,6 +19,7 @@ pest()->extend(TestCase::class)
         Str::createUuidsNormally();
         Http::preventStrayRequests();
         Process::preventStrayProcesses();
+        Validator::fakeDnsLookups();
         Sleep::fake();
 
         config(['media.cache_path' => storage_path('framework/images/test-'.(ParallelTesting::token() ?: 'single'))]);

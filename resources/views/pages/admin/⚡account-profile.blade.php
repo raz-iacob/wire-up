@@ -52,7 +52,7 @@ return new class extends Component
                 'required',
                 'string',
                 'lowercase',
-                'email',
+                'email:rfc,dns',
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user->id),
             ],

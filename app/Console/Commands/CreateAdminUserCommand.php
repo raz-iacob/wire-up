@@ -33,7 +33,7 @@ final class CreateAdminUserCommand extends Command
             label: 'Enter email',
             placeholder: 'Admin email address',
             required: true,
-            validate: ['required', 'email', 'lowercase', 'max:255', 'unique:users,email'],
+            validate: ['required', 'email:rfc,dns', 'lowercase', 'max:255', 'unique:users,email'],
         );
 
         $password = $this->password();

@@ -37,7 +37,7 @@ final class MailIntegrationForm extends Form
             'mail_username' => ['required', 'string', 'max:255'],
             'mail_password' => ['required', 'string', 'max:500'],
             'mail_encryption' => ['required', 'string', 'in:tls,ssl'],
-            'mail_from_address' => ['required', 'string', 'email', 'max:255'],
+            'mail_from_address' => ['required', 'string', 'email:rfc,dns', 'max:255'],
             'mail_from_name' => ['required', 'string', 'max:100'],
         ];
     }

@@ -486,6 +486,20 @@ it('rejects invalid email connection settings', function (string $field, mixed $
     'bad from address' => ['mail_from_address', 'not-an-email', 'email'],
 ]);
 
+it('rejects a syntactically valid from address on a non-routable domain', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('mailForm.mail_provider', 'custom')
+        ->set('mailForm.mail_host', 'smtp.example.com')
+        ->set('mailForm.mail_username', 'user')
+        ->set('mailForm.mail_password', 'secret')
+        ->set('mailForm.mail_from_address', 'hello@wire-up-no-such-domain.invalid')
+        ->set('mailForm.mail_from_name', 'Site')
+        ->call('connectMail')
+        ->assertHasErrors(['mailForm.mail_from_address' => 'email']);
+});
+
 it('disconnects email by clearing the credentials', function (): void {
     Settings::set([
         'mail_host' => 'smtp.example.com',

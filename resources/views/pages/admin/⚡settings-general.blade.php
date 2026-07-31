@@ -79,7 +79,7 @@ return new class extends Component
             'languages' => ['required', 'array', 'min:1'],
             'languages.*' => ['string', Rule::exists('locales', 'code')],
             'home_page_id' => ['required', 'integer', Rule::exists('pages', 'id')],
-            'contact_email' => ['nullable', 'email', 'max:255'],
+            'contact_email' => ['nullable', 'email:rfc,dns', 'max:255'],
             'currency' => ['required', 'string', Rule::in(array_keys($this->currencies()))],
             'allow_registration' => ['boolean'],
         ], [
