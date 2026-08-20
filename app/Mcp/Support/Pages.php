@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Mcp\Support;
 
+use App\Actions\UpdatePageAction;
 use App\Enums\BlockType;
+use App\Enums\ContentStatus;
+use App\Enums\MediaType;
 use App\Models\Block;
 use App\Models\Page;
 use App\Services\SettingsService;
@@ -43,14 +46,28 @@ final readonly class Pages
     /**
      * @return array<string, mixed>
      */
-    public static function detailed(Page $page): array
+    public static function meta(Page $page): array
     {
-        $page->loadMissing('blocks');
+        $page->loadMissing('media', 'translations');
 
         return [
             ...self::summary($page),
             'description' => $page->description,
             'slugs' => $page->getSlugsArray(),
+            'noindex' => $page->isNoindex(),
+            'og_image' => $page->firstMedia(MediaType::IMAGE, 'og_image')?->id,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function detailed(Page $page): array
+    {
+        $page->loadMissing('blocks');
+
+        return [
+            ...self::meta($page),
             'layout' => $page->resolvedLayout(),
             'blocks' => $page->blocks
                 ->map(fn (Block $block): array => [
@@ -60,6 +77,20 @@ final readonly class Pages
                 ])
                 ->all(),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public static function update(Page $page, array $attributes): void
+    {
+        $status = $page->computed_status;
+
+        if ($status === ContentStatus::SCHEDULED) {
+            $attributes['published_at'] = $page->published_at;
+        }
+
+        new UpdatePageAction()->handle($page, [...$attributes, 'status' => $status]);
     }
 
     /**

@@ -33,6 +33,7 @@ use App\Mcp\Tools\UpdateIdentityTool;
 use App\Mcp\Tools\UpdateInterfaceTranslationsTool;
 use App\Mcp\Tools\UpdateMenuTool;
 use App\Mcp\Tools\UpdatePageBlocksTool;
+use App\Mcp\Tools\UpdatePageTool;
 use App\Mcp\Tools\UpdateRecordTool;
 use App\Mcp\Tools\UpdateSocialTool;
 use Laravel\Mcp\Server;
@@ -63,7 +64,8 @@ Typical workflow for building or replicating a site:
    or adding them later with `update-page-blocks`. To lay out a whole site at
    once, `scaffold-site` creates the pages, header/footer navigation and
    homepage in a single call — then fill each page's blocks with
-   `update-page-blocks`.
+   `update-page-blocks`. Change a page's title, meta description, web address
+   or SEO settings afterwards with `update-page`.
 5. Wire the pages into navigation with `get-menus` + `update-menu` (header and
    footer), and set social profile links with `update-social`.
 6. For repeating, structured content (products, services, blog posts, events),
@@ -90,6 +92,7 @@ final class WireUpServer extends Server
         ScaffoldSiteTool::class,
         CreatePageTool::class,
         UpdatePageBlocksTool::class,
+        UpdatePageTool::class,
         PublishPageTool::class,
         ListContentTypesTool::class,
         CreateContentTypeTool::class,

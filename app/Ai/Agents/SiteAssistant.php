@@ -81,9 +81,10 @@ final class SiteAssistant implements Agent, Conversational, HasTools
         3. Bring in imagery with import-media-from-url, or search-pexels +
            import-pexels-media for stock photos, then reference the returned source
            paths in block content.
-        4. Create pages as drafts with create-page, then refine them with
-           update-page-blocks. Wire pages into navigation with get-menus + update-menu
-           (header and footer), and set social links with update-social.
+        4. Create pages as drafts with create-page, then refine their content with
+           update-page-blocks and their title, meta description, web address or SEO
+           settings with update-page. Wire pages into navigation with get-menus +
+           update-menu (header and footer), and set social links with update-social.
         5. Publish with publish-page when the owner asks. Publishing is not immediate:
            calling publish-page shows the owner an approval button in the chat. When it
            returns "awaiting_confirmation", do not call it again — just tell the owner it

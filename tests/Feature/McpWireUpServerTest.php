@@ -91,6 +91,8 @@ it('gets a page in full including its blocks', function (): void {
         ->assertSee('Detailed Page')
         ->assertSee('A described page.')
         ->assertSee('detailed-page')
+        ->assertSee('"noindex":false')
+        ->assertSee('"og_image":null')
         ->assertSee('"type":"rich-text"')
         ->assertSee('Block body');
 });

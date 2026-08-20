@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ContentStatus;
 use App\Mcp\Servers\WireUpServer;
 use App\Mcp\Tools\ScaffoldSiteTool;
 use App\Models\Page;
@@ -62,6 +63,39 @@ it('reuses a page with an existing title and leaves the homepage unset', functio
     $menus = Settings::get('menus');
     expect(collect($menus)->firstWhere('key', 'footer')['items']['en'])->toHaveCount(1)
         ->and(collect($menus)->firstWhere('key', 'header')['items']['en'])->toHaveCount(1);
+});
+
+it('applies the description it was given to a page it reuses', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Studio Notes',
+        'description' => 'Welcome to our website!',
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now(),
+    ]);
+    $page->updateBlocks([['id' => 'new-1', 'type' => 'rich-text', 'content' => ['body' => ['en' => '<p>Hand written</p>']]]]);
+
+    WireUpServer::tool(ScaffoldSiteTool::class, ['pages' => [
+        ['title' => 'Studio Notes', 'description' => 'Ceramics from a canal-side studio.'],
+    ]])
+        ->assertOk()
+        ->assertSee('"created":false')
+        ->assertSee('Ceramics from a canal-side studio.');
+
+    $page->refresh();
+
+    expect($page->description)->toBe('Ceramics from a canal-side studio.')
+        ->and($page->status)->toBe(ContentStatus::PUBLISHED)
+        ->and($page->blocks()->count())->toBe(1);
+});
+
+it('leaves the description of a reused page alone when none is given', function (): void {
+    $page = Page::factory()->create(['title' => 'Keep My Meta', 'description' => 'Written by hand.']);
+
+    WireUpServer::tool(ScaffoldSiteTool::class, ['pages' => [['title' => 'Keep My Meta']]])
+        ->assertOk()
+        ->assertSee('Written by hand.');
+
+    expect($page->refresh()->description)->toBe('Written by hand.');
 });
 
 it('rejects duplicate titles in one scaffold call', function (): void {

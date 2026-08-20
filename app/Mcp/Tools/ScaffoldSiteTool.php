@@ -19,7 +19,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
 #[Name('scaffold-site')]
-#[Description('Scaffold a site skeleton in one call: create (or reuse, by title) the given pages as blank drafts, wire them into the header and footer navigation, and set the homepage. Fill each page with update-page-blocks afterwards, then publish-page. Sets (replaces) the header and footer menus for the default locale.')]
+#[Description('Scaffold a site skeleton in one call: create (or reuse, by title) the given pages as blank drafts, wire them into the header and footer navigation, and set the homepage. Fill each page with update-page-blocks afterwards, then publish-page. Sets (replaces) the header and footer menus for the default locale. A page that already exists with the given title is reused: its description is overwritten when you pass one, and its blocks, layout and publication status are left untouched.')]
 final class ScaffoldSiteTool extends Tool
 {
     public function handle(Request $request): Response
@@ -68,10 +68,16 @@ final class ScaffoldSiteTool extends Tool
             $existing = $this->findByTitle($title, $locale);
             $created = ! $existing instanceof Page;
 
+            $description = is_string($definition['description'] ?? null) ? $definition['description'] : null;
+
             $page = $existing ?? new CreatePageAction()->handle([
                 'title' => $title,
-                'description' => (string) ($definition['description'] ?? ''),
+                'description' => (string) $description,
             ]);
+
+            if (! $created && $description !== null) {
+                Pages::update($page, ['description' => [...$page->translationsFor('description'), $locale => $description]]);
+            }
 
             $nav = is_string($definition['nav'] ?? null) ? $definition['nav'] : 'header';
 
@@ -87,7 +93,9 @@ final class ScaffoldSiteTool extends Tool
                 $homepageId = $page->id;
             }
 
-            $pages[] = ['created' => $created, 'nav' => $nav, ...Pages::summary($page->refresh())];
+            $page->refresh();
+
+            $pages[] = ['created' => $created, 'nav' => $nav, ...Pages::summary($page), 'description' => $page->description];
         }
 
         $menus = SettingsService::current()->allMenus();
@@ -112,7 +120,7 @@ final class ScaffoldSiteTool extends Tool
             'header_nav' => array_column($header, 'label'),
             'footer_nav' => array_column($footer, 'label'),
             'homepage_id' => $homepageId,
-            'hint' => 'Pages are blank drafts. Fill each one with update-page-blocks (see the block-types resource), then publish-page. Navigation links and the homepage resolve once the pages are published.',
+            'hint' => 'New pages are blank drafts; reused pages ("created": false) kept their existing blocks, layout and status. Fill each one with update-page-blocks (see the block-types resource), adjust titles and SEO with update-page, then publish-page. Navigation links and the homepage resolve once the pages are published.',
         ]);
     }
 
@@ -124,7 +132,7 @@ final class ScaffoldSiteTool extends Tool
         return [
             'pages' => $schema->array()
                 ->items($schema->object())
-                ->description('The pages to scaffold, in order: [{"title": "About", "description": "optional meta description (max 160)", "homepage": false, "nav": "header"|"footer"|"both"|"none"}]. Each page is created as a blank draft; "nav" adds it to the header and/or footer menu (default "header"). Set "homepage": true on exactly one page. A page whose title already exists is reused, not duplicated.')
+                ->description('The pages to scaffold, in order: [{"title": "About", "description": "optional meta description (max 160)", "homepage": false, "nav": "header"|"footer"|"both"|"none"}]. Each page is created as a blank draft; "nav" adds it to the header and/or footer menu (default "header"). Set "homepage": true on exactly one page. A page whose title already exists is reused rather than duplicated, and a "description" you pass replaces the one it already has.')
                 ->required(),
         ];
     }
@@ -132,6 +140,7 @@ final class ScaffoldSiteTool extends Tool
     private function findByTitle(string $title, string $locale): ?Page
     {
         return Page::query()
+            ->with(['slugs', 'translations'])
             ->whereHas('translations', function (Builder $query) use ($title, $locale): void {
                 $query->where('key', 'title')
                     ->where('locale', $locale)

@@ -59,7 +59,10 @@ final class ReplicateSitePrompt extends Prompt
         5. Lay out the pages. Use `scaffold-site` to create every page as a draft and wire
            the header/footer navigation and homepage in one call — mirror the source's nav
            from read-webpage's nav_links. Then fill each page with `update-page-blocks`,
-           composing blocks to match each page's sections.
+           composing blocks to match each page's sections, and set each page's meta
+           description and web address with `update-page` — `scaffold-site` only applies
+           a description to pages it creates, and pages the installer created keep their
+           default one until you change it.
 
         6. Recreate collections as records. If the source has repeating content — products,
            services, blog posts, events, team members, projects, jobs — model it with a
