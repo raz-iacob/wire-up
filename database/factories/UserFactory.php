@@ -28,6 +28,9 @@ final class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => self::$password ??= Hash::make('password'),
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
             'photo' => fake()->optional(0.3)->randomElement(['avatars/user-1.jpg', 'avatars/user-2.jpg', 'avatars/user-3.jpg']),
             'stripe_id' => fake()->uuid(),
             'metadata' => [

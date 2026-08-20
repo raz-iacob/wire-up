@@ -11,6 +11,7 @@ Route::livewire('help', 'pages::admin.help')->name('help');
 
 Route::livewire('account', 'pages::admin.account-profile')->name('account-profile');
 Route::livewire('account/password', 'pages::admin.account-password')->name('account-password');
+Route::livewire('account/security', 'pages::admin.account-security')->name('account-security');
 Route::livewire('account/appearance', 'pages::admin.account-appearance')->name('account-appearance');
 
 Route::middleware('can:pages.view')->group(function (): void {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\LocaleRedirect;
 use App\Http\Middleware\OnlyAdmins;
+use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\TrackUserAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         then: fn () => Route::prefix('admin')->name('admin.')
-            ->middleware(['web', OnlyAdmins::class])
+            ->middleware(['web', OnlyAdmins::class, RequireTwoFactor::class])
             ->group(base_path('routes/admin.php')),
     )
     ->withMiddleware(function (Middleware $middleware): void {

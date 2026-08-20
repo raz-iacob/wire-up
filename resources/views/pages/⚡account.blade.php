@@ -195,6 +195,10 @@ return new class extends Component
 
     <flux:separator />
 
+    <livewire:shared.two-factor />
+
+    <flux:separator />
+
     <section class="space-y-4">
         <div>
             <flux:heading size="lg">{{ __('Delete account') }}</flux:heading>

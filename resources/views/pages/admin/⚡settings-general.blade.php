@@ -29,6 +29,8 @@ return new class extends Component
 
     public bool $allow_registration = false;
 
+    public bool $require_two_factor = false;
+
     public function mount(): void
     {
         $this->languages = Locale::query()->active()->orderBy('name')->pluck('code')->all();
@@ -36,6 +38,7 @@ return new class extends Component
         $this->contact_email = is_string(config('site.contact_email')) ? config()->string('site.contact_email') : '';
         $this->currency = SettingsService::current()->currency();
         $this->allow_registration = SettingsService::current()->allowsRegistration();
+        $this->require_two_factor = SettingsService::current()->requiresTwoFactor();
     }
 
     /**
@@ -82,6 +85,7 @@ return new class extends Component
             'contact_email' => ['nullable', 'email:rfc,dns', 'max:255'],
             'currency' => ['required', 'string', Rule::in(array_keys($this->currencies()))],
             'allow_registration' => ['boolean'],
+            'require_two_factor' => ['boolean'],
         ], [
             'contact_email.email' => __('Enter a valid communication email address.'),
         ], [
@@ -109,6 +113,7 @@ return new class extends Component
             'contact_email' => $validated['contact_email'] ?? '',
             'currency' => $validated['currency'],
             'allow_registration' => $validated['allow_registration'] ?? false,
+            'require_two_factor' => $validated['require_two_factor'] ?? false,
         ]);
 
         Flux::toast(__('Settings have been updated.'), variant: 'success');
@@ -190,6 +195,13 @@ return new class extends Component
                 align="left"
                 :label="__('Allow sign-ups')"
                 :description="__('Let visitors create their own accounts. When off, the registration page is unavailable.')"
+            />
+
+            <flux:switch
+                wire:model="require_two_factor"
+                align="left"
+                :label="__('Require two-factor authentication for staff')"
+                :description="__('Anyone with admin access must set up an authenticator app before they can use the admin panel.')"
             />
 
             <div class="flex items-center gap-4">

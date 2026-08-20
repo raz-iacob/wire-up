@@ -7,6 +7,7 @@ use App\Services\SettingsService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -32,6 +33,21 @@ return new class extends Component
         ]);
 
         $this->ensureIsNotRateLimited();
+
+        $challenged = User::query()->where('email', $credentials['email'])->first();
+
+        if ($challenged !== null
+            && $challenged->active
+            && $challenged->hasEnabledTwoFactorAuthentication()
+            && Hash::check($credentials['password'], $challenged->password)) {
+            RateLimiter::clear($this->throttleKey());
+
+            Session::put(['login.id' => $challenged->id, 'login.remember' => $this->remember]);
+
+            $this->redirect(route('two-factor.challenge'), navigate: true);
+
+            return;
+        }
 
         if (! Auth::attemptWhen($credentials, fn (User $user): bool => $user->active, remember: $this->remember)) {
             RateLimiter::hit($this->throttleKey());

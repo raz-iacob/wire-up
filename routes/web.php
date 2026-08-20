@@ -21,6 +21,7 @@ Route::group(['prefix' => resolve('localization')->setLocale()], function (): vo
         Route::livewire('register', 'pages::auth.register')->name('register');
         Route::livewire('forgot-password', 'pages::auth.forgot-password')->name('password.request');
         Route::livewire('reset-password/{token}', 'pages::auth.reset-password')->name('password.reset');
+        Route::livewire('two-factor-challenge', 'pages::auth.two-factor-challenge')->name('two-factor.challenge');
     });
 
     Route::middleware('auth')->group(function (): void {

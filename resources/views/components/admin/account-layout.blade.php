@@ -17,6 +17,11 @@
             wire:navigate
         >{{ __('Password') }}</flux:tab>
         <flux:tab
+            :href="route('admin.account-security')"
+            :selected="$current('admin.account-security')"
+            wire:navigate
+        >{{ __('Security') }}</flux:tab>
+        <flux:tab
             :href="route('admin.account-appearance')"
             :selected="$current('admin.account-appearance')"
             wire:navigate

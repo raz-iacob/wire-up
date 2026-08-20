@@ -15,6 +15,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * @property-read int $id
@@ -22,6 +23,9 @@ use Illuminate\Support\Str;
  * @property-read string $email
  * @property-read CarbonInterface|null $email_verified_at
  * @property-read string $password
+ * @property-read string|null $two_factor_secret
+ * @property-read string|null $two_factor_recovery_codes
+ * @property-read CarbonInterface|null $two_factor_confirmed_at
  * @property-read string|null $photo
  * @property-read string|null $stripe_id
  * @property-read array<string, mixed>|null $metadata
@@ -42,11 +46,14 @@ use Illuminate\Support\Str;
     'password',
     'remember_token',
     'stripe_id',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+    'two_factor_confirmed_at',
 ])]
 final class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * @return array<string, string>
@@ -59,6 +66,9 @@ final class User extends Authenticatable implements MustVerifyEmail
             'email' => 'string',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_secret' => 'string',
+            'two_factor_recovery_codes' => 'string',
+            'two_factor_confirmed_at' => 'datetime',
             'photo' => 'string',
             'stripe_id' => 'string',
             'metadata' => 'json',
