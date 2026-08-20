@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\ContentStatus;
 use App\Models\Page;
 use App\Models\Settings;
+use App\Models\User;
 
 it('keeps the dark class across wire:navigate when the system prefers dark', function (): void {
     $page = visit('/login')->inDarkMode();
@@ -46,4 +47,35 @@ it('renders the public header and footer without javascript errors', function ()
         ->assertPresent('[data-site-footer]')
         ->assertSee('Docs')
         ->assertSee('Made with Wire-Up');
+});
+
+it('signs a member out from the header logout item', function (): void {
+    $home = Page::factory()->create([
+        'metadata' => ['published_locales' => ['en']],
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'title' => 'Account Chrome',
+    ]);
+    $home->slugs()->create(['locale' => 'en', 'slug' => 'account-chrome']);
+
+    Settings::set([
+        'home_page_id' => $home->id,
+        'allow_registration' => true,
+        'menus' => menusPayload([
+            'header' => ['en' => [
+                ['type' => 'account', 'appearance' => 'link', 'target' => '_self', 'label' => '', 'page_id' => null, 'url' => ''],
+            ]],
+        ]),
+    ]);
+
+    $this->actingAs(User::factory()->member()->create(['active' => true]));
+
+    $page = visit('/');
+    $page->assertSee('Log out')
+        ->assertNoJavascriptErrors();
+
+    $page->press('Log out');
+
+    $page->assertSee('Log in')
+        ->assertDontSee('Log out');
 });

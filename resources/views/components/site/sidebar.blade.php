@@ -50,16 +50,22 @@
         <nav @class(['flex flex-wrap items-center gap-x-6 gap-y-2 md:hidden', 'justify-end' => $isRight])>
             @foreach ($links as $item)
                 @php($active = $item['url'] !== '' && rtrim($item['url'], '/') === $currentUrl)
-                <a
-                    href="{{ $item['url'] }}"
-                    @if ($item['target'] === '_blank') target="_blank" rel="noopener noreferrer" @endif
-                    @if ($active) aria-current="page" @endif
-                    @class([
-                        'text-sm transition',
-                        'font-medium underline underline-offset-8' => $active,
-                        'opacity-70 hover:opacity-100' => ! $active,
-                    ])
-                >{{ $item['label'] }}</a>
+                @php($itemClasses = \Illuminate\Support\Arr::toCssClasses([
+                    'text-sm transition',
+                    'font-medium underline underline-offset-8' => $active,
+                    'opacity-70 hover:opacity-100' => ! $active,
+                ]))
+
+                @if (($item['type'] ?? 'link') === 'logout')
+                    <x-site.logout-form :url="$item['url']" :label="$item['label']" :button-class="$itemClasses" />
+                @else
+                    <a
+                        href="{{ $item['url'] }}"
+                        @if ($item['target'] === '_blank') target="_blank" rel="noopener noreferrer" @endif
+                        @if ($active) aria-current="page" @endif
+                        class="{{ $itemClasses }}"
+                    >{{ $item['label'] }}</a>
+                @endif
             @endforeach
         </nav>
     @elseif ($mobile === 'toggle')

@@ -183,8 +183,40 @@ it('expands an account menu item to the account link for signed-in members', fun
 
     $items = SettingsService::current()->menu('header');
 
-    expect($items)->toHaveCount(1)
+    expect($items)->toHaveCount(2)
+        ->and($items[0]['type'])->toBe('link')
         ->and($items[0]['label'])->toBe(__('Account'))
         ->and($items[0]['url'])->toBe(route('account'))
-        ->and($items[0]['appearance'])->toBe('button');
+        ->and($items[0]['appearance'])->toBe('button')
+        ->and($items[1]['type'])->toBe('logout')
+        ->and($items[1]['label'])->toBe(__('Log out'))
+        ->and($items[1]['url'])->toBe(route('logout'))
+        ->and($items[1]['appearance'])->toBe('button');
+});
+
+it('renders a logout menu item as a csrf-protected post form', function (string $component): void {
+    accountMenuConfig();
+    $this->actingAs(User::factory()->member()->create(['active' => true]));
+
+    $items = SettingsService::current()->menu('header');
+
+    $rendered = $this->blade('<x-dynamic-component :component="$component" :items="$items" />', [
+        'component' => $component,
+        'items' => $items,
+    ]);
+
+    $rendered->assertSee('<form method="POST" action="'.route('logout').'"', false)
+        ->assertSee('name="_token"', false)
+        ->assertSee(__('Log out'))
+        ->assertSee(route('account'), false);
+})->with(['site.nav', 'site.navlist']);
+
+it('renders ordinary menu items as plain links, never as forms', function (): void {
+    accountMenuConfig();
+
+    $items = SettingsService::current()->menu('header');
+
+    $this->blade('<x-site.nav :items="$items" />', ['items' => $items])
+        ->assertDontSee('<form', false)
+        ->assertSee(route('login'), false);
 });

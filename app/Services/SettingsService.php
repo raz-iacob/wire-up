@@ -183,6 +183,11 @@ final class SettingsService
         return (bool) config('site.allow_registration', false);
     }
 
+    public function requiresTwoFactor(): bool
+    {
+        return (bool) config('site.require_two_factor', false);
+    }
+
     /**
      * @return array<int, string>
      */
@@ -933,8 +938,8 @@ final class SettingsService
     {
         $appearance = ($item['appearance'] ?? null) === 'button' ? 'button' : 'link';
 
-        $link = fn (string $label, string $url): array => [
-            'type' => 'link',
+        $entry = fn (string $type, string $label, string $url): array => [
+            'type' => $type,
             'label' => $label,
             'url' => $url,
             'target' => '_self',
@@ -946,13 +951,16 @@ final class SettingsService
         ];
 
         if (auth()->check()) {
-            return [$link(__('Account'), route('account'))];
+            return [
+                $entry('link', __('Account'), route('account')),
+                $entry('logout', __('Log out'), route('logout')),
+            ];
         }
 
-        $links = [$link(__('Log in'), route('login'))];
+        $links = [$entry('link', __('Log in'), route('login'))];
 
         if ($this->allowsRegistration()) {
-            $links[] = $link(__('Sign up'), route('register'));
+            $links[] = $entry('link', __('Sign up'), route('register'));
         }
 
         return $links;

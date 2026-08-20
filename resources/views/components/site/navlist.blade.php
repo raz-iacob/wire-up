@@ -75,6 +75,16 @@
                                     default => 'bg-current/10',
                                 };
                             @endphp
+                            @if (($item['type'] ?? 'link') === 'logout')
+                                <x-site.logout-form
+                                    :url="$item['url']"
+                                    :label="$item['label']"
+                                    button-class="-ms-px flex w-full items-center gap-2.5 border-s-2 border-transparent py-1.5 ps-4 text-start text-sm opacity-70 transition hover:opacity-100"
+                                />
+
+                                @continue
+                            @endif
+
                             <a
                                 href="{{ $item['url'] }}"
                                 @if ($item['target'] === '_blank') target="_blank" rel="noopener noreferrer" @endif

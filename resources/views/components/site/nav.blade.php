@@ -23,10 +23,8 @@
                     ])
                 >{!! $item['icon_svg'] !!}</a>
             @else
-                <a
-                    href="{{ $item['url'] }}"
-                    @if ($item['target'] === '_blank') target="_blank" rel="noopener noreferrer" @endif
-                    @class([
+                @php
+                    $itemClasses = \Illuminate\Support\Arr::toCssClasses([
                         'font-medium transition',
                         'rounded-(--wire-radius) px-4 py-2 bg-(--wire-primary-bg) text-(--wire-primary-text)' => $item['appearance'] === 'button',
                         'text-sm' => $size === 'sm',
@@ -35,8 +33,18 @@
                         'hover:opacity-70' => $hover === 'opacity',
                         'hover:underline' => $hover === 'underline',
                         'hover:scale-105' => $hover === 'scale',
-                    ])
-                >{{ $item['label'] }}</a>
+                    ]);
+                @endphp
+
+                @if (($item['type'] ?? 'link') === 'logout')
+                    <x-site.logout-form :url="$item['url']" :label="$item['label']" :button-class="$itemClasses" />
+                @else
+                    <a
+                        href="{{ $item['url'] }}"
+                        @if ($item['target'] === '_blank') target="_blank" rel="noopener noreferrer" @endif
+                        class="{{ $itemClasses }}"
+                    >{{ $item['label'] }}</a>
+                @endif
             @endif
         @endforeach
     </nav>

@@ -12,11 +12,13 @@ final readonly class SessionController
 {
     public function destroy(Request $request): RedirectResponse
     {
+        $returnsToLogin = Auth::user()?->canAccessAdmin() ?? false;
+
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect(route('login'));
+        return redirect($returnsToLogin ? route('login') : route('home'));
     }
 }
