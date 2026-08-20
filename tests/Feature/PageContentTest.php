@@ -475,6 +475,61 @@ it('renders a location block with an embedded map and contact details', function
         ->assertSee('<ul><li><strong>Mon</strong> 9–5</li></ul>', false);
 });
 
+it('renders rich text in the location address', function (): void {
+    publishPageWithBlocks('loc-html', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'map' => '123 Main St, Springfield',
+            'address' => ['en' => '<p><strong>Acme HQ</strong></p><p>123 Main St<br>Springfield</p>'],
+        ]],
+    ]);
+
+    $this->get(route('page', 'loc-html'))
+        ->assertOk()
+        ->assertSee('<p><strong>Acme HQ</strong></p><p>123 Main St<br>Springfield</p>', false);
+});
+
+it('keeps the line breaks of an address that was saved as plain text', function (): void {
+    publishPageWithBlocks('loc-plain', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'map' => '123 Main St, Springfield',
+            'address' => ['en' => "123 Main St\nSpringfield"],
+        ]],
+    ]);
+
+    $this->get(route('page', 'loc-plain'))
+        ->assertOk()
+        ->assertSee('whitespace-pre-wrap', false)
+        ->assertSee("123 Main St\nSpringfield", false);
+});
+
+it('hides the location address when it holds no readable text', function (): void {
+    publishPageWithBlocks('loc-empty-address', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'map' => '123 Main St, Springfield',
+            'address' => ['en' => '<p></p>'],
+        ]],
+    ]);
+
+    $this->get(route('page', 'loc-empty-address'))
+        ->assertOk()
+        ->assertDontSee('<p></p>', false);
+});
+
+it('builds the directions link from the plain text of a rich text address', function (): void {
+    publishPageWithBlocks('loc-dir-html', [
+        ['id' => 'new-1', 'type' => 'location', 'content' => [
+            'map' => 'https://www.google.com/maps/embed?pb=!1m18',
+            'address' => ['en' => '<p>123 Main St<br>Springfield</p>'],
+            'directions' => ['enabled' => true, 'text' => ['en' => 'Get directions']],
+        ]],
+    ]);
+
+    $this->get(route('page', 'loc-dir-html'))
+        ->assertOk()
+        ->assertSee('query='.urlencode('123 Main St Springfield'), false)
+        ->assertDontSee(urlencode('<p>'), false);
+});
+
 it('renders the location map through the embed api when a google maps key is configured', function (): void {
     Settings::set(['google_maps_api_key' => 'AIzaTESTKEY']);
 

@@ -174,3 +174,31 @@ it('returns null when the video block has no source', function (): void {
     expect(Block::factory()->create(['content' => ['source' => 'upload', 'video' => null]])->videoEmbed())->toBeNull();
     expect(Block::factory()->create(['content' => ['source' => 'url', 'url' => '']])->videoEmbed())->toBeNull();
 });
+
+it('reduces a single rich text field to plain text', function (): void {
+    $block = Block::factory()->create([
+        'content' => ['address' => ['en' => '<p><strong>Acme HQ</strong></p><p>123 Main St<br>Springfield</p>']],
+    ]);
+
+    expect($block->plainTextField('address'))->toBe('Acme HQ 123 Main St Springfield');
+});
+
+it('falls back to the default locale and to an empty string for plain text fields', function (): void {
+    $block = Block::factory()->create([
+        'content' => ['address' => ['en' => '<p>123 Main St</p>']],
+    ]);
+
+    expect($block->plainTextField('address', 'fr'))->toBe('123 Main St')
+        ->and($block->plainTextField('missing'))->toBe('');
+});
+
+it('harvests the address into the block plain text', function (): void {
+    $block = Block::factory()->create([
+        'content' => [
+            'heading' => ['en' => '<p>Find us</p>'],
+            'address' => ['en' => '<p>123 Main St<br>Springfield</p>'],
+        ],
+    ]);
+
+    expect($block->plainText('en'))->toBe('Find us 123 Main St Springfield');
+});

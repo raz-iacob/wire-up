@@ -20,7 +20,7 @@
         default => 'https://www.google.com/maps?q='.urlencode($mapRaw).'&output=embed',
     };
 
-    $dirQuery = $isUrl ? $address : $mapRaw;
+    $dirQuery = $isUrl ? $block->plainTextField('address') : $mapRaw;
     $dirUrl = $dirQuery !== '' ? 'https://www.google.com/maps/search/?api=1&query='.urlencode($dirQuery) : null;
 
     $directions = [
@@ -67,8 +67,10 @@
                     <p class="text-lg font-semibold">{{ $name }}</p>
                 @endif
 
-                @if ($address !== '')
-                    <p class="whitespace-pre-line opacity-90">{{ $address }}</p>
+                @if (strip_tags($address) !== '')
+                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&_p]:whitespace-pre-wrap [&>p]:my-1 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 opacity-90 *:first:mt-0 *:last:mb-0">
+                        {!! $address !!}
+                    </div>
                 @endif
 
                 @if (strip_tags($hours) !== '')

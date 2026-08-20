@@ -36,6 +36,7 @@ final class Block extends Model
     private const array PROSE_FIELDS = [
         'heading', 'subheading', 'intro', 'lead', 'body', 'quote', 'question',
         'answer', 'title', 'description', 'caption', 'label', 'value', 'role', 'bio',
+        'address',
     ];
 
     /**
@@ -98,11 +99,12 @@ final class Block extends Model
         $parts = [];
         $this->harvestText($this->content ?? [], $locale, $default, $parts);
 
-        $spaced = (string) preg_replace('/<\/(?:p|div|li|h[1-6])>|<br\s*\/?>/i', ' ', implode(' ', $parts));
-        $decoded = html_entity_decode(strip_tags($spaced), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $decoded = str_replace("\u{00A0}", ' ', $decoded);
+        return $this->toPlainText(implode(' ', $parts));
+    }
 
-        return (string) str($decoded)->squish();
+    public function plainTextField(string $field, ?string $locale = null): string
+    {
+        return $this->toPlainText($this->text($field, $locale));
     }
 
     /**
@@ -256,6 +258,14 @@ final class Block extends Model
     {
         return ($this->content[$field]['link']['type'] ?? null) === 'url'
             && (bool) ($this->content[$field]['link']['newTab'] ?? false);
+    }
+
+    private function toPlainText(string $value): string
+    {
+        $spaced = (string) preg_replace('/<\/(?:p|div|li|h[1-6])>|<br\s*\/?>/i', ' ', $value);
+        $decoded = html_entity_decode(strip_tags($spaced), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return (string) str(str_replace("\u{00A0}", ' ', $decoded))->squish();
     }
 
     /**

@@ -26,7 +26,7 @@
         :multi-locale="$multiLocale"
         label="{{ __('Name') }}"
     />
-    <x-forms.textarea-translated
+    <x-forms.texteditor-translated
         name="{{ $c }}.address"
         :locale="$locale"
         :multi-locale="$multiLocale"

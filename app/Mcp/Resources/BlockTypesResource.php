@@ -35,7 +35,7 @@ final class BlockTypesResource extends Resource
     {
         return [
             'blocks' => 'A page holds an ordered list of blocks: {"type": "<block key>", "content": {...}}. The defaultContent below shows every field a block supports; omitted fields fall back to sensible defaults.',
-            'localizedText' => 'Text fields (heading, subheading, body, intro, title, quote, author, role, name, label, value, and similar) are objects keyed by locale code, e.g. {"en": "<p>Hello</p>"}. Rich-text fields accept HTML (p, h2-h4, ul/ol, a, strong, em).',
+            'localizedText' => 'Text fields (heading, subheading, body, intro, title, quote, author, role, name, label, value, address, and similar) are objects keyed by locale code, e.g. {"en": "<p>Hello</p>"}. Rich-text fields accept HTML (p, h2-h4, ul/ol, a, strong, em).',
             'links' => 'Link objects are {"type": "url"|"anchor"|"page", "value": "<url, #anchor, or page id>", "newTab": bool}. CTA objects wrap a link with {"enabled": bool, "text": {locale map}, "link": {...}}.',
             'media' => 'Image and file fields are objects like {"source": "<media library path>", "metadata": {"alt": "...", "caption": "..."}}. Get source paths from list-media, import-media-from-url, or search-pexels + import-pexels-media.',
             'items' => 'Repeating blocks (accordion, testimonials, team, pricing, ...) hold an "items" array; give each item a unique string "id".',
