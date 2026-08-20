@@ -11,6 +11,24 @@ it('exposes a label, icon, description and default content for every case', func
     expect($type->defaultContent())->toBeArray();
 })->with(BlockType::cases());
 
+it('seeds every localized text field its editor exposes', function (): void {
+    $missing = [];
+
+    foreach (BlockType::cases() as $type) {
+        $editor = (string) file_get_contents(resource_path("views/components/admin/blocks/{$type->value}.blade.php"));
+
+        preg_match_all('/x-forms\.(?:input|textarea|texteditor|url)-translated\b[^>]*?name="\{\{ \$c \}\}\.([a-zA-Z]+)"/s', $editor, $matches);
+
+        foreach (array_unique($matches[1]) as $field) {
+            if (! is_array($type->defaultContent()[$field] ?? null)) {
+                $missing[] = "{$type->value}.{$field}";
+            }
+        }
+    }
+
+    expect($missing)->toBe([]);
+});
+
 it('derives admin and frontend view paths from the value', function (): void {
     expect(BlockType::HERO->adminView())->toBe('components.admin.blocks.hero');
     expect(BlockType::HERO->frontendView())->toBe('components.site.blocks.hero');

@@ -38,6 +38,7 @@ final class BlockTypesResource extends Resource
             'localizedText' => 'Text fields (heading, subheading, body, intro, title, quote, author, role, name, label, value, address, and similar) are objects keyed by locale code, e.g. {"en": "<p>Hello</p>"}. Rich-text fields accept HTML (p, h2-h4, ul/ol, a, strong, em).',
             'links' => 'Link objects are {"type": "url"|"anchor"|"page", "value": "<url, #anchor, or page id>", "newTab": bool}. CTA objects wrap a link with {"enabled": bool, "text": {locale map}, "link": {...}}.',
             'media' => 'Image and file fields are objects like {"source": "<media library path>", "metadata": {"alt": "...", "caption": "..."}}. Get source paths from list-media, import-media-from-url, or search-pexels + import-pexels-media.',
+            'anchor' => 'Every block except spacer and divider takes an "anchor" string, rendered as the element id on the block\'s section: "services" renders id="services". Set it on the target block first, then link to it from anywhere on the same page with {"type": "anchor", "value": "#services"}. Use a lowercase slug of letters, numbers and hyphens, unique within the page.',
             'items' => 'Repeating blocks (accordion, testimonials, team, pricing, ...) hold an "items" array; give each item a unique string "id".',
         ];
     }
@@ -51,7 +52,17 @@ final class BlockTypesResource extends Resource
             'key' => $type->value,
             'label' => $type->label(),
             'description' => $type->description(),
-            'defaultContent' => $type->defaultContent(),
+            'defaultContent' => $this->defaultContent($type),
         ], BlockType::cases());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function defaultContent(BlockType $type): array
+    {
+        $content = $type->defaultContent();
+
+        return $type->hasAnchor() ? [...$content, 'anchor' => ''] : $content;
     }
 }

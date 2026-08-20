@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\BlockType;
 use App\Enums\ContentStatus;
 use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Servers\WireUpServer;
@@ -11,6 +12,7 @@ use App\Mcp\Tools\ListPagesTool;
 use App\Mcp\Tools\PublishPageTool;
 use App\Mcp\Tools\UpdatePageBlocksTool;
 use App\Models\Page;
+use Laravel\Mcp\Request;
 
 it('advertises every tool with its name and input schema', function (): void {
     $advertised = collect([
@@ -38,6 +40,30 @@ it('documents every block type in the block-types resource', function (): void {
         ->assertSee('"key":"rich-text"')
         ->assertSee('"key":"contact-form"')
         ->assertSee('defaultContent');
+});
+
+it('exposes the anchor field on every block type that renders one', function (): void {
+    $catalog = json_decode((string) resolve(BlockTypesResource::class)->handle(new Request)->content(), true, 512, JSON_THROW_ON_ERROR);
+
+    expect($catalog['conventions'])->toHaveKey('anchor')
+        ->and($catalog['conventions']['anchor'])->toContain('id="services"');
+
+    foreach ($catalog['blockTypes'] as $blockType) {
+        $type = BlockType::from($blockType['key']);
+
+        expect(array_key_exists('anchor', $blockType['defaultContent']))->toBe($type->hasAnchor());
+    }
+});
+
+it('exposes every localized text field a block renders, even when empty', function (): void {
+    $catalog = json_decode((string) resolve(BlockTypesResource::class)->handle(new Request)->content(), true, 512, JSON_THROW_ON_ERROR);
+    $shapes = collect($catalog['blockTypes'])->keyBy('key')->map(fn (array $blockType): array => $blockType['defaultContent']);
+
+    expect($shapes['hero'])->toHaveKeys(['heading', 'subheading'])
+        ->and($shapes['text-image'])->toHaveKeys(['heading', 'body', 'image'])
+        ->and($shapes['location'])->toHaveKeys(['heading', 'name', 'address', 'hours'])
+        ->and($shapes['accordion'])->toHaveKey('heading')
+        ->and($shapes['gallery'])->toHaveKey('heading');
 });
 
 it('lists pages with slug, url, status and homepage flag', function (): void {

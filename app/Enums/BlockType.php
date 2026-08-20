@@ -158,6 +158,8 @@ enum BlockType: string
 
         return match ($this) {
             self::HERO => [
+                'heading' => [],
+                'subheading' => [],
                 'align' => 'center',
                 'verticalAlign' => 'center',
                 'width' => 'full',
@@ -174,12 +176,19 @@ enum BlockType: string
                 'ctaSecondary' => $cta,
             ],
             self::TEXT_IMAGE => [
+                'heading' => [],
+                'body' => [],
+                'image' => null,
                 'reverseLayout' => false,
                 'hasBackground' => false,
                 'ctaPrimary' => $cta,
                 'ctaSecondary' => $cta,
             ],
             self::LOCATION => [
+                'heading' => [],
+                'name' => [],
+                'address' => [],
+                'hours' => [],
                 'map' => '',
                 'phone' => '',
                 'email' => '',
@@ -193,6 +202,7 @@ enum BlockType: string
                 ],
             ],
             self::ACCORDION => [
+                'heading' => [],
                 'icon' => 'chevron',
                 'exclusive' => true,
                 'hasBackground' => false,
@@ -201,6 +211,7 @@ enum BlockType: string
                 ],
             ],
             self::GALLERY => [
+                'heading' => [],
                 'media' => [],
                 'columns' => 3,
                 'lightbox' => true,
