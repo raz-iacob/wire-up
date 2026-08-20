@@ -113,6 +113,22 @@ Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
     });
 });
 
+let pendingBlockItem = null;
+
+window.addEventListener("open-block-item", (event) => {
+    pendingBlockItem = event.detail?.id ?? null;
+});
+
+window.claimsOpenBlockItem = (id) => {
+    if (pendingBlockItem === null || String(pendingBlockItem) !== String(id)) {
+        return false;
+    }
+
+    pendingBlockItem = null;
+
+    return true;
+};
+
 document.addEventListener("alpine:init", () => {
     // Toggles a raw-HTML "source" view for a Flux rich-text editor. The textarea
     // reads from and writes back to the underlying Tiptap instance (captured above

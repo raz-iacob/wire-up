@@ -99,7 +99,7 @@ trait HasContentEditor
         foreach ($media as $locale => $value) {
             if (is_array($value) && array_is_list($value)) {
                 $result[$locale] = $value;
-            } elseif (is_array($value) && $value !== []) {
+            } elseif (is_array($value)) {
                 $result[$locale] = [$value];
             } else {
                 $result[$locale] = [];

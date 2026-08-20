@@ -38,7 +38,7 @@
                     class="overflow-hidden p-0!"
                     wire:key="team-item-{{ $item['id'] ?? $i }}"
                     wire:sort:item="{{ $item['id'] ?? $i }}"
-                    x-data="{ open: false }"
+                    x-data="{ open: window.claimsOpenBlockItem('{{ $item['id'] ?? $i }}') }"
                     x-on:open-block-item.window="$event.detail.id === '{{ $item['id'] ?? $i }}' && (open = true)"
                 >
                     <div class="flex items-center justify-between gap-3 bg-zinc-100 px-3 py-2 dark:bg-white/10">

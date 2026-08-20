@@ -19,11 +19,14 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Fortify\Fortify;
 
 final class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        Fortify::ignoreRoutes();
+
         $this->app->singleton('localization', LocalizationService::class);
 
         $this->app->make(Repository::class)->set('app.default_locale', $this->app->make(Repository::class)->string('app.locale', 'en'));

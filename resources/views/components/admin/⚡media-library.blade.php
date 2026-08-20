@@ -611,7 +611,7 @@ return new class extends Component
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $isSvg = mb_strtolower($originalExtension) === 'svg';
             $isHeic = in_array(mb_strtolower($originalExtension), ['heic', 'heif'], true)
-                || str_contains(mb_strtolower((string) $file->getMimeType()), 'hei');
+                || str_contains(mb_strtolower($file->getMimeType()), 'hei');
             $extension = $isHeic ? 'jpg' : $originalExtension;
             $filename = $uuid.'_'.Str::slug($originalName).'.'.$extension;
             $path = 'media';
