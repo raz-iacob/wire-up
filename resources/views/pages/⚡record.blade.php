@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
 use Illuminate\View\View;
@@ -42,7 +41,7 @@ return new class extends Component
             ->title($this->record->title)
             ->layoutData([
                 'description' => $this->record->description,
-                'siteLayout' => Page::normalizeLayout([]),
+                'siteLayout' => $this->record->resolvedLayout(),
                 'page' => $this->record,
             ]);
     }

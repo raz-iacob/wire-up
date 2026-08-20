@@ -215,6 +215,14 @@ final class Record extends Model
     }
 
     /**
+     * @return array{hideHeader: bool, hideFooter: bool, backgroundColor: ?string, backgroundImage: ?string, backgroundFixed: bool, customCss: string, sidebar: array{menus: array<int, string>}}
+     */
+    public function resolvedLayout(): array
+    {
+        return Page::normalizeLayout(is_array($this->metadata['layout'] ?? null) ? $this->metadata['layout'] : []);
+    }
+
+    /**
      * @param  Builder<Record>  $query
      */
     #[Scope]

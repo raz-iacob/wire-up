@@ -347,3 +347,46 @@ it('can attach a media field value', function (): void {
     expect($record->media)->toHaveCount(1)
         ->and($record->media->first()->pivot->role)->toBe('photo');
 });
+
+it('saves layout overrides for the record page', function (): void {
+    $type = typeWithFields();
+    $record = makeRecord($type, 'Layout Sample');
+    $media = Media::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->assertSet('layout.sidebar.menus', [])
+        ->set('data.summary.en', 'A sample product')
+        ->set('layout.hideHeader', true)
+        ->set('layout.backgroundColor', '#001122')
+        ->set('layout.customCss', '.only-here { color: red; }')
+        ->set('layout.backgroundImage', ['id' => $media->id, 'source' => $media->source])
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $record->refresh();
+
+    expect($record->metadata['layout']['hideHeader'])->toBeTrue()
+        ->and($record->resolvedLayout()['backgroundColor'])->toBe('#001122')
+        ->and($record->resolvedLayout()['customCss'])->toBe('.only-here { color: red; }')
+        ->and($record->resolvedLayout()['backgroundImage'])->toContain($media->source);
+});
+
+it('keeps existing record metadata when saving a layout', function (): void {
+    $type = typeWithFields();
+    $record = makeRecord($type, 'Metadata Sample');
+    $record->update(['metadata' => [...$record->metadata ?? [], 'members_only' => true]]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->set('data.summary.en', 'A sample product')
+        ->set('layout.hideFooter', true)
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($record->refresh()->metadata)
+        ->toHaveKey('members_only', true)
+        ->and($record->metadata['layout']['hideFooter'])->toBeTrue();
+});

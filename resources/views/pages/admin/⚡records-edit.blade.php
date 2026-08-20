@@ -73,6 +73,16 @@ return new class extends Component
 
     public bool $members_only = false;
 
+    /**
+     * @var array<string, mixed>
+     */
+    public array $layout = [];
+
+    /**
+     * @var array<int, array<string, string>>
+     */
+    public array $menuOptions = [];
+
     public bool $showPreview = false;
 
     public ?string $previewToken = null;
@@ -100,6 +110,21 @@ return new class extends Component
         $this->publishedLocales = array_values(array_intersect($record->published_locales, array_keys($this->activeLocales)));
         $this->noindex = (bool) ($record->metadata['noindex'] ?? false);
         $this->members_only = (bool) ($record->metadata['members_only'] ?? false);
+        $this->layout = [
+            ...(is_array($record->metadata['layout'] ?? null) ? $record->metadata['layout'] : []),
+            'sidebar' => Page::normalizeSidebar(($record->metadata['layout'] ?? [])['sidebar'] ?? null),
+        ];
+
+        $this->menuOptions = collect(SettingsService::current()->allMenus())
+            ->reject(fn (array $menu): bool => $menu['builtin'])
+            ->map(fn (array $menu): array => ['key' => $menu['key'], 'label' => $menu['name']])
+            ->values()
+            ->all();
+
+        $this->layout['sidebar']['menus'] = array_values(array_intersect(
+            $this->layout['sidebar']['menus'],
+            array_column($this->menuOptions, 'key'),
+        ));
         $this->data = is_array($record->data) ? $record->data : [];
 
         $this->media['og_image'] = $this->mediaForRole('og_image');
@@ -181,6 +206,7 @@ return new class extends Component
                 'published_locales' => array_values($validated['publishedLocales'] ?? []),
                 'noindex' => $this->noindex,
                 'members_only' => $this->members_only,
+                'layout' => $this->layout,
             ],
         ]);
 
@@ -271,6 +297,16 @@ return new class extends Component
             'categories.*' => ['integer', Rule::exists('categories', 'id')],
             'noindex' => ['boolean'],
             'members_only' => ['boolean'],
+            'layout' => ['array'],
+            'layout.hideHeader' => ['boolean'],
+            'layout.hideFooter' => ['boolean'],
+            'layout.backgroundFixed' => ['boolean'],
+            'layout.backgroundColor' => ['nullable', 'string', 'max:30'],
+            'layout.backgroundImage' => ['nullable', 'array'],
+            'layout.customCss' => ['nullable', 'string', 'max:50000'],
+            'layout.sidebar' => ['array'],
+            'layout.sidebar.menus' => ['array'],
+            'layout.sidebar.menus.*' => ['string'],
             'media' => ['array'],
             'media.og_image' => ['array'],
             'media.og_image.*' => ['array'],
@@ -284,6 +320,7 @@ return new class extends Component
         $attributes = [
             'publishedLocales.*' => (string) __('language'),
             'published_at' => (string) __('scheduled date'),
+            'layout.customCss' => (string) __('custom CSS'),
         ];
 
         foreach (array_keys($this->activeLocales) as $locale) {
@@ -752,6 +789,17 @@ return new class extends Component
                         />
                     </div>
                 </flux:fieldset>
+
+                <flux:separator />
+
+                <x-admin.layout-fields
+                    :locale="$locale"
+                    :menu-options="$menuOptions"
+                    :layout="$layout"
+                    name="record"
+                    :description="__('Optional design overrides for this record\'s page.')"
+                    :css-description="__('Add custom CSS rules that apply only to this record\'s page.')"
+                />
             </div>
         </div>
 
