@@ -30,6 +30,7 @@ function productRecordType(): RecordType
             ['key' => 'overview', 'type' => 'rich-text', 'label' => ['en' => 'Description'], 'translatable' => true, 'prefills' => 'description'],
             ['key' => 'current_price', 'type' => 'money', 'label' => ['en' => 'Current price'], 'translatable' => false],
             ['key' => 'regular_price', 'type' => 'money', 'label' => ['en' => 'Regular price'], 'translatable' => false],
+            ['key' => 'sold', 'type' => 'boolean', 'label' => ['en' => 'Sold'], 'translatable' => false],
             ['key' => 'gallery', 'type' => 'media-gallery', 'label' => ['en' => 'Gallery'], 'translatable' => false],
         ],
     ]);
@@ -314,4 +315,46 @@ it('routes single-segment slugs to pages and two-segment slugs to records', func
 
     $this->get(route('page', 'products'))->assertOk()->assertSee('Products Landing');
     $this->get(route('record', ['recordType' => 'products', 'slug' => 'widget']))->assertOk()->assertSee('Widget Detail');
+});
+
+it('shows a Sold badge on a product page when the sold field is on', function (): void {
+    $type = productRecordType();
+
+    publishRecord($type, 'gone', [
+        'title' => ['en' => 'Warp Core'],
+        'data' => ['heading' => ['en' => 'Warp Core'], 'current_price' => 3000, 'sold' => true],
+    ]);
+
+    $this->get(route('record', ['recordType' => 'products', 'slug' => 'gone']))
+        ->assertOk()
+        ->assertSee('Warp Core')
+        ->assertSee('Sold');
+});
+
+it('hides the Sold badge on a product page when the sold field is off', function (): void {
+    $type = productRecordType();
+
+    publishRecord($type, 'available', [
+        'title' => ['en' => 'Green Giant'],
+        'data' => ['heading' => ['en' => 'Green Giant'], 'current_price' => 3400, 'sold' => false],
+    ]);
+
+    $this->get(route('record', ['recordType' => 'products', 'slug' => 'available']))
+        ->assertOk()
+        ->assertSee('Green Giant')
+        ->assertDontSee('Sold');
+});
+
+it('shows the Sold badge on a product page that has no price', function (): void {
+    $type = productRecordType();
+
+    publishRecord($type, 'priceless', [
+        'title' => ['en' => 'Prototype'],
+        'data' => ['heading' => ['en' => 'Prototype'], 'sold' => true],
+    ]);
+
+    $this->get(route('record', ['recordType' => 'products', 'slug' => 'priceless']))
+        ->assertOk()
+        ->assertSee('Prototype')
+        ->assertSee('Sold');
 });

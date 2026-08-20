@@ -7,13 +7,24 @@
     $image = $showImage ? $record->primaryImageUrl($layout === 'list' ? 400 : 900) : null;
 
     $meta = [];
+    $badges = [];
     foreach ($fields as $field) {
+        if (\App\Enums\FieldType::tryFrom($field['type'] ?? '') === \App\Enums\FieldType::BOOLEAN) {
+            if ($record->fieldValue($field['key'], (bool) ($field['translatable'] ?? false))) {
+                $badges[] = $record->recordType->fieldLabel($field);
+            }
+
+            continue;
+        }
+
         $value = $record->columnValue($field);
 
         if ($value !== '' && $value !== '—') {
             $meta[] = $value;
         }
     }
+
+    $badgeClass = 'rounded-full bg-current/10 px-2.5 py-1 text-xs font-bold text-(--wire-accent)';
 @endphp
 
 @if ($layout === 'list')
@@ -28,6 +39,13 @@
         @endif
         <div class="min-w-0">
             <h3 class="text-lg font-semibold tracking-tight group-hover:text-(--wire-accent)">{{ $heading }}</h3>
+            @if ($badges !== [])
+                <div class="mt-2 flex flex-wrap gap-2">
+                    @foreach ($badges as $badge)
+                        <span class="{{ $badgeClass }}">{{ $badge }}</span>
+                    @endforeach
+                </div>
+            @endif
             @if ($excerpt !== '')
                 <p class="mt-1 leading-relaxed opacity-80">{{ $excerpt }}</p>
             @endif
@@ -46,6 +64,13 @@
         @endif
         <div class="flex grow flex-col gap-2 p-5">
             <h3 class="text-lg font-semibold tracking-tight group-hover:text-(--wire-accent)">{{ $heading }}</h3>
+            @if ($badges !== [])
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($badges as $badge)
+                        <span class="{{ $badgeClass }}">{{ $badge }}</span>
+                    @endforeach
+                </div>
+            @endif
             @if ($excerpt !== '')
                 <p class="leading-relaxed opacity-80">{{ $excerpt }}</p>
             @endif

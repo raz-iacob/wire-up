@@ -39,6 +39,8 @@
     $heading = $record->fieldValue('heading', true) ?: $record->title;
     $overview = (string) ($record->fieldValue('overview', true) ?? '');
 
+    $isSold = (bool) $record->fieldValue('sold', false);
+
     $price = $record->fieldValue('current_price', false);
     $compare = $record->fieldValue('regular_price', false);
     $hasDiscount = is_numeric($price) && is_numeric($compare) && (float) $compare > (float) $price && (float) $price > 0;
@@ -184,12 +186,17 @@
                     </div>
                 @endif
 
-                @if (is_numeric($price))
+                @if (is_numeric($price) || $isSold)
                     <div class="mt-2 flex flex-col gap-1">
-                        <div class="flex items-center gap-3">
-                            <span class="font-(family-name:--wire-heading-font) text-(length:--wire-heading-size) tracking-tight">{{ $settings->formatMoney($price) }}</span>
+                        <div class="flex flex-wrap items-center gap-3">
+                            @if (is_numeric($price))
+                                <span class="font-(family-name:--wire-heading-font) text-(length:--wire-heading-size) tracking-tight">{{ $settings->formatMoney($price) }}</span>
+                            @endif
                             @if ($hasDiscount)
                                 <span class="rounded-full bg-current/10 px-2.5 py-1 text-sm font-bold text-(--wire-accent)">{{ $discountPct }}%</span>
+                            @endif
+                            @if ($isSold)
+                                <span class="rounded-full bg-current/10 px-2.5 py-1 text-sm font-bold text-(--wire-accent)">{{ __('Sold') }}</span>
                             @endif
                         </div>
                         @if ($hasDiscount)

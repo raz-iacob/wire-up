@@ -226,3 +226,110 @@ it('hides record images when the toggle is off', function (): void {
         ->assertOk()
         ->assertDontSee('media/card.jpg', false);
 });
+
+it('renders a true boolean field as a badge on the card instead of Yes text', function (): void {
+    $type = RecordType::factory()->create([
+        'key' => 'product',
+        'slug_prefix' => 'products',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'prefills' => 'title', 'translatable' => true],
+            ['key' => 'current_price', 'type' => 'money', 'label' => ['en' => 'Price'], 'translatable' => false],
+            ['key' => 'sold', 'type' => 'boolean', 'label' => ['en' => 'Sold'], 'translatable' => false],
+        ],
+    ]);
+
+    $record = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Warp Core'],
+        'data' => ['heading' => ['en' => 'Warp Core'], 'current_price' => 3000, 'sold' => true],
+        'metadata' => ['published_locales' => ['en']],
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $record->setSlugs();
+
+    $this->get(collectionPage($type->id, ['fields' => ['current_price', 'sold']]))
+        ->assertOk()
+        ->assertSee('Warp Core')
+        ->assertSee(SettingsService::current()->formatMoney(3000))
+        ->assertSee('Sold')
+        ->assertDontSee('Yes');
+});
+
+it('omits the badge on the card when the boolean field is false', function (): void {
+    $type = RecordType::factory()->create([
+        'key' => 'product',
+        'slug_prefix' => 'products',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'prefills' => 'title', 'translatable' => true],
+            ['key' => 'sold', 'type' => 'boolean', 'label' => ['en' => 'Sold'], 'translatable' => false],
+        ],
+    ]);
+
+    $record = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Green Giant'],
+        'data' => ['heading' => ['en' => 'Green Giant'], 'sold' => false],
+        'metadata' => ['published_locales' => ['en']],
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $record->setSlugs();
+
+    $this->get(collectionPage($type->id, ['fields' => ['sold']]))
+        ->assertOk()
+        ->assertSee('Green Giant')
+        ->assertDontSee('Sold');
+});
+
+it('renders boolean badges on list-layout cards too', function (): void {
+    $type = RecordType::factory()->create([
+        'key' => 'product',
+        'slug_prefix' => 'products',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'prefills' => 'title', 'translatable' => true],
+            ['key' => 'sold', 'type' => 'boolean', 'label' => ['en' => 'Sold'], 'translatable' => false],
+        ],
+    ]);
+
+    $record = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Storm Breaker'],
+        'data' => ['heading' => ['en' => 'Storm Breaker'], 'sold' => true],
+        'metadata' => ['published_locales' => ['en']],
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $record->setSlugs();
+
+    $this->get(collectionPage($type->id, ['layout' => 'list', 'fields' => ['sold']]))
+        ->assertOk()
+        ->assertSee('Storm Breaker')
+        ->assertSee('Sold');
+});
+
+it('renders a translatable boolean badge from the active locale value', function (): void {
+    $type = RecordType::factory()->create([
+        'key' => 'product',
+        'slug_prefix' => 'products',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'prefills' => 'title', 'translatable' => true],
+            ['key' => 'clearance', 'type' => 'boolean', 'label' => ['en' => 'Clearance'], 'translatable' => true],
+        ],
+    ]);
+
+    $record = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Last One'],
+        'data' => ['heading' => ['en' => 'Last One'], 'clearance' => ['en' => true]],
+        'metadata' => ['published_locales' => ['en']],
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $record->setSlugs();
+
+    $this->get(collectionPage($type->id, ['fields' => ['clearance']]))
+        ->assertOk()
+        ->assertSee('Last One')
+        ->assertSee('Clearance');
+});
