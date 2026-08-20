@@ -205,6 +205,7 @@ final readonly class Records
                 'column' => (bool) ($field['column'] ?? false),
                 'sortable' => (bool) ($field['sortable'] ?? false),
                 'searchable' => (bool) ($field['searchable'] ?? false),
+                'filterable' => (bool) ($field['filterable'] ?? false) && $type->isFilterable(),
                 'help' => (string) ($field['help'] ?? ''),
                 'options' => array_values(array_filter(
                     is_array($field['options'] ?? null) ? $field['options'] : [],
@@ -230,6 +231,7 @@ final readonly class Records
             'fields.*.column' => ['boolean'],
             'fields.*.sortable' => ['boolean'],
             'fields.*.searchable' => ['boolean'],
+            'fields.*.filterable' => ['boolean'],
             'fields.*.help' => ['nullable', 'string', 'max:500'],
             'fields.*.options' => ['array'],
             'fields.*.options.*' => ['string'],

@@ -218,6 +218,13 @@
                                                 :label="__('Searchable')"
                                                 align="left"
                                             />
+                                            @if (\App\Enums\FieldType::tryFrom($field['type'])?->isFilterable())
+                                                <flux:switch
+                                                    wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.filterable"
+                                                    :label="__('Filterable')"
+                                                    align="left"
+                                                />
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

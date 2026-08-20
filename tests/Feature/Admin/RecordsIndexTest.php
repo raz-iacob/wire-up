@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\CreateRecordAction;
+use App\Enums\ContentStatus;
 use App\Enums\MediaType;
 use App\Models\Media;
 use App\Models\Record;
@@ -210,4 +211,116 @@ it('can delete a record', function (): void {
         ->assertHasNoErrors();
 
     $this->assertDatabaseMissing('records', ['id' => $record->id]);
+});
+
+function filterableProductType(): RecordType
+{
+    return RecordType::factory()->create([
+        'name' => 'Products',
+        'slug_prefix' => 'products',
+        'fields' => [
+            ['key' => 'sold', 'type' => 'boolean', 'label' => ['en' => 'Sold'], 'required' => false, 'translatable' => false, 'column' => true, 'sortable' => false, 'searchable' => false, 'filterable' => true, 'help' => '', 'options' => []],
+            ['key' => 'condition', 'type' => 'select', 'label' => ['en' => 'Condition'], 'required' => false, 'translatable' => false, 'column' => false, 'sortable' => false, 'searchable' => false, 'filterable' => true, 'help' => '', 'options' => ['New', 'Refurbished']],
+            ['key' => 'summary', 'type' => 'text', 'label' => ['en' => 'Summary'], 'required' => false, 'translatable' => false, 'column' => false, 'sortable' => false, 'searchable' => false, 'filterable' => true, 'help' => '', 'options' => []],
+        ],
+    ]);
+}
+
+it('offers a filter menu for filterable boolean and select fields only', function (): void {
+    $type = filterableProductType();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->assertSee('Sold')
+        ->assertSee('Condition')
+        ->assertDontSee('Summary');
+
+    expect(array_column($type->filterableFields(), 'key'))->toBe(['sold', 'condition']);
+});
+
+it('filters records by a boolean field', function (): void {
+    $type = filterableProductType();
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Warp Core'], 'data' => ['sold' => true]]);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Green Giant'], 'data' => ['sold' => false]]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->assertSee('Warp Core')
+        ->assertSee('Green Giant')
+        ->set('filters.sold', '1')
+        ->assertSee('Warp Core')
+        ->assertDontSee('Green Giant')
+        ->set('filters.sold', '0')
+        ->assertDontSee('Warp Core')
+        ->assertSee('Green Giant')
+        ->set('filters.sold', '')
+        ->assertSee('Warp Core')
+        ->assertSee('Green Giant');
+});
+
+it('filters records by a select field option', function (): void {
+    $type = filterableProductType();
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Fresh Build'], 'data' => ['condition' => 'New']]);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Older Build'], 'data' => ['condition' => 'Refurbished']]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('filters.condition', 'New')
+        ->assertSee('Fresh Build')
+        ->assertDontSee('Older Build');
+});
+
+it('combines a field filter with the status filter and search', function (): void {
+    $type = filterableProductType();
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Sold Draft'], 'data' => ['sold' => true], 'status' => ContentStatus::DRAFT]);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Sold Live'], 'data' => ['sold' => true], 'status' => ContentStatus::PUBLISHED]);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Unsold Live'], 'data' => ['sold' => false], 'status' => ContentStatus::PUBLISHED]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('filters.sold', '1')
+        ->set('status', ContentStatus::PUBLISHED->value)
+        ->assertSee('Sold Live')
+        ->assertDontSee('Sold Draft')
+        ->assertDontSee('Unsold Live');
+});
+
+it('ignores a filter whose field is not marked filterable', function (): void {
+    $type = RecordType::factory()->create([
+        'slug_prefix' => 'widgets',
+        'fields' => [
+            ['key' => 'sold', 'type' => 'boolean', 'label' => ['en' => 'Sold'], 'translatable' => false, 'filterable' => false, 'options' => []],
+        ],
+    ]);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Widget A'], 'data' => ['sold' => true]]);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Widget B'], 'data' => ['sold' => false]]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('filters.sold', '1')
+        ->assertSee('Widget A')
+        ->assertSee('Widget B');
+});
+
+it('filters records by a translatable select field in the active locale', function (): void {
+    $type = RecordType::factory()->create([
+        'slug_prefix' => 'tools',
+        'fields' => [
+            ['key' => 'grade', 'type' => 'select', 'label' => ['en' => 'Grade'], 'translatable' => true, 'filterable' => true, 'options' => ['Pro', 'Basic']],
+        ],
+    ]);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Pro Tool'], 'data' => ['grade' => ['en' => 'Pro']]]);
+    Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Basic Tool'], 'data' => ['grade' => ['en' => 'Basic']]]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('filters.grade', 'Pro')
+        ->assertSee('Pro Tool')
+        ->assertDontSee('Basic Tool');
 });

@@ -99,6 +99,18 @@ final class RecordType extends Model
         ));
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function filterableFields(): array
+    {
+        return array_values(array_filter(
+            $this->fields,
+            fn (array $field): bool => (bool) ($field['filterable'] ?? false)
+                && (FieldType::tryFrom($field['type'])?->isFilterable() ?? false),
+        ));
+    }
+
     public function hasMediaColumns(): bool
     {
         return array_any(

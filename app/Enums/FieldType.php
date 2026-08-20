@@ -106,6 +106,14 @@ enum FieldType: string
         return $this === self::SELECT;
     }
 
+    public function isFilterable(): bool
+    {
+        return match ($this) {
+            self::BOOLEAN, self::SELECT => true,
+            default => false,
+        };
+    }
+
     /**
      * @return array<int, string>
      */

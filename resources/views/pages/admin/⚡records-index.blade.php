@@ -6,6 +6,7 @@ use App\Actions\CreateRecordAction;
 use App\Actions\DeleteRecordAction;
 use App\Actions\DuplicateRecordAction;
 use App\Enums\ContentStatus;
+use App\Enums\FieldType;
 use App\Models\Record;
 use App\Models\RecordType;
 use App\Traits\WithSorting;
@@ -30,6 +31,12 @@ return new class extends Component
 
     #[Url(as: 'status', except: '')]
     public string $status = '';
+
+    /**
+     * @var array<string, string>
+     */
+    #[Url(as: 'f', except: [])]
+    public array $filters = [];
 
     #[Validate(['required', 'string', 'max:255'])]
     public string $title = '';
@@ -133,6 +140,23 @@ return new class extends Component
             })
             ->when($this->search, fn (Builder $query, string $search): Builder => $query->matchingSearch($search, $this->recordType));
 
+        foreach ($this->recordType->filterableFields() as $field) {
+            $value = (string) ($this->filters[$field['key']] ?? '');
+
+            if ($value === '') {
+                continue;
+            }
+
+            $path = ($field['translatable'] ?? false)
+                ? "data->{$field['key']}->{$locale}"
+                : "data->{$field['key']}";
+
+            $paginator->where(
+                $path,
+                $field['type'] === FieldType::BOOLEAN->value ? $value === '1' : $value,
+            );
+        }
+
         if ($this->sortBy === 'title') {
             $paginator->orderByTranslation('title', $this->sortDirection);
         } elseif (in_array($this->sortBy, $this->recordType->sortableFieldKeys(), true)) {
@@ -156,6 +180,15 @@ return new class extends Component
     public function columnFields(): array
     {
         return $this->recordType->indexColumnFields();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    #[Computed]
+    public function fieldFilters(): array
+    {
+        return $this->recordType->filterableFields();
     }
 
     #[Computed]
@@ -205,6 +238,27 @@ return new class extends Component
                             @endforeach
                         </flux:menu.radio.group>
                     </flux:menu.submenu>
+
+                    @foreach ($this->fieldFilters as $filterField)
+                        @php($filterLabel = $recordType->fieldLabel($filterField))
+                        <flux:menu.submenu heading="{{ $filterLabel }}" wire:key="filter-{{ $filterField['key'] }}">
+                            <flux:menu.radio.group
+                                wire:model.live="filters.{{ $filterField['key'] }}"
+                                heading="{{ $filterLabel }}"
+                            >
+                                <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
+                                @if ($filterField['type'] === \App\Enums\FieldType::BOOLEAN->value)
+                                    <flux:menu.radio value="1">{{ __('Yes') }}</flux:menu.radio>
+                                    <flux:menu.radio value="0">{{ __('No') }}</flux:menu.radio>
+                                @else
+                                    @foreach ($filterField['options'] ?? [] as $filterOption)
+                                        <flux:menu.radio value="{{ $filterOption }}">
+                                            {{ $filterOption }}</flux:menu.radio>
+                                    @endforeach
+                                @endif
+                            </flux:menu.radio.group>
+                        </flux:menu.submenu>
+                    @endforeach
                 </flux:menu>
             </flux:dropdown>
 

@@ -209,6 +209,7 @@ final class RecordTypePresets
             'column' => false,
             'sortable' => false,
             'searchable' => false,
+            'filterable' => false,
             'help' => '',
             'options' => [],
             'prefills' => null,
