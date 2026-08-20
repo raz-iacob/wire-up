@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Services\MediaItem;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Modelable;
 use Livewire\Attributes\On;
@@ -372,7 +373,15 @@ return new class extends Component
      */
     private function normalizeMediaItem(mixed $item): ?array
     {
-        if (! is_array($item) || ! $this->isMediaItem($item)) {
+        if (! is_array($item)) {
+            return null;
+        }
+
+        if (! $this->isMediaItem($item)) {
+            $item = $this->resolveBySource($item);
+        }
+
+        if ($item === null) {
             return null;
         }
 
@@ -400,6 +409,23 @@ return new class extends Component
     private function isMediaItem(mixed $item): bool
     {
         return is_array($item) && array_key_exists('id', $item);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $item
+     * @return array<array-key, mixed>|null
+     */
+    private function resolveBySource(array $item): ?array
+    {
+        $source = $item['source'] ?? null;
+
+        if (! is_string($source)) {
+            return null;
+        }
+
+        $resolved = MediaItem::fromSource($source);
+
+        return $resolved === null ? null : [...$item, ...$resolved];
     }
 
     private function normalizedType(): ?string

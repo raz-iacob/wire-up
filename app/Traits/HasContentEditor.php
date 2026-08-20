@@ -6,6 +6,7 @@ namespace App\Traits;
 
 use App\Enums\ContentStatus;
 use App\Models\Media;
+use App\Services\MediaItem;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -68,21 +69,7 @@ trait HasContentEditor
     protected function mediaToItem(Media $media): array
     {
         return [
-            'id' => $media->id,
-            'source' => $media->source,
-            'preview' => $media->preview,
-            'crop_src' => $media->cropSrc,
-            'filename' => $media->filename,
-            'alt_text' => $media->alt_text,
-            'mime_type' => $media->mime_type,
-            'thumbnail' => $media->thumbnail,
-            'icon' => $media->type->icon(),
-            'size' => $media->size,
-            'duration' => $media->duration,
-            'width' => $media->width,
-            'height' => $media->height,
-            'dimensions' => $media->dimensions,
-            'created_at' => $media->created_at->toDateTimeString(),
+            ...MediaItem::fromMedia($media),
             'crop' => $media->pivot->crop ?? [],
             'metadata' => $media->pivot->metadata ?? [],
         ];

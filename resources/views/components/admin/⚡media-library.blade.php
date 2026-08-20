@@ -8,6 +8,7 @@ use App\Actions\ImportPexelsMediaAction;
 use App\Actions\UpdateMediaAction;
 use App\Enums\MediaType;
 use App\Models\Media;
+use App\Services\MediaItem;
 use App\Services\PexelsService;
 use App\Services\UploadLimit;
 use enshrined\svgSanitize\Sanitizer;
@@ -715,23 +716,7 @@ return new class extends Component
      */
     private function parseMedia(Media $media): array
     {
-        return [
-            'id' => $media->id,
-            'source' => $media->source,
-            'preview' => $media->preview,
-            'crop_src' => $media->cropSrc,
-            'filename' => $media->filename,
-            'alt_text' => $media->alt_text,
-            'mime_type' => $media->mime_type,
-            'thumbnail' => $media->thumbnail,
-            'icon' => $media->type->icon(),
-            'size' => $media->size,
-            'duration' => $media->duration,
-            'width' => $media->width,
-            'height' => $media->height,
-            'dimensions' => $media->dimensions,
-            'created_at' => $media->created_at->toDateTimeString(),
-        ];
+        return MediaItem::fromMedia($media);
     }
 };
 ?>
