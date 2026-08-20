@@ -26,6 +26,7 @@ final class RecordTypeFactory extends Factory
             'icon' => 'rectangle-stack',
             'name' => Str::title(Str::plural($word)),
             'fields' => [],
+            'breadcrumbs' => false,
             'position' => 0,
         ];
     }

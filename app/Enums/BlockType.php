@@ -29,6 +29,7 @@ enum BlockType: string
     case TEAM = 'team';
     case PRICING = 'pricing';
     case CONTACT_FORM = 'contact-form';
+    case BREADCRUMB = 'breadcrumb';
     case SPACER = 'spacer';
     case DIVIDER = 'divider';
 
@@ -75,6 +76,7 @@ enum BlockType: string
             self::TEAM => __('Team'),
             self::PRICING => __('Pricing'),
             self::CONTACT_FORM => __('Contact Form'),
+            self::BREADCRUMB => __('Breadcrumb'),
             self::SPACER => __('Spacer'),
             self::DIVIDER => __('Divider'),
         };
@@ -104,6 +106,7 @@ enum BlockType: string
             self::TEAM => 'users',
             self::PRICING => 'currency-dollar',
             self::CONTACT_FORM => 'mail',
+            self::BREADCRUMB => 'chevron-right',
             self::SPACER => 'arrows-up-down',
             self::DIVIDER => 'minus',
         };
@@ -138,6 +141,7 @@ enum BlockType: string
             self::TEAM => __('A grid of team members with a photo, role, bio and social links.'),
             self::PRICING => __('Pricing plans shown side by side, each with features and a button.'),
             self::CONTACT_FORM => __('A contact form that emails you and stores each submission.'),
+            self::BREADCRUMB => __('The trail back to the home page, built automatically from where this page sits.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
             self::DIVIDER => __('A horizontal divider line in your chosen thickness.'),
         };
@@ -392,6 +396,13 @@ enum BlockType: string
                     'message' => ['required' => true, 'label' => [], 'placeholder' => [], 'column' => 'right'],
                 ],
                 'customFields' => [],
+            ],
+            self::BREADCRUMB => [
+                'align' => 'center',
+                'separator' => '/',
+                'showHome' => true,
+                'homeLabel' => [],
+                'hasBackground' => false,
             ],
             self::SPACER => ['size' => 'medium'],
             self::DIVIDER => ['size' => 'medium'],

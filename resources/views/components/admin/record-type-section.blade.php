@@ -69,6 +69,13 @@
                 </flux:field>
             </div>
 
+            <flux:switch
+                wire:model="types.{{ $index }}.breadcrumbs"
+                label="{{ __('Show breadcrumbs') }}"
+                description="{{ __('Adds the trail back to the home page on every record of this type.') }}"
+                align="left"
+            />
+
             <div class="space-y-3">
                 <div class="flex items-center justify-between gap-3">
                     <flux:label>{{ __('Fields') }}</flux:label>

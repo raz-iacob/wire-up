@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read string $icon
  * @property-read string $name
  * @property-read array<int, array<string, mixed>> $fields
+ * @property-read bool $breadcrumbs
  * @property-read int $position
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
@@ -37,6 +38,7 @@ final class RecordType extends Model
     {
         return [
             'fields' => 'array',
+            'breadcrumbs' => 'boolean',
             'position' => 'integer',
         ];
     }

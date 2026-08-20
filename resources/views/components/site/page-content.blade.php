@@ -47,7 +47,7 @@
             ])
             @if ($anchor !== '') id="{{ $anchor }}" @endif
         >
-            @includeIf($block->type->frontendView(), ['block' => $block, 'pad' => $padClass])
+            @includeIf($block->type->frontendView(), ['block' => $block, 'pad' => $padClass, 'page' => $page])
         </div>
     @endforeach
 </article>

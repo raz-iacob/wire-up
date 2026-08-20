@@ -395,3 +395,13 @@ it('rejects publishing an unknown record', function (): void {
     WireUpServer::tool(PublishRecordTool::class, ['record' => 999])
         ->assertHasErrors(['No record with id 999']);
 });
+
+it('sets record page breadcrumbs when creating and updating a content type', function (): void {
+    WireUpServer::tool(CreateContentTypeTool::class, ['preset' => 'post', 'breadcrumbs' => true])
+        ->assertOk()
+        ->assertSee('"breadcrumbs":true');
+
+    WireUpServer::tool(UpdateContentTypeTool::class, ['type' => 'post', 'breadcrumbs' => false])
+        ->assertOk()
+        ->assertSee('"breadcrumbs":false');
+});

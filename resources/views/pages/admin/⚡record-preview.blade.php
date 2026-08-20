@@ -122,6 +122,12 @@ return new class extends Component
 ?>
 
 <div>
+    @if ($record->recordType->breadcrumbs)
+        <div class="mx-auto w-full max-w-(--wire-container) px-(--wire-gutter) pt-10">
+            <x-site.breadcrumbs :trail="\App\Services\BreadcrumbService::current()->trail($record)" />
+        </div>
+    @endif
+
     @includeFirst([
         'components.site.records.'.$record->recordType->key,
         'components.site.records.default',

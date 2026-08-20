@@ -31,6 +31,7 @@ final class CreateContentTypeTool extends Tool
                 'name' => ['nullable', 'string', 'max:255'],
                 'slug_prefix' => ['nullable', 'string', 'lowercase', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::notIn(Records::reservedPrefixes())],
                 'icon' => ['nullable', 'string', 'max:255'],
+                'breadcrumbs' => ['nullable', 'boolean'],
                 ...Records::fieldRules(),
             ],
             [
@@ -74,6 +75,7 @@ final class CreateContentTypeTool extends Tool
             'name' => $name,
             'slug_prefix' => $slugPrefix,
             'icon' => (string) ($validated['icon'] ?? $preset['icon'] ?? 'rectangle-stack'),
+            'breadcrumbs' => (bool) ($validated['breadcrumbs'] ?? false),
             'fields' => $fields,
         ]);
 
@@ -100,6 +102,9 @@ final class CreateContentTypeTool extends Tool
 
             'icon' => $schema->string()
                 ->description('A Heroicon name for the admin sidebar, e.g. "shopping-bag". Defaults to "rectangle-stack".'),
+
+            'breadcrumbs' => $schema->boolean()
+                ->description('Show the breadcrumb trail back to the home page on every record page of this type. Defaults to false.'),
 
             'fields' => $schema->array()
                 ->items($schema->object())

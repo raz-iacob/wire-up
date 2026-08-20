@@ -75,6 +75,7 @@ return new class extends Component
             'name' => $preset['name'],
             'slug_prefix' => $preset['slug_prefix'],
             'icon' => $preset['icon'],
+            'breadcrumbs' => false,
             'fields' => array_map(fn (array $field): array => $this->hydrateField($field, $locale), $preset['fields']),
             'open' => true,
         ];
@@ -89,6 +90,7 @@ return new class extends Component
             'name' => '',
             'slug_prefix' => '',
             'icon' => 'rectangle-stack',
+            'breadcrumbs' => false,
             'fields' => [],
             'open' => true,
         ];
@@ -189,6 +191,7 @@ return new class extends Component
                     'slug_prefix' => $row['slug_prefix'],
                     'icon' => $row['icon'],
                     'name' => $row['name'],
+                    'breadcrumbs' => (bool) $row['breadcrumbs'],
                     'fields' => $this->serializeFields($row['fields'], $locale),
                     'position' => $position,
                 ];
@@ -317,6 +320,7 @@ return new class extends Component
             'name' => $type->name,
             'slug_prefix' => $type->slug_prefix,
             'icon' => $type->icon,
+            'breadcrumbs' => $type->breadcrumbs,
             'fields' => array_map(fn (array $field): array => $this->hydrateField($field, $locale), $type->fields),
             'open' => false,
         ];
@@ -408,6 +412,7 @@ return new class extends Component
                 Rule::unique('record_types', 'slug_prefix')->ignore($this->types[$index]['id']),
                 Rule::unique('slugs', 'slug')->where('base_path', ''),
             ];
+            $rules["types.$index.breadcrumbs"] = ['boolean'];
             $rules["types.$index.fields"] = ['array'];
             $rules["types.$index.fields.*.key"] = [
                 'required', 'string', 'distinct', 'regex:/^[a-z][a-z0-9_]*$/',

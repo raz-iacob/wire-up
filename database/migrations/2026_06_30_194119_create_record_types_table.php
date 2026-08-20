@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('icon')->default('rectangle-stack');
             $table->string('name');
             $table->json('fields')->nullable();
+            $table->boolean('breadcrumbs')->default(false);
             $table->unsignedInteger('position')->default(0);
             $table->timestamps();
         });

@@ -50,7 +50,7 @@ it('sorts every case alphabetically by label', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'collection', 'search', 'buttons', 'audio', 'downloads', 'rich-text', 'code', 'stats', 'team', 'pricing', 'contact-form', 'spacer', 'divider']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'collection', 'search', 'buttons', 'audio', 'downloads', 'rich-text', 'code', 'stats', 'team', 'pricing', 'contact-form', 'breadcrumb', 'spacer', 'divider']);
 });
 
 it('seeds the divider default content and has no anchor', function (): void {
@@ -442,4 +442,18 @@ it('truncates the text + image title at fifty characters', function (): void {
     $content = ['heading' => ['en' => '<p>'.str_repeat('a', 60).'</p>']];
 
     expect(BlockType::TEXT_IMAGE->editorTitle($content, 'en'))->toBe(str_repeat('a', 50).'...');
+});
+
+it('seeds the breadcrumb default content shape', function (): void {
+    expect(BlockType::BREADCRUMB->defaultContent())->toBe([
+        'align' => 'center',
+        'separator' => '/',
+        'showHome' => true,
+        'homeLabel' => [],
+        'hasBackground' => false,
+    ]);
+});
+
+it('falls back to the label for the breadcrumb title', function (): void {
+    expect(BlockType::BREADCRUMB->editorTitle([], 'en'))->toBe('Breadcrumb');
 });

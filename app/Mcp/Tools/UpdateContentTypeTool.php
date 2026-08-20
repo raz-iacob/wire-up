@@ -29,6 +29,7 @@ final class UpdateContentTypeTool extends Tool
                 'name' => ['nullable', 'string', 'max:255'],
                 'slug_prefix' => ['nullable', 'string', 'lowercase', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::notIn(Records::reservedPrefixes())],
                 'icon' => ['nullable', 'string', 'max:255'],
+                'breadcrumbs' => ['nullable', 'boolean'],
                 ...Records::fieldRules(),
             ],
             [
@@ -54,6 +55,10 @@ final class UpdateContentTypeTool extends Tool
 
         if (($validated['icon'] ?? null) !== null) {
             $attributes['icon'] = $validated['icon'];
+        }
+
+        if (($validated['breadcrumbs'] ?? null) !== null) {
+            $attributes['breadcrumbs'] = (bool) $validated['breadcrumbs'];
         }
 
         if (($validated['slug_prefix'] ?? null) !== null) {
@@ -93,6 +98,9 @@ final class UpdateContentTypeTool extends Tool
 
             'icon' => $schema->string()
                 ->description('A new Heroicon name for the admin sidebar.'),
+
+            'breadcrumbs' => $schema->boolean()
+                ->description('Whether every record page of this type shows the breadcrumb trail back to the home page.'),
 
             'fields' => $schema->array()
                 ->items($schema->object())

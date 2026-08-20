@@ -149,14 +149,10 @@ final class SeoService
 
             $graph[] = $webpage;
 
-            if (! $this->isHome($content)) {
-                $graph[] = [
-                    '@type' => 'BreadcrumbList',
-                    'itemListElement' => [
-                        ['@type' => 'ListItem', 'position' => 1, 'name' => __('Home'), 'item' => $home],
-                        ['@type' => 'ListItem', 'position' => 2, 'name' => $title, 'item' => $url],
-                    ],
-                ];
+            $crumbs = BreadcrumbService::current()->schemaItems($content, $url);
+
+            if ($crumbs !== []) {
+                $graph[] = ['@type' => 'BreadcrumbList', 'itemListElement' => $crumbs];
             }
 
             if ($content instanceof Record) {
