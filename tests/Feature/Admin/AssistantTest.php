@@ -13,6 +13,16 @@ use Laravel\Ai\Contracts\ConversationStore;
 use Laravel\Ai\Responses\Data\ToolCall;
 use Livewire\Livewire;
 
+beforeEach(function (): void {
+    ob_start(fn (string $buffer): string => '');
+});
+
+afterEach(function (): void {
+    if (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+});
+
 /**
  * @param  array<int, string>  $toolNames
  */
