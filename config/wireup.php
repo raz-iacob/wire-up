@@ -8,6 +8,8 @@ return [
 
     'backup_path' => storage_path('app/backups'),
 
+    'transfer_path' => storage_path('app/transfers'),
+
     'backups_to_keep' => 5,
 
 ];
