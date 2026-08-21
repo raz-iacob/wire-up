@@ -9,6 +9,7 @@ use Database\Factories\SettingsFactory;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -32,14 +33,18 @@ final class Settings extends Model
      */
     public static function cached(): array
     {
-        if (! Schema::hasTable('settings')) {
+        try {
+            if (! Schema::hasTable('settings')) {
+                return [];
+            }
+
+            return cache()->rememberForever(
+                self::CACHE_KEY,
+                fn (): array => self::query()->get(['key', 'value'])->pluck('value', 'key')->all()
+            );
+        } catch (QueryException) {
             return [];
         }
-
-        return cache()->rememberForever(
-            self::CACHE_KEY,
-            fn (): array => self::query()->get(['key', 'value'])->pluck('value', 'key')->all()
-        );
     }
 
     public static function get(string $key, mixed $default = null): mixed

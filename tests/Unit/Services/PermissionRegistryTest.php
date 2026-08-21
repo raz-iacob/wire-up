@@ -32,6 +32,14 @@ it('omits record resources when the record types table is missing', function ():
     expect($keys)->toContain('pages')->not->toContain('records.product');
 });
 
+it('omits record resources when the database is unreachable', function (): void {
+    Schema::shouldReceive('hasTable')->andThrow(unreachableDatabase());
+
+    $keys = collect(PermissionRegistry::resources())->pluck('key');
+
+    expect($keys)->toContain('pages')->not->toContain('records.product');
+});
+
 it('builds dotted ability keys for every resource action', function (): void {
     $keys = PermissionRegistry::abilityKeys();
 

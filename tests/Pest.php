@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\QueryException;
+use Illuminate\Database\SQLiteDatabaseDoesNotExistException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\ParallelTesting;
@@ -37,6 +39,16 @@ expect()->extend('toBeOne', fn () => $this->toBe(1));
 function something(): void
 {
     //
+}
+
+function unreachableDatabase(): QueryException
+{
+    return new QueryException(
+        'sqlite',
+        'select 1',
+        [],
+        new SQLiteDatabaseDoesNotExistException('/missing/database.sqlite'),
+    );
 }
 
 /**

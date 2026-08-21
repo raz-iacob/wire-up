@@ -21,6 +21,14 @@ it('returns no active locales in console before the locales table is migrated', 
     expect(resolve(LocalizationService::class)->getActiveLocales())->toBe([]);
 });
 
+it('returns no active locales when the database is unreachable', function (): void {
+    Cache::forget('site-locales');
+
+    Schema::shouldReceive('hasTable')->andThrow(unreachableDatabase());
+
+    expect(resolve(LocalizationService::class)->getActiveLocales())->toBe([]);
+});
+
 it('returns active locales from cache', function (): void {
     Locale::query()->whereIn('code', ['en', 'nl'])->update(['active' => true]);
     Cache::forget('site-locales');

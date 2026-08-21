@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\PermissionAction;
 use App\Models\RecordType;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
 
 final class PermissionRegistry
@@ -70,21 +71,25 @@ final class PermissionRegistry
      */
     private static function recordResources(): array
     {
-        if (! Schema::hasTable('record_types')) {
+        try {
+            if (! Schema::hasTable('record_types')) {
+                return [];
+            }
+
+            $crud = array_map(fn (PermissionAction $action): string => $action->value, PermissionAction::cases());
+
+            return RecordType::query()
+                ->orderBy('position')
+                ->get()
+                ->map(fn (RecordType $type): array => [
+                    'key' => 'records.'.$type->key,
+                    'label' => $type->name,
+                    'group' => self::GROUP_RECORDS,
+                    'actions' => $crud,
+                ])
+                ->all();
+        } catch (QueryException) {
             return [];
         }
-
-        $crud = array_map(fn (PermissionAction $action): string => $action->value, PermissionAction::cases());
-
-        return RecordType::query()
-            ->orderBy('position')
-            ->get()
-            ->map(fn (RecordType $type): array => [
-                'key' => 'records.'.$type->key,
-                'label' => $type->name,
-                'group' => self::GROUP_RECORDS,
-                'actions' => $crud,
-            ])
-            ->all();
     }
 }

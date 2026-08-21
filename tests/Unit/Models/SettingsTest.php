@@ -11,6 +11,12 @@ it('caches settings as a key/value map', function (): void {
     expect(Settings::cached())->toMatchArray(['site_name' => 'Acme']);
 });
 
+it('returns an empty array when the database is unreachable', function (): void {
+    Schema::shouldReceive('hasTable')->andThrow(unreachableDatabase());
+
+    expect(Settings::cached())->toBe([]);
+});
+
 it('returns an empty array when the settings table is absent', function (): void {
     Schema::shouldReceive('hasTable')->with('settings')->andReturnFalse();
 

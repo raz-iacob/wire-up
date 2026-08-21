@@ -8,6 +8,7 @@ use App\Models\Locale;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Translation\Translator;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -80,14 +81,18 @@ final class LocalizationService
      */
     public function getActiveLocales(): array
     {
-        if ($this->app->runningInConsole() && ! Schema::hasTable('locales')) {
+        try {
+            if ($this->app->runningInConsole() && ! Schema::hasTable('locales')) {
+                return [];
+            }
+
+            return cache()->rememberForever('site-locales', fn (): array => Locale::query()->where('active', true)
+                ->get()
+                ->mapWithKeys(fn (Locale $locale): array => [$locale->code => $locale->toArray()])
+                ->all());
+        } catch (QueryException) {
             return [];
         }
-
-        return cache()->rememberForever('site-locales', fn (): array => Locale::query()->where('active', true)
-            ->get()
-            ->mapWithKeys(fn (Locale $locale): array => [$locale->code => $locale->toArray()])
-            ->all());
     }
 
     /**
