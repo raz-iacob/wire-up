@@ -233,3 +233,18 @@ it('flags the homepage in the pages list', function (): void {
     Livewire::test('pages::admin.pages-index')
         ->assertSee('Homepage');
 });
+
+it('returns to the first page when the search or status changes', function (): void {
+    Page::factory()->count(25)->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->call('gotoPage', 2)
+        ->assertSet('paginators.page', 2)
+        ->set('search', 'Page')
+        ->assertSet('paginators.page', 1)
+        ->call('gotoPage', 2)
+        ->set('status', 'draft')
+        ->assertSet('paginators.page', 1);
+});

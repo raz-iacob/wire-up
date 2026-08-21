@@ -50,6 +50,21 @@ return new class extends Component
 
     public int $perPage = 20;
 
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilters(): void
+    {
+        $this->resetPage();
+    }
+
     public function mount(RecordType $recordType): void
     {
         $this->authorize('records.'.$recordType->key.'.view');

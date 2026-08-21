@@ -284,3 +284,18 @@ it('shows last login information', function (): void {
     $response->assertSee(User::query()->where('name', 'User With Login')->first()->last_seen_at->format('M d, Y H:i'))
         ->assertSee('Never');
 });
+
+it('returns to the first page when the search or status changes', function (): void {
+    User::factory()->count(25)->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.users-index')
+        ->call('gotoPage', 2)
+        ->assertSet('paginators.page', 2)
+        ->set('search', 'a')
+        ->assertSet('paginators.page', 1)
+        ->call('gotoPage', 2)
+        ->set('status', 'active')
+        ->assertSet('paginators.page', 1);
+});

@@ -324,3 +324,29 @@ it('filters records by a translatable select field in the active locale', functi
         ->assertSee('Pro Tool')
         ->assertDontSee('Basic Tool');
 });
+
+it('returns to the first page when a filter or search changes', function (): void {
+    $type = filterableProductType();
+
+    foreach (range(1, 25) as $index) {
+        Record::factory()->create([
+            'record_type_id' => $type->id,
+            'title' => ['en' => "Widget {$index}"],
+            'data' => ['sold' => $index > 20],
+        ]);
+    }
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->call('gotoPage', 2)
+        ->assertSet('paginators.page', 2)
+        ->set('filters.sold', '1')
+        ->assertSet('paginators.page', 1)
+        ->call('gotoPage', 2)
+        ->set('search', 'Widget')
+        ->assertSet('paginators.page', 1)
+        ->call('gotoPage', 2)
+        ->set('status', 'draft')
+        ->assertSet('paginators.page', 1);
+});

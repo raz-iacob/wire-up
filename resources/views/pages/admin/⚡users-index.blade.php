@@ -37,6 +37,16 @@ return new class extends Component
 
     public int $perPage = 20;
 
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
+    }
+
     public function mount(): void
     {
         $roles = $this->assignableRoles();

@@ -41,6 +41,16 @@ return new class extends Component
 
     public int $perPage = 20;
 
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
+    }
+
     public function create(CreatePageAction $action): void
     {
         $this->authorize('pages.create');
