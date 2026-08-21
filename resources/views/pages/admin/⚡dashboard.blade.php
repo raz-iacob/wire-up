@@ -9,11 +9,11 @@ use App\Models\RecordType;
 use App\Models\Role;
 use App\Models\Submission;
 use App\Models\User;
+use App\Services\VisitorCounter;
 use Carbon\CarbonInterface;
 use Flux\DateRange;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -95,17 +95,7 @@ return new class extends Component
     #[Computed]
     public function visitorsOnline(): int
     {
-        if (config()->string('session.driver') !== 'database') {
-            return 0;
-        }
-
-        $visitors = DB::table(config()->string('session.table', 'sessions'))
-            ->select('ip_address', 'user_agent')
-            ->whereNull('user_id')
-            ->where('last_activity', '>=', now()->subMinutes(15)->getTimestamp())
-            ->distinct();
-
-        return DB::query()->fromSub($visitors, 'visitors')->count();
+        return VisitorCounter::current()->onlineNow();
     }
 
     /**
