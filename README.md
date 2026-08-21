@@ -12,13 +12,15 @@
 
 ### Key Features
 
-- **Multi-language Support** - Easily build applications with localization and translations
-- **Real-time Interactivity** - Dynamic content updates without page refreshes
-- **Server-side Rendering** - Fast initial page loads with SEO-friendly content
-- **Modern UI Components** - Built with Flux UI Pro for beautiful, accessible interfaces
-- **Developer Experience** - Hot reloading, type-safe code, and comprehensive testing
-- **Responsive Design** - Mobile-first approach with Tailwind CSS
-- **Security First** - Laravel's built-in security features and best practices
+- **Block-based page builder** - Compose pages from 20+ content blocks with a live desktop/tablet/mobile preview
+- **Records & content types** - Define your own content types and fields in the admin, with public detail pages and categories
+- **Media library** - Crops, SVG sanitising, HEIC conversion, Pexels import, signed image URLs with a transform cache
+- **Design settings** - Colour tokens, light/dark schemes with per-theme logos, fonts, and site-wide custom CSS
+- **Multi-language** - Per-locale publishing, owner-editable interface translations
+- **Users, roles & members** - Per-action abilities, two-factor authentication, member accounts and members-only content
+- **AI-native** - An in-admin AI assistant plus an MCP server, so agents can build and edit the site programmatically
+- **SEO & AI discoverability** - Meta, JSON-LD, sitemap, `llms.txt`, and Markdown responses for agents
+- **Self-updating** - Install and update from git tags, with a database backup before every migration
 
 ## Built With
 
@@ -26,8 +28,8 @@
 - **[Livewire 4](https://livewire.laravel.com)** - Full-stack framework for Laravel
 - **[Flux UI Pro](https://fluxui.dev)** - Beautiful UI components for Livewire
 - **[Tailwind CSS v4](https://tailwindcss.com)** - Utility-first CSS framework
-- **[Pest 4](https://pestphp.com)** - Delightful PHP testing framework
-- **[PHPStan + PestStan](https://phpstan.org)** - Static analysis for application and Pest tests
+- **[Pest 5](https://pestphp.com)** - Delightful PHP testing framework
+- **[PHPStan + Larastan](https://phpstan.org)** - Static analysis for Laravel applications
 - **[Rector](https://getrector.com)** - Automated refactoring and code quality checks
 - **[Laravel Pint](https://laravel.com/docs/pint)** - Code style fixer
 - **[Vite](https://vitejs.dev)** - Fast build tool and dev server
@@ -39,6 +41,8 @@
 - Composer 2.0+
 - MySQL/PostgreSQL/SQLite
 - PHP `gd` extension (image resizing/cropping)
+- PHP `zip` extension (site export/import bundles)
+- A **[Flux UI Pro](https://fluxui.dev)** license — the admin is built on it, so `composer install` needs your credentials in `auth.json` (see [Installation](#installation))
 - _Optional:_ PHP `imagick` extension built with `libheif` — enables HEIC/HEIF uploads (converted to JPEG on upload). Without it, HEIC uploads are rejected with a friendly message; all other image formats are unaffected.
 
 ## Getting Started
@@ -48,11 +52,24 @@
 1. **Clone the repository**
 
     ```bash
-    git clone https://github.com/your-username/wire-up.git
+    git clone https://github.com/raz-iacob/wire-up.git
     cd wire-up
     ```
 
-2. **Install PHP & Node.js dependencies and Environment setup**
+2. **Add your Flux UI Pro credentials** to `auth.json` (gitignored)
+
+    ```json
+    {
+        "http-basic": {
+            "composer.fluxui.dev": {
+                "username": "your-email",
+                "password": "your-license-key"
+            }
+        }
+    }
+    ```
+
+3. **Install PHP & Node.js dependencies and Environment setup**
 
     ```bash
     composer setup
@@ -60,7 +77,7 @@
 
 ## Testing
 
-Wire-Up uses Pest v4 for testing, including browser testing capabilities:
+Wire-Up uses Pest v5 for testing, including browser testing capabilities:
 
 ```bash
 # Run the full quality pipeline (type coverage, tests, lint, static analysis)
@@ -156,6 +173,20 @@ npm ci && npm run build && php artisan optimize && php artisan up
 ```
 
 **Release routine:** add a `## vX.Y.Z` section to `CHANGELOG.md`, commit, tag (`git tag vX.Y.Z`), push with tags.
+
+### Moving a site
+
+A whole site — content, media, settings, menus, translations — travels as a single zip bundle, from **Settings → Export / Import** in the admin or from the CLI:
+
+```bash
+php artisan wireup:export --path=/tmp/site.zip
+```
+
+```bash
+php artisan wireup:import /tmp/site.zip --dry-run
+```
+
+API keys and mail credentials are left out unless you pass `--with-secrets`. An import **replaces** the current site, so use `--dry-run` first to see what a bundle holds; run `php artisan storage:link` afterwards if imported media does not appear.
 
 > **Pexels media library integration:** Add a free Pexels API key (from [pexels.com/api](https://www.pexels.com/api/)) under **Settings → Integrations** in the admin to enable the integration. Editors can then search Pexels photos and videos directly from the media picker and import them into the library. When no key is set, the Pexels option is hidden. Per the [Pexels API Guidelines](https://www.pexels.com/api/documentation/#guidelines), photographer attribution and a link back to Pexels are shown in the picker, and the photographer/source details are stored with each imported asset (in `media.metadata`) so credit can be surfaced wherever the media is used.
 
