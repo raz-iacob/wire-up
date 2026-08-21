@@ -26,3 +26,12 @@ Never run `git commit` or `git push` without confirming with the user first. Pro
 Commit messages are one-line conventional commits (`feat:`, `fix:`, `refactor:`, `test:`, `chore:`). No body, no bullet lists, no co-author trailers.
 
 Commit directly to `main`. Do not create a feature branch or a PR per feature — this deliberately overrides the default "branch first when on the default branch" behaviour. Branch or open a PR only when the user asks.
+
+## Keep CHANGELOG.md current as you ship
+Every user-visible change (feature, fix, or behaviour change) adds a bullet to an `## Unreleased` section at the top of CHANGELOG.md, in the same commit as the change. Internal-only work (refactors, tests, tooling, dependency bumps) does not.
+
+At release: rename `## Unreleased` to `## vX.Y.Z — YYYY-MM-DD`, commit, tag `vX.Y.Z`, push with tags.
+
+Format is load-bearing, not cosmetic. App\Services\UpdateService::parseChangelog() renders release notes on Settings → Updates by taking EVERY non-empty line of a section and stripping leading `- `. So use a flat bullet list only: no sub-headings, no blank-line-separated prose, no nested lists — a `### Foo` line would show up as a note item reading "### Foo". Only `## vX.Y.Z` headings are matched, which is why an `## Unreleased` section is invisible to installs (verified).
+
+Never edit a section for an already-released tag: installs read CHANGELOG.md as it was AT that tag (`git show {tag}:CHANGELOG.md`), so edits on main cannot reach them and only cause drift.
