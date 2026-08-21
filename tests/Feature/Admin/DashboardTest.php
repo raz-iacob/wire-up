@@ -8,6 +8,7 @@ use App\Models\RecordType;
 use App\Models\Submission;
 use App\Models\User;
 use App\Services\UpdateService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
@@ -137,4 +138,51 @@ it('hides the editor in recent activity when only one staff user exists', functi
     Livewire::test('pages::admin.dashboard')
         ->assertSee('Solo Item')
         ->assertDontSee('by Solo Admin');
+});
+
+it('counts distinct anonymous visitors rather than session rows', function (): void {
+    config()->set('session.driver', 'database');
+
+    $admin = User::factory()->create(['active' => true, 'role' => 'admin', 'last_seen_at' => now()]);
+
+    DB::table('sessions')->insert([
+        ['id' => 'visitor-a-1', 'user_id' => null, 'ip_address' => '10.0.0.1', 'user_agent' => 'Firefox', 'payload' => '', 'last_activity' => now()->getTimestamp()],
+        ['id' => 'visitor-a-2', 'user_id' => null, 'ip_address' => '10.0.0.1', 'user_agent' => 'Firefox', 'payload' => '', 'last_activity' => now()->subMinutes(2)->getTimestamp()],
+        ['id' => 'visitor-a-3', 'user_id' => null, 'ip_address' => '10.0.0.1', 'user_agent' => 'Firefox', 'payload' => '', 'last_activity' => now()->subMinutes(5)->getTimestamp()],
+        ['id' => 'visitor-b', 'user_id' => null, 'ip_address' => '10.0.0.2', 'user_agent' => 'Firefox', 'payload' => '', 'last_activity' => now()->getTimestamp()],
+        ['id' => 'visitor-c', 'user_id' => null, 'ip_address' => '10.0.0.1', 'user_agent' => 'Safari', 'payload' => '', 'last_activity' => now()->getTimestamp()],
+        ['id' => 'stale', 'user_id' => null, 'ip_address' => '10.0.0.9', 'user_agent' => 'Firefox', 'payload' => '', 'last_activity' => now()->subHour()->getTimestamp()],
+        ['id' => 'signed-in', 'user_id' => $admin->id, 'ip_address' => '10.0.0.3', 'user_agent' => 'Firefox', 'payload' => '', 'last_activity' => now()->getTimestamp()],
+    ]);
+
+    $component = Livewire::actingAs($admin)->test('pages::admin.dashboard');
+
+    expect($component->instance()->visitorsOnline)->toBe(3);
+
+    $component->assertSee('Online now')->assertSee('Users online');
+});
+
+it('reports no visitors online when sessions are not stored in the database', function (): void {
+    config()->set('session.driver', 'array');
+
+    $this->actingAsAdmin();
+
+    expect(Livewire::test('pages::admin.dashboard')->instance()->visitorsOnline)->toBe(0);
+});
+
+it('adds users and visitors together in the online tile', function (): void {
+    config()->set('session.driver', 'database');
+
+    $admin = User::factory()->create(['active' => true, 'role' => 'admin', 'last_seen_at' => now()]);
+    User::factory()->create(['active' => true, 'role' => 'admin', 'last_seen_at' => now()->subMinute()]);
+
+    DB::table('sessions')->insert([
+        ['id' => 'visitor-1', 'user_id' => null, 'ip_address' => '10.1.0.1', 'user_agent' => 'Firefox', 'payload' => '', 'last_activity' => now()->getTimestamp()],
+        ['id' => 'visitor-2', 'user_id' => null, 'ip_address' => '10.1.0.2', 'user_agent' => 'Firefox', 'payload' => '', 'last_activity' => now()->getTimestamp()],
+        ['id' => 'visitor-3', 'user_id' => null, 'ip_address' => '10.1.0.3', 'user_agent' => 'Firefox', 'payload' => '', 'last_activity' => now()->getTimestamp()],
+    ]);
+
+    $component = Livewire::actingAs($admin)->test('pages::admin.dashboard')->assertSee('Online now');
+
+    expect($component->instance()->onlineUsers->count() + $component->instance()->visitorsOnline)->toBe(5);
 });

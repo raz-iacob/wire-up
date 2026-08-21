@@ -13,6 +13,7 @@ use Carbon\CarbonInterface;
 use Flux\DateRange;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -77,12 +78,6 @@ return new class extends Component
         return Submission::query()->latest()->limit(5)->get();
     }
 
-    #[Computed]
-    public function userCount(): int
-    {
-        return User::query()->count();
-    }
-
     /**
      * @return Collection<int, User>
      */
@@ -95,6 +90,22 @@ return new class extends Component
             ->latest('last_seen_at')
             ->limit(8)
             ->get();
+    }
+
+    #[Computed]
+    public function visitorsOnline(): int
+    {
+        if (config()->string('session.driver') !== 'database') {
+            return 0;
+        }
+
+        $visitors = DB::table(config()->string('session.table', 'sessions'))
+            ->select('ip_address', 'user_agent')
+            ->whereNull('user_id')
+            ->where('last_activity', '>=', now()->subMinutes(15)->getTimestamp())
+            ->distinct();
+
+        return DB::query()->fromSub($visitors, 'visitors')->count();
     }
 
     /**
@@ -279,8 +290,8 @@ return new class extends Component
                     <flux:heading
                         size="xl"
                         class="tabular-nums"
-                    >{{ number_format($this->onlineUsers->count()) }}</flux:heading>
-                    <flux:subheading>{{ __('Online now') }} · {{ __(':count total', ['count' => number_format($this->userCount)]) }}</flux:subheading>
+                    >{{ number_format($this->onlineUsers->count() + $this->visitorsOnline) }}</flux:heading>
+                    <flux:subheading>{{ __('Online now') }}</flux:subheading>
                 </div>
             </flux:card>
         </div>
@@ -419,7 +430,7 @@ return new class extends Component
 
                 @can('users.view')
                     <flux:card class="space-y-4">
-                        <flux:heading size="lg">{{ __('Online now') }}</flux:heading>
+                        <flux:heading size="lg">{{ __('Users online') }}</flux:heading>
                         @if ($this->onlineUsers->isEmpty())
                             <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No one else is online.') }}</flux:text>
                         @else
