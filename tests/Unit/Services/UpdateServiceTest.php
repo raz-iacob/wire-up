@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Settings;
 use App\Notifications\SystemUpdateCompleted;
 use App\Services\UpdateService;
+use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Notification;
@@ -65,13 +66,17 @@ it('returns null when git describe reports no tag', function (): void {
 });
 
 it('picks the highest semver tag from the remote, ignoring peeled and non-semver refs', function (): void {
-    Process::fake(['*ls-remote*' => Process::result(output: implode("\n", [
-        "aaa\trefs/tags/v0.9.1",
-        "bbb\trefs/tags/v0.10.0",
-        "ccc\trefs/tags/v0.10.0^{}",
-        "ddd\trefs/tags/not-semver",
-        "eee\trefs/tags/v1.0.0-beta",
-    ]))]);
+    Process::fake([
+        '*ls-remote*' => Process::result(output: implode("\n", [
+            "aaa\trefs/tags/v0.9.1",
+            "bbb\trefs/tags/v0.10.0",
+            "ccc\trefs/tags/v0.10.0^{}",
+            "ddd\trefs/tags/not-semver",
+            "eee\trefs/tags/v1.0.0-beta",
+        ])),
+        '*describe*' => Process::result(exitCode: 1),
+        '*fetch*' => Process::result(),
+    ]);
 
     $service = new UpdateService();
 
@@ -81,7 +86,11 @@ it('picks the highest semver tag from the remote, ignoring peeled and non-semver
 });
 
 it('caches a null latest version when the remote has no tags', function (): void {
-    Process::fake(['*ls-remote*' => Process::result(output: '')]);
+    Process::fake([
+        '*ls-remote*' => Process::result(output: ''),
+        '*describe*' => Process::result(exitCode: 1),
+        '*fetch*' => Process::result(),
+    ]);
 
     $service = new UpdateService();
 
@@ -91,7 +100,11 @@ it('caches a null latest version when the remote has no tags', function (): void
 });
 
 it('caches a null latest version when the remote is unreachable', function (): void {
-    Process::fake(['*ls-remote*' => Process::result(exitCode: 1)]);
+    Process::fake([
+        '*ls-remote*' => Process::result(exitCode: 1),
+        '*describe*' => Process::result(exitCode: 1),
+        '*fetch*' => Process::result(),
+    ]);
 
     $service = new UpdateService();
 
@@ -134,7 +147,11 @@ it('reports whether an update is available', function (string $current, string $
 ]);
 
 it('reports no update when either version is unknown', function (): void {
-    Process::fake(['*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0")]);
+    Process::fake([
+        '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*describe*' => Process::result(exitCode: 1),
+        '*fetch*' => Process::result(),
+    ]);
 
     $service = new UpdateService();
 
@@ -143,6 +160,26 @@ it('reports no update when either version is unknown', function (): void {
     $service->check();
 
     expect($service->updateAvailable())->toBeFalse();
+});
+
+it('stamps the current version from git when the version file is missing', function (): void {
+    Process::fake([
+        '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*describe*' => Process::result(output: "v0.9.0\n"),
+        '*fetch*' => Process::result(),
+        '*show*' => Process::result(output: "## v1.0.0\n\n- Newer release"),
+    ]);
+
+    $service = new UpdateService();
+
+    expect($service->currentVersion())->toBeNull();
+
+    $service->check();
+
+    Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['git', 'fetch', '--tags', '--force', 'origin']);
+
+    expect($service->currentVersion())->toBe('v0.9.0')
+        ->and($service->updateAvailable())->toBeTrue();
 });
 
 it('stores release notes from the changelog when an update is available', function (): void {

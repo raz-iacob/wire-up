@@ -63,7 +63,7 @@ final class UpdateService
         $result = Process::path(base_path())->run(['git', 'ls-remote', '--tags', 'origin']);
 
         $latest = $result->failed() ? null : $this->highestTag($result->output());
-        $current = $this->currentVersion();
+        $current = $this->currentVersion() ?? $this->stampVersionFromFetchedTags();
 
         $notes = $latest !== null && $current !== null && version_compare(mb_ltrim($latest, 'v'), mb_ltrim($current, 'v'), '>')
             ? $this->releaseNotes($current, $latest)
@@ -208,6 +208,13 @@ final class UpdateService
         } catch (Throwable $exception) {
             report($exception);
         }
+    }
+
+    private function stampVersionFromFetchedTags(): ?string
+    {
+        Process::path(base_path())->timeout(120)->run(['git', 'fetch', '--tags', '--force', 'origin']);
+
+        return $this->refreshCurrentVersionFromGit();
     }
 
     /**

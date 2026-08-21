@@ -45,7 +45,11 @@ it('reports being up to date', function (): void {
 });
 
 it('warns when no release tags exist', function (): void {
-    Process::fake(['*ls-remote*' => Process::result(output: '')]);
+    Process::fake([
+        '*ls-remote*' => Process::result(output: ''),
+        '*describe*' => Process::result(exitCode: 1),
+        '*fetch*' => Process::result(),
+    ]);
 
     $this->artisan(CheckForUpdatesCommand::class)
         ->expectsOutputToContain('unknown')

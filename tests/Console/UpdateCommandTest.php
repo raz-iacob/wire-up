@@ -94,7 +94,11 @@ it('reruns the update on the same version when forced', function (): void {
 });
 
 it('fails when no release tag exists', function (): void {
-    Process::fake(['*ls-remote*' => Process::result(output: '')]);
+    Process::fake([
+        '*ls-remote*' => Process::result(output: ''),
+        '*describe*' => Process::result(exitCode: 1),
+        '*fetch*' => Process::result(),
+    ]);
 
     $this->artisan(UpdateCommand::class)
         ->expectsOutputToContain('No release tag to install.')

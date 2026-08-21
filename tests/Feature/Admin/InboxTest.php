@@ -40,8 +40,8 @@ it('lists submissions with name, email and form', function (): void {
 });
 
 it('searches across name, email and form name', function (): void {
-    Submission::factory()->create(['name' => 'Ada Lovelace']);
-    Submission::factory()->create(['name' => 'Grace Hopper']);
+    Submission::factory()->create(['name' => 'Ada Lovelace', 'email' => 'ada@example.com']);
+    Submission::factory()->create(['name' => 'Grace Hopper', 'email' => 'grace@example.com']);
 
     $this->actingAsAdmin();
 
