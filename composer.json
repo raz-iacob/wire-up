@@ -1,11 +1,14 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "nunomaduro/laravel-starter-kit",
+    "name": "raz-iacob/wire-up",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "A modern Laravel + Livewire framework for building dynamic content-driven websites.",
     "keywords": [
         "laravel",
-        "framework"
+        "livewire",
+        "flux",
+        "cms",
+        "tailwindcss"
     ],
     "license": "MIT",
     "require": {
