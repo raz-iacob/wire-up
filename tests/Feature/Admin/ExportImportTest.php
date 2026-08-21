@@ -236,6 +236,7 @@ it('shows the outcome of a finished import and dismisses it', function (): void 
     Livewire::test('pages::admin.settings-export-import')
         ->assertSee('Imported site.zip')
         ->assertSee('4 pages, 12 records')
+        ->assertSee('storage:link')
         ->call('dismissState')
         ->assertDontSee('Imported site.zip');
 

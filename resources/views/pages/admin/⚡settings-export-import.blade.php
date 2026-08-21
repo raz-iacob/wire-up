@@ -218,6 +218,9 @@ return new class extends Component
                             {{ __('Imported :bundle', ['bundle' => (string) $state['bundle']]) }}</flux:callout.heading>
                         <flux:callout.text>
                             {{ $state['output'] }}
+                            <div class="mt-2">
+                                {{ __('If images do not load, run "php artisan storage:link" on this server.') }}
+                            </div>
                             <div class="mt-3">
                                 <flux:button size="sm" variant="ghost" wire:click="dismissState">
                                     {{ __('Dismiss') }}</flux:button>

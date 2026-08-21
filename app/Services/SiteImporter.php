@@ -197,7 +197,7 @@ final class SiteImporter
     }
 
     /**
-     * @param  array<int, string>  $sources  Already checked by auditMedia.
+     * @param  array<int, string>  $sources
      */
     private function restoreMedia(ZipArchive $zip, array $sources): void
     {
