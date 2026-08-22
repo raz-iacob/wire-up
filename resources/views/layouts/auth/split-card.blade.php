@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <x-site.head :title="isset($title) ? $title : null" />
+    <x-site.head :title="isset($title) ? $title : null" :site-custom-css="false" />
 
     <body class="min-h-screen bg-zinc-100 antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
         <div class="flex min-h-dvh items-center justify-center p-6">

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Event;
@@ -236,4 +237,23 @@ it('locks out after five real failed login attempts', function (): void {
         ->assertHasErrors(['email' => __('auth.throttle', ['seconds' => 60, 'minutes' => 1])]);
 
     Event::assertDispatched(Lockout::class);
+});
+
+it('keeps site-wide custom css off the auth pages in every layout', function (string $layout): void {
+    Settings::set([
+        'custom_css' => 'body { background-image: none; }',
+        'auth_layout' => $layout,
+    ]);
+
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertDontSee('background-image: none', false);
+})->with(['simple', 'card', 'split', 'split-card']);
+
+it('still applies the site theme to the auth pages', function (): void {
+    Settings::set(['custom_css' => 'body { background-image: none; }']);
+
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertSee('--wire-body-bg', false);
 });

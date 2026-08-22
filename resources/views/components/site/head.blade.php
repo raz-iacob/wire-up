@@ -1,4 +1,4 @@
-@props(['title' => null, 'description' => null, 'customCss' => '', 'page' => null])
+@props(['title' => null, 'description' => null, 'customCss' => '', 'page' => null, 'siteCustomCss' => true])
 
 @php
     $site = \App\Services\SettingsService::current();
@@ -93,7 +93,7 @@
             })();
         </script>
     @endif
-    @if ($site->customCss() !== '')
+    @if ($siteCustomCss && $site->customCss() !== '')
         <style>
             {!! $site->customCss() !!}
         </style>
