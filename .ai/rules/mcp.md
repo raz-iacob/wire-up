@@ -14,11 +14,9 @@ Building blocks through `update-page-blocks` / `create-record` hits three undocu
 
 The `block-types` resource states none of this; consider adding it there.
 
-## A block without an id gets reordered to the end (bug + workaround)
-`update-page-blocks` and `update-record` silently move any block you insert mid-list to the bottom of the page.
+## Validated block order is not input order — normalise it
+`Pages::blockRules()` declares `blocks.*.id` before `blocks.*.type`, and Laravel's `validated()` rebuilds the array attribute by attribute. Items with no `id` key are skipped on the `id` pass and only created on the `type` pass, so they land at the END of the validated array. Sending hero(id) → divider(no id) → stats(id) validates as hero → stats → divider, and `HasBlocks::updateBlocks()` assigns `position` from `array_values()` of that.
 
-Cause: `Pages::blockRules()` declares `blocks.*.id` before `blocks.*.type`, and Laravel's `validated()` rebuilds the array attribute by attribute. Items that have no `id` key are skipped on the `id` pass and only get created on the `type` pass, so they end up appended to the validated array. `HasBlocks::updateBlocks()` then assigns `position` from `array_values()` of that reordered array. Proven: sending hero(id 8) → photo(no id) → stats(id 9) validates as hero → stats → photo.
+Fixed by `Pages::orderedBlocks()`, which `ksort()`s on the original input keys. Every tool that feeds validated blocks into `updateBlocks` or an action MUST pass them through it — `create-page`, `update-page-blocks`, `create-record` and `update-record` all do.
 
-Workaround until it is fixed: give every item an id — real ids for existing blocks, `"id": "new-1"` for new ones (`updateBlocks` treats a `new-` prefix as a create).
-
-Real fix: `ksort()` the validated blocks before use, or list the `id` rule after `type`/`content`.
+Do NOT move the `ksort` into `HasBlocks::updateBlocks()` instead. The admin editor keys `$this->blocks` by block id and `HasBlockBuilder::reorderBlocks()` rebuilds that array in the user's chosen order while keeping the id keys, so sorting by key there would re-sort by block id and silently undo every manual drag-reorder.

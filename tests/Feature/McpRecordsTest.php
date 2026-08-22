@@ -299,6 +299,33 @@ it('rejects getting an unknown record', function (): void {
         ->assertHasErrors(['No record with id 999']);
 });
 
+it('keeps a new record block in place when it is inserted between blocks that have ids', function (): void {
+    $type = mcpProductType();
+    WireUpServer::tool(CreateRecordTool::class, [
+        'type' => 'product',
+        'title' => 'Ordered Blocks',
+        'blocks' => [
+            ['type' => 'hero', 'content' => ['heading' => ['en' => 'Top']]],
+            ['type' => 'stats', 'content' => []],
+        ],
+    ])->assertOk();
+
+    $record = Record::query()->where('record_type_id', $type->id)->firstOrFail();
+    $hero = $record->blocks()->where('type', 'hero')->firstOrFail();
+    $stats = $record->blocks()->where('type', 'stats')->firstOrFail();
+
+    WireUpServer::tool(UpdateRecordTool::class, [
+        'record' => $record->id,
+        'blocks' => [
+            ['id' => $hero->id, 'type' => 'hero', 'content' => ['heading' => ['en' => 'Top']]],
+            ['type' => 'divider', 'content' => ['size' => 'medium']],
+            ['id' => $stats->id, 'type' => 'stats', 'content' => []],
+        ],
+    ])->assertOk();
+
+    expect($record->refresh()->blocks->pluck('type.value')->all())->toBe(['hero', 'divider', 'stats']);
+});
+
 it('updates a record and preserves its published status when status is omitted', function (): void {
     $type = mcpProductType();
     $media = Media::factory()->create();

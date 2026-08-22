@@ -89,7 +89,7 @@ final class UpdateRecordTool extends Tool
         }
 
         if (array_key_exists('blocks', $validated)) {
-            $attributes['blocks'] = $validated['blocks'];
+            $attributes['blocks'] = Pages::orderedBlocks($validated['blocks']);
         }
 
         if (array_key_exists('categories', $validated)) {

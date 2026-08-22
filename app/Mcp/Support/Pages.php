@@ -107,6 +107,17 @@ final readonly class Pages
     }
 
     /**
+     * @param  array<int|string, mixed>  $blocks
+     * @return list<mixed>
+     */
+    public static function orderedBlocks(array $blocks): array
+    {
+        ksort($blocks, SORT_NUMERIC);
+
+        return array_values($blocks);
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function blockMessages(): array

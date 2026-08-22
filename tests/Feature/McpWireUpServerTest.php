@@ -194,6 +194,29 @@ it('replaces page blocks keeping the ones referenced by id', function (): void {
         ->and($blocks->last()->type->value)->toBe('rich-text');
 });
 
+it('keeps a new block in place when it is inserted between blocks that have ids', function (): void {
+    $page = Page::factory()->create(['title' => 'Ordered']);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'ordered']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'hero', 'content' => ['heading' => ['en' => 'Top']]],
+        ['id' => 'new-2', 'type' => 'stats', 'content' => []],
+    ]);
+
+    $hero = $page->blocks()->where('type', 'hero')->firstOrFail();
+    $stats = $page->blocks()->where('type', 'stats')->firstOrFail();
+
+    WireUpServer::tool(UpdatePageBlocksTool::class, [
+        'page' => $page->id,
+        'blocks' => [
+            ['id' => $hero->id, 'type' => 'hero', 'content' => ['heading' => ['en' => 'Top']]],
+            ['type' => 'divider', 'content' => ['size' => 'medium']],
+            ['id' => $stats->id, 'type' => 'stats', 'content' => []],
+        ],
+    ])->assertOk();
+
+    expect($page->refresh()->blocks->pluck('type.value')->all())->toBe(['hero', 'divider', 'stats']);
+});
+
 it('returns a friendly error when updating blocks on an unknown page', function (): void {
     WireUpServer::tool(UpdatePageBlocksTool::class, ['page' => 999999, 'blocks' => []])
         ->assertHasErrors(['No page with id 999999. Use list-pages to see the available pages.']);

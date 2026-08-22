@@ -71,7 +71,7 @@ final class CreateRecordTool extends Tool
 
         new UpdateRecordAction()->handle($record, [
             'status' => Records::statusFor((bool) ($validated['publish'] ?? false)),
-            'blocks' => $validated['blocks'] ?? [],
+            'blocks' => Pages::orderedBlocks($validated['blocks'] ?? []),
             'categories' => $validated['categories'] ?? [],
             'media' => Records::normalizeMedia($validated['media'] ?? [], $locale),
         ]);
