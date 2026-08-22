@@ -121,12 +121,13 @@ it('rejects a url prefix already used by another type', function (): void {
         ->assertHasErrors(['already in use']);
 });
 
-it('rejects a url prefix already used by a page slug', function (): void {
+it('allows a url prefix that matches a page slug so the page can act as the landing page', function (): void {
     $page = Page::factory()->create(['title' => 'Showcase']);
     $page->slugs()->create(['locale' => 'en', 'slug' => 'showcase', 'base_path' => '']);
 
     WireUpServer::tool(CreateContentTypeTool::class, ['name' => 'Showcase things', 'slug_prefix' => 'showcase'])
-        ->assertHasErrors(['already in use']);
+        ->assertOk()
+        ->assertSee('"slug_prefix":"showcase"');
 });
 
 it('gives colliding custom types a unique key', function (): void {
@@ -431,4 +432,14 @@ it('sets record page breadcrumbs when creating and updating a content type', fun
     WireUpServer::tool(UpdateContentTypeTool::class, ['type' => 'post', 'breadcrumbs' => false])
         ->assertOk()
         ->assertSee('"breadcrumbs":false');
+});
+it('allows renaming a content type prefix onto an existing page slug', function (): void {
+    $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides', 'name' => 'Guides']);
+
+    $page = Page::factory()->create(['title' => 'Handbook']);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'handbook', 'base_path' => '']);
+
+    WireUpServer::tool(UpdateContentTypeTool::class, ['type' => $type->key, 'slug_prefix' => 'handbook'])
+        ->assertOk()
+        ->assertSee('"slug_prefix":"handbook"');
 });

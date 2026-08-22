@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
 use App\Models\User;
@@ -206,4 +207,20 @@ it('blocks removing a content type that still has records', function (): void {
     $component->call('removeType');
     expect($component->get('types'))->toHaveCount(1);
     $this->assertModelExists($type);
+});
+
+it('allows a URL prefix that matches an existing page slug', function (): void {
+    $this->actingAsAdmin();
+
+    $page = Page::factory()->create(['title' => 'Guides']);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'guides']);
+
+    Livewire::test('pages::admin.settings-content-types')
+        ->call('addCustom')
+        ->set('types.0.name', 'Guide')
+        ->set('types.0.slug_prefix', 'guides')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('record_types', ['slug_prefix' => 'guides']);
 });

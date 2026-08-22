@@ -413,7 +413,6 @@ return new class extends Component
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
                 Rule::notIn($reserved),
                 Rule::unique('record_types', 'slug_prefix')->ignore($this->types[$index]['id']),
-                Rule::unique('slugs', 'slug')->where('base_path', ''),
             ];
             $rules["types.$index.breadcrumbs"] = ['boolean'];
             $rules["types.$index.fields"] = ['array'];

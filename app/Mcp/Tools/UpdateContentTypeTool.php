@@ -7,7 +7,6 @@ namespace App\Mcp\Tools;
 use App\Actions\UpdateRecordTypeAction;
 use App\Mcp\Support\Records;
 use App\Models\RecordType;
-use App\Models\Slug;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Validation\Rule;
@@ -110,10 +109,6 @@ final class UpdateContentTypeTool extends Tool
 
     private function prefixTaken(string $slugPrefix, RecordType $type): bool
     {
-        if (RecordType::query()->where('slug_prefix', $slugPrefix)->whereKeyNot($type->id)->exists()) {
-            return true;
-        }
-
-        return Slug::query()->where('slug', $slugPrefix)->where('base_path', '')->exists();
+        return RecordType::query()->where('slug_prefix', $slugPrefix)->whereKeyNot($type->id)->exists();
     }
 }

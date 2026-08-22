@@ -7,7 +7,6 @@ namespace App\Mcp\Tools;
 use App\Actions\CreateRecordTypeAction;
 use App\Mcp\Support\Records;
 use App\Models\RecordType;
-use App\Models\Slug;
 use App\Services\RecordTypePresets;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
@@ -114,11 +113,7 @@ final class CreateContentTypeTool extends Tool
 
     private function prefixTaken(string $slugPrefix): bool
     {
-        if (RecordType::query()->where('slug_prefix', $slugPrefix)->exists()) {
-            return true;
-        }
-
-        return Slug::query()->where('slug', $slugPrefix)->where('base_path', '')->exists();
+        return RecordType::query()->where('slug_prefix', $slugPrefix)->exists();
     }
 
     private function uniqueKey(string $base): string

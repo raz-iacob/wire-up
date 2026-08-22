@@ -8,6 +8,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The Settings group in the admin sidebar now stays open while you move between pages, until you close it.
 - Fixed a new block added in the middle of a page or record through the AI assistant or an MCP tool silently jumping to the bottom.
 - Site-wide custom CSS no longer applies to the login and other account pages, where it could make the form unreadable and lock you out of your own site.
+- A content type's URL prefix may now match an existing page's web address, so that page can act as the landing page the breadcrumb links to.
 
 ## v0.1.0 — 2026-08-21
 
