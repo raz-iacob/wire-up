@@ -3,23 +3,7 @@
 @php
     $currentUrl = mb_rtrim(url()->current(), '/');
 
-    $groups = [];
-    $current = ['heading' => '', 'items' => []];
-
-    foreach ($items as $item) {
-        if (($item['type'] ?? 'link') === 'heading') {
-            if ($current['heading'] !== '' || $current['items'] !== []) {
-                $groups[] = $current;
-            }
-            $current = ['heading' => $item['label'], 'items' => []];
-        } else {
-            $current['items'][] = $item;
-        }
-    }
-
-    if ($current['heading'] !== '' || $current['items'] !== []) {
-        $groups[] = $current;
-    }
+    $groups = \App\Services\SettingsService::groupMenuItems($items);
 @endphp
 
 @if ($groups !== [])

@@ -88,12 +88,29 @@ return new class extends Component
                         @endif
                         <x-site.social :links="$social" :variant="$socialVariant" />
                     </div>
+                    @php($groups = \App\Services\SettingsService::groupMenuItems($items))
+                    @php($groupedFooter = collect($groups)->contains(fn (array $group): bool => $group['heading'] !== ''))
                     @if ($items !== [])
                         <div class="md:col-span-2">
-                            <x-site.nav
-                                :items="$items"
-                                class="flex-col items-start gap-3 md:flex-row md:flex-wrap md:gap-x-10"
-                            />
+                            @if ($groupedFooter)
+                                <div class="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
+                                    @foreach ($groups as $group)
+                                        <div class="space-y-3">
+                                            @if ($group['heading'] !== '')
+                                                <p class="text-xs font-semibold tracking-wide uppercase opacity-60">
+                                                    {{ $group['heading'] }}
+                                                </p>
+                                            @endif
+                                            <x-site.nav :items="$group['items']" class="flex-col items-start gap-3" />
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <x-site.nav
+                                    :items="$items"
+                                    class="flex-col items-start gap-3 md:flex-row md:flex-wrap md:gap-x-10"
+                                />
+                            @endif
                         </div>
                     @endif
                 </div>

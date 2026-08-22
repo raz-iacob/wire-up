@@ -77,7 +77,7 @@
                     <flux:select.option value="page">{{ __('Page') }}</flux:select.option>
                     <flux:select.option value="link">{{ __('Custom Link') }}</flux:select.option>
                     <flux:select.option value="account">{{ __('Account') }}</flux:select.option>
-                    @if ($sidebarFields)
+                    @if ($sidebarFields || $menuKey === 'footer')
                         <flux:select.option value="heading">{{ __('Group heading') }}</flux:select.option>
                     @endif
                 </flux:select>

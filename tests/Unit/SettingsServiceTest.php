@@ -679,3 +679,30 @@ it('uses the raster header logo for the mail header', function (): void {
         ->and($logo['url'])->toContain('h=100,q=80,fm=png')
         ->toContain('media/logo.png');
 });
+
+it('groups menu items by heading', function (): void {
+    $groups = SettingsService::groupMenuItems([
+        ['type' => 'link', 'label' => 'Loose'],
+        ['type' => 'heading', 'label' => 'Product'],
+        ['type' => 'link', 'label' => 'Features'],
+        ['type' => 'link', 'label' => 'Pricing'],
+        ['type' => 'heading', 'label' => 'Company'],
+        ['type' => 'link', 'label' => 'About'],
+    ]);
+
+    expect($groups)->toHaveCount(3)
+        ->and($groups[0])->toBe(['heading' => '', 'items' => [['type' => 'link', 'label' => 'Loose']]])
+        ->and($groups[1]['heading'])->toBe('Product')
+        ->and($groups[1]['items'])->toHaveCount(2)
+        ->and($groups[2]['heading'])->toBe('Company');
+});
+
+it('returns no groups for an empty menu and tolerates a headless heading', function (): void {
+    expect(SettingsService::groupMenuItems([]))->toBe([])
+        ->and(SettingsService::groupMenuItems([['type' => 'heading']]))->toBe([]);
+});
+
+it('treats an item with no type as a link when grouping', function (): void {
+    expect(SettingsService::groupMenuItems([['label' => 'Typeless']]))
+        ->toBe([['heading' => '', 'items' => [['label' => 'Typeless']]]]);
+});

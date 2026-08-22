@@ -6,6 +6,7 @@ use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 function setSiteMetadata(array $settings): void
@@ -234,4 +235,55 @@ it('leaves out the badge markup when a menu item has no badge', function (): voi
         ->assertOk()
         ->assertSee('Plain')
         ->assertDontSee('rounded-full px-2', false);
+});
+
+it('groups the columns footer into headed columns', function (): void {
+    setSiteMetadata([
+        'footer_layout' => 'columns',
+        'menus' => menusPayload(['footer' => ['en' => [
+            ['type' => 'heading', 'appearance' => 'link', 'target' => '_self', 'label' => 'Product', 'page_id' => null, 'url' => ''],
+            ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Features', 'page_id' => null, 'url' => '/features'],
+            ['type' => 'heading', 'appearance' => 'link', 'target' => '_self', 'label' => 'Company', 'page_id' => null, 'url' => ''],
+            ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'About', 'page_id' => null, 'url' => '/about'],
+        ]]]),
+    ]);
+
+    $response = $this->get(route('home'))->assertOk();
+
+    $footer = Str::after($response->content(), 'data-site-footer');
+
+    expect($footer)->toMatch('/opacity-60">\s*Product\s*<\/p>/')
+        ->toMatch('/opacity-60">\s*Company\s*<\/p>/')
+        ->toContain('>Features<')
+        ->toContain('>About<')
+        ->not->toContain('md:flex-row md:flex-wrap');
+});
+
+it('keeps the columns footer flat when the menu has no headings', function (): void {
+    setSiteMetadata([
+        'footer_layout' => 'columns',
+        'menus' => menusPayload(['footer' => ['en' => [
+            ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Features', 'page_id' => null, 'url' => '/features'],
+            ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'About', 'page_id' => null, 'url' => '/about'],
+        ]]]),
+    ]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('md:flex-row md:flex-wrap', false);
+});
+
+it('groups the columns footer even when there is a single heading', function (): void {
+    setSiteMetadata([
+        'footer_layout' => 'columns',
+        'menus' => menusPayload(['footer' => ['en' => [
+            ['type' => 'heading', 'appearance' => 'link', 'target' => '_self', 'label' => 'Product', 'page_id' => null, 'url' => ''],
+            ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Features', 'page_id' => null, 'url' => '/features'],
+        ]]]),
+    ]);
+
+    $footer = Str::after($this->get(route('home'))->assertOk()->content(), 'data-site-footer');
+
+    expect($footer)->toMatch('/opacity-60">\s*Product\s*<\/p>/')
+        ->toContain('>Features<');
 });

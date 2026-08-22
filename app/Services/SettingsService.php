@@ -93,6 +93,36 @@ final class SettingsService
         ];
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, array{heading: string, items: array<int, array<string, mixed>>}>
+     */
+    public static function groupMenuItems(array $items): array
+    {
+        $groups = [];
+        $current = ['heading' => '', 'items' => []];
+
+        foreach ($items as $item) {
+            if (($item['type'] ?? 'link') === 'heading') {
+                if ($current['heading'] !== '' || $current['items'] !== []) {
+                    $groups[] = $current;
+                }
+
+                $current = ['heading' => is_string($item['label'] ?? null) ? $item['label'] : '', 'items' => []];
+
+                continue;
+            }
+
+            $current['items'][] = $item;
+        }
+
+        if ($current['heading'] !== '' || $current['items'] !== []) {
+            $groups[] = $current;
+        }
+
+        return $groups;
+    }
+
     public static function deduceCurrency(): string
     {
         $localization = resolve('localization');
