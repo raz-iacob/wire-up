@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Ai\Agents\ConnectionCheck;
+use App\Mail\IntegrationTestMail;
 use App\Models\Settings;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 
 it('can render the integrations settings screen', function (): void {
@@ -581,4 +585,113 @@ it('does not touch the mail config when no email settings are saved', function (
     new AppServiceProvider(app())->boot();
 
     expect(config('mail.default'))->toBe('log');
+});
+
+it('tests the typed slack webhook without saving it', function (): void {
+    Http::fake(['hooks.slack.com/*' => Http::response('ok')]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('slackForm.slack_webhook_url', '  https://hooks.slack.com/services/T0/B0/typed  ')
+        ->call('testSlack')
+        ->assertHasNoErrors();
+
+    Http::assertSent(
+        fn ($request): bool => $request->url() === 'https://hooks.slack.com/services/T0/B0/typed',
+    );
+
+    expect(Settings::get('slack_webhook_url'))->toBeNull();
+});
+
+it('validates the slack webhook before testing it', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('slackForm.slack_webhook_url', 'https://example.com/hook')
+        ->call('testSlack')
+        ->assertHasErrors(['slackForm.slack_webhook_url' => 'regex']);
+});
+
+it('sends the test email to the communication email when one is set', function (): void {
+    Mail::fake();
+
+    Settings::set(['contact_email' => 'hello@example.com']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('mailForm.mail_provider', 'custom')
+        ->set('mailForm.mail_host', 'smtp.example.com')
+        ->set('mailForm.mail_port', 2525)
+        ->set('mailForm.mail_username', 'user@example.com')
+        ->set('mailForm.mail_password', 'secret-key')
+        ->set('mailForm.mail_encryption', 'tls')
+        ->set('mailForm.mail_from_address', 'hello@example.com')
+        ->set('mailForm.mail_from_name', 'Example Site')
+        ->call('testMail')
+        ->assertHasNoErrors();
+
+    Mail::assertSent(
+        IntegrationTestMail::class,
+        fn (IntegrationTestMail $mail): bool => $mail->hasTo('hello@example.com'),
+    );
+
+    expect(Settings::get('mail_host'))->toBeNull();
+});
+
+it('falls back to the logged-in admin for the test email', function (): void {
+    Mail::fake();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->assertSet('testEmailRecipient', 'admin@example.com')
+        ->set('mailForm.mail_provider', 'custom')
+        ->set('mailForm.mail_host', 'smtp.example.com')
+        ->set('mailForm.mail_port', 2525)
+        ->set('mailForm.mail_username', 'user@example.com')
+        ->set('mailForm.mail_password', 'secret-key')
+        ->set('mailForm.mail_encryption', 'tls')
+        ->set('mailForm.mail_from_address', 'hello@example.com')
+        ->set('mailForm.mail_from_name', 'Example Site')
+        ->call('testMail')
+        ->assertHasNoErrors();
+
+    Mail::assertSent(
+        IntegrationTestMail::class,
+        fn (IntegrationTestMail $mail): bool => $mail->hasTo('admin@example.com'),
+    );
+});
+
+it('tests the typed assistant credentials without saving them', function (): void {
+    ConnectionCheck::fake(['OK']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('assistantForm.ai_provider', 'anthropic')
+        ->set('assistantForm.ai_api_key', 'sk-ant-typed')
+        ->set('assistantForm.ai_model', '  claude-sonnet-5  ')
+        ->call('testAssistant')
+        ->assertHasNoErrors();
+
+    ConnectionCheck::assertPrompted('ping');
+
+    expect(Settings::get('ai_api_key'))->toBeNull();
+});
+
+it('stops testing integrations after five attempts a minute', function (): void {
+    Http::fake(['hooks.slack.com/*' => Http::response('ok')]);
+
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.settings-integrations')
+        ->set('slackForm.slack_webhook_url', 'https://hooks.slack.com/services/T0/B0/typed');
+
+    foreach (range(1, 6) as $ignored) {
+        $component->call('testSlack');
+    }
+
+    Http::assertSentCount(5);
 });

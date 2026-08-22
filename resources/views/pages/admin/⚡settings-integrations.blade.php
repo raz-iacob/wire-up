@@ -10,8 +10,13 @@ use App\Livewire\Forms\GoogleMapsIntegrationForm;
 use App\Livewire\Forms\MailIntegrationForm;
 use App\Livewire\Forms\PexelsIntegrationForm;
 use App\Livewire\Forms\SlackIntegrationForm;
+use App\Services\IntegrationTester;
+use App\Services\IntegrationTestResult;
+use App\Services\SettingsService;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\RateLimiter;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 return new class extends Component
@@ -182,6 +187,70 @@ return new class extends Component
         Flux::toast(__('AI Assistant connected.'), variant: 'success');
     }
 
+    #[Computed]
+    public function testEmailRecipient(): string
+    {
+        $contactEmail = resolve(SettingsService::class)->contactEmail();
+
+        return $contactEmail !== '' ? $contactEmail : (string) auth()->user()?->email;
+    }
+
+    public function testSlack(IntegrationTester $tester): void
+    {
+        $this->authorize('settings.edit');
+
+        $this->slackForm->slack_webhook_url = mb_trim($this->slackForm->slack_webhook_url);
+
+        $validated = $this->slackForm->validate();
+
+        if (! $this->allowsAnotherTest()) {
+            return;
+        }
+
+        $this->reportTest($tester->slack($validated['slack_webhook_url']));
+    }
+
+    public function testMail(IntegrationTester $tester): void
+    {
+        $this->authorize('settings.edit');
+
+        $this->mailForm->mail_host = mb_trim($this->mailForm->mail_host);
+        $this->mailForm->mail_from_address = mb_trim($this->mailForm->mail_from_address);
+
+        $validated = $this->mailForm->validate();
+
+        if (! $this->allowsAnotherTest()) {
+            return;
+        }
+
+        $this->reportTest($tester->mail([
+            'host' => $validated['mail_host'],
+            'port' => $validated['mail_port'],
+            'encryption' => $validated['mail_encryption'],
+            'username' => $validated['mail_username'],
+            'password' => $validated['mail_password'],
+            'from_address' => $validated['mail_from_address'],
+            'from_name' => mb_trim((string) $validated['mail_from_name']),
+        ], $this->testEmailRecipient()));
+    }
+
+    public function testAssistant(IntegrationTester $tester): void
+    {
+        $this->authorize('settings.edit');
+
+        $validated = $this->assistantForm->validate();
+
+        if (! $this->allowsAnotherTest()) {
+            return;
+        }
+
+        $this->reportTest($tester->assistant(
+            $validated['ai_provider'],
+            $validated['ai_api_key'],
+            mb_trim($validated['ai_model']),
+        ));
+    }
+
     public function disconnect(string $integration, UpdateSettingsAction $action): void
     {
         $this->authorize('settings.edit');
@@ -237,6 +306,26 @@ return new class extends Component
         return $this->view()
             ->title(__('Integrations'))
             ->layout('layouts::admin');
+    }
+
+    private function allowsAnotherTest(): bool
+    {
+        $key = 'integration-test:'.auth()->id();
+
+        if (RateLimiter::tooManyAttempts($key, maxAttempts: 5)) {
+            Flux::toast(__('That’s a lot of tests. Please wait a moment and try again.'), variant: 'warning');
+
+            return false;
+        }
+
+        RateLimiter::hit($key, decaySeconds: 60);
+
+        return true;
+    }
+
+    private function reportTest(IntegrationTestResult $result): void
+    {
+        Flux::toast($result->message, variant: $result->passed ? 'success' : 'danger');
     }
 };
 ?>
@@ -462,7 +551,13 @@ return new class extends Component
                     @else
                         <span></span>
                     @endif
-                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                    <div class="flex items-center gap-2">
+                        <flux:button
+                            wire:click="testMail"
+                            :tooltip="__('Sends a test message to :email', ['email' => $this->testEmailRecipient])"
+                        >{{ __('Test') }}</flux:button>
+                        <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                    </div>
                 </div>
             </form>
         </flux:modal>
@@ -601,7 +696,13 @@ return new class extends Component
                     @else
                         <span></span>
                     @endif
-                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                    <div class="flex items-center gap-2">
+                        <flux:button
+                            wire:click="testSlack"
+                            :tooltip="__('Posts a test message to your Slack channel')"
+                        >{{ __('Test') }}</flux:button>
+                        <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                    </div>
                 </div>
             </form>
         </flux:modal>
@@ -653,7 +754,13 @@ return new class extends Component
                     @else
                         <span></span>
                     @endif
-                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                    <div class="flex items-center gap-2">
+                        <flux:button
+                            wire:click="testAssistant"
+                            :tooltip="__('Sends a short prompt to check the key and model')"
+                        >{{ __('Test') }}</flux:button>
+                        <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                    </div>
                 </div>
             </form>
         </flux:modal>
