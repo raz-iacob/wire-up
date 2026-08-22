@@ -19,6 +19,8 @@ final class ImageController
 
         if (str_ends_with(mb_strtolower($path), '.svg')) {
             $response = ImageService::svg($path);
+        } elseif (str_ends_with(mb_strtolower($path), '.gif')) {
+            $response = ImageService::passthrough($path, 'image/gif');
         } elseif (! ($response = ImageService::cached($options, $path)) instanceof BinaryFileResponse) {
             $this->ratelimitTransforms($request);
 

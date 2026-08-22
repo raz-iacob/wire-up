@@ -136,3 +136,22 @@ it('serves png and gif variants with their mime types', function (): void {
         ->assertOk()
         ->assertHeader('Content-Type', 'image/gif');
 });
+
+it('serves animated gifs verbatim instead of flattening them to jpeg', function (): void {
+    $gif = base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7', true);
+    Storage::disk(config('filesystems.media'))->put('spinner.gif', $gif);
+
+    $response = $this->get(ImageService::url('w=350,h=200,q=80,fm=jpg', 'spinner.gif'));
+
+    $response->assertOk();
+
+    expect($response->headers->get('Content-Type'))->toBe('image/gif')
+        ->and($response->getContent())->toBe($gif)
+        ->and($response->headers->get('X-Content-Type-Options'))->toBe('nosniff');
+
+    expect(File::exists(config('media.cache_path')))->toBeFalse();
+});
+
+it('returns 404 for a gif that is not on the media disk', function (): void {
+    $this->get(ImageService::url('w=10,h=10', 'missing.gif'))->assertNotFound();
+});

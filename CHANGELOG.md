@@ -13,6 +13,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The columns footer layout now builds real grouped columns from group headings in the footer menu, which that menu can now contain.
 - Bullet and numbered lists now render as lists in feature card and text-and-image bodies, instead of running together on one line.
 - Rich text blocks gain a "Narrow (left)" width that keeps the text column on the same left edge as full-width blocks; the existing narrow option is now labelled "Narrow (centred)".
+- Animated GIFs keep their animation instead of being flattened to a still image. They are served at their original size, so scale them before uploading.
 
 ## v0.1.0 — 2026-08-21
 
