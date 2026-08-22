@@ -1456,3 +1456,34 @@ it('gives the hero content generous vertical padding so it is not cramped', func
         ->assertSee('Welcome aboard')
         ->assertSee('py-24', false);
 });
+
+it('styles bullet lists inside a feature card body', function (): void {
+    publishPageWithBlocks('feat-list', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'heading' => ['en' => '<p>Included</p>'],
+            'columns' => 2,
+            'items' => [
+                ['id' => 'a', 'image' => null, 'title' => ['en' => 'Plan'], 'body' => ['en' => '<ul><li>One</li><li>Two</li></ul>']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'feat-list'))
+        ->assertOk()
+        ->assertSee('<li>One</li>', false)
+        ->assertSee('[&_ul]:list-disc', false);
+});
+
+it('styles bullet lists inside a text and image body', function (): void {
+    publishPageWithBlocks('ti-list', [
+        ['id' => 'new-1', 'type' => 'text-image', 'content' => [
+            'heading' => ['en' => '<p>Details</p>'],
+            'body' => ['en' => '<ul><li>Alpha</li><li>Beta</li></ul>'],
+        ]],
+    ]);
+
+    $this->get(route('page', 'ti-list'))
+        ->assertOk()
+        ->assertSee('<li>Alpha</li>', false)
+        ->assertSee('[&_ol]:list-decimal', false);
+});
