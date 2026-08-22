@@ -21,7 +21,8 @@
     <div class="grid gap-4 md:grid-cols-2">
         <flux:radio.group wire:model.lazy="{{ $c }}.width" variant="segmented" label="{{ __('Width') }}">
             <flux:radio value="normal" label="{{ __('Normal') }}" />
-            <flux:radio value="narrow" label="{{ __('Narrow') }}" />
+            <flux:radio value="narrow-left" label="{{ __('Narrow (left)') }}" />
+            <flux:radio value="narrow" label="{{ __('Narrow (centred)') }}" />
         </flux:radio.group>
 
         <flux:radio.group wire:model.lazy="{{ $c }}.align" variant="segmented" label="{{ __('Alignment') }}">

@@ -1487,3 +1487,32 @@ it('styles bullet lists inside a text and image body', function (): void {
         ->assertSee('<li>Alpha</li>', false)
         ->assertSee('[&_ol]:list-decimal', false);
 });
+
+it('left-anchors a narrow-left rich text block inside the full container', function (): void {
+    publishPageWithBlocks('rich-left', [
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
+            'heading' => ['en' => '<p>Left measure</p>'],
+            'body' => ['en' => '<p>Shares the left edge.</p>'],
+            'width' => 'narrow-left',
+        ]],
+    ]);
+
+    $content = $this->get(route('page', 'rich-left'))->assertOk()->content();
+
+    expect($content)->toContain('Left measure')
+        ->toContain('<div class="max-w-2xl">');
+});
+
+it('keeps a narrow rich text block centred without a left-anchored wrapper', function (): void {
+    publishPageWithBlocks('rich-centred', [
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
+            'heading' => ['en' => '<p>Centred measure</p>'],
+            'width' => 'narrow',
+        ]],
+    ]);
+
+    $content = $this->get(route('page', 'rich-centred'))->assertOk()->content();
+
+    expect($content)->toContain('mx-auto px-(--wire-gutter) max-w-2xl')
+        ->not->toContain('<div class="max-w-2xl">');
+});

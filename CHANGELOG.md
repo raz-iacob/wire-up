@@ -12,6 +12,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Menu item badges now actually appear on the site, in the colour you pick, and can be set on the header and footer menus rather than only custom ones.
 - The columns footer layout now builds real grouped columns from group headings in the footer menu, which that menu can now contain.
 - Bullet and numbered lists now render as lists in feature card and text-and-image bodies, instead of running together on one line.
+- Rich text blocks gain a "Narrow (left)" width that keeps the text column on the same left edge as full-width blocks; the existing narrow option is now labelled "Narrow (centred)".
 
 ## v0.1.0 — 2026-08-21
 
