@@ -253,7 +253,7 @@ it('renders a true boolean field as a badge on the card instead of Yes text', fu
         ->assertSee('Warp Core')
         ->assertSee(SettingsService::current()->formatMoney(3000))
         ->assertSee('Sold')
-        ->assertDontSee('Yes');
+        ->assertDontSeeText('Yes');
 });
 
 it('omits the badge on the card when the boolean field is false', function (): void {

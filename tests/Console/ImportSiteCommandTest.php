@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 
 beforeEach(function (): void {
     config()->set('wireup.transfer_path', storage_path('framework/testing/import-cmd-'.Str::random(8)));
+    config()->set('wireup.version_file', storage_path('framework/testing/import-cmd-'.Str::random(8).'/missing'));
     Storage::fake(config()->string('filesystems.media'));
 });
 
