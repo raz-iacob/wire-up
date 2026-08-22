@@ -204,6 +204,37 @@
         </flux:toast.group>
     @endpersist
 
+    <script>
+        (function () {
+            var key = 'wireup.sidebar.settings';
+
+            var remember = function () {
+                var group = document.querySelector('[data-wireup-settings-group]');
+
+                if (!group || group.dataset.wireupRemembered) {
+                    return;
+                }
+
+                group.dataset.wireupRemembered = '1';
+
+                if (localStorage.getItem(key) === 'open') {
+                    group.value = true;
+                }
+
+                group.addEventListener('lofi-disclosable-change', function () {
+                    localStorage.setItem(key, group.value ? 'open' : 'closed');
+                });
+            };
+
+            remember();
+
+            if (!window.wireupSidebarSettingsBound) {
+                window.wireupSidebarSettingsBound = true;
+                document.addEventListener('livewire:navigated', remember);
+            }
+        })();
+    </script>
+
     @fluxScripts
 </body>
 </html>

@@ -31,7 +31,7 @@ return new class extends Component
 ?>
 
 <div>
-    <flux:sidebar.group expandable :heading="__('Settings')" :expanded="false" class="grid">
+    <flux:sidebar.group expandable :heading="__('Settings')" :expanded="false" class="grid" data-wireup-settings-group>
         <x-slot:icon>
             <div class="relative">
                 <flux:icon icon="cog-6-tooth" variant="outline" class="size-4" />
