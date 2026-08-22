@@ -65,15 +65,6 @@
                             @php
                                 $fragment = \Illuminate\Support\Str::contains($item['url'], '#') ? \Illuminate\Support\Str::after($item['url'], '#') : '';
                                 $serverActive = $fragment === '' && $item['url'] !== '' && mb_rtrim($item['url'], '/') === $currentUrl;
-                                $badgeClasses = match ($item['badgeColor']) {
-                                    'primary' => 'bg-(--wire-primary-bg) text-(--wire-primary-text)',
-                                    'green' => 'bg-green-100 text-green-700',
-                                    'red' => 'bg-red-100 text-red-700',
-                                    'amber' => 'bg-amber-100 text-amber-700',
-                                    'blue' => 'bg-blue-100 text-blue-700',
-                                    'purple' => 'bg-purple-100 text-purple-700',
-                                    default => 'bg-current/10',
-                                };
                             @endphp
                             @if (($item['type'] ?? 'link') === 'logout')
                                 <x-site.logout-form
@@ -107,9 +98,7 @@
 
                                 <span class="min-w-0 flex-1 truncate">{{ $item['label'] }}</span>
 
-                                @if ($item['badge'] !== '')
-                                    <span class="shrink-0 rounded-(--wire-radius) px-1.5 py-0.5 text-xs font-medium {{ $badgeClasses }}">{{ $item['badge'] }}</span>
-                                @endif
+                                <x-site.nav-badge :badge="$item['badge']" :color="$item['badgeColor']" shape="chip" />
                             </a>
                         @endforeach
                     </div>

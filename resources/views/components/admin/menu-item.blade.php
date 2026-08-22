@@ -193,7 +193,9 @@
                     </flux:select>
                     <flux:error name="{{ $base }}.icon" />
                 </flux:field>
+            @endif
 
+            @if ($itemType !== 'heading' && ! $isAccount)
                 <div class="grid grid-cols-2 gap-3">
                     <flux:field>
                         <flux:label>{{ __('Badge') }}</flux:label>

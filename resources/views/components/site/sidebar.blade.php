@@ -64,7 +64,10 @@
                         @if ($item['target'] === '_blank') target="_blank" rel="noopener noreferrer" @endif
                         @if ($active) aria-current="page" @endif
                         class="{{ $itemClasses }}"
-                    >{{ $item['label'] }}</a>
+                        >{{ $item['label'] }}<x-site.nav-badge
+                            :badge="$item['badge'] ?? ''"
+                            :color="$item['badgeColor'] ?? 'zinc'"
+                    /></a>
                 @endif
             @endforeach
         </nav>

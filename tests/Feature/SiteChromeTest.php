@@ -203,3 +203,35 @@ it('emits paired theme-color metas for light and dark, and a single one when dar
         ->assertSee('<meta name="theme-color" content="#ffffff" />', false)
         ->assertDontSee('prefers-color-scheme: dark) content', false);
 });
+
+it('renders a badge on a header menu item in its chosen colour', function (): void {
+    setSiteMetadata(['menus' => menusPayload(['header' => ['en' => [
+        [
+            'type' => 'link',
+            'appearance' => 'link',
+            'target' => '_self',
+            'label' => 'Changelog',
+            'page_id' => null,
+            'url' => '/changelog',
+            'badge' => 'v0.1.1',
+            'badgeColor' => 'green',
+        ],
+    ]]])]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('Changelog')
+        ->assertSee('v0.1.1')
+        ->assertSee('text-green-700', false);
+});
+
+it('leaves out the badge markup when a menu item has no badge', function (): void {
+    setSiteMetadata(['menus' => menusPayload(['header' => ['en' => [
+        ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'Plain', 'page_id' => null, 'url' => '/plain', 'badge' => ''],
+    ]]])]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('Plain')
+        ->assertDontSee('rounded-full px-2', false);
+});
