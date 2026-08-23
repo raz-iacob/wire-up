@@ -129,7 +129,11 @@ window.claimsOpenBlockItem = (id) => {
     return true;
 };
 
-document.addEventListener("alpine:init", () => {
+// Registered through a guard rather than on `alpine:init` alone: this bundle is a
+// deferred module, so on a cold cache Alpine can start before it executes and the
+// event is missed — every component below then dies with "x is not defined", and
+// an always-rendered element such as the crop modal shows its raw markup.
+const registerAdminAlpineData = () => {
     // Toggles a raw-HTML "source" view for a Flux rich-text editor. The textarea
     // reads from and writes back to the underlying Tiptap instance (captured above
     // on the `flux:editor` event), so edits round-trip through the editor's own
@@ -559,7 +563,13 @@ document.addEventListener("alpine:init", () => {
             },
         };
     });
-});
+};
+
+if (window.Alpine) {
+    registerAdminAlpineData();
+} else {
+    document.addEventListener("alpine:init", registerAdminAlpineData);
+}
 
 const analyzeFile = async (file) => {
     const base = {

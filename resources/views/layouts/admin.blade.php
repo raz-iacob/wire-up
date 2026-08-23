@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 @php
     $site = \App\Services\SettingsService::current();
     $siteName = $site->title() ?: config('app.name');

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 it('can render the account appearance screen', function (): void {
@@ -92,4 +93,26 @@ it('does not seed local storage when no appearance preference is stored', functi
         ->get(route('admin.account-appearance'))
         ->assertOk()
         ->assertDontSee("localStorage.setItem('flux.appearance', preference)", false);
+});
+
+it('leaves the admin appearance to the visitor system preference by default', function (): void {
+    $user = User::factory()->owner()->create(['metadata' => []]);
+
+    $response = $this->actingAs($user)->get(route('admin.dashboard'))->assertOk();
+
+    $html = $response->content();
+    $openingTag = Str::before(Str::after($html, '<html'), '>');
+
+    expect($openingTag)->not->toContain('dark')
+        ->and($html)->toContain("window.Flux.applyAppearance(window.localStorage.getItem('flux.appearance') || 'system')");
+});
+
+it('still honours a stored dark preference over the system default', function (): void {
+    $user = User::factory()->owner()->create(['metadata' => ['appearance' => 'dark']]);
+
+    $this->actingAs($user)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee("localStorage.setItem('flux.appearance', preference)", false)
+        ->assertSee('"dark"', false);
 });
