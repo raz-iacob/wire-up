@@ -30,6 +30,7 @@ use App\Mcp\Tools\ListRecordsTool;
 use App\Mcp\Tools\PublishPageTool;
 use App\Mcp\Tools\PublishRecordTool;
 use App\Mcp\Tools\ReadWebpageTool;
+use App\Mcp\Tools\RenderPageTool;
 use App\Mcp\Tools\ScaffoldSiteTool;
 use App\Mcp\Tools\SearchPexelsTool;
 use App\Mcp\Tools\UpdateContentStringsTool;
@@ -90,9 +91,11 @@ Typical workflow for building or replicating a site:
    carry both custom field values and their own content blocks. Group them with
    `list-categories` + `create-category` — categories are global and shared
    across every content type, and a collection block can filter by one.
-7. Verify your work by fetching the page or record URL with an
+7. Verify your work two ways. For content, fetch the page or record URL with an
    `Accept: text/markdown` header — every page and record serves a markdown
-   representation of its content.
+   representation. For how it actually looks, `render-page` screenshots a
+   published page, record or path at desktop, tablet or mobile size, so you can
+   see the result instead of guessing.
 8. Publish with `publish-page` / `publish-record` when the content looks right.
 9. Removing things is permanent: `delete-page`, `delete-record` and
    `delete-media` cannot be undone. To take content offline while keeping it,
@@ -129,6 +132,7 @@ final class WireUpServer extends Server
         ImportMediaFromUrlTool::class,
         UploadMediaTool::class,
         DeleteMediaTool::class,
+        RenderPageTool::class,
         ReadWebpageTool::class,
         SearchPexelsTool::class,
         ImportPexelsMediaTool::class,
