@@ -7,6 +7,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | resources/views/layouts/auth/** | .ai/rules/auth.md |
 | ** | .ai/rules/general.md |
 | resources/js/editor.js | .ai/rules/js.md |
+| resources/views/layouts/** | .ai/rules/layouts.md |
 | app/Mail/** | .ai/rules/mail.md |
 | app/Mcp/** | .ai/rules/mcp.md |
 | app/Services/*.php | .ai/rules/services.md |
