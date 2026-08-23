@@ -10,6 +10,8 @@ return [
 
     'transfer_path' => storage_path('app/transfers'),
 
+    'media_import_path' => storage_path('app/import'),
+
     'backups_to_keep' => 5,
 
 ];

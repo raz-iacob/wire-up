@@ -5,6 +5,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 ## Unreleased
 
 - The admin stays usable while an update runs: Settings → Updates now shows live progress instead of the "Down for maintenance" page.
+- Import files that are already on the server into the media library: a new `wireup:media:import` command for the terminal, and an `upload-media` tool so the AI assistant and other agents can do it too. Both handle SVG, HEIC and video, which importing from a URL could not.
 
 ## v0.1.1 — 2026-08-22
 

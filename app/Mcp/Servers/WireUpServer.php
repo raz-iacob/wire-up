@@ -36,6 +36,7 @@ use App\Mcp\Tools\UpdatePageBlocksTool;
 use App\Mcp\Tools\UpdatePageTool;
 use App\Mcp\Tools\UpdateRecordTool;
 use App\Mcp\Tools\UpdateSocialTool;
+use App\Mcp\Tools\UploadMediaTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -57,9 +58,10 @@ Typical workflow for building or replicating a site:
    content shape, and the conventions for localized text and links.
 2. Set the look with `get-settings` + `update-design` (theme, colors, fonts,
    shape) and the site identity with `update-identity`.
-3. Bring in imagery with `import-media-from-url`, or `search-pexels` +
-   `import-pexels-media` for stock photos, then reference the returned source
-   paths in block content.
+3. Bring in imagery with `import-media-from-url`, `upload-media` for a file the
+   owner has placed in the server's import folder (the only route for SVG, HEIC
+   and video), or `search-pexels` + `import-pexels-media` for stock photos, then
+   reference the returned source paths in block content.
 4. Create pages as drafts with `create-page`, passing blocks in the same call
    or adding them later with `update-page-blocks`. To lay out a whole site at
    once, `scaffold-site` creates the pages, header/footer navigation and
@@ -104,6 +106,7 @@ final class WireUpServer extends Server
         PublishRecordTool::class,
         ListMediaTool::class,
         ImportMediaFromUrlTool::class,
+        UploadMediaTool::class,
         ReadWebpageTool::class,
         SearchPexelsTool::class,
         ImportPexelsMediaTool::class,
