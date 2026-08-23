@@ -14,6 +14,9 @@ use Illuminate\Support\Str;
 use Pest\Browser\Playwright\Playwright;
 use Tests\TestCase;
 
+throw_if(file_exists(__DIR__.'/../bootstrap/cache/config.php'), RuntimeException::class, 'bootstrap/cache/config.php exists, which overrides the sqlite test connection and points the suite '
+.'at your real database — a parallel run would drop every table in it. Run: php artisan config:clear');
+
 pest()->extend(TestCase::class)
     ->use(LazilyRefreshDatabase::class)
     ->beforeEach(function (): void {
