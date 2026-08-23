@@ -7,6 +7,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The admin stays usable while an update runs: Settings → Updates now shows live progress instead of the "Down for maintenance" page.
 - Import files that are already on the server into the media library: a new `wireup:media:import` command for the terminal, and an `upload-media` tool so the AI assistant and other agents can do it too. Both handle SVG, HEIC and video, which importing from a URL could not.
 - The AI assistant and other agents can now build a sidebar: a new `create-menu` tool makes menus beyond the header and footer, and `update-page` sets a page's layout — hiding the header or footer, a background colour or image, per-page CSS, and which sidebar menus appear beside the content.
+- Agents and the AI assistant can now set the dark-mode logos, the favicon and the header light/dark toggle through `update-design` — previously admin-only.
 
 ## v0.1.1 — 2026-08-22
 

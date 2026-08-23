@@ -376,7 +376,33 @@ it('sets logos from media ids', function (): void {
 
     WireUpServer::tool(UpdateDesignTool::class, ['logo_header' => $pdf->id])
         ->assertHasErrors()
-        ->assertSee('logos must be images');
+        ->assertSee('must be images');
+});
+
+it('sets the dark logos and the favicon from media ids', function (string $key): void {
+    $image = Media::factory()->create(['type' => MediaType::IMAGE, 'thumbnail' => null, 'duration' => null]);
+
+    WireUpServer::tool(UpdateDesignTool::class, [$key => $image->id])->assertOk();
+
+    expect(Settings::get($key))->toBe(['id' => $image->id, 'source' => $image->source]);
+})->with(['logo_header_dark', 'logo_footer_dark', 'favicon']);
+
+it('refuses a non-image for the dark logos and the favicon', function (string $key): void {
+    $pdf = Media::factory()->create(['type' => MediaType::DOCUMENT, 'thumbnail' => null, 'duration' => null]);
+
+    WireUpServer::tool(UpdateDesignTool::class, [$key => $pdf->id])
+        ->assertHasErrors()
+        ->assertSee('must be images');
+})->with(['logo_header_dark', 'logo_footer_dark', 'favicon']);
+
+it('toggles the header light and dark switch', function (): void {
+    WireUpServer::tool(UpdateDesignTool::class, ['header_theme_toggle' => true])->assertOk();
+
+    expect(Settings::get('header_theme_toggle'))->toBeTrue();
+
+    WireUpServer::tool(UpdateDesignTool::class, ['header_theme_toggle' => false])->assertOk();
+
+    expect(Settings::get('header_theme_toggle'))->toBeFalse();
 });
 
 it('updates the site identity preserving other locales', function (): void {

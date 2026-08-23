@@ -55,6 +55,10 @@ final class UpdateDesignTool extends Tool
                 'custom_css' => ['sometimes', 'string', 'max:50000'],
                 'logo_header' => ['sometimes', 'integer'],
                 'logo_footer' => ['sometimes', 'integer'],
+                'logo_header_dark' => ['sometimes', 'integer'],
+                'logo_footer_dark' => ['sometimes', 'integer'],
+                'favicon' => ['sometimes', 'integer'],
+                'header_theme_toggle' => ['sometimes', 'boolean'],
             ],
             [
                 'colors.*.regex' => 'Colors must be 6-digit hex values like #1a2b3c.',
@@ -117,6 +121,10 @@ final class UpdateDesignTool extends Tool
             'custom_css' => $schema->string()->description('Extra CSS appended to the public site.'),
             'logo_header' => $schema->integer()->description('Media id of the header logo image.'),
             'logo_footer' => $schema->integer()->description('Media id of the footer logo image.'),
+            'logo_header_dark' => $schema->integer()->description('Media id of the header logo shown in dark mode. Falls back to logo_header when unset.'),
+            'logo_footer_dark' => $schema->integer()->description('Media id of the footer logo shown in dark mode. Falls back to logo_footer when unset.'),
+            'favicon' => $schema->integer()->description('Media id of the browser tab icon. SVG and PNG both work; import one with upload-media.'),
+            'header_theme_toggle' => $schema->boolean()->description('Show a light/dark toggle in the header. Only has an effect when theme_dark is not "none".'),
         ];
     }
 
@@ -176,7 +184,7 @@ final class UpdateDesignTool extends Tool
      */
     private function applyLogos(array &$validated): ?string
     {
-        foreach (['logo_header', 'logo_footer'] as $key) {
+        foreach (['logo_header', 'logo_footer', 'logo_header_dark', 'logo_footer_dark', 'favicon'] as $key) {
             if (! isset($validated[$key])) {
                 continue;
             }
@@ -184,11 +192,11 @@ final class UpdateDesignTool extends Tool
             $media = Media::query()->find($validated[$key]);
 
             if ($media === null) {
-                return "No media with id {$validated[$key]}. Use list-media, or import a logo with import-media-from-url first.";
+                return "No media with id {$validated[$key]}. Use list-media, or import an image with upload-media or import-media-from-url first.";
             }
 
             if ($media->type !== MediaType::IMAGE) {
-                return "Media {$media->id} is a {$media->type->value}; logos must be images.";
+                return "Media {$media->id} is a {$media->type->value}; logos and the favicon must be images.";
             }
 
             $validated[$key] = ['id' => $media->id, 'source' => $media->source];
