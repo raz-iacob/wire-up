@@ -35,3 +35,12 @@ At release: rename `## Unreleased` to `## vX.Y.Z — YYYY-MM-DD`, commit, tag `v
 Format is load-bearing, not cosmetic. App\Services\UpdateService::parseChangelog() renders release notes on Settings → Updates by taking EVERY non-empty line of a section and stripping leading `- `. So use a flat bullet list only: no sub-headings, no blank-line-separated prose, no nested lists — a `### Foo` line would show up as a note item reading "### Foo". Only `## vX.Y.Z` headings are matched, which is why an `## Unreleased` section is invisible to installs (verified).
 
 Never edit a section for an already-released tag: installs read CHANGELOG.md as it was AT that tag (`git show {tag}:CHANGELOG.md`), so edits on main cannot reach them and only cause drift.
+
+## Every feature gets three changelog entries, not one
+A user-visible change is not shipped until it is recorded in all three places. Note the wording as you build it, while the detail is fresh:
+
+1. **CHANGELOG.md** — a bullet under `## Unreleased`, in the same commit as the change (see the existing changelog rule). This is the source of truth; the other two derive from it.
+2. **GitHub Release** — at release time, after the tag is pushed: `gh release create vX.Y.Z --verify-tag --title vX.Y.Z --notes-file <(git show vX.Y.Z:CHANGELOG.md | extract the section)`. Take the notes from the changelog **at that tag**, never from `main`, so the Release matches what installs read. Use `--latest` on the newest. Tags are not pushed by a plain `git push` — use `git push --follow-tags`; if the SSH key is unavailable, `gh api .../git/refs` can create the tag ref, but commits still need a real push.
+3. **wire-up.dev/changelog** — a rich-text block per release, newest first, directly under the hero. Anchor = the version (`v0-1-1`), which the page CSS keys off. Write it in plain markup: the admin editor strips class attributes, so no `wu-*` hooks (see the editor rule). Heading field = date on line one, version + short title on line two; body = a plain `<ul>` with `<strong>` lead-ins, pasted via the editor's source view so the bold survives.
+
+The site copy is prose for humans and may be grouped or reworded, but it must not claim anything the CHANGELOG does not.
