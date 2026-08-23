@@ -254,3 +254,14 @@ it('returns a friendly error when publishing an unknown page', function (): void
     WireUpServer::tool(PublishPageTool::class, ['page' => 999999])
         ->assertHasErrors(['No page with id 999999. Use list-pages to see the available pages.']);
 });
+
+it('documents the escaping, collection source and collection fields conventions', function (): void {
+    $catalog = json_decode((string) resolve(BlockTypesResource::class)->handle(new Request)->content(), true, 512, JSON_THROW_ON_ERROR);
+
+    $conventions = $catalog['conventions'];
+
+    expect($conventions)->toHaveKeys(['escapedFields', 'collectionSource', 'collectionFields'])
+        ->and($conventions['escapedFields'])->toContain('stats')->toContain('feature-cards')
+        ->and($conventions['collectionSource'])->toContain('latest')->toContain('manual')->toContain('recordIds')
+        ->and($conventions['collectionFields'])->toContain('field-key strings');
+});

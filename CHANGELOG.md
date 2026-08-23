@@ -9,6 +9,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The AI assistant and other agents can now build a sidebar: a new `create-menu` tool makes menus beyond the header and footer, and `update-page` sets a page's layout — hiding the header or footer, a background colour or image, per-page CSS, and which sidebar menus appear beside the content.
 - Agents and the AI assistant can now set the dark-mode logos, the favicon and the header light/dark toggle through `update-design` — previously admin-only.
 - Agents and the AI assistant can create and list categories, so records can be grouped and a collection block can filter by category without anyone hand-picking ids.
+- The block-types catalogue agents read now spells out which fields render escaped rather than as HTML, and the exact shapes the collection block accepts — three things that previously cost a debug cycle each.
 
 ## v0.1.1 — 2026-08-22
 

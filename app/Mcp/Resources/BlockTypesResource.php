@@ -40,6 +40,9 @@ final class BlockTypesResource extends Resource
             'media' => 'Image and file fields are objects like {"source": "<media library path>", "metadata": {"alt": "...", "caption": "..."}}. Get source paths from list-media, import-media-from-url, or search-pexels + import-pexels-media.',
             'anchor' => 'Every block except spacer and divider takes an "anchor" string, rendered as the element id on the block\'s section: "services" renders id="services". Set it on the target block first, then link to it from anywhere on the same page with {"type": "anchor", "value": "#services"}. Use a lowercase slug of letters, numbers and hyphens, unique within the page.',
             'items' => 'Repeating blocks (accordion, testimonials, team, pricing, ...) hold an "items" array; give each item a unique string "id".',
+            'escapedFields' => 'Most rich-text fields render as raw HTML, so class attributes and inline markup survive. These render escaped instead, and an HTML entity there shows literally: stats item "value" and "label", feature-cards item "title", menu item labels, and search placeholders. Write real characters in those — "—" not "&mdash;", "\'" not "&rsquo;".',
+            'collectionSource' => 'The collection block\'s "source" accepts only "latest", "manual" or "category" — any other value silently falls back to "latest". A hand-picked list needs "source": "manual" plus "recordIds": [<record id>, ...]. Filtering by category needs "source": "category" plus a category id from list-categories.',
+            'collectionFields' => 'The collection block\'s "fields" is a flat list of field-key strings, e.g. ["audience", "reading_time"] — not the field objects create-content-type takes. Non-string entries are dropped. The keys come from the content type blueprint in list-content-types.',
         ];
     }
 
