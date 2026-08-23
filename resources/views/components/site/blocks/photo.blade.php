@@ -12,8 +12,16 @@
     $linkUrl = $block->ctaUrl('imageLink');
     $newTab = $block->ctaOpensNewTab('imageLink');
 
+    $framed = (bool) ($content['frame'] ?? false);
+
     $hasHeading = strip_tags($heading) !== '' || strip_tags($intro) !== '';
-    $imgClass = $full ? 'w-full h-auto' : 'w-full h-auto rounded-(--wire-radius) shadow-sm';
+    $imgClass = collect([
+        'w-full h-auto',
+        $full ? null : 'rounded-(--wire-radius)',
+        $framed
+            ? 'border border-(--wire-accent)/20 shadow-[0_40px_90px_-50px_rgba(0,0,0,0.85)]'
+            : ($full ? null : 'shadow-sm'),
+    ])->filter()->implode(' ');
 @endphp
 
 <section @class([

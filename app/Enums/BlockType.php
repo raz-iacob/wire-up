@@ -126,7 +126,7 @@ enum BlockType: string
             self::ACCORDION => __('Collapsible sections of content, great for services or FAQs.'),
             self::GALLERY => __('A responsive grid of images and videos with an optional lightbox.'),
             self::VIDEO => __('A video player using an uploaded file, a YouTube or Vimeo link, or a direct video URL.'),
-            self::PHOTO => __('A single image, shown at container width or full-bleed, with an optional link.'),
+            self::PHOTO => __('A single image, shown at container width or full-bleed, with an optional link and an optional frame that sets product shots off the page.'),
             self::TESTIMONIALS => __('Customer quotes shown in a grid, carousel or single column.'),
             self::SPONSORS => __('Sponsor and partner logos shown in a grid, marquee or grouped by tier.'),
             self::FEATURE_CARDS => __('A responsive grid of cards, each with an image or icon, a title and a short description.'),
@@ -238,6 +238,7 @@ enum BlockType: string
             self::PHOTO => [
                 'image' => null,
                 'width' => 'normal',
+                'frame' => false,
                 'hasBackground' => false,
                 'imageLink' => ['link' => ['type' => 'url', 'value' => '', 'newTab' => false]],
                 'heading' => [],

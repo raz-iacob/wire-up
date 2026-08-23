@@ -798,6 +798,7 @@ it('renders the photo block editor fields', function (): void {
         ->assertSee('Image')
         ->assertSee('Width')
         ->assertSee('Full-bleed')
+        ->assertSee('Frame the image')
         ->assertSee('Link (optional)')
         ->assertSee('Use background color');
 });

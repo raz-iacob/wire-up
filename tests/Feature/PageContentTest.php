@@ -1141,6 +1141,59 @@ it('wraps a photo in a new-tab link when one is set and goes full-bleed', functi
         ->assertSee('target="_blank"', false);
 });
 
+it('frames a photo with a hairline border and a deep shadow when the frame is on', function (): void {
+    publishPageWithBlocks('photo-framed', [
+        ['id' => 'new-1', 'type' => 'photo', 'content' => [
+            'image' => ['source' => 'media/shot.png', 'crop' => []],
+            'frame' => true,
+        ]],
+    ]);
+
+    $response = $this->get(route('page', 'photo-framed'))->assertOk();
+
+    preg_match('/<img[^>]*media\/shot\.png[^>]*>/', (string) $response->getContent(), $matches);
+
+    expect($matches[0] ?? '')
+        ->toContain('border-(--wire-accent)/20')
+        ->toContain('shadow-[0_40px_90px_-50px_rgba(0,0,0,0.85)]')
+        ->toContain('rounded-(--wire-radius)')
+        ->not->toContain('shadow-sm');
+});
+
+it('leaves an unframed photo on the default soft shadow', function (): void {
+    publishPageWithBlocks('photo-unframed', [
+        ['id' => 'new-1', 'type' => 'photo', 'content' => [
+            'image' => ['source' => 'media/plain.png', 'crop' => []],
+        ]],
+    ]);
+
+    $response = $this->get(route('page', 'photo-unframed'))->assertOk();
+
+    preg_match('/<img[^>]*media\/plain\.png[^>]*>/', (string) $response->getContent(), $matches);
+
+    expect($matches[0] ?? '')
+        ->toContain('shadow-sm')
+        ->not->toContain('border-(--wire-accent)/20');
+});
+
+it('frames a full-bleed photo without rounding its corners', function (): void {
+    publishPageWithBlocks('photo-framed-full', [
+        ['id' => 'new-1', 'type' => 'photo', 'content' => [
+            'image' => ['source' => 'media/wide.png', 'crop' => []],
+            'width' => 'full',
+            'frame' => true,
+        ]],
+    ]);
+
+    $response = $this->get(route('page', 'photo-framed-full'))->assertOk();
+
+    preg_match('/<img[^>]*media\/wide\.png[^>]*>/', (string) $response->getContent(), $matches);
+
+    expect($matches[0] ?? '')
+        ->toContain('border-(--wire-accent)/20')
+        ->not->toContain('rounded-(--wire-radius)');
+});
+
 it('omits the photo section image when none is selected', function (): void {
     publishPageWithBlocks('photo-empty', [
         ['id' => 'new-1', 'type' => 'photo', 'content' => [

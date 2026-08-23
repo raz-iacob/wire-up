@@ -36,6 +36,13 @@
         <flux:radio value="full" label="{{ __('Full-bleed') }}" />
     </flux:radio.group>
 
+    <flux:switch
+        wire:model.live="{{ $c }}.frame"
+        label="{{ __('Frame the image') }}"
+        description="{{ __('A hairline border and a soft drop shadow, for screenshots and product shots.') }}"
+        align="left"
+    />
+
     <div class="flex flex-col gap-4">
         <flux:select
             wire:model.live="{{ $c }}.imageLink.link.type"
