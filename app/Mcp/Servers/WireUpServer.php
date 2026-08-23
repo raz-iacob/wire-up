@@ -6,6 +6,7 @@ namespace App\Mcp\Servers;
 
 use App\Mcp\Prompts\ReplicateSitePrompt;
 use App\Mcp\Resources\BlockTypesResource;
+use App\Mcp\Tools\CreateCategoryTool;
 use App\Mcp\Tools\CreateContentTypeTool;
 use App\Mcp\Tools\CreateMenuTool;
 use App\Mcp\Tools\CreatePageTool;
@@ -18,6 +19,7 @@ use App\Mcp\Tools\GetRecordTool;
 use App\Mcp\Tools\GetSettingsTool;
 use App\Mcp\Tools\ImportMediaFromUrlTool;
 use App\Mcp\Tools\ImportPexelsMediaTool;
+use App\Mcp\Tools\ListCategoriesTool;
 use App\Mcp\Tools\ListContentTypesTool;
 use App\Mcp\Tools\ListMediaTool;
 use App\Mcp\Tools\ListPagesTool;
@@ -82,7 +84,9 @@ Typical workflow for building or replicating a site:
    with `create-content-type`, and adjust its blueprint with
    `update-content-type`. Then manage its records with `list-records`,
    `get-record`, `create-record`, `update-record`, and `publish-record`. Records
-   carry both custom field values and their own content blocks.
+   carry both custom field values and their own content blocks. Group them with
+   `list-categories` + `create-category` — categories are global and shared
+   across every content type, and a collection block can filter by one.
 7. Verify your work by fetching the page or record URL with an
    `Accept: text/markdown` header — every page and record serves a markdown
    representation of its content.
@@ -109,6 +113,8 @@ final class WireUpServer extends Server
         CreateRecordTool::class,
         UpdateRecordTool::class,
         PublishRecordTool::class,
+        ListCategoriesTool::class,
+        CreateCategoryTool::class,
         ListMediaTool::class,
         ImportMediaFromUrlTool::class,
         UploadMediaTool::class,
