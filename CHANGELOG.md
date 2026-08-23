@@ -2,11 +2,11 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
-## Unreleased
+## v0.1.1 — 2026-08-22
 
 - Test buttons on Settings → Integrations for Slack, e-mail and the AI assistant, checking the credentials you have typed before you save them.
 - The Settings group in the admin sidebar now stays open while you move between pages, until you close it.
-- Fixed a new block added in the middle of a page or record through the AI assistant or an MCP tool silently jumping to the bottom.
+- A new block added in the middle of a page or record through the AI assistant or an MCP tool now stays where you put it, instead of silently jumping to the bottom.
 - Site-wide custom CSS no longer applies to the login and other account pages, where it could make the form unreadable and lock you out of your own site.
 - A content type's URL prefix may now match an existing page's web address, so that page can act as the landing page the breadcrumb links to.
 - Menu item badges now actually appear on the site, in the colour you pick, and can be set on the header and footer menus rather than only custom ones.
