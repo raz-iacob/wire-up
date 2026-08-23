@@ -10,6 +10,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Agents and the AI assistant can now set the dark-mode logos, the favicon and the header light/dark toggle through `update-design` — previously admin-only.
 - Agents and the AI assistant can create and list categories, so records can be grouped and a collection block can filter by category without anyone hand-picking ids.
 - The block-types catalogue agents read now spells out which fields render escaped rather than as HTML, and the exact shapes the collection block accepts — three things that previously cost a debug cycle each.
+- Agents and the AI assistant can delete pages, records and media rather than only drafting them — the assistant asks you to approve each deletion first. The homepage is protected, and a file still used anywhere is refused with a list of what uses it.
 
 ## v0.1.1 — 2026-08-22
 

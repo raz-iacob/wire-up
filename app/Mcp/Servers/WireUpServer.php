@@ -11,6 +11,9 @@ use App\Mcp\Tools\CreateContentTypeTool;
 use App\Mcp\Tools\CreateMenuTool;
 use App\Mcp\Tools\CreatePageTool;
 use App\Mcp\Tools\CreateRecordTool;
+use App\Mcp\Tools\DeleteMediaTool;
+use App\Mcp\Tools\DeletePageTool;
+use App\Mcp\Tools\DeleteRecordTool;
 use App\Mcp\Tools\GetContentStringsTool;
 use App\Mcp\Tools\GetInterfaceTranslationsTool;
 use App\Mcp\Tools\GetMenusTool;
@@ -91,6 +94,11 @@ Typical workflow for building or replicating a site:
    `Accept: text/markdown` header — every page and record serves a markdown
    representation of its content.
 8. Publish with `publish-page` / `publish-record` when the content looks right.
+9. Removing things is permanent: `delete-page`, `delete-record` and
+   `delete-media` cannot be undone. To take content offline while keeping it,
+   publish it with status `draft` instead. Deleting a block just means leaving
+   it out of the next `update-page-blocks` call. The homepage cannot be deleted,
+   and media still referenced anywhere is refused with a list of what uses it.
 MD)]
 final class WireUpServer extends Server
 {
@@ -105,6 +113,7 @@ final class WireUpServer extends Server
         UpdatePageBlocksTool::class,
         UpdatePageTool::class,
         PublishPageTool::class,
+        DeletePageTool::class,
         ListContentTypesTool::class,
         CreateContentTypeTool::class,
         UpdateContentTypeTool::class,
@@ -113,11 +122,13 @@ final class WireUpServer extends Server
         CreateRecordTool::class,
         UpdateRecordTool::class,
         PublishRecordTool::class,
+        DeleteRecordTool::class,
         ListCategoriesTool::class,
         CreateCategoryTool::class,
         ListMediaTool::class,
         ImportMediaFromUrlTool::class,
         UploadMediaTool::class,
+        DeleteMediaTool::class,
         ReadWebpageTool::class,
         SearchPexelsTool::class,
         ImportPexelsMediaTool::class,
