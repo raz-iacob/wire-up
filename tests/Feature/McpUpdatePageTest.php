@@ -164,7 +164,7 @@ it('asks for at least one field to change', function (): void {
     $page = Page::factory()->create(['title' => 'Untouched']);
 
     WireUpServer::tool(UpdatePageTool::class, ['page' => $page->id])
-        ->assertHasErrors(['Pass at least one of title, description, slug, noindex or og_image to change.']);
+        ->assertHasErrors(['Pass at least one of title, description, slug, noindex, og_image or layout to change.']);
 });
 
 it('refuses a title that another page already uses', function (): void {

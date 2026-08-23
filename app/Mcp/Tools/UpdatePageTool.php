@@ -18,7 +18,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
 #[Name('update-page')]
-#[Description('Update an existing page\'s title, meta description, web address, and SEO settings. Only the keys you pass are changed; the page\'s blocks, layout and publication status are left as they are — use update-page-blocks for content and publish-page for publishing.')]
+#[Description('Update an existing page\'s title, meta description, web address, SEO settings and layout — hiding the header or footer, a background, per-page CSS, and which sidebar menus show beside the content. Only the keys you pass are changed; blocks and publication status are left as they are — use update-page-blocks for content and publish-page for publishing.')]
 final class UpdatePageTool extends Tool
 {
     public function handle(Request $request): Response
@@ -31,6 +31,16 @@ final class UpdatePageTool extends Tool
                 'slug' => ['nullable', 'string', 'min:3', 'max:255', 'regex:/^[a-z0-9-]+$/'],
                 'noindex' => ['boolean'],
                 'og_image' => ['nullable', 'integer', 'exists:media,id'],
+                'layout' => ['sometimes', 'array'],
+                'layout.hideHeader' => ['boolean'],
+                'layout.hideFooter' => ['boolean'],
+                'layout.backgroundFixed' => ['boolean'],
+                'layout.backgroundColor' => ['nullable', 'string', 'max:30'],
+                'layout.backgroundImage' => ['nullable', 'integer', 'exists:media,id'],
+                'layout.customCss' => ['nullable', 'string', 'max:50000'],
+                'layout.sidebar' => ['sometimes', 'array'],
+                'layout.sidebar.menus' => ['array', 'max:3'],
+                'layout.sidebar.menus.*' => ['string', 'max:255'],
             ],
             [
                 'page.required' => 'Pass the page id. Use list-pages to find it.',
@@ -41,6 +51,8 @@ final class UpdatePageTool extends Tool
                 'slug.min' => 'The web address must be at least 3 characters.',
                 'slug.regex' => 'The web address can only use lowercase letters, numbers and hyphens.',
                 'og_image.exists' => 'That media id does not exist. Use list-media or import-media-from-url first.',
+                'layout.backgroundImage.exists' => 'That background media id does not exist. Use list-media, upload-media or import-media-from-url first.',
+                'layout.sidebar.menus.max' => 'A page may show at most 3 sidebar menus.',
             ],
         );
 
@@ -71,8 +83,35 @@ final class UpdatePageTool extends Tool
             $attributes['slugs'] = [$locale => $validated['slug']];
         }
 
+        $metadata = $page->metadata ?? [];
+        $metadataChanged = false;
+
         if (array_key_exists('noindex', $validated)) {
-            $attributes['metadata'] = [...($page->metadata ?? []), 'noindex' => (bool) $validated['noindex']];
+            $metadata['noindex'] = (bool) $validated['noindex'];
+            $metadataChanged = true;
+        }
+
+        if (array_key_exists('layout', $validated)) {
+            /** @var array<string, mixed> $layoutInput */
+            $layoutInput = (array) $validated['layout'];
+            $background = null;
+
+            if (($layoutInput['backgroundImage'] ?? null) !== null) {
+                $media = Media::query()->findOrFail($layoutInput['backgroundImage']);
+
+                if ($media->type !== MediaType::IMAGE) {
+                    return Response::error("Media id {$media->id} is not an image, so it cannot be a page background. Use list-media to find an image.");
+                }
+
+                $background = ['source' => $media->source, 'crop' => []];
+            }
+
+            $metadata['layout'] = $this->mergedLayout($page, $layoutInput, $background);
+            $metadataChanged = true;
+        }
+
+        if ($metadataChanged) {
+            $attributes['metadata'] = $metadata;
         }
 
         if (array_key_exists('og_image', $validated)) {
@@ -91,7 +130,7 @@ final class UpdatePageTool extends Tool
         }
 
         if ($attributes === []) {
-            return Response::error('Pass at least one of title, description, slug, noindex or og_image to change.');
+            return Response::error('Pass at least one of title, description, slug, noindex, og_image or layout to change.');
         }
 
         Pages::update($page, $attributes);
@@ -126,7 +165,46 @@ final class UpdatePageTool extends Tool
 
             'og_image' => $schema->integer()
                 ->description('Media id of the social sharing image, as returned by list-media or import-media-from-url. Pass null to remove it.'),
+
+            'layout' => $schema->object()
+                ->description('Per-page layout overrides. Only the keys you pass are changed: {"hideHeader": bool, "hideFooter": bool, "backgroundColor": "#0b1220" or null, "backgroundImage": <media id> or null, "backgroundFixed": bool, "customCss": "css applied to this page only", "sidebar": {"menus": ["<menu key>"]}}. Sidebar menu keys come from get-menus or create-menu, and render the site sidebar layout beside the page content.'),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $layout
+     * @param  array{source: string, crop: array<string, mixed>}|null  $background
+     * @return array<string, mixed>
+     */
+    private function mergedLayout(Page $page, array $layout, ?array $background): array
+    {
+        /** @var array<string, mixed> $current */
+        $current = is_array($page->metadata['layout'] ?? null) ? $page->metadata['layout'] : [];
+
+        foreach (['hideHeader', 'hideFooter', 'backgroundFixed'] as $flag) {
+            if (array_key_exists($flag, $layout)) {
+                $current[$flag] = (bool) $layout[$flag];
+            }
+        }
+
+        if (array_key_exists('backgroundColor', $layout)) {
+            $color = mb_trim((string) $layout['backgroundColor']);
+            $current['backgroundColor'] = $color !== '' ? $color : null;
+        }
+
+        if (array_key_exists('backgroundImage', $layout)) {
+            $current['backgroundImage'] = $background;
+        }
+
+        if (array_key_exists('customCss', $layout)) {
+            $current['customCss'] = Page::sanitizeCustomCss((string) $layout['customCss']);
+        }
+
+        if (is_array($layout['sidebar'] ?? null) && array_key_exists('menus', $layout['sidebar'])) {
+            $current['sidebar'] = Page::normalizeSidebar($layout['sidebar']);
+        }
+
+        return $current;
     }
 
     /**

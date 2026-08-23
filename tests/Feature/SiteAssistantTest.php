@@ -66,7 +66,7 @@ it('exposes every WireUp tool and the block-types resource to the assistant', fu
         'list-records', 'get-record', 'create-record', 'update-record', 'publish-record',
         'list-media', 'import-media-from-url', 'upload-media', 'read-webpage', 'search-pexels', 'import-pexels-media',
         'get-settings', 'update-design', 'update-identity',
-        'get-menus', 'update-menu', 'update-social',
+        'get-menus', 'create-menu', 'update-menu', 'update-social',
         'get-interface-translations', 'update-interface-translations',
         'get-content-strings', 'update-content-strings',
         'block-types',

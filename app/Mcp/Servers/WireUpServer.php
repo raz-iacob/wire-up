@@ -7,6 +7,7 @@ namespace App\Mcp\Servers;
 use App\Mcp\Prompts\ReplicateSitePrompt;
 use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Tools\CreateContentTypeTool;
+use App\Mcp\Tools\CreateMenuTool;
 use App\Mcp\Tools\CreatePageTool;
 use App\Mcp\Tools\CreateRecordTool;
 use App\Mcp\Tools\GetContentStringsTool;
@@ -69,7 +70,11 @@ Typical workflow for building or replicating a site:
    `update-page-blocks`. Change a page's title, meta description, web address
    or SEO settings afterwards with `update-page`.
 5. Wire the pages into navigation with `get-menus` + `update-menu` (header and
-   footer), and set social profile links with `update-social`.
+   footer), and set social profile links with `update-social`. For a sidebar —
+   a documentation nav, say — `create-menu` makes a new menu, `update-menu`
+   fills it, and `update-page` with `layout.sidebar.menus` shows it beside a
+   page's content. `update-page` also carries `layout` overrides for hiding the
+   header or footer, a page background and per-page CSS.
 6. For repeating, structured content (products, services, blog posts, events),
    use content types. A content type is a reusable blueprint of fields; each
    entry is a record with its own URL under the type's prefix. List and inspect
@@ -114,6 +119,7 @@ final class WireUpServer extends Server
         UpdateDesignTool::class,
         UpdateIdentityTool::class,
         GetMenusTool::class,
+        CreateMenuTool::class,
         UpdateMenuTool::class,
         UpdateSocialTool::class,
         GetInterfaceTranslationsTool::class,
