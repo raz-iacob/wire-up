@@ -36,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin',
             'admin/*',
             'livewire/*',
+            'livewire-*/*',
             'login',
         ]);
     })

@@ -2,6 +2,10 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
+## Unreleased
+
+- The admin stays usable while an update runs: Settings → Updates now shows live progress instead of the "Down for maintenance" page.
+
 ## v0.1.1 — 2026-08-22
 
 - Test buttons on Settings → Integrations for Slack, e-mail and the AI assistant, checking the credentials you have typed before you save them.
