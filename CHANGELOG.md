@@ -5,6 +5,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 ## Unreleased
 
 - Validation errors, sign-in messages and password-reset notices now read as real sentences. They were showing internal keys such as "validation.required" in the admin, the terminal and to connected agents.
+- Settings → Translations gains a "Form messages" group, so a site in another language can translate the wording of form errors — "is required", "must be a valid email address" and the rest — instead of being stuck with English.
 - The admin stays usable while an update runs: Settings → Updates now shows live progress instead of the "Down for maintenance" page.
 - Import files that are already on the server into the media library: a new `wireup:media:import` command for the terminal, and an `upload-media` tool so the AI assistant and other agents can do it too. Both handle SVG, HEIC and video, which importing from a URL could not.
 - The AI assistant and other agents can now build a sidebar: a new `create-menu` tool makes menus beyond the header and footer, and `update-page` sets a page's layout — hiding the header or footer, a background colour or image, per-page CSS, and which sidebar menus appear beside the content.

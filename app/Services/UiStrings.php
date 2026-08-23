@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+
 final class UiStrings
 {
     /**
@@ -62,7 +65,36 @@ final class UiStrings
             }
         }
 
+        $catalog[] = ['group' => 'Form messages', 'strings' => array_values(array_diff(self::frameworkLines(), array_keys($seen)))];
+
         return $catalog;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function frameworkLines(): array
+    {
+        $rules = [
+            'after', 'array', 'between', 'boolean', 'confirmed', 'date', 'dimensions', 'distinct',
+            'email', 'exists', 'file', 'image', 'in', 'integer', 'ip', 'json', 'lowercase', 'max',
+            'mimes', 'min', 'not_in', 'numeric', 'present', 'regex', 'required', 'required_if',
+            'required_with', 'size', 'string', 'unique', 'url',
+        ];
+
+        $lines = trans('validation');
+
+        $keys = collect(is_array($lines) ? Arr::dot($lines) : [])
+            ->keys()
+            ->filter(fn (string $key): bool => in_array(Str::before($key, '.'), $rules, true))
+            ->map(fn (string $key): string => 'validation.'.$key)
+            ->push('auth.throttle')
+            ->values()
+            ->all();
+
+        sort($keys);
+
+        return $keys;
     }
 
     /**

@@ -43,7 +43,7 @@ it('scans the visitor-facing views into a grouped, de-duplicated catalog', funct
     $groups = collect($catalog)->pluck('group');
     $strings = collect($catalog)->flatMap(fn (array $group): array => $group['strings']);
 
-    expect($groups->all())->toBe(['Account', 'Sign in', 'Site'])
+    expect($groups->all())->toBe(['Account', 'Sign in', 'Site', 'Form messages'])
         ->and($strings)->toContain('My account')
         ->and($strings)->toContain('Log out')
         ->and($strings->count())->toBe($strings->unique()->count());
