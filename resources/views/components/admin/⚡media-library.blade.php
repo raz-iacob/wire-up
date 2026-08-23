@@ -2,19 +2,17 @@
 
 declare(strict_types=1);
 
-use App\Actions\CreateMediaAction;
 use App\Actions\DownloadMediaAction;
 use App\Actions\ImportPexelsMediaAction;
+use App\Actions\StoreMediaFileAction;
 use App\Actions\UpdateMediaAction;
 use App\Enums\MediaType;
 use App\Models\Media;
 use App\Services\MediaItem;
 use App\Services\PexelsService;
 use App\Services\UploadLimit;
-use enshrined\svgSanitize\Sanitizer;
 use Flux\Flux;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
@@ -450,7 +448,7 @@ return new class extends Component
     }
 
     /** @param array<int, array<string, mixed>> $metadata */
-    public function save(array $metadata, CreateMediaAction $action): void
+    public function save(array $metadata, StoreMediaFileAction $action): void
     {
         $allowsVideo = $this->type === MediaType::VIDEO || in_array(MediaType::VIDEO->value, $this->allowedTypes, true);
         $maxKilobytes = UploadLimit::enforcedKilobytes($allowsVideo ? UploadLimit::VIDEO_MAX_KILOBYTES : UploadLimit::IMAGE_MAX_KILOBYTES);
@@ -597,115 +595,28 @@ return new class extends Component
     }
 
     /** @param array<int, array{file: TemporaryUploadedFile, metadata: array<string, mixed>}> $validatedFiles */
-    private function uploadFiles(array $validatedFiles, CreateMediaAction $action): void
+    private function uploadFiles(array $validatedFiles, StoreMediaFileAction $action): void
     {
         foreach ($validatedFiles as ['file' => $file, 'metadata' => $metadata]) {
-
-            $etag = md5_file($file->getRealPath());
-            $existing = Media::query()->where('etag', $etag)->first();
-            if ($existing) {
-                continue;
-            }
-
-            $uuid = Str::uuid()->toString();
-            $originalExtension = $file->getClientOriginalExtension();
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $isSvg = mb_strtolower($originalExtension) === 'svg';
-            $isHeic = in_array(mb_strtolower($originalExtension), ['heic', 'heif'], true)
-                || str_contains(mb_strtolower($file->getMimeType()), 'hei');
-            $extension = $isHeic ? 'jpg' : $originalExtension;
-            $filename = $uuid.'_'.Str::slug($originalName).'.'.$extension;
-            $path = 'media';
-            $width = $metadata['width'] ?? null;
-            $height = $metadata['height'] ?? null;
-
-            if ($isSvg) {
-                $clean = (new Sanitizer)->sanitize((string) file_get_contents($file->getRealPath()));
-
-                Storage::disk(config('filesystems.media'))
-                    ->put("$path/$filename", $clean === false ? '' : $clean, 'public');
-
-                $size = $clean === false ? 0 : mb_strlen($clean, '8bit');
-                $mimeType = 'image/svg+xml';
-            } elseif ($isHeic) {
-                try {
-                    $imagick = new Imagick($file->getRealPath());
-
-                    match ($imagick->getImageOrientation()) {
-                        Imagick::ORIENTATION_BOTTOMRIGHT => $imagick->rotateImage('#000', 180),
-                        Imagick::ORIENTATION_RIGHTTOP => $imagick->rotateImage('#000', 90),
-                        Imagick::ORIENTATION_LEFTBOTTOM => $imagick->rotateImage('#000', -90),
-                        default => null,
-                    };
-                    $imagick->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
-
-                    $imagick->setImageFormat('jpeg');
-                    $imagick->setImageCompressionQuality(85);
-
-                    $jpeg = $imagick->getImageBlob();
-                    $width = $imagick->getImageWidth();
-                    $height = $imagick->getImageHeight();
-
-                    $imagick->clear();
-                    $imagick->destroy();
-
-                    Storage::disk(config('filesystems.media'))
-                        ->put("$path/$filename", $jpeg, 'public');
-
-                    $size = mb_strlen($jpeg, '8bit');
-                    $mimeType = 'image/jpeg';
-                } catch (Throwable) {
-                    Flux::toast(
-                        variant: 'danger',
-                        heading: __('Upload Failed'),
-                        text: __('":filename" couldn\'t be converted. Please upload it as a JPG or PNG instead.', [
-                            'filename' => $file->getClientOriginalName(),
-                        ]),
-                        duration: 10000,
-                    );
-                    $file->delete();
-
-                    continue;
-                }
-            } else {
-                $file->storeAs($path, $filename, [
-                    'disk' => config('filesystems.media'),
-                    'visibility' => 'public',
+            try {
+                $action->handle($file->getRealPath(), $file->getClientOriginalName(), [
+                    'width' => $metadata['width'] ?? null,
+                    'height' => $metadata['height'] ?? null,
+                    'duration' => $metadata['duration'] ?? null,
+                    'thumbnail' => $metadata['thumbnail'] ?? null,
+                    'mime_type' => $file->getMimeType(),
                 ]);
-
-                $size = $file->getSize();
-                $mimeType = $file->getMimeType();
+            } catch (Throwable) {
+                Flux::toast(
+                    variant: 'danger',
+                    heading: __('Upload Failed'),
+                    text: __('":filename" couldn\'t be converted. Please upload it as a JPG or PNG instead.', [
+                        'filename' => $file->getClientOriginalName(),
+                    ]),
+                    duration: 10000,
+                );
+                $file->delete();
             }
-
-            $thumbnail = null;
-            $thumbData = $metadata['thumbnail'] ?? null;
-
-            if ($thumbData && preg_match('/^data:image\/([a-zA-Z0-9]+);base64,/', (string) $thumbData, $matches)) {
-                $thumbFilename = $uuid.'_'.Str::slug($originalName).'_thumb.'.$matches[1];
-
-                $base64 = explode(',', (string) $thumbData, 2)[1] ?? null;
-
-                if ($base64) {
-                    Storage::disk(config('filesystems.media'))
-                        ->put("$path/$thumbFilename", base64_decode($base64), 'public');
-
-                    $thumbnail = "$path/$thumbFilename";
-                }
-            }
-
-            $action->handle([
-                'type' => MediaType::fromMimeType($mimeType)->value,
-                'source' => "$path/$filename",
-                'etag' => $etag,
-                'filename' => $originalName.'.'.$extension,
-                'alt_text' => $originalName,
-                'mime_type' => $mimeType,
-                'thumbnail' => $thumbnail,
-                'size' => $size,
-                'duration' => $metadata['duration'] ?? null,
-                'width' => $width,
-                'height' => $height,
-            ]);
         }
 
         $this->files = [];
@@ -1092,7 +1003,7 @@ return new class extends Component
                             >
                                 @if ($loop->first && $media->type === MediaType::VIDEO)
                                     <video
-                                        src="{{ Storage::disk(config('filesystems.media'))->url($media->source) }}"
+                                        src="{{ \Illuminate\Support\Facades\Storage::disk(config('filesystems.media'))->url($media->source) }}"
                                         poster="{{ $media->preview }}"
                                         class="aspect-video w-full bg-black object-contain"
                                         controls
@@ -1110,7 +1021,7 @@ return new class extends Component
                                         />
                                         <audio
                                             x-ref="audio"
-                                            src="{{ Storage::disk(config('filesystems.media'))->url($media->source) }}"
+                                            src="{{ \Illuminate\Support\Facades\Storage::disk(config('filesystems.media'))->url($media->source) }}"
                                             preload="none"
                                             x-on:ended="playing = false"
                                         ></audio>
