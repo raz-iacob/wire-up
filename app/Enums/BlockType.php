@@ -279,7 +279,7 @@ enum BlockType: string
                 'heading' => [],
                 'intro' => [],
                 'items' => [
-                    ['id' => (string) Str::uuid(), 'image' => null, 'title' => [], 'body' => [], 'cta' => $cta],
+                    ['id' => (string) Str::uuid(), 'media' => 'image', 'image' => null, 'icon' => '', 'title' => [], 'body' => [], 'cta' => $cta],
                 ],
             ],
             self::COLLECTION => [

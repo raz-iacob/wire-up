@@ -1007,6 +1007,52 @@ it('omits the image rounding class when the toggle is off', function (): void {
         ->not->toContain('rounded-(--wire-radius)');
 });
 
+it('renders an icon instead of the image when a feature card is set to icon', function (): void {
+    publishPageWithBlocks('feat-icon', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'imageHeight' => 'large',
+            'items' => [
+                ['id' => 'a', 'media' => 'icon', 'icon' => 'rocket-launch', 'image' => ['source' => 'media/shot.png', 'crop' => []], 'title' => ['en' => 'Fast']],
+            ],
+        ]],
+    ]);
+
+    $response = $this->get(route('page', 'feat-icon'))->assertOk();
+
+    expect((string) $response->getContent())
+        ->toContain('size-20')
+        ->not->toContain('media/shot.png');
+});
+
+it('renders nothing for a feature card icon that is not in the allowed set', function (): void {
+    publishPageWithBlocks('feat-icon-bogus', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'items' => [
+                ['id' => 'a', 'media' => 'icon', 'icon' => 'not-a-real-icon', 'title' => ['en' => 'Fast']],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'feat-icon-bogus'))
+        ->assertOk()
+        ->assertSee('Fast')
+        ->assertDontSee('not-a-real-icon');
+});
+
+it('keeps a feature card that carries only an icon', function (): void {
+    publishPageWithBlocks('feat-icon-only', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'items' => [
+                ['id' => 'a', 'media' => 'icon', 'icon' => 'bolt'],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'feat-icon-only'))
+        ->assertOk()
+        ->assertSee('size-14', false);
+});
+
 it('renders a feature card button that links and opens in a new tab', function (): void {
     publishPageWithBlocks('feat-cta', [
         ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [

@@ -43,6 +43,7 @@ final class BlockTypesResource extends Resource
             'escapedFields' => 'Most rich-text fields render as raw HTML, so class attributes and inline markup survive. These render escaped instead, and an HTML entity there shows literally: stats item "value" and "label", feature-cards item "title", menu item labels, and search placeholders. Write real characters in those — "—" not "&mdash;", "\'" not "&rsquo;".',
             'collectionSource' => 'The collection block\'s "source" accepts only "latest", "manual" or "category" — any other value silently falls back to "latest". A hand-picked list needs "source": "manual" plus "recordIds": [<record id>, ...]. Filtering by category needs "source": "category" plus a category id from list-categories.',
             'collectionFields' => 'The collection block\'s "fields" is a flat list of field-key strings, e.g. ["audience", "reading_time"] — not the field objects create-content-type takes. Non-string entries are dropped. The keys come from the content type blueprint in list-content-types.',
+            'featureCardIcons' => 'Each feature-cards item shows either an image or an icon, chosen by its "media" key ("image" or "icon"). With "media": "icon", set "icon" to one of these names — any other value renders nothing: '.implode(', ', config()->array('menu.icons')).'. Icon size follows the block\'s "imageHeight", and the icon takes the card text colour.',
         ];
     }
 

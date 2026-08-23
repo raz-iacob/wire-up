@@ -204,7 +204,9 @@ trait HasBlockBuilder
         $itemId = (string) Str::uuid();
         $this->blocks[$id]['content']['items'][] = [
             'id' => $itemId,
+            'media' => 'image',
             'image' => null,
+            'icon' => '',
             'title' => [],
             'body' => [],
             'cta' => [

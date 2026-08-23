@@ -77,18 +77,49 @@
                     </div>
 
                     <div class="flex flex-col gap-4 p-4" x-show="open" x-collapse x-cloak>
-                        <livewire:admin.blocks.item-media
-                            :block-id="$block['id']"
-                            item-id="{{ $item['id'] ?? $i }}"
-                            field="image"
-                            :value="data_get($item, 'image')"
-                            media-type="image"
-                            :multiple="false"
-                            :locale="$locale"
-                            :multi-locale="$multiLocale"
-                            label="{{ __('Image or icon') }}"
-                            wire:key="feature-image-{{ $block['id'] }}-{{ $item['id'] ?? $i }}"
-                        />
+                        <flux:radio.group
+                            wire:model.live="{{ $c }}.items.{{ $i }}.media"
+                            variant="segmented"
+                            label="{{ __('Show') }}"
+                        >
+                            <flux:radio value="image" label="{{ __('Image') }}" />
+                            <flux:radio value="icon" label="{{ __('Icon') }}" />
+                        </flux:radio.group>
+
+                        <div x-show="{{ $b }}?.items?.[{{ $i }}]?.media !== 'icon'">
+                            <livewire:admin.blocks.item-media
+                                :block-id="$block['id']"
+                                item-id="{{ $item['id'] ?? $i }}"
+                                field="image"
+                                :value="data_get($item, 'image')"
+                                media-type="image"
+                                :multiple="false"
+                                :locale="$locale"
+                                :multi-locale="$multiLocale"
+                                label="{{ __('Image') }}"
+                                wire:key="feature-image-{{ $block['id'] }}-{{ $item['id'] ?? $i }}"
+                            />
+                        </div>
+
+                        <div x-show="{{ $b }}?.items?.[{{ $i }}]?.media === 'icon'" x-cloak>
+                            <flux:select
+                                wire:model.live="{{ $c }}.items.{{ $i }}.icon"
+                                variant="listbox"
+                                searchable
+                                clearable
+                                placeholder="{{ __('Choose an icon') }}"
+                                label="{{ __('Icon') }}"
+                            >
+                                @foreach (config()->array('menu.icons') as $iconOption)
+                                    <flux:select.option value="{{ $iconOption }}">
+                                        <span class="flex items-center gap-2">
+                                            <flux:icon :name="$iconOption" variant="mini" class="size-4 shrink-0" />
+                                            {{ \Illuminate\Support\Str::of($iconOption)->replace('-', ' ')->ucfirst() }}
+                                        </span>
+                                    </flux:select.option>
+                                @endforeach
+                            </flux:select>
+                        </div>
 
                         <x-forms.input-translated
                             name="{{ $c }}.items.{{ $i }}.title"

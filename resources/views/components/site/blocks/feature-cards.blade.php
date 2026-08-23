@@ -17,9 +17,19 @@
         'xl' => 'max-h-60',
         default => 'max-h-24',
     };
+    $iconSizeClass = match ($content['imageHeight'] ?? 'medium') {
+        'icon' => 'size-8',
+        'small' => 'size-10',
+        'large' => 'size-20',
+        'xl' => 'size-28',
+        default => 'size-14',
+    };
+    $allowedIcons = config()->array('menu.icons');
 
     $items = collect($rawItems)
         ->map(fn (mixed $item, int $i): array => [
+            'media' => data_get($item, 'media') === 'icon' ? 'icon' : 'image',
+            'icon' => in_array(data_get($item, 'icon'), $allowedIcons, true) ? (string) data_get($item, 'icon') : '',
             'image' => $block->imageUrl("items.{$i}.image", ['w' => 800]),
             'alt' => $block->imageAlt("items.{$i}.image") ?: $block->text("items.{$i}.title"),
             'title' => $block->text("items.{$i}.title"),
@@ -33,7 +43,7 @@
                 'fg' => (data_get($item, 'cta.textColor') ?: null) ?? 'var(--wire-primary-text)',
             ],
         ])
-        ->filter(fn (array $item): bool => $item['title'] !== '' || strip_tags($item['body']) !== '' || $item['image'] !== null)
+        ->filter(fn (array $item): bool => $item['title'] !== '' || strip_tags($item['body']) !== '' || $item['image'] !== null || $item['icon'] !== '')
         ->values();
 
     $hasHeading = strip_tags($heading) !== '' || strip_tags($intro) !== '';
@@ -75,6 +85,7 @@
                     <x-site.blocks.feature-card
                         :item="$item"
                         :image-height-class="$imageHeightClass"
+                        :icon-size-class="$iconSizeClass"
                         :image-rounded="$imageRounded"
                         :card-style="$cardStyle"
                         :card-bg="$cardBg"

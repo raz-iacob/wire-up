@@ -1,4 +1,4 @@
-@props(['item', 'imageHeightClass' => 'max-h-24', 'imageRounded' => false, 'cardStyle' => true, 'cardBg' => 'var(--wire-card-bg)', 'cardText' => 'var(--wire-card-text)'])
+@props(['item', 'imageHeightClass' => 'max-h-24', 'iconSizeClass' => 'size-14', 'imageRounded' => false, 'cardStyle' => true, 'cardBg' => 'var(--wire-card-bg)', 'cardText' => 'var(--wire-card-text)'])
 
 <article
     @class([
@@ -7,7 +7,9 @@
     ])
     @if ($cardStyle) style="background-color:{{ $cardBg }};color:{{ $cardText }}" @endif
 >
-    @if ($item['image'])
+    @if ($item['media'] === 'icon' && $item['icon'] !== '')
+        <flux:icon :name="$item['icon']" class="{{ $iconSizeClass }} shrink-0" aria-hidden="true" />
+    @elseif ($item['image'])
         <img
             src="{{ $item['image'] }}"
             alt="{{ $item['alt'] }}"

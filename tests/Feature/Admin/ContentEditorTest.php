@@ -808,7 +808,9 @@ it('renders the feature cards block editor fields', function (): void {
             'new-f' => ['id' => 'new-f', 'type' => 'feature-cards', 'position' => 0, 'content' => BlockType::FEATURE_CARDS->defaultContent()],
         ])
         ->assertSee('Add card')
-        ->assertSee('Image or icon')
+        ->assertSee('Image')
+        ->assertSee('Icon')
+        ->assertSee('Choose an icon')
         ->assertSee('Title')
         ->assertSee('Description')
         ->assertSee('Columns')
