@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Translation\FileLoader;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Fortify;
 
@@ -31,9 +32,9 @@ final class AppServiceProvider extends ServiceProvider
 
         $this->app->make(Repository::class)->set('app.default_locale', $this->app->make(Repository::class)->string('app.locale', 'en'));
 
-        $this->app->extend('translation.loader', fn (): DatabaseTranslationLoader => new DatabaseTranslationLoader(
+        $this->app->extend('translation.loader', fn (FileLoader $loader): DatabaseTranslationLoader => new DatabaseTranslationLoader(
             $this->app->make(Filesystem::class),
-            (string) $this->app->make('path.lang'),
+            $loader->paths(),
         ));
     }
 
