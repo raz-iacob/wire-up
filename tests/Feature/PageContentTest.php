@@ -1391,7 +1391,7 @@ it('omits downloads with no resolvable file', function (): void {
         ->assertDontSee('ghost.pdf');
 });
 
-it('renders a rich text block with heading and body, honouring narrow width and centering', function (): void {
+it('renders a rich text block with heading and body, honouring narrow width and a centred column', function (): void {
     publishPageWithBlocks('rich', [
         ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
             'heading' => ['en' => '<p>Our story</p>'],
@@ -1406,8 +1406,7 @@ it('renders a rich text block with heading and body, honouring narrow width and 
         ->assertSee('Our story')
         ->assertSee('<strong>garage</strong>', false)
         ->assertSee('<li>One</li>', false)
-        ->assertSee('max-w-2xl', false)
-        ->assertSee('text-center', false);
+        ->assertSee('max-w-2xl mx-auto', false);
 });
 
 it('omits the rich text block when it has no content', function (): void {
@@ -1663,12 +1662,13 @@ it('styles bullet lists inside a text and image body', function (): void {
         ->assertSee('[&_ol]:list-decimal', false);
 });
 
-it('left-anchors a narrow-left rich text block inside the full container', function (): void {
+it('left-anchors a left-aligned narrow rich text block inside the full container', function (): void {
     publishPageWithBlocks('rich-left', [
         ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
             'heading' => ['en' => '<p>Left measure</p>'],
             'body' => ['en' => '<p>Shares the left edge.</p>'],
-            'width' => 'narrow-left',
+            'width' => 'narrow',
+            'align' => 'left',
         ]],
     ]);
 
@@ -1678,16 +1678,17 @@ it('left-anchors a narrow-left rich text block inside the full container', funct
         ->toContain('<div class="max-w-2xl">');
 });
 
-it('keeps a narrow rich text block centred without a left-anchored wrapper', function (): void {
+it('keeps a centre-aligned narrow rich text block off the left edge', function (): void {
     publishPageWithBlocks('rich-centred', [
         ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
             'heading' => ['en' => '<p>Centred measure</p>'],
             'width' => 'narrow',
+            'align' => 'center',
         ]],
     ]);
 
     $content = $this->get(route('page', 'rich-centred'))->assertOk()->content();
 
-    expect($content)->toContain('mx-auto px-(--wire-gutter) max-w-2xl')
+    expect($content)->toContain('max-w-2xl mx-auto')
         ->not->toContain('<div class="max-w-2xl">');
 });

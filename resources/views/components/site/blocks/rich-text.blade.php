@@ -5,10 +5,9 @@
     $heading = $block->text('heading');
     $body = $block->text('body');
     $hasBg = (bool) ($content['hasBackground'] ?? false);
-    $width = $content['width'] ?? 'normal';
-    $narrow = $width === 'narrow';
-    $narrowLeft = $width === 'narrow-left';
-    $center = ($content['align'] ?? 'left') === 'center';
+    $narrow = ($content['width'] ?? 'normal') === 'narrow';
+    $align = $block->plain('align', 'left');
+    $align = in_array($align, ['left', 'center', 'right'], true) ? $align : 'left';
     $hasContent = strip_tags($heading) !== '' || strip_tags($body) !== '';
 @endphp
 
@@ -18,13 +17,12 @@
         'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
         ($pad ?? 'py-16') => $hasBg,
     ])>
-        <div @class([
-            'mx-auto px-(--wire-gutter)',
-            'max-w-2xl' => $narrow,
-            'max-w-(--wire-container)' => ! $narrow,
-            'text-center' => $center,
-        ])>
-            <div @class(['max-w-2xl' => $narrowLeft])>
+        <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
+            <div @class([
+                'max-w-2xl' => $narrow,
+                'mx-auto' => $narrow && $align === 'center',
+                'ms-auto' => $narrow && $align === 'right',
+            ])>
                 @if (strip_tags($heading) !== '')
                     <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-6 text-(length:--wire-heading-size) tracking-tight">
                         {!! $heading !!}

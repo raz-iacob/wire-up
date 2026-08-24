@@ -409,3 +409,24 @@ it('offers a shareable draft link while the record is unpublished', function ():
     Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record->refresh()])
         ->assertDontSee('Copy draft link');
 });
+
+it('duplicates a record block directly below the one it copied', function (): void {
+    $type = typeWithFields();
+    $record = makeRecord($type, 'Widget');
+    $record->updateBlocks([
+        ['id' => 'new-a', 'type' => 'rich-text', 'content' => ['body' => ['en' => '<p>first</p>']]],
+        ['id' => 'new-b', 'type' => 'accordion', 'content' => ['items' => [['id' => 'row-1', 'title' => ['en' => 'Q']]]]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record]);
+    $target = (string) collect($component->get('blocks'))->firstWhere('type', 'accordion')['id'];
+
+    $blocks = array_values($component->call('duplicateBlock', $target)->get('blocks'));
+
+    expect(array_column($blocks, 'type'))->toBe(['rich-text', 'accordion', 'accordion'])
+        ->and(array_column($blocks, 'position'))->toBe([0, 1, 2])
+        ->and($blocks[2]['content']['items'][0]['id'])->not->toBe($blocks[1]['content']['items'][0]['id'])
+        ->and($blocks[2]['content']['items'][0]['title'])->toBe(['en' => 'Q']);
+});

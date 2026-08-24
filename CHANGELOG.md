@@ -6,6 +6,8 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 - Share a draft before it goes live: the page and record editors gain a "Copy draft link" — a signed web address anyone can open without signing in, good for 7 days by default. Preview links are never indexed by search engines.
 - New block options: an icon instead of an image on feature cards, a "Frame the image" switch on the photo block, a "Related" source on collection blocks, a new "Previous / Next" block for records, and any video aspect ratio including the uploaded file's own.
+- Duplicate a block from its ⋯ menu in the page and record editors. The copy lands directly below the original with all its content, and an anchor on the copy is made unique when you save.
+- The rich text block's Width and Alignment no longer overlap: Width is just Normal or Narrow, and Alignment moves the narrow column left, centre or right. Existing blocks keep the layout they had. Alignment used to centre the text instead, which the editor toolbar already does per paragraph — so centre text there from now on.
 - Import files that are already on the server into the media library, from the terminal with `wireup:media:import` or through agents with `upload-media` and `list-import-files`. SVG, HEIC and video all work, which importing from a URL could not.
 - Form messages now read as real sentences and name fields in plain words, instead of showing internal keys such as "validation.required" or paths such as "title.en". Settings → Translations gains a "Form messages" group so a site in another language can translate them.
 - The admin stays usable while an update runs: Settings → Updates shows live progress instead of the "Down for maintenance" page.

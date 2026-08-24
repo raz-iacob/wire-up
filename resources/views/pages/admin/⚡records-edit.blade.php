@@ -639,6 +639,11 @@ return new class extends Component
                                                         wire:click="openBlockPicker({{ $loop->index + 1 }})"
                                                     >
                                                         {{ __('Add below') }}</flux:menu.item>
+                                                    <flux:menu.item
+                                                        icon="document-duplicate"
+                                                        wire:click="duplicateBlock('{{ $block['id'] }}')"
+                                                    >
+                                                        {{ __('Duplicate') }}</flux:menu.item>
                                                     <flux:menu.separator />
                                                     <flux:menu.item
                                                         icon="trash"

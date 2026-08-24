@@ -1091,3 +1091,89 @@ it('names the web address and description in plain words too', function (): void
     expect($errors)->toContain('The web address field is required.')
         ->and(collect($errors)->filter(fn (string $error): bool => str_contains($error, '.en')))->toBeEmpty();
 });
+
+it('duplicates a block directly below the one it copied', function (): void {
+    $this->page->updateBlocks([
+        ['id' => 'new-a', 'type' => 'rich-text', 'content' => ['body' => ['en' => '<p>first</p>']]],
+        ['id' => 'new-b', 'type' => 'stats', 'content' => ['items' => [['id' => 'stat-1', 'value' => ['en' => '99%']]]]],
+        ['id' => 'new-c', 'type' => 'divider', 'content' => []],
+    ]);
+
+    $component = editor($this->page);
+    $target = (string) collect($component->get('blocks'))->firstWhere('type', 'stats')['id'];
+
+    $blocks = array_values($component->call('duplicateBlock', $target)->get('blocks'));
+
+    expect(array_column($blocks, 'type'))->toBe(['rich-text', 'stats', 'stats', 'divider'])
+        ->and(array_column($blocks, 'position'))->toBe([0, 1, 2, 3])
+        ->and($blocks[2]['content']['items'][0]['value'])->toBe(['en' => '99%'])
+        ->and($blocks[2]['id'])->toStartWith('new-')
+        ->and($blocks[2]['id'])->not->toBe($blocks[1]['id']);
+});
+
+it('gives the duplicated block and its items their own ids', function (): void {
+    $this->page->updateBlocks([
+        ['id' => 'new-a', 'type' => 'feature-cards', 'content' => ['items' => [
+            ['id' => 'card-1', 'title' => ['en' => 'One']],
+            ['id' => 'card-2', 'title' => ['en' => 'Two']],
+        ]]],
+    ]);
+
+    $component = editor($this->page);
+    $target = (string) array_first($component->get('blocks'))['id'];
+
+    $blocks = array_values($component->call('duplicateBlock', $target)->get('blocks'));
+
+    $original = array_column($blocks[0]['content']['items'], 'id');
+    $copy = array_column($blocks[1]['content']['items'], 'id');
+
+    expect(array_intersect($original, $copy))->toBe([])
+        ->and(array_column($blocks[1]['content']['items'], 'title'))->toBe([['en' => 'One'], ['en' => 'Two']]);
+});
+
+it('repoints a duplicated contact form field order at its new fields', function (): void {
+    $this->page->updateBlocks([
+        ['id' => 'new-a', 'type' => 'contact-form', 'content' => [
+            'customFields' => [
+                ['id' => 'field-one', 'label' => ['en' => 'Budget'], 'type' => 'text'],
+                ['id' => 'field-two', 'label' => ['en' => 'Timeline'], 'type' => 'text'],
+            ],
+            'fieldOrder' => ['name', 'field-two', 'email', 'field-one'],
+        ]],
+    ]);
+
+    $component = editor($this->page);
+    $target = (string) array_first($component->get('blocks'))['id'];
+
+    $copy = array_values($component->call('duplicateBlock', $target)->get('blocks'))[1]['content'];
+    $ids = array_column($copy['customFields'], 'id');
+
+    expect($copy['fieldOrder'])->toBe(['name', $ids[1], 'email', $ids[0]])
+        ->and($copy['fieldOrder'])->not->toContain('field-one', 'field-two');
+});
+
+it('makes the duplicated anchor unique when the page is saved', function (): void {
+    $this->page->slugs()->create(['locale' => 'en', 'slug' => 'anchored']);
+    $this->page->updateBlocks([
+        ['id' => 'new-a', 'type' => 'rich-text', 'content' => ['body' => ['en' => '<p>hi</p>'], 'anchor' => 'intro']],
+    ]);
+
+    $component = editor($this->page);
+    $target = (string) array_first($component->get('blocks'))['id'];
+
+    $component->call('duplicateBlock', $target)->call('update')->assertHasNoErrors();
+
+    $anchors = $this->page->fresh()?->blocks()->orderBy('position')->get()
+        ->map(fn (Block $block): ?string => $block->content['anchor'] ?? null)
+        ->all();
+
+    expect($anchors)->toBe(['intro', 'intro-2']);
+});
+
+it('ignores a duplicate request for a block that is not there', function (): void {
+    $this->page->updateBlocks([['id' => 'new-a', 'type' => 'divider', 'content' => []]]);
+
+    $component = editor($this->page);
+
+    expect($component->call('duplicateBlock', 'no-such-block')->get('blocks'))->toHaveCount(1);
+});

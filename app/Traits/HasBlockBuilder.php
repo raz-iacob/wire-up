@@ -568,6 +568,39 @@ trait HasBlockBuilder
             ->all();
     }
 
+    public function duplicateBlock(string $id): void
+    {
+        if (! isset($this->blocks[$id])) {
+            return;
+        }
+
+        $blocks = array_values($this->blocks);
+        $position = 0;
+
+        foreach ($blocks as $index => $block) {
+            if ((string) $block['id'] === $id) {
+                $position = $index;
+
+                break;
+            }
+        }
+
+        $source = $blocks[$position];
+
+        array_splice($blocks, $position + 1, 0, [[
+            'id' => 'new-'.Str::uuid()->toString(),
+            'type' => $source['type'],
+            'position' => $position + 1,
+            'content' => $this->duplicatedContent($source['content']),
+        ]]);
+
+        $this->blocks = collect($blocks)
+            ->mapWithKeys(fn (array $block, int $index): array => [
+                $block['id'] => [...$block, 'position' => $index],
+            ])
+            ->all();
+    }
+
     public function confirmRemoveBlock(string $id): void
     {
         $this->selectedBlock = $id;
@@ -682,5 +715,63 @@ trait HasBlockBuilder
 
             return;
         }
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $content
+     * @return array<array-key, mixed>
+     */
+    private function duplicatedContent(array $content): array
+    {
+        $replacements = [];
+
+        return $this->withRemappedReferences($this->withFreshItemIds($content, $replacements), $replacements);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $content
+     * @param  array<string, string>  $replacements
+     * @return array<array-key, mixed>
+     */
+    private function withFreshItemIds(array $content, array &$replacements): array
+    {
+        $fresh = [];
+
+        foreach ($content as $key => $value) {
+            if (! is_array($value)) {
+                $fresh[$key] = $value;
+
+                continue;
+            }
+
+            if (is_string($value['id'] ?? null)) {
+                $replacements[$value['id']] = (string) Str::uuid();
+                $value['id'] = $replacements[$value['id']];
+            }
+
+            $fresh[$key] = $this->withFreshItemIds($value, $replacements);
+        }
+
+        return $fresh;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $content
+     * @param  array<string, string>  $replacements
+     * @return array<array-key, mixed>
+     */
+    private function withRemappedReferences(array $content, array $replacements): array
+    {
+        $remapped = [];
+
+        foreach ($content as $key => $value) {
+            $remapped[$key] = match (true) {
+                is_array($value) => $this->withRemappedReferences($value, $replacements),
+                is_string($value) => $replacements[$value] ?? $value,
+                default => $value,
+            };
+        }
+
+        return $remapped;
     }
 }
