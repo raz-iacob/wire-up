@@ -87,6 +87,48 @@ it('renders when an agent puts an array where an item field expects a string', f
     expect($failed)->toBe([]);
 });
 
+it('renders when an agent puts an array where a top-level field expects a string', function (): void {
+    $failed = [];
+    $index = 0;
+
+    foreach (BlockType::cases() as $type) {
+        foreach (array_keys($type->defaultContent()) as $field) {
+            foreach ([['a', 'b'], ['k' => 'v']] as $hostile) {
+                $slug = 'top-level-'.$index++;
+                pageWithBlock($slug, $type, [$field => $hostile]);
+
+                if ($this->get('/'.$slug)->getStatusCode() !== 200) {
+                    $failed[] = $type->value.'.'.$field;
+                }
+            }
+        }
+    }
+
+    expect($failed)->toBe([]);
+});
+
+it('renders when an agent shapes a repeatable list as a map instead of a list', function (): void {
+    $failed = [];
+    $index = 0;
+
+    foreach (BlockType::cases() as $type) {
+        foreach ($type->defaultContent() as $listKey => $listValue) {
+            if (! is_array($listValue) || ! array_is_list($listValue) || ! is_array($listValue[0] ?? null)) {
+                continue;
+            }
+
+            $slug = 'map-list-'.$index++;
+            pageWithBlock($slug, $type, [$listKey => ['first' => $listValue[0]]]);
+
+            if ($this->get('/'.$slug)->getStatusCode() !== 200) {
+                $failed[] = $type->value.'.'.$listKey;
+            }
+        }
+    }
+
+    expect($failed)->toBe([]);
+});
+
 it('renders when an agent nests an array inside a translatable field', function (array $heading): void {
     pageWithBlock('nested-translatable', BlockType::RICH_TEXT, ['heading' => $heading]);
 

@@ -12,7 +12,7 @@
     $rawItems = is_array($content['items'] ?? null) ? $content['items'] : [];
 
     $items = collect($rawItems)
-        ->map(fn (mixed $item, int $i): array => [
+        ->map(fn (mixed $item, int|string $i): array => [
             'value' => $block->text("items.{$i}.value"),
             'label' => $block->text("items.{$i}.label"),
         ])

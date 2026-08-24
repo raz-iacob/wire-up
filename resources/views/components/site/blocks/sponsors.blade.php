@@ -13,7 +13,7 @@
     $showNames = (bool) ($content['showNames'] ?? false);
 
     $items = collect($rawItems)
-        ->map(fn (mixed $item, int $i): array => [
+        ->map(fn (mixed $item, int|string $i): array => [
             'logo' => $block->imageUrl("items.{$i}.logo", ['w' => 400]),
             'name' => $block->text("items.{$i}.name"),
             'alt' => $block->text("items.{$i}.name") ?: $block->imageAlt("items.{$i}.logo"),

@@ -12,11 +12,11 @@
     $rawFiles = is_array($content['files'] ?? null) ? $content['files'] : [];
 
     $files = collect($rawFiles)
-        ->map(fn (mixed $file, int $i): array => [
+        ->map(fn (mixed $file, int|string $i): array => [
             'url' => $block->fileUrl("files.{$i}"),
-            'name' => (string) (data_get($file, 'metadata.caption') ?: data_get($file, 'filename', __('Download'))),
+            'name' => $block->plain("files.{$i}.metadata.caption") ?: ($block->plain("files.{$i}.filename") ?: __('Download')),
             'size' => data_get($file, 'size'),
-            'icon' => (string) data_get($file, 'icon', 'document'),
+            'icon' => $block->plain("files.{$i}.icon", 'document'),
         ])
         ->filter(fn (array $file): bool => $file['url'] !== null)
         ->values();

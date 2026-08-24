@@ -10,7 +10,7 @@
     $rawItems = is_array($content['items'] ?? null) ? $content['items'] : [];
 
     $plans = collect($rawItems)
-        ->map(fn (mixed $item, int $i): array => [
+        ->map(fn (mixed $item, int|string $i): array => [
             'name' => $block->text("items.{$i}.name"),
             'price' => $block->text("items.{$i}.price"),
             'period' => $block->text("items.{$i}.period"),

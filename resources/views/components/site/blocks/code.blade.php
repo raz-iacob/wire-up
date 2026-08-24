@@ -2,10 +2,10 @@
 
 @php
     $content = $block->content ?? [];
-    $code = (string) ($content['code'] ?? '');
-    $language = (string) ($content['language'] ?? 'plaintext');
+    $code = $block->plain('code');
+    $language = $block->plain('language', 'plaintext');
     $language = preg_match('/^[a-z0-9]+$/', $language) === 1 ? $language : 'plaintext';
-    $filename = mb_trim((string) ($content['filename'] ?? ''));
+    $filename = mb_trim($block->plain('filename'));
     $wrap = (bool) ($content['wrap'] ?? false);
     $hasBg = (bool) ($content['hasBackground'] ?? false);
     $heading = $block->text('heading');

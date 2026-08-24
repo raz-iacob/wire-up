@@ -27,7 +27,7 @@
     $allowedIcons = config()->array('menu.icons');
 
     $items = collect($rawItems)
-        ->map(fn (mixed $item, int $i): array => [
+        ->map(fn (mixed $item, int|string $i): array => [
             'media' => data_get($item, 'media') === 'icon' ? 'icon' : 'image',
             'icon' => in_array(data_get($item, 'icon'), $allowedIcons, true) ? (string) data_get($item, 'icon') : '',
             'image' => $block->imageUrl("items.{$i}.image", ['w' => 800]),

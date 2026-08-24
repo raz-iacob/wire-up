@@ -13,7 +13,7 @@
     };
 
     $buttons = collect($rawItems)
-        ->map(fn (mixed $item, int $i): array => [
+        ->map(fn (mixed $item, int|string $i): array => [
             'text' => $block->text("items.{$i}.text"),
             'url' => $block->ctaUrl("items.{$i}"),
             'newTab' => data_get($item, 'link.type') === 'url' && (bool) data_get($item, 'link.newTab'),

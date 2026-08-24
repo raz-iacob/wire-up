@@ -13,10 +13,14 @@
     $socialVariant = config('social.default_icon_variant', 'solid');
 
     $members = collect($rawItems)
-        ->map(function (mixed $item, int $i) use ($block, $socialPlatforms, $socialVariant): array {
+        ->map(function (mixed $item, int|string $i) use ($block, $socialPlatforms, $socialVariant): array {
             $socials = [];
 
             foreach ((is_array(data_get($item, 'socials')) ? data_get($item, 'socials') : []) as $key => $url) {
+                if (! is_scalar($url)) {
+                    continue;
+                }
+
                 $url = mb_trim((string) $url);
 
                 if ($url === '') {

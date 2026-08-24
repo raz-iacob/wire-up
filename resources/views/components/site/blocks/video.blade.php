@@ -24,7 +24,7 @@
         $videoWidth = (int) data_get($content, 'video.width');
         $videoHeight = (int) data_get($content, 'video.height');
         $ratio = $videoWidth > 0 && $videoHeight > 0 ? [$videoWidth, $videoHeight] : null;
-    } elseif ($aspect === 'custom' && preg_match('/^\s*(\d{1,5})\s*[:\/]\s*(\d{1,5})\s*$/', (string) ($content['customAspect'] ?? ''), $parts) === 1) {
+    } elseif ($aspect === 'custom' && preg_match('/^\s*(\d{1,5})\s*[:\/]\s*(\d{1,5})\s*$/', $block->plain('customAspect'), $parts) === 1) {
         $ratio = (int) $parts[1] > 0 && (int) $parts[2] > 0 ? [(int) $parts[1], (int) $parts[2]] : null;
     }
 

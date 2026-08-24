@@ -20,3 +20,12 @@ Use $block->plain('items.0.field', 'default') for plain scalar fields and $block
 This bit four places at once, found by rendering every block type with hostile content rather than by reading the views: Block::text() itself (so every heading/intro/body on every block), sponsors items.link and items.tier, and buttons items.variant. tests/Feature/Site/AgentWrittenBlockContentTest.php now sweeps every block type and every repeatable item field, so a new block is covered automatically — keep it passing rather than special-casing it.
 
 Note withBlockDefaults() runs ONLY when the admin editor loads blocks. It never runs on save and never on the MCP path, so no view may assume a key exists or has the advertised type.
+
+## Item-list closures must accept int|string keys
+Item lists are read as `is_array($content['items'] ?? null) ? ... : []`, and a map like {"first": {...}} passes that check. It then reaches `->map(fn (mixed $item, int $i))` with a string key and dies on the parameter type — a 500 on the live page. Agents do emit objects where the schema shows a list.
+
+So type these closures `int|string $i`, never `int $i`. Do NOT "fix" it by reindexing the list instead: the closures build content paths from that key (`$block->text("items.{$i}.name")`), so reindexing silently decouples the path from the real key and the block renders blank. Widening the type keeps the two in step.
+
+Same trap lives outside the views: App\Services\BlockSchema builds JSON-LD from the same raw content, and its unguarded casts crashed the location block through the page head, where no amount of reading block views would have found it. It takes the Block model, so use $block->plain(...) there too.
+
+Found by rendering 1075 hostile field/value combinations; tests/Feature/Site/AgentWrittenBlockContentTest.php keeps the sweep.

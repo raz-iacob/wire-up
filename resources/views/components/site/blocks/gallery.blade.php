@@ -9,12 +9,12 @@
     $hasBg = (bool) ($content['hasBackground'] ?? false);
 
     $items = collect($rawMedia)
-        ->map(fn (mixed $item, int $i): array => [
+        ->map(fn (mixed $item, int|string $i): array => [
             'isVideo' => $block->isVideo("media.{$i}"),
             'poster' => $block->posterUrl("media.{$i}", ['w' => 800, 'h' => 800]),
             'full' => $block->isVideo("media.{$i}") ? $block->fileUrl("media.{$i}") : $block->imageUrl("media.{$i}", ['w' => 1600]),
             'alt' => $block->imageAlt("media.{$i}"),
-            'caption' => (string) data_get($item, 'metadata.caption', ''),
+            'caption' => $block->plain("media.{$i}.metadata.caption"),
         ])
         ->filter(fn (array $item): bool => $item['poster'] !== null || $item['full'] !== null)
         ->values();

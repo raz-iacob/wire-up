@@ -41,10 +41,9 @@ final readonly class BlockSchema
      */
     private function location(Block $block, string $locale): array
     {
-        $content = $block->content ?? [];
         $address = $this->clean($block->text('address', $locale));
-        $phone = mb_trim((string) ($content['phone'] ?? ''));
-        $email = mb_trim((string) ($content['email'] ?? ''));
+        $phone = mb_trim($block->plain('phone'));
+        $email = mb_trim($block->plain('email'));
 
         if ($address === '' && $phone === '' && $email === '') {
             return [];
@@ -65,7 +64,7 @@ final readonly class BlockSchema
             $node['email'] = $email;
         }
 
-        $map = mb_trim((string) ($content['map'] ?? ''));
+        $map = mb_trim($block->plain('map'));
         if (str_starts_with($map, 'http')) {
             $node['hasMap'] = $map;
         }
@@ -80,7 +79,7 @@ final readonly class BlockSchema
     {
         $nodes = [];
 
-        foreach ($this->items($block) as $i => $item) {
+        foreach (array_keys($this->items($block)) as $i) {
             $name = $this->clean($block->text("items.{$i}.name", $locale));
 
             if ($name === '') {
@@ -104,16 +103,14 @@ final readonly class BlockSchema
                 $person['image'] = $photo;
             }
 
-            $socials = is_array($item['socials'] ?? null) ? $item['socials'] : [];
-
-            $email = mb_trim((string) ($socials['email'] ?? ''));
+            $email = mb_trim($block->plain("items.{$i}.socials.email"));
             if ($email !== '') {
                 $person['email'] = $email;
             }
 
             $sameAs = [];
             foreach (['website', 'linkedin', 'x', 'instagram'] as $key) {
-                $url = mb_trim((string) ($socials[$key] ?? ''));
+                $url = mb_trim($block->plain("items.{$i}.socials.{$key}"));
                 if ($url !== '') {
                     $sameAs[] = $url;
                 }
@@ -233,7 +230,7 @@ final readonly class BlockSchema
     {
         $nodes = [];
 
-        foreach ($this->items($block, 'media') as $i => $item) {
+        foreach (array_keys($this->items($block, 'media')) as $i) {
             if ($block->isVideo("media.{$i}")) {
                 continue;
             }
@@ -250,7 +247,7 @@ final readonly class BlockSchema
                 $node['name'] = $alt;
             }
 
-            $caption = mb_trim((string) data_get($item, 'metadata.caption', ''));
+            $caption = mb_trim($block->plain("media.{$i}.metadata.caption"));
             if ($caption !== '') {
                 $node['caption'] = $caption;
             }

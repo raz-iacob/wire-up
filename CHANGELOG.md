@@ -28,7 +28,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Share a draft before it goes live: the page editor gains a "Copy draft link", a signed web address that anyone you send it to can open for 7 days without signing in. Preview links are never indexed by search engines, and the length is configurable.
 - The `render-page` tool can now screenshot a draft as well as a published page, so agents and the AI assistant can see work in progress instead of being told to publish it first.
 - Block content written by an agent or the AI assistant can no longer put working JavaScript on your public pages. Script, iframe and style tags, `onclick`-style attributes and `javascript:` links are now stripped when a block is saved, whoever saved it. Ordinary formatting, classes and anchors are untouched.
-- Fixed a server error on any published page or record where an agent or the AI assistant had written a heading, sponsor link, sponsor tier or button style as a list instead of a piece of text. The block now falls back to its default instead of taking the page down.
+- Fixed server errors on published pages and records where an agent or the AI assistant wrote a block field in the wrong shape — a list where a piece of text belongs (headings, sponsor links and tiers, button styles, phone, e-mail, map, code, filename, captions and more), or a set of named entries where a list of items belongs. Every block now falls back to its default instead of taking the page down, and the whole block library is swept by a test so new blocks are covered too.
 
 ## v0.1.1 — 2026-08-22
 

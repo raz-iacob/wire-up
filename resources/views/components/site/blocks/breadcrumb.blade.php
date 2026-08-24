@@ -24,7 +24,7 @@
             <x-site.breadcrumbs
                 :trail="$trail"
                 :align="$content['align'] ?? 'center'"
-                :separator="$content['separator'] ?? '/'"
+                :separator="$block->plain('separator', '/')"
             />
         </div>
     </section>

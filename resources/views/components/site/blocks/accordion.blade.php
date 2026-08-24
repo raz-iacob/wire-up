@@ -9,7 +9,7 @@
     $hasBg = (bool) ($content['hasBackground'] ?? false);
 
     $items = collect($rawItems)
-        ->map(fn (mixed $item, int $i): array => [
+        ->map(fn (mixed $item, int|string $i): array => [
             'title' => $block->text("items.{$i}.title"),
             'body' => $block->text("items.{$i}.body"),
         ])

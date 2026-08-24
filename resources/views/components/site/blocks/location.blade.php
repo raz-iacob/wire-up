@@ -6,12 +6,12 @@
     $name = $block->text('name');
     $address = $block->text('address');
     $hours = $block->text('hours');
-    $phone = mb_trim((string) ($content['phone'] ?? ''));
-    $email = mb_trim((string) ($content['email'] ?? ''));
+    $phone = mb_trim($block->plain('phone'));
+    $email = mb_trim($block->plain('email'));
     $reverse = (bool) ($content['reverseLayout'] ?? false);
     $hasBg = (bool) ($content['hasBackground'] ?? false);
 
-    $mapRaw = mb_trim((string) ($content['map'] ?? ''));
+    $mapRaw = mb_trim($block->plain('map'));
     $isUrl = str_starts_with($mapRaw, 'http');
     $mapsKey = \App\Services\SettingsService::current()->googleMapsApiKey();
     $mapSrc = match (true) {
