@@ -73,6 +73,10 @@
 
             <flux:spacer />
 
+            <flux:modal.trigger name="admin-search" shortcut="cmd.k">
+                <flux:button variant="subtle" icon="magnifying-glass" square :tooltip="__('Search')" />
+            </flux:modal.trigger>
+
             <flux:dropdown position="bottom" align="end">
                 <flux:profile
                     :avatar="auth()->user()->photo_url"
@@ -127,6 +131,17 @@
         <flux:navbar scrollable class="hidden w-full md:flex">
             @yield('header-content')
             <flux:spacer />
+            <flux:modal.trigger name="admin-search" shortcut="cmd.k">
+                <flux:input
+                    as="button"
+                    variant="filled"
+                    :placeholder="__('Search...')"
+                    icon="magnifying-glass"
+                    kbd="⌘K"
+                    class="max-w-48"
+                />
+            </flux:modal.trigger>
+
             <flux:dropdown position="bottom" align="end">
                 <flux:profile
                     size="sm"
@@ -234,6 +249,10 @@
             }
         })();
     </script>
+
+    @persist('admin-search')
+        <livewire:admin.search />
+    @endpersist
 
     @fluxScripts
 </body>
