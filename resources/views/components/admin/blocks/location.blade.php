@@ -13,7 +13,7 @@
         label="{{ __('Heading') }}"
     />
 
-    <flux:input
+    <x-forms.url-input
         wire:model.lazy="{{ $c }}.map"
         label="{{ __('Map address or embed URL') }}"
         placeholder="{{ __('123 Main St, Springfield') }}"

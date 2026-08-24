@@ -120,7 +120,7 @@
                             <flux:label>{{ __('Social links') }}</flux:label>
                             <div class="grid gap-4 md:grid-cols-2">
                                 @foreach ($socialFields as $socialKey => $socialMeta)
-                                    <flux:input
+                                    <x-forms.url-input
                                         wire:model.lazy="{{ $c }}.items.{{ $i }}.socials.{{ $socialKey }}"
                                         label="{{ $socialMeta['label'] }}"
                                         placeholder="{{ $socialMeta['placeholder'] }}"

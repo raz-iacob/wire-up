@@ -73,11 +73,7 @@
                 placeholder="#contact"
             />
         @else
-            <flux:input
-                wire:model.lazy="{{ $c }}.imageLink.link.value"
-                label="{{ __('URL') }}"
-                placeholder="https://example.com"
-            />
+            <x-forms.url-input wire:model.lazy="{{ $c }}.imageLink.link.value" label="{{ __('URL') }}" />
             <flux:switch
                 wire:model.lazy="{{ $c }}.imageLink.link.newTab"
                 label="{{ __('Open in a new tab') }}"

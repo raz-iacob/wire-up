@@ -94,10 +94,9 @@
                         />
 
                         <div class="grid gap-4 md:grid-cols-2">
-                            <flux:input
+                            <x-forms.url-input
                                 wire:model.lazy="{{ $c }}.items.{{ $i }}.link"
                                 label="{{ __('Link') }}"
-                                placeholder="https://example.com"
                             />
                             <flux:input
                                 wire:model.lazy="{{ $c }}.items.{{ $i }}.tier"

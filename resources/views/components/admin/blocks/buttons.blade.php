@@ -108,10 +108,9 @@
                                 />
                             @else
                                 <div class="flex flex-col gap-3">
-                                    <flux:input
+                                    <x-forms.url-input
                                         wire:model.lazy="{{ $c }}.items.{{ $i }}.link.value"
                                         label="{{ __('URL') }}"
-                                        placeholder="https://example.com"
                                     />
                                     <flux:switch
                                         wire:model.lazy="{{ $c }}.items.{{ $i }}.link.newTab"

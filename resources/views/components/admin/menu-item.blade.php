@@ -143,7 +143,7 @@
                     <div class="sm:col-span-2">
                         <flux:field>
                             <flux:label>{{ __('URL') }}</flux:label>
-                            <flux:input
+                            <x-forms.url-input
                                 wire:model="{{ $base }}.url"
                                 type="text"
                                 placeholder="https://example.com, /about, or #contact"

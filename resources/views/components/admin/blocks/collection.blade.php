@@ -192,11 +192,7 @@
                 />
             @else
                 <div class="flex flex-col gap-3">
-                    <flux:input
-                        wire:model.lazy="{{ $c }}.button.link.value"
-                        label="{{ __('URL') }}"
-                        placeholder="https://example.com"
-                    />
+                    <x-forms.url-input wire:model.lazy="{{ $c }}.button.link.value" label="{{ __('URL') }}" />
                     <flux:switch
                         wire:model.lazy="{{ $c }}.button.link.newTab"
                         label="{{ __('Open in a new tab') }}"

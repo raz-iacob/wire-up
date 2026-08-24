@@ -37,7 +37,7 @@
     </div>
 
     <div x-show="{{ $b }}?.source === 'url'" x-cloak>
-        <flux:input
+        <x-forms.url-input
             wire:model.lazy="{{ $c }}.url"
             label="{{ __('Video URL') }}"
             placeholder="https://www.youtube.com/watch?v=..."

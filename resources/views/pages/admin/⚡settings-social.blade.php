@@ -80,7 +80,7 @@ return new class extends Component
         <div class="space-y-10 md:col-span-3">
             <div class="grid gap-6 sm:grid-cols-2">
                 @foreach ($platforms as $key => $platform)
-                    <flux:input
+                    <x-forms.url-input
                         wire:model="links.{{ $key }}"
                         type="url"
                         label="{{ __($platform['label']) }}"
