@@ -62,6 +62,12 @@ final class SeoService
             if (is_string($image) && $image !== '') {
                 return $image;
             }
+
+            $generated = resolve(OgImageService::class)->url($content, app()->getLocale());
+
+            if ($generated !== null) {
+                return $generated;
+            }
         }
 
         return SettingsService::current()->defaultOgImageUrl();

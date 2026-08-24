@@ -16,4 +16,4 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Services/*.php | .ai/rules/services.md |
 | tests/** | .ai/rules/tests.md |
 | app/Mcp/Tools/** | .ai/rules/tools.md |
-| app/Traits/HasBlocks.php | .ai/rules/traits.md |
+| app/Traits/HasBlocks.php, app/Traits/HasPublishing.php | .ai/rules/traits.md |

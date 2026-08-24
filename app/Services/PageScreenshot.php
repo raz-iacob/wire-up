@@ -27,7 +27,7 @@ final readonly class PageScreenshot
         $command = [
             'npx', 'playwright', 'screenshot',
             '--browser=chromium',
-            '--viewport-size='.(self::VIEWPORTS[$viewport] ?? self::VIEWPORTS['desktop']),
+            '--viewport-size='.$this->viewportSize($viewport),
             '--wait-for-timeout=1500',
         ];
 
@@ -50,6 +50,15 @@ final readonly class PageScreenshot
         File::delete($file);
 
         return $png;
+    }
+
+    private function viewportSize(string $viewport): string
+    {
+        if (preg_match('/^\d{2,5},\d{2,5}$/', $viewport) === 1) {
+            return $viewport;
+        }
+
+        return self::VIEWPORTS[$viewport] ?? self::VIEWPORTS['desktop'];
     }
 
     private function explain(string $output): string

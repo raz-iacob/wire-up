@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\OgImageController;
 use App\Http\Controllers\SessionController;
 use App\Http\Middleware\MarkdownForAgents;
 use App\Http\Middleware\RedirectHomepageSlug;
@@ -39,6 +40,10 @@ Route::group(['prefix' => resolve('localization')->setLocale()], function (): vo
 Route::get('img/{options}/{path}', [ImageController::class, 'show'])
     ->where('path', '.*')
     ->name('image.show');
+
+Route::get('og/{type}/{id}/{locale}.png', [OgImageController::class, 'show'])
+    ->where(['type' => 'page|record', 'id' => '[0-9]+', 'locale' => '[A-Za-z_-]+'])
+    ->name('og.show');
 
 Route::get('robots.txt', function (): Response {
     $body = SettingsService::current()->noindex()

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Traits;
 
 use App\Enums\ContentStatus;
+use App\Jobs\GenerateOgImage;
+use App\Models\Page;
+use App\Services\OgImageService;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -32,6 +35,19 @@ trait HasPublishing
         }
 
         return in_array($locale ?? app()->getLocale(), $this->published_locales, true);
+    }
+
+    protected static function bootHasPublishing(): void
+    {
+        static::saved(function (self $model): void {
+            if ($model->published_locales === [] || ! config()->boolean('wireup.og_images')) {
+                return;
+            }
+
+            dispatch(new GenerateOgImage($model instanceof Page ? 'page' : 'record', (int) $model->id))->afterCommit();
+        });
+
+        static::deleted(fn (self $model) => resolve(OgImageService::class)->forget($model));
     }
 
     /**

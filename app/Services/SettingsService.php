@@ -646,6 +646,27 @@ final class SettingsService
     }
 
     /**
+     * @return array{stack: string, google: string}
+     */
+    public function fontFor(string $slot): array
+    {
+        $key = (string) config("site.{$slot}_font", '') ?: config()->string('theme.default_font');
+
+        if ($key === 'custom') {
+            $custom = mb_trim((string) config("site.{$slot}_font_custom", ''));
+
+            return $custom === ''
+                ? ['stack' => '', 'google' => '']
+                : ['stack' => '"'.$custom.'", sans-serif', 'google' => $custom];
+        }
+
+        return [
+            'stack' => config()->string("theme.fonts.$key.stack", ''),
+            'google' => config()->string("theme.fonts.$key.google", ''),
+        ];
+    }
+
+    /**
      * @return array{key: string, name: string, builtin: bool, display: array{background: bool, position: string, sticky: bool, mobile: string}, items: array<string, array<int, mixed>>}
      */
     private static function emptyBuiltinMenu(string $key): array
@@ -721,27 +742,6 @@ final class SettingsService
             "--color-accent:{$accentColor}",
             "--color-accent-content:{$accentColor}",
             "--color-accent-foreground:{$palette['primary_text']}",
-        ];
-    }
-
-    /**
-     * @return array{stack: string, google: string}
-     */
-    private function fontFor(string $slot): array
-    {
-        $key = (string) config("site.{$slot}_font", '') ?: config()->string('theme.default_font');
-
-        if ($key === 'custom') {
-            $custom = mb_trim((string) config("site.{$slot}_font_custom", ''));
-
-            return $custom === ''
-                ? ['stack' => '', 'google' => '']
-                : ['stack' => '"'.$custom.'", sans-serif', 'google' => $custom];
-        }
-
-        return [
-            'stack' => config()->string("theme.fonts.$key.stack", ''),
-            'google' => config()->string("theme.fonts.$key.google", ''),
         ];
     }
 
