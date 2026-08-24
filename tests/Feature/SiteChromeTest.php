@@ -108,6 +108,26 @@ it('applies the configured logo and navigation sizes in the header', function ()
         ->assertSee('hover:scale-105', false);
 });
 
+it('never underlines a button menu item on hover, whatever the nav hover style', function (): void {
+    setSiteMetadata([
+        'header_nav_hover' => 'underline',
+        'menus' => menusPayload(['header' => ['en' => [
+            ['type' => 'link', 'appearance' => 'link', 'target' => '_self', 'label' => 'About', 'page_id' => null, 'url' => 'https://example.com'],
+            ['type' => 'link', 'appearance' => 'button', 'target' => '_self', 'label' => 'Get started', 'page_id' => null, 'url' => 'https://example.com/start'],
+        ]]]),
+    ]);
+
+    $html = Livewire::test('site.header')->html();
+
+    preg_match('#<a[^>]*>Get started#', $html, $button);
+
+    expect($button[0])->toContain('bg-(--wire-primary-bg)')
+        ->toContain('hover:opacity-90')
+        ->not->toContain('hover:underline');
+
+    expect($html)->toContain('hover:underline');
+});
+
 it('shows the language switcher in the header when more than one locale is active', function (): void {
     Locale::query()->where('code', 'ro')->update(['active' => true]);
     cache()->forget('site-locales');

@@ -24,14 +24,17 @@
                 >{!! $item['icon_svg'] !!}</a>
             @else
                 @php
+                    $isButton = $item['appearance'] === 'button';
+
                     $itemClasses = \Illuminate\Support\Arr::toCssClasses([
                         'font-medium transition',
-                        'rounded-(--wire-radius) px-4 py-2 bg-(--wire-primary-bg) text-(--wire-primary-text)' => $item['appearance'] === 'button',
+                        'rounded-(--wire-radius) px-4 py-2 bg-(--wire-primary-bg) text-(--wire-primary-text)' => $isButton,
                         'text-sm' => $size === 'sm',
                         'text-base' => $size === 'md',
                         'text-lg' => $size === 'lg',
                         'hover:opacity-70' => $hover === 'opacity',
-                        'hover:underline' => $hover === 'underline',
+                        'hover:underline' => $hover === 'underline' && ! $isButton,
+                        'hover:opacity-90' => $hover === 'underline' && $isButton,
                         'hover:scale-105' => $hover === 'scale',
                     ]);
                 @endphp
