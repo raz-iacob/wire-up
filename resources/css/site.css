@@ -108,23 +108,54 @@
     margin-bottom: 0;
 }
 
+main :not(pre) > code {
+    padding: 0.14em 0.42em;
+    border-radius: 0.35rem;
+    background-color: color-mix(in oklab, var(--wire-accent) 12%, transparent);
+    color: color-mix(in oklab, var(--wire-accent) 85%, currentColor);
+    font-family:
+        ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas,
+        "Liberation Mono", monospace;
+    font-size: 0.88em;
+    white-space: nowrap;
+}
+
 .wire-code {
     border-radius: var(--wire-radius, 0.5rem);
     overflow: hidden;
-    background: #0d1117;
+    background: #060b13;
     color: #e6edf3;
-    border: 1px solid #30363d;
+    border: 1px solid color-mix(in oklab, var(--wire-accent) 16%, #30363d);
+    box-shadow: 0 30px 70px -40px rgba(0, 0, 0, 0.9);
     font-size: 0.85rem;
 }
 
 .wire-code-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
     padding: 0.6rem 1rem;
-    border-bottom: 1px solid #30363d;
+    background: color-mix(in oklab, var(--wire-accent) 5%, transparent);
+    border-bottom: 1px solid
+        color-mix(in oklab, var(--wire-accent) 14%, #30363d);
     font-family:
         ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas,
         "Liberation Mono", monospace;
     font-size: 0.78rem;
-    color: #9aa7b4;
+    color: #8ba3bd;
+}
+
+.wire-code-bar::before {
+    content: "";
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-inline-end: 1.85rem;
+    border-radius: 999px;
+    background: #ff5f57;
+    box-shadow:
+        0.85rem 0 0 #febc2e,
+        1.7rem 0 0 #28c840;
 }
 
 .wire-code-pre {

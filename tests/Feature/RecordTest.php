@@ -64,6 +64,15 @@ it('renders a published record detail page', function (): void {
         ->assertSee('The best widget.');
 });
 
+it('tags a record page with its type so site CSS can hook onto it', function (): void {
+    $type = recordType();
+    publishRecord($type, 'hooked', ['title' => ['en' => 'Hooked']]);
+
+    $this->get(route('record', ['recordType' => 'products', 'slug' => 'hooked']))
+        ->assertOk()
+        ->assertSee('data-record="'.$type->key.'"', false);
+});
+
 it('renders the product layout with category, heading, description, price and computed discount', function (): void {
     Storage::fake(config('filesystems.media'));
 

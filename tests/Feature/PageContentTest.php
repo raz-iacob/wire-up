@@ -1721,3 +1721,15 @@ it('does not mark a block heading field as prose, so its size stays the heading 
     expect($wrapper[1])->toContain('--wire-heading-size')
         ->not->toContain('wire-prose');
 });
+
+it('tags every block wrapper with its type so site CSS can hook onto it', function (): void {
+    publishPageWithBlocks('block-hooks', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => ['heading' => ['en' => 'Top of the page']]],
+        ['id' => 'new-2', 'type' => 'rich-text', 'content' => ['body' => ['en' => '<p>Copy</p>']]],
+    ]);
+
+    $this->get(route('page', 'block-hooks'))
+        ->assertOk()
+        ->assertSee('data-block="hero"', false)
+        ->assertSee('data-block="rich-text"', false);
+});

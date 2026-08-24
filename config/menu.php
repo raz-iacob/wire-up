@@ -24,6 +24,10 @@ return [
         'information-circle', 'arrow-right', 'link', 'photo', 'play', 'squares-2x2',
         'list-bullet', 'newspaper', 'briefcase', 'building-office-2', 'shopping-cart',
         'gift', 'flag', 'hashtag', 'beaker', 'code-bracket', 'command-line', 'cpu-chip', 'cloud',
+        'magnifying-glass', 'eye', 'swatch', 'paint-brush', 'arrow-path', 'arrow-down-tray',
+        'inbox', 'speaker-wave', 'film', 'key', 'table-cells', 'squares-plus',
+        'chat-bubble-left-right', 'server-stack', 'document-duplicate', 'credit-card',
+        'check-circle', 'cube', 'adjustments-horizontal', 'language',
     ],
 
     /*

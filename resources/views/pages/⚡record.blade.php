@@ -48,7 +48,7 @@ return new class extends Component
 };
 ?>
 
-<div>
+<div data-record="{{ $record->recordType->key }}">
     @if ($record->recordType->breadcrumbs)
         <div class="mx-auto w-full max-w-(--wire-container) px-(--wire-gutter) pt-10">
             <x-site.breadcrumbs :trail="\App\Services\BreadcrumbService::current()->trail($record)" />

@@ -43,7 +43,7 @@
         align="left"
     />
 
-    <div class="flex flex-col gap-4">
+    <div class="grid gap-4 md:grid-cols-2">
         <flux:select
             wire:model.live="{{ $c }}.imageLink.link.type"
             variant="listbox"
@@ -74,11 +74,13 @@
             />
         @else
             <x-forms.url-input wire:model.lazy="{{ $c }}.imageLink.link.value" label="{{ __('URL') }}" />
-            <flux:switch
-                wire:model.lazy="{{ $c }}.imageLink.link.newTab"
-                label="{{ __('Open in a new tab') }}"
-                align="left"
-            />
+            <div class="md:col-span-2">
+                <flux:switch
+                    wire:model.lazy="{{ $c }}.imageLink.link.newTab"
+                    label="{{ __('Open in a new tab') }}"
+                    align="left"
+                />
+            </div>
         @endif
     </div>
 

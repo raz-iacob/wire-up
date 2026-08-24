@@ -40,6 +40,7 @@
                 && ($block->content['width'] ?? 'full') !== 'container';
         @endphp
         <div
+            data-block="{{ $block->type->value }}"
             @class([
                 'scroll-mt-24' => $anchor !== '',
                 $flushTopClass => $isFullWidthHero && $index > 0,

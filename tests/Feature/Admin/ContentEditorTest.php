@@ -36,6 +36,21 @@ it('offers the heading style picker in every rich-text toolbar', function (): vo
     expect(mb_substr_count($html, 'data-editor="heading"'))->toBeGreaterThan(0);
 });
 
+it('puts the photo link type and its value on one row', function (): void {
+    $html = editor($this->page)
+        ->set('blocks', [
+            'new-a' => ['id' => 'new-a', 'type' => 'photo', 'position' => 0, 'content' => ['imageLink' => ['link' => ['type' => 'url']]]],
+        ])
+        ->html();
+
+    $label = mb_strpos($html, 'Link (optional)');
+    $openingTags = mb_substr($html, 0, (int) $label);
+
+    expect($label)->not->toBeFalse();
+    expect(mb_substr($openingTags, mb_strrpos($openingTags, '<div class="') ?: 0))
+        ->toContain('md:grid-cols-2');
+});
+
 it('renders each block type partial', function (): void {
     editor($this->page)
         ->set('blocks', [
