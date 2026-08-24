@@ -24,16 +24,16 @@
     $headingColor = ($content['headingColor'] ?? null) ?: null;
     $subheadingColor = ($content['subheadingColor'] ?? null) ?: null;
 
-    $styles = ['color:var(--wire-header-text)'];
+    $styles = ['color:var(--wire-hero-text, var(--wire-header-text))'];
 
     if ($type === 'color') {
         $gradient = $bg['gradient'] ?? [];
         $direction = ($gradient['direction'] ?? 'to-b') === 'to-r' ? 'to right' : 'to bottom';
-        $start = ($gradient['start'] ?? null) ?: 'var(--wire-header-bg)';
-        $end = ($gradient['end'] ?? null) ?: 'var(--wire-header-bg)';
+        $start = ($gradient['start'] ?? null) ?: 'var(--wire-hero-bg, var(--wire-header-bg))';
+        $end = ($gradient['end'] ?? null) ?: 'var(--wire-hero-bg, var(--wire-header-bg))';
         $styles[] = "background-image:linear-gradient({$direction}, {$start}, {$end})";
     } else {
-        $styles[] = 'background-color:var(--wire-header-bg)';
+        $styles[] = 'background-color:var(--wire-hero-bg, var(--wire-header-bg))';
     }
 
     $defaultBg = ['ctaPrimary' => 'var(--wire-primary-bg)', 'ctaSecondary' => 'var(--wire-secondary-bg)'];

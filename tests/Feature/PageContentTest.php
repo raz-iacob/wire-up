@@ -271,8 +271,8 @@ it('falls back to theme colors for an inherited hero gradient', function (): voi
 
     $this->get(route('page', 'inherit-hero'))
         ->assertOk()
-        ->assertSee('linear-gradient(to bottom, var(--wire-header-bg), var(--wire-header-bg))', false)
-        ->assertSee('color:var(--wire-header-text)', false);
+        ->assertSee('linear-gradient(to bottom, var(--wire-hero-bg, var(--wire-header-bg)), var(--wire-hero-bg, var(--wire-header-bg)))', false)
+        ->assertSee('color:var(--wire-hero-text, var(--wire-header-text))', false);
 });
 
 it('applies separate heading and subheading colors', function (): void {

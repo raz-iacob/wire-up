@@ -545,39 +545,48 @@ return new class extends Component
                     </div>
                 </div>
 
-                <div data-test="preview-body" class="px-4 py-6" :style="`background:${c.background}; color:${c.text}`">
-                    <div class="space-y-3 text-center">
-                        <h1 class="font-bold" :style="`font-family:${headingFont}; font-size:${headingSize}`">
-                            {{ __('Build something great') }}
-                        </h1>
-                        <p
-                            class="mx-auto max-w-xs"
-                            :style="`color:${c.muted}; font-family:${bodyFont}; font-size:${bodySize}`"
-                        >
-                            {{ __('A clean starting point for your next project, themed to your brand.') }}
-                        </p>
-                        <div class="flex items-center justify-center gap-2 pt-2" :style="`font-family:${bodyFont}`">
-                            <span
-                                class="px-2 py-1 text-[10px] font-medium"
-                                :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`"
-                            >{{ __('Get started') }}</span>
-                            <span
-                                class="px-2 py-1 text-[10px] font-medium"
-                                :style="`background:${c.secondary_bg}; color:${c.secondary_text}; border:${borderWidth} solid ${c.secondary_border}; border-radius:${radius}`"
-                            >{{ __('Learn more') }}</span>
-                        </div>
-                        <div class="mx-auto flex max-w-xs items-center gap-2 pt-2" :style="`font-family:${bodyFont}`">
-                            <span
-                                class="flex-1 px-2 py-1 text-left text-[10px]"
-                                :style="`background:${c.input_bg}; color:${c.input_text}; border:${borderWidth} solid ${c.input_border}; border-radius:${radius}`"
-                            >name@email.com</span>
-                            <span
-                                class="px-2 py-1 text-[10px] font-medium"
-                                :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`"
-                            >{{ __('Subscribe') }}</span>
+                <div data-test="preview-body" class="pb-6" :style="`background:${c.background}; color:${c.text}`">
+                    <div
+                        data-test="preview-hero"
+                        class="mb-6 px-4 py-6"
+                        :style="`background:${c.hero_bg}; color:${c.hero_text}`"
+                    >
+                        <div class="space-y-3 text-center">
+                            <h1 class="font-bold" :style="`font-family:${headingFont}; font-size:${headingSize}`">
+                                {{ __('Build something great') }}
+                            </h1>
+                            <p
+                                class="mx-auto max-w-xs opacity-90"
+                                :style="`font-family:${bodyFont}; font-size:${bodySize}`"
+                            >
+                                {{ __('A clean starting point for your next project, themed to your brand.') }}
+                            </p>
+                            <div class="flex items-center justify-center gap-2 pt-2" :style="`font-family:${bodyFont}`">
+                                <span
+                                    class="px-2 py-1 text-[10px] font-medium"
+                                    :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`"
+                                >{{ __('Get started') }}</span>
+                                <span
+                                    class="px-2 py-1 text-[10px] font-medium"
+                                    :style="`background:${c.secondary_bg}; color:${c.secondary_text}; border:${borderWidth} solid ${c.secondary_border}; border-radius:${radius}`"
+                                >{{ __('Learn more') }}</span>
+                            </div>
+                            <div
+                                class="mx-auto flex max-w-xs items-center gap-2 pt-2"
+                                :style="`font-family:${bodyFont}`"
+                            >
+                                <span
+                                    class="flex-1 px-2 py-1 text-left text-[10px]"
+                                    :style="`background:${c.input_bg}; color:${c.input_text}; border:${borderWidth} solid ${c.input_border}; border-radius:${radius}`"
+                                >name@email.com</span>
+                                <span
+                                    class="px-2 py-1 text-[10px] font-medium"
+                                    :style="`background:${c.primary_bg}; color:${c.primary_text}; border:${borderWidth} solid ${c.primary_border}; border-radius:${radius}`"
+                                >{{ __('Subscribe') }}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-3 pt-6">
+                    <div class="grid grid-cols-3 gap-3 px-4">
                         @for ($i = 0; $i < 3; $i++)
                             <div
                                 class="space-y-1.5 p-3 text-left"
