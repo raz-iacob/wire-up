@@ -23,6 +23,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Fixed a crash on any page holding a collection or search block that an agent or the AI assistant created without choosing a layout — the page returned a server error instead of rendering.
 - A new "Previous / Next" block links a record to the ones published before and after it, so a series of guides or posts reads in order without hand-written links. It can stay inside the record's category, and shows nothing on a page.
 - The video block is no longer limited to three aspect ratios: it can now take the shape of the uploaded file itself, or any ratio you type such as 16:10, so a recording no longer has to be cropped to fit.
+- Agents and the AI assistant can see what is waiting in the server import folder with a new `list-import-files` tool, instead of having to be told each file name before `upload-media` will work.
 
 ## v0.1.1 — 2026-08-22
 

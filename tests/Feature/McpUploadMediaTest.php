@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Mcp\Servers\WireUpServer;
+use App\Mcp\Tools\ListImportFilesTool;
 use App\Mcp\Tools\UploadMediaTool;
 use App\Models\Media;
+use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
@@ -96,4 +98,50 @@ it('advertises upload-media with its schema', function (): void {
     expect($tool['name'])->toBe('upload-media')
         ->and($tool['inputSchema']['required'])->toBe(['path'])
         ->and($tool['inputSchema']['properties'])->toHaveKeys(['path', 'alt']);
+});
+
+it('lists the files waiting in the import folder, nested ones included', function (): void {
+    importable('logo.svg');
+    importable('brand/hero.png');
+    importable('.hidden-file');
+
+    WireUpServer::tool(ListImportFilesTool::class, [])
+        ->assertOk()
+        ->assertSee('logo.svg')
+        ->assertSee('brand/hero.png')
+        ->assertDontSee('hidden-file');
+});
+
+it('filters the import listing by extension with or without a leading dot', function (string $extension): void {
+    importable('logo.svg');
+    importable('photo.png');
+
+    WireUpServer::tool(ListImportFilesTool::class, ['extension' => $extension])
+        ->assertOk()
+        ->assertSee('photo.png')
+        ->assertDontSee('logo.svg');
+})->with(['png', '.png', 'PNG']);
+
+it('says the import folder is empty rather than returning a bare list', function (): void {
+    WireUpServer::tool(ListImportFilesTool::class, [])
+        ->assertOk()
+        ->assertSee('The import folder is empty');
+});
+
+it('caps a very large import folder and says how many it left out', function (): void {
+    foreach (range(1, 205) as $index) {
+        importable(sprintf('file-%03d.txt', $index));
+    }
+
+    WireUpServer::tool(ListImportFilesTool::class, [])
+        ->assertOk()
+        ->assertSee('Showing the first 200 of 205 files')
+        ->assertSee('file-001.txt')
+        ->assertDontSee('file-205.txt');
+});
+
+it('advertises the optional extension filter in its schema', function (): void {
+    $schema = (new ListImportFilesTool)->schema(new JsonSchemaTypeFactory);
+
+    expect($schema)->toHaveKey('extension');
 });

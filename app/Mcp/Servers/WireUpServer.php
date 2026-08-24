@@ -24,6 +24,7 @@ use App\Mcp\Tools\ImportMediaFromUrlTool;
 use App\Mcp\Tools\ImportPexelsMediaTool;
 use App\Mcp\Tools\ListCategoriesTool;
 use App\Mcp\Tools\ListContentTypesTool;
+use App\Mcp\Tools\ListImportFilesTool;
 use App\Mcp\Tools\ListMediaTool;
 use App\Mcp\Tools\ListPagesTool;
 use App\Mcp\Tools\ListRecordsTool;
@@ -130,6 +131,7 @@ final class WireUpServer extends Server
         CreateCategoryTool::class,
         ListMediaTool::class,
         ImportMediaFromUrlTool::class,
+        ListImportFilesTool::class,
         UploadMediaTool::class,
         DeleteMediaTool::class,
         RenderPageTool::class,
