@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\BlockType;
 use App\Enums\ContentStatus;
 use App\Enums\MediaType;
+use App\Models\Category;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Record;
@@ -332,6 +333,42 @@ it('renders a translatable boolean badge from the active locale value', function
         ->assertOk()
         ->assertSee('Last One')
         ->assertSee('Clearance');
+});
+
+it('renders a related collection on a record page and leaves that record out', function (): void {
+    $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides', 'fields' => []]);
+    $category = Category::factory()->create();
+
+    $current = collectionRecord($type, 'Install Wire-Up');
+    $sibling = collectionRecord($type, 'Build a page');
+    $current->categories()->attach($category);
+    $sibling->categories()->attach($category);
+
+    $current->updateBlocks([
+        ['id' => 'new-1', 'type' => BlockType::COLLECTION->value, 'content' => [
+            'source' => 'related',
+            'heading' => ['en' => '<p>Related guides</p>'],
+        ]],
+    ]);
+
+    $this->get($current->getUrl())
+        ->assertOk()
+        ->assertSee('Related guides')
+        ->assertSee('Build a page');
+});
+
+it('renders nothing for a related collection sitting on a page', function (): void {
+    $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides', 'fields' => []]);
+    collectionRecord($type, 'Build a page');
+
+    $slug = collectionPage($type->id, [
+        'source' => 'related',
+        'heading' => ['en' => '<p>Related guides</p>'],
+    ]);
+
+    $this->get(route('page', $slug))
+        ->assertOk()
+        ->assertDontSee('Build a page');
 });
 
 it('renders a collection block whose content omits the layout key', function (): void {

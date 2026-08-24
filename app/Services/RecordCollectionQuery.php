@@ -17,9 +17,9 @@ final class RecordCollectionQuery
      * @param  array<string, mixed>  $content
      * @return Collection<int, Record>
      */
-    public function resolve(array $content): Collection
+    public function resolve(array $content, ?Record $current = null): Collection
     {
-        $recordTypeId = $this->recordTypeId($content);
+        $recordTypeId = $this->recordTypeId($content, $current);
 
         if ($recordTypeId === null) {
             return new Collection;
@@ -31,7 +31,7 @@ final class RecordCollectionQuery
 
         $limit = max(1, min(100, (int) ($content['limit'] ?? 12)));
 
-        return $this->baseQuery($recordTypeId, $content)
+        return $this->baseQuery($recordTypeId, $content, $current)
             ->latest('published_at')
             ->limit($limit)
             ->get();
@@ -41,11 +41,11 @@ final class RecordCollectionQuery
      * @param  array<string, mixed>  $content
      * @return LengthAwarePaginator<int, Record>
      */
-    public function paginate(array $content, int $perPage, int $page = 1): LengthAwarePaginator
+    public function paginate(array $content, int $perPage, int $page = 1, ?Record $current = null): LengthAwarePaginator
     {
         $perPage = max(1, min(500, $perPage));
         $page = max(1, $page);
-        $recordTypeId = $this->recordTypeId($content);
+        $recordTypeId = $this->recordTypeId($content, $current);
 
         if ($recordTypeId === null) {
             return Record::query()->whereRaw('1 = 0')->paginate($perPage, ['*'], 'page', $page);
@@ -63,7 +63,7 @@ final class RecordCollectionQuery
             );
         }
 
-        return $this->baseQuery($recordTypeId, $content)
+        return $this->baseQuery($recordTypeId, $content, $current)
             ->latest('published_at')
             ->paginate($perPage, ['*'], 'page', $page);
     }
@@ -71,8 +71,18 @@ final class RecordCollectionQuery
     /**
      * @param  array<string, mixed>  $content
      */
-    private function recordTypeId(array $content): ?int
+    private function recordTypeId(array $content, ?Record $current = null): ?int
     {
+        if ($this->source($content) === 'related') {
+            if (! $current instanceof Record) {
+                return null;
+            }
+
+            return is_numeric($content['recordTypeId'] ?? null)
+                ? (int) $content['recordTypeId']
+                : $current->record_type_id;
+        }
+
         return is_numeric($content['recordTypeId'] ?? null) ? (int) $content['recordTypeId'] : null;
     }
 
@@ -81,7 +91,7 @@ final class RecordCollectionQuery
      */
     private function source(array $content): string
     {
-        return in_array($content['source'] ?? null, ['latest', 'manual', 'category'], true)
+        return in_array($content['source'] ?? null, ['latest', 'manual', 'category', 'related'], true)
             ? $content['source']
             : 'latest';
     }
@@ -90,12 +100,22 @@ final class RecordCollectionQuery
      * @param  array<string, mixed>  $content
      * @return Builder<Record>
      */
-    private function baseQuery(int $recordTypeId, array $content): Builder
+    private function baseQuery(int $recordTypeId, array $content, ?Record $current = null): Builder
     {
         $query = Record::query()
             ->where('record_type_id', $recordTypeId)
             ->publishedInLocale()
             ->with(['recordType', 'media', 'slugs', 'translations']);
+
+        if ($this->source($content) === 'related' && $current instanceof Record) {
+            $query->whereKeyNot($current->getKey());
+
+            $categoryIds = $current->categories->pluck('id')->all();
+
+            if ($categoryIds !== []) {
+                $query->whereHas('categories', fn (BuilderContract $categories): BuilderContract => $categories->whereIn('categories.id', $categoryIds));
+            }
+        }
 
         if ($this->source($content) === 'category') {
             $categoryId = is_numeric($content['categoryId'] ?? null) ? (int) $content['categoryId'] : null;

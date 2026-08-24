@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Record;
 use App\Services\RecordCollectionQuery;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
@@ -24,6 +25,8 @@ return new class extends Component
      */
     public array $content = [];
 
+    public ?int $currentRecordId = null;
+
     public string $heading = '';
 
     public ?string $buttonUrl = null;
@@ -35,7 +38,7 @@ return new class extends Component
     public int $visiblePages = 1;
 
     /**
-     * @return LengthAwarePaginator<int, App\Models\Record>
+     * @return LengthAwarePaginator<int, Record>
      */
     #[Computed]
     public function records(): LengthAwarePaginator
@@ -46,6 +49,7 @@ return new class extends Component
             $this->content,
             $this->mode === 'infinite' ? $perPage * $this->visiblePages : $perPage,
             $this->mode === 'infinite' ? 1 : $this->getPage(),
+            $this->currentRecordId === null ? null : Record::query()->find($this->currentRecordId),
         );
     }
 

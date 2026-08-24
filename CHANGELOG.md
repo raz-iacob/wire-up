@@ -19,6 +19,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Agents and the AI assistant can screenshot a published page, record or path at desktop, tablet or mobile size with the new `render-page` tool, so they can see their work instead of guessing. Needs a headless browser on the server; the error explains how to install one.
 - Feature cards can now show an icon instead of an image — a choice of 48 built-in icons per card, sized by the block's image height and coloured to match the card text. The block always promised "an image or icon"; only the image half existed.
 - The photo block gains a "Frame the image" switch — a hairline border in your accent colour and a soft drop shadow that lifts screenshots and product shots off the page, without hand-written CSS.
+- The collection block gains a "Related" option: on a record it lists other records sharing a category with it, newest first, leaving the current one out. On a page it shows nothing. Saves hand-picking a list per record.
 - Fixed a crash on any page holding a collection or search block that an agent or the AI assistant created without choosing a layout — the page returned a server error instead of rendering.
 
 ## v0.1.1 — 2026-08-22

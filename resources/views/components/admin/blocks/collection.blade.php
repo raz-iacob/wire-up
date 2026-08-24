@@ -38,7 +38,23 @@
         <flux:radio value="latest" label="{{ __('Latest') }}" />
         <flux:radio value="category" label="{{ __('By category') }}" />
         <flux:radio value="manual" label="{{ __('Hand-picked') }}" />
+        <flux:radio value="related" label="{{ __('Related') }}" />
     </flux:radio.group>
+
+    <div x-show="{{ $b }}?.source === 'related'" x-cloak class="flex flex-col gap-4">
+        <flux:callout variant="secondary" icon="information-circle">
+            {{ __('Shows records sharing a category with the record this block sits on, newest first, leaving that record out. On a page it shows nothing. Leave the content type empty to stay with the record\'s own type.') }}
+        </flux:callout>
+        <div class="grid gap-4 md:grid-cols-2">
+            <flux:input
+                type="number"
+                min="1"
+                max="100"
+                wire:model.live="{{ $c }}.limit"
+                label="{{ __('Maximum records') }}"
+            />
+        </div>
+    </div>
 
     <div x-show="{{ $b }}?.source === 'latest'" x-cloak class="grid gap-4 md:grid-cols-2">
         <flux:input

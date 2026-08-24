@@ -1,7 +1,8 @@
-@props(['block'])
+@props(['block', 'page' => null])
 
 @php
     $content = $block->content ?? [];
+    $currentRecord = $page instanceof \App\Models\Record ? $page : null;
     $hasBg = (bool) ($content['hasBackground'] ?? false);
     $layout = in_array($content['layout'] ?? 'grid', ['grid', 'list', 'carousel'], true) ? ($content['layout'] ?? 'grid') : 'grid';
     $columns = (int) ($content['columns'] ?? 3);
@@ -29,6 +30,7 @@
         :mode="$pagination"
         :pad="$pad ?? 'py-16'"
         :content="$content"
+        :current-record-id="$currentRecord?->getKey()"
         :heading="$heading"
         :button-url="$buttonUrl"
         :button-text="$buttonText"
@@ -37,7 +39,7 @@
     />
 @else
     @php
-        $records = resolve(\App\Services\RecordCollectionQuery::class)->resolve($content);
+        $records = resolve(\App\Services\RecordCollectionQuery::class)->resolve($content, $currentRecord);
         $fieldKeys = array_values(array_filter((array) ($content['fields'] ?? []), 'is_string'));
         $displayFields = $records->first()?->recordType?->pickFields($fieldKeys) ?? [];
     @endphp

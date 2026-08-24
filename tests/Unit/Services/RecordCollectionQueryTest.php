@@ -158,3 +158,81 @@ it('returns an empty paginator for a category source with no category', function
 
     expect($paginator->total())->toBe(0);
 });
+
+it('lists related records sharing a category, newest first, without the current record', function (): void {
+    $type = collectionType();
+    $shared = Category::factory()->create();
+    $other = Category::factory()->create();
+
+    $current = publishedCollectionRecord($type);
+    $current->categories()->attach($shared);
+
+    $older = publishedCollectionRecord($type, ['published_at' => now()->subDays(4)]);
+    $older->categories()->attach($shared);
+
+    $newer = publishedCollectionRecord($type, ['published_at' => now()->subDays(2)]);
+    $newer->categories()->attach($shared);
+
+    $unrelated = publishedCollectionRecord($type);
+    $unrelated->categories()->attach($other);
+
+    $result = (new RecordCollectionQuery)->resolve(['source' => 'related'], $current);
+
+    expect($result->pluck('id')->all())->toBe([$newer->id, $older->id]);
+});
+
+it('returns nothing for a related collection when there is no current record', function (): void {
+    $type = collectionType();
+    publishedCollectionRecord($type);
+
+    expect((new RecordCollectionQuery)->resolve(['source' => 'related', 'recordTypeId' => $type->id]))->toBeEmpty();
+});
+
+it('falls back to the current record type for a related collection with no categories', function (): void {
+    $type = collectionType();
+    $current = publishedCollectionRecord($type);
+    $sibling = publishedCollectionRecord($type);
+
+    $result = (new RecordCollectionQuery)->resolve(['source' => 'related'], $current);
+
+    expect($result->pluck('id')->all())->toBe([$sibling->id]);
+});
+
+it('honours an explicit record type on a related collection', function (): void {
+    $type = collectionType();
+    $otherType = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides', 'fields' => []]);
+    $shared = Category::factory()->create();
+
+    $current = publishedCollectionRecord($type);
+    $current->categories()->attach($shared);
+
+    $sameType = publishedCollectionRecord($type);
+    $sameType->categories()->attach($shared);
+
+    $crossType = publishedCollectionRecord($otherType);
+    $crossType->categories()->attach($shared);
+
+    $result = (new RecordCollectionQuery)->resolve(
+        ['source' => 'related', 'recordTypeId' => $otherType->id],
+        $current,
+    );
+
+    expect($result->pluck('id')->all())->toBe([$crossType->id]);
+});
+
+it('paginates a related collection', function (): void {
+    $type = collectionType();
+    $shared = Category::factory()->create();
+
+    $current = publishedCollectionRecord($type);
+    $current->categories()->attach($shared);
+
+    foreach (range(1, 3) as $day) {
+        publishedCollectionRecord($type, ['published_at' => now()->subDays($day)])->categories()->attach($shared);
+    }
+
+    $result = (new RecordCollectionQuery)->paginate(['source' => 'related'], 2, 1, $current);
+
+    expect($result->total())->toBe(3)
+        ->and($result->items())->toHaveCount(2);
+});
