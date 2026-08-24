@@ -1058,3 +1058,36 @@ it('offers a shareable draft link on the editor, but only while the page is unpu
     Livewire::test('pages::admin.pages-edit', ['page' => $live])
         ->assertDontSee('Copy draft link');
 });
+
+it('names the field in plain words when a published page is missing its title', function (): void {
+    $page = Page::factory()->create([
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'metadata' => ['published_locales' => ['en']],
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'needs-a-title']);
+
+    $errors = editor($page)->set('title.en', '')->call('update')->errors()->all();
+
+    expect($errors)->toContain('The title field is required.')
+        ->and($errors)->not->toContain('The title.en field is required.');
+});
+
+it('names the web address and description in plain words too', function (): void {
+    $page = Page::factory()->create([
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'metadata' => ['published_locales' => ['en']],
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'plain-words']);
+
+    $errors = editor($page)
+        ->set('slugs.en', '')
+        ->set('description.en', str_repeat('a', 200))
+        ->call('update')
+        ->errors()
+        ->all();
+
+    expect($errors)->toContain('The web address field is required.')
+        ->and(collect($errors)->filter(fn (string $error): bool => str_contains($error, '.en')))->toBeEmpty();
+});

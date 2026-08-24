@@ -7,6 +7,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Fixed the admin sometimes loading with its interactive parts dead on a first visit — most visibly Settings → Design opening with an empty "Edit image crop" box over the page.
 - The admin no longer assumes dark before its stylesheet decides, so the very first paint matches your device setting rather than briefly flashing dark. A theme chosen on your account still wins.
 - Validation errors, sign-in messages and password-reset notices now read as real sentences. They were showing internal keys such as "validation.required" in the admin, the terminal and to connected agents.
+- Page editor validation now names the field in plain words — "The title field is required" rather than "The title.en field is required". The record editor already did this.
 - `wireup:admin` now takes `--name`, `--email` and `--password`, so an admin can be created from a script or a fresh-install routine without answering the prompts. Any detail you leave out is still asked for.
 - Settings → Translations gains a "Form messages" group, so a site in another language can translate the wording of form errors — "is required", "must be a valid email address" and the rest — instead of being stuck with English.
 - The admin stays usable while an update runs: Settings → Updates now shows live progress instead of the "Down for maintenance" page.

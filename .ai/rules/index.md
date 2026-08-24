@@ -15,4 +15,5 @@ Before planning or editing, find the row whose globs match the file's path and r
 | resources/views/pages/** | .ai/rules/pages.md |
 | app/Services/*.php | .ai/rules/services.md |
 | tests/** | .ai/rules/tests.md |
+| app/Mcp/Tools/** | .ai/rules/tools.md |
 | app/Traits/HasBlocks.php | .ai/rules/traits.md |

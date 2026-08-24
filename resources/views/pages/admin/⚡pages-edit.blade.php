@@ -194,6 +194,8 @@ return new class extends Component
             'categories.*' => ['integer', Rule::exists('categories', 'id')],
         ];
 
+        $localeAttributes = [];
+
         foreach (array_keys($this->activeLocales) as $locale) {
             $isLive = in_array($locale, $this->publishedLocales, true);
 
@@ -205,6 +207,10 @@ return new class extends Component
                             ->where('sluggable_type', 'page');
                     });
                 });
+
+            $localeAttributes["title.$locale"] = __('title');
+            $localeAttributes["description.$locale"] = __('description');
+            $localeAttributes["slugs.$locale"] = __('web address');
 
             $rules["title.$locale"] = $isLive ? ['required', 'string', 'min:3'] : ['nullable', 'string'];
             $rules["description.$locale"] = ['nullable', 'string', 'max:160'];
@@ -221,6 +227,7 @@ return new class extends Component
         ];
 
         $attributes = [
+            ...$localeAttributes,
             'publishedLocales.*' => __('language'),
             'published_at' => __('scheduled date'),
             'layout.customCss' => __('custom CSS'),

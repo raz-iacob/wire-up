@@ -9,11 +9,14 @@ use App\Ai\Tools\DraftOnlyTool;
 use App\Ai\Tools\McpResourceTool;
 use App\Enums\ContentStatus;
 use App\Mcp\Resources\BlockTypesResource;
+use App\Mcp\Servers\WireUpServer;
 use App\Mcp\Tools\CreatePageTool;
 use App\Mcp\Tools\GetPageTool;
 use App\Mcp\Tools\PublishPageTool;
 use App\Mcp\Tools\PublishRecordTool;
 use App\Models\Page;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Tools\McpServerTool;
@@ -144,4 +147,44 @@ it('drops primitives marked HiddenFromAssistant while keeping the rest', functio
     ]);
 
     expect($visible->values()->all())->toEqual([CreatePageTool::class, GetPageTool::class]);
+});
+
+it('exposes only the reviewed tool surface to the assistant', function (): void {
+    $visible = SiteAssistant::visible(WireUpServer::toolClasses())
+        ->map(fn (string $class): string => resolve($class)->name())
+        ->sort()
+        ->values()
+        ->all();
+
+    expect($visible)->toBe([
+        'create-category', 'create-content-type', 'create-menu', 'create-page',
+        'create-record', 'delete-media', 'delete-page', 'delete-record',
+        'get-content-strings', 'get-interface-translations', 'get-menus', 'get-page',
+        'get-record', 'get-settings', 'import-media-from-url', 'import-pexels-media',
+        'list-categories', 'list-content-types', 'list-import-files', 'list-media',
+        'list-pages', 'list-records', 'publish-page', 'publish-record',
+        'read-webpage', 'render-page', 'scaffold-site', 'search-pexels',
+        'update-content-strings', 'update-content-type', 'update-design', 'update-identity',
+        'update-interface-translations', 'update-menu', 'update-page', 'update-page-blocks',
+        'update-record', 'update-social', 'upload-media',
+    ]);
+});
+
+it('keeps accounts, roles and integration credentials away from the assistant', function (): void {
+    $forbidden = [
+        User::class, Role::class,
+        'ai_api_key', 'google_analytics_credentials', 'google_maps_api_key',
+        'mail_password', 'pexels_api_key', 'slack_webhook_url',
+    ];
+
+    $exposed = SiteAssistant::visible(WireUpServer::toolClasses())
+        ->mapWithKeys(function (string $class) use ($forbidden): array {
+            $source = (string) file_get_contents((string) new ReflectionClass($class)->getFileName());
+            $hits = array_values(array_filter($forbidden, fn (string $needle): bool => str_contains($source, $needle)));
+
+            return $hits === [] ? [] : [$class => $hits];
+        })
+        ->all();
+
+    expect($exposed)->toBe([]);
 });
