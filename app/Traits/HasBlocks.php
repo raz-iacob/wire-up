@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Traits;
 
 use App\Models\Block;
+use App\Services\BlockHtmlSanitizer;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
@@ -52,7 +53,7 @@ trait HasBlocks
             $attributes = [
                 'type' => $block['type'],
                 'position' => $position,
-                'content' => $block['content'] ?? [],
+                'content' => BlockHtmlSanitizer::forBlock($block['type'], $block['content'] ?? []),
             ];
 
             if (! isset($block['id']) || Str::startsWith($block['id'], 'new-')) {

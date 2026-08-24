@@ -27,6 +27,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Deleting a page, record or media file through an outside agent such as Claude Desktop now has to be confirmed in the call itself, rather than going through immediately. The in-admin assistant is unchanged — it still asks you to approve each deletion in the chat.
 - Share a draft before it goes live: the page editor gains a "Copy draft link", a signed web address that anyone you send it to can open for 7 days without signing in. Preview links are never indexed by search engines, and the length is configurable.
 - The `render-page` tool can now screenshot a draft as well as a published page, so agents and the AI assistant can see work in progress instead of being told to publish it first.
+- Block content written by an agent or the AI assistant can no longer put working JavaScript on your public pages. Script, iframe and style tags, `onclick`-style attributes and `javascript:` links are now stripped when a block is saved, whoever saved it. Ordinary formatting, classes and anchors are untouched.
 
 ## v0.1.1 — 2026-08-22
 

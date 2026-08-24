@@ -12,5 +12,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | resources/views/layouts/** | .ai/rules/layouts.md |
 | app/Mail/** | .ai/rules/mail.md |
 | app/Mcp/** | .ai/rules/mcp.md |
+| resources/views/pages/** | .ai/rules/pages.md |
 | app/Services/*.php | .ai/rules/services.md |
 | tests/** | .ai/rules/tests.md |
+| app/Traits/HasBlocks.php | .ai/rules/traits.md |
