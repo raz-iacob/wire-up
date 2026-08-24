@@ -659,6 +659,7 @@ it('renders the video block editor fields', function (): void {
         ->assertSee('Link / embed')
         ->assertSee('Poster image')
         ->assertSee('Aspect ratio')
+        ->assertSee('Custom ratio')
         ->assertSee('Autoplay (muted)')
         ->assertSee('Show controls');
 });

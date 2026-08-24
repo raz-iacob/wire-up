@@ -6,7 +6,7 @@
     $intro = $block->text('intro');
     $hasBg = (bool) ($content['hasBackground'] ?? false);
     $aspect = $content['aspect'] ?? '16:9';
-    $aspect = in_array($aspect, ['16:9', '9:16', '4:3'], true) ? $aspect : '16:9';
+    $aspect = in_array($aspect, ['auto', '16:9', '9:16', '4:3', 'custom'], true) ? $aspect : '16:9';
     $autoplay = (bool) ($content['autoplay'] ?? false);
     $loop = (bool) ($content['loop'] ?? false);
     $muted = $autoplay || (bool) ($content['muted'] ?? false);
@@ -18,9 +18,22 @@
     $heading = strip_tags($heading) !== '' ? $heading : '';
     $hasHeading = $heading !== '' || strip_tags($intro) !== '';
 
-    $aspectClass = match ($aspect) {
-        '9:16' => 'aspect-[9/16] mx-auto w-full max-w-sm',
-        '4:3' => 'aspect-[4/3]',
+    $ratio = null;
+
+    if ($aspect === 'auto') {
+        $videoWidth = (int) data_get($content, 'video.width');
+        $videoHeight = (int) data_get($content, 'video.height');
+        $ratio = $videoWidth > 0 && $videoHeight > 0 ? [$videoWidth, $videoHeight] : null;
+    } elseif ($aspect === 'custom' && preg_match('/^\s*(\d{1,5})\s*[:\/]\s*(\d{1,5})\s*$/', (string) ($content['customAspect'] ?? ''), $parts) === 1) {
+        $ratio = (int) $parts[1] > 0 && (int) $parts[2] > 0 ? [(int) $parts[1], (int) $parts[2]] : null;
+    }
+
+    $aspectStyle = $ratio === null ? null : "aspect-ratio: {$ratio[0]} / {$ratio[1]}";
+
+    $aspectClass = match (true) {
+        $ratio !== null => $ratio[1] > $ratio[0] ? 'mx-auto w-full max-w-sm' : '',
+        $aspect === '9:16' => 'aspect-[9/16] mx-auto w-full max-w-sm',
+        $aspect === '4:3' => 'aspect-[4/3]',
         default => 'aspect-video',
     };
 
@@ -88,7 +101,10 @@
         @endif
 
         @if ($embed !== null)
-            <div class="{{ $aspectClass }} overflow-hidden rounded-(--wire-radius) bg-black shadow-sm">
+            <div
+                class="{{ $aspectClass }} overflow-hidden rounded-(--wire-radius) bg-black shadow-sm"
+                @if ($aspectStyle) style="{{ $aspectStyle }}" @endif
+            >
                 @if ($embed['kind'] === 'iframe')
                     <iframe
                         src="{{ $iframeSrc }}"

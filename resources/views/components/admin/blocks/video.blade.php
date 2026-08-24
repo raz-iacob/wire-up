@@ -59,7 +59,22 @@
         <flux:radio value="16:9" label="{{ __('16:9') }}" />
         <flux:radio value="9:16" label="{{ __('9:16') }}" />
         <flux:radio value="4:3" label="{{ __('4:3') }}" />
+        <flux:radio value="auto" label="{{ __('Auto') }}" />
+        <flux:radio value="custom" label="{{ __('Custom') }}" />
     </flux:radio.group>
+
+    <div x-show="{{ $b }}?.aspect === 'auto'" x-cloak>
+        <flux:text variant="subtle">{{ __('Uses the uploaded file\'s own dimensions. Falls back to 16:9 for a link or a file with none.') }}</flux:text>
+    </div>
+
+    <div x-show="{{ $b }}?.aspect === 'custom'" x-cloak class="grid gap-4 md:grid-cols-2">
+        <flux:input
+            wire:model.lazy="{{ $c }}.customAspect"
+            label="{{ __('Custom ratio') }}"
+            placeholder="16:10"
+            note="{{ __('Width and height, e.g. 16:10. Falls back to 16:9 if it is not a pair of numbers.') }}"
+        />
+    </div>
 
     <div class="flex flex-col gap-4">
         <flux:switch wire:model.live="{{ $c }}.autoplay" label="{{ __('Autoplay (muted)') }}" align="left" />

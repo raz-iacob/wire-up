@@ -732,6 +732,82 @@ it('plays a direct video url natively and honours the vertical aspect ratio', fu
         ->assertSee('aspect-[9/16]', false);
 });
 
+it('derives the video aspect ratio from the uploaded file', function (): void {
+    publishPageWithBlocks('vid-auto', [
+        ['id' => 'new-1', 'type' => 'video', 'content' => [
+            'source' => 'upload',
+            'video' => ['source' => 'media/clip.mp4', 'mime_type' => 'video/mp4', 'width' => 1920, 'height' => 1200],
+            'aspect' => 'auto',
+        ]],
+    ]);
+
+    $this->get(route('page', 'vid-auto'))
+        ->assertOk()
+        ->assertSee('aspect-ratio: 1920 / 1200', false)
+        ->assertDontSee('aspect-video', false);
+});
+
+it('falls back to 16:9 when an auto video has no stored dimensions', function (): void {
+    publishPageWithBlocks('vid-auto-empty', [
+        ['id' => 'new-1', 'type' => 'video', 'content' => [
+            'source' => 'url',
+            'url' => 'https://example.com/promo.webm',
+            'aspect' => 'auto',
+        ]],
+    ]);
+
+    $this->get(route('page', 'vid-auto-empty'))
+        ->assertOk()
+        ->assertSee('aspect-video', false)
+        ->assertDontSee('aspect-ratio:', false);
+});
+
+it('honours a custom video aspect ratio', function (string $value): void {
+    publishPageWithBlocks('vid-custom', [
+        ['id' => 'new-1', 'type' => 'video', 'content' => [
+            'source' => 'url',
+            'url' => 'https://example.com/promo.webm',
+            'aspect' => 'custom',
+            'customAspect' => $value,
+        ]],
+    ]);
+
+    $this->get(route('page', 'vid-custom'))
+        ->assertOk()
+        ->assertSee('aspect-ratio: 16 / 10', false);
+})->with(['16:10', '16/10', ' 16 : 10 ']);
+
+it('falls back to 16:9 for a custom video aspect that is not a pair of numbers', function (string $value): void {
+    publishPageWithBlocks('vid-custom-bad', [
+        ['id' => 'new-1', 'type' => 'video', 'content' => [
+            'source' => 'url',
+            'url' => 'https://example.com/promo.webm',
+            'aspect' => 'custom',
+            'customAspect' => $value,
+        ]],
+    ]);
+
+    $this->get(route('page', 'vid-custom-bad'))
+        ->assertOk()
+        ->assertSee('aspect-video', false)
+        ->assertDontSee('aspect-ratio:', false);
+})->with(['', 'widescreen', '16:0', '0:9', '16:', 'auto/1']);
+
+it('constrains a portrait video derived from the file', function (): void {
+    publishPageWithBlocks('vid-portrait', [
+        ['id' => 'new-1', 'type' => 'video', 'content' => [
+            'source' => 'upload',
+            'video' => ['source' => 'media/clip.mp4', 'mime_type' => 'video/mp4', 'width' => 1080, 'height' => 1920],
+            'aspect' => 'auto',
+        ]],
+    ]);
+
+    $this->get(route('page', 'vid-portrait'))
+        ->assertOk()
+        ->assertSee('aspect-ratio: 1080 / 1920', false)
+        ->assertSee('max-w-sm', false);
+});
+
 it('renders testimonials content in every layout', function (string $layout): void {
     publishPageWithBlocks("tst-{$layout}", [
         ['id' => 'new-1', 'type' => 'testimonials', 'content' => [
