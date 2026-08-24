@@ -532,3 +532,86 @@ it('allows demoting an owner when another owner exists', function (): void {
     $response->assertHasNoErrors();
     expect($owner->fresh()->role->key)->toBe('admin');
 });
+
+it('refuses to let someone lock themselves out', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'owner@example.com',
+        'active' => true,
+        'role' => 'owner',
+    ]);
+
+    Livewire::actingAs($owner)
+        ->test('pages::admin.users-edit', ['user' => $owner])
+        ->set('active', false)
+        ->call('update')
+        ->assertHasErrors('active');
+
+    expect($owner->fresh()->active)->toBeTrue();
+});
+
+it('keeps one full-access user able to sign in', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'only-owner@example.com',
+        'active' => true,
+        'role' => 'owner',
+    ]);
+
+    $administrator = User::factory()->create([
+        'email' => 'administrator@example.com',
+        'active' => true,
+        'role' => 'admin',
+    ]);
+
+    Livewire::actingAs($administrator)
+        ->test('pages::admin.users-edit', ['user' => $owner])
+        ->set('active', false)
+        ->call('update')
+        ->assertHasErrors('active');
+
+    expect($owner->fresh()->active)->toBeTrue();
+});
+
+it('deactivates a full-access user while another one stays active', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'second-owner@example.com',
+        'active' => true,
+        'role' => 'owner',
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.users-edit', ['user' => $owner])
+        ->set('active', false)
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($owner->fresh()->active)->toBeFalse();
+});
+
+it('cannot demote the only full-access user who can still sign in', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'lone-owner@example.com',
+        'active' => true,
+        'role' => 'owner',
+    ]);
+
+    User::factory()->create([
+        'email' => 'dormant-owner@example.com',
+        'active' => false,
+        'role' => 'owner',
+    ]);
+
+    $administrator = User::factory()->create([
+        'email' => 'admin-two@example.com',
+        'active' => true,
+        'role' => 'admin',
+    ]);
+
+    Livewire::actingAs($administrator)
+        ->test('pages::admin.users-edit', ['user' => $owner])
+        ->set('roleId', Role::query()->where('key', 'editor')->value('id'))
+        ->call('update')
+        ->assertHasErrors('roleId');
+
+    expect($owner->fresh()->role->key)->toBe('owner');
+});

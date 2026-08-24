@@ -54,6 +54,20 @@ return new class extends Component
         return Role::query()->orderBy('id')->get();
     }
 
+    #[Computed]
+    public function loginLockReason(): ?string
+    {
+        if ($this->user->is(auth()->user())) {
+            return __('You cannot lock yourself out.');
+        }
+
+        if ($this->user->active && $this->user->role?->bypass && $this->isLastSuperAdmin()) {
+            return __('The site must keep one full-access user who can sign in.');
+        }
+
+        return null;
+    }
+
     public function update(#[CurrentUser] User $editor, UpdateUserAction $action, UpdateUserPasswordAction $updatePassword): void
     {
         $this->authorize('users.edit');
@@ -85,6 +99,14 @@ return new class extends Component
 
         if ($this->user->role?->bypass && ! $targetRole->bypass && $this->isLastSuperAdmin()) {
             $this->addError('roleId', __('The site must keep at least one full-access role.'));
+
+            return;
+        }
+
+        $lockReason = $this->loginLockReason();
+
+        if (! ($validated['active'] ?? $this->active) && $lockReason !== null) {
+            $this->addError('active', $lockReason);
 
             return;
         }
@@ -130,6 +152,7 @@ return new class extends Component
     {
         return User::query()
             ->whereKeyNot($this->user->id)
+            ->where('active', true)
             ->whereHas('role', fn (Builder $query): Builder => $query->where('bypass', true))
             ->doesntExist();
     }
@@ -207,8 +230,11 @@ return new class extends Component
                         <flux:switch
                             wire:model.live="active"
                             label="{{ __('Allow this user to sign in') }}"
+                            :disabled="$this->loginLockReason !== null"
+                            :description="$this->loginLockReason"
                             align="left"
                         />
+                        <flux:error name="active" />
                     </flux:accordion.content>
                 </flux:accordion.item>
 

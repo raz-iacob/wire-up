@@ -4,6 +4,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
+- The "Allow this user to sign in" switch is now locked when turning it off would lock you out of your own account, or leave the site with no full-access user who can still sign in — with the reason shown next to it. The check that protects the last full-access role now also ignores accounts that are switched off.
 - A header or footer menu item styled as a button no longer picks up the underline hover effect meant for links — it fades slightly instead, like every other button on the site.
 - The divider block gains a line style, a colour and a width: solid, faded at both edges, faded to the left or right, dotted or dashed; any colour you like or the theme's own; and content width or edge to edge.
 - The rich text editor gains a style picker: any paragraph can become Heading 1, 2 or 3, in block text and in record fields alike. Headings in block body copy are sized on the public site, and headings now survive a paste instead of being flattened to plain paragraphs.
