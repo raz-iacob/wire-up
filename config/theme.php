@@ -98,18 +98,18 @@ return [
         'ocean' => [
             'label' => 'Ocean',
             'colors' => [
-                'background' => '#f0f9ff', 'text' => '#0c4a6e', 'muted' => '#0369a1',
-                'card_bg' => '#ffffff', 'card_text' => '#0c4a6e', 'card_border' => '#bae6fd', 'divider' => '#bae6fd',
-                'input_bg' => '#ffffff', 'input_text' => '#0c4a6e', 'input_border' => '#7dd3fc',
-                'header_bg' => '#0c4a6e', 'header_text' => '#e0f2fe', 'footer_bg' => '#082f49', 'footer_text' => '#bae6fd',
-                'primary_bg' => '#0ea5e9', 'primary_text' => '#ffffff', 'secondary_bg' => '#e0f2fe', 'secondary_text' => '#0c4a6e', 'primary_border' => '#0ea5e9', 'accent' => '#0ea5e9', 'secondary_border' => '#e0f2fe',
+                'background' => '#f4fafe', 'text' => '#0c3f5c', 'muted' => '#4a7692',
+                'card_bg' => '#ffffff', 'card_text' => '#0c3f5c', 'card_border' => '#d9e9f4', 'divider' => '#d5e8f5',
+                'input_bg' => '#ffffff', 'input_text' => '#0c3f5c', 'input_border' => '#b9d5e8',
+                'header_bg' => '#0c3f5c', 'header_text' => '#e6f4fd', 'footer_bg' => '#082f49', 'footer_text' => '#b9d5e8',
+                'primary_bg' => '#0369a1', 'primary_text' => '#ffffff', 'secondary_bg' => '#e2eff8', 'secondary_text' => '#0c3f5c', 'primary_border' => '#0369a1', 'accent' => '#0369a1', 'secondary_border' => '#cfe3f0',
             ],
             'colors_dark' => [
-                'background' => '#082f49', 'text' => '#e0f2fe', 'muted' => '#7dd3fc',
-                'card_bg' => '#0c4a6e', 'card_text' => '#e0f2fe', 'card_border' => '#075985', 'divider' => '#075985',
-                'input_bg' => '#0c4a6e', 'input_text' => '#e0f2fe', 'input_border' => '#0369a1',
-                'header_bg' => '#082f49', 'header_text' => '#e0f2fe', 'footer_bg' => '#041e2f', 'footer_text' => '#bae6fd',
-                'primary_bg' => '#0ea5e9', 'primary_text' => '#ffffff', 'secondary_bg' => '#0c4a6e', 'secondary_text' => '#e0f2fe', 'primary_border' => '#0ea5e9', 'accent' => '#38bdf8', 'secondary_border' => '#075985',
+                'background' => '#04202f', 'text' => '#dbeefb', 'muted' => '#8bb3cc',
+                'card_bg' => '#0a3049', 'card_text' => '#dbeefb', 'card_border' => '#14455f', 'divider' => '#123c53',
+                'input_bg' => '#0a3049', 'input_text' => '#dbeefb', 'input_border' => '#1d5878',
+                'header_bg' => '#04202f', 'header_text' => '#dbeefb', 'footer_bg' => '#01131d', 'footer_text' => '#9dc3d8',
+                'primary_bg' => '#38bdf8', 'primary_text' => '#04202f', 'secondary_bg' => '#0a3049', 'secondary_text' => '#dbeefb', 'primary_border' => '#38bdf8', 'accent' => '#56ccff', 'secondary_border' => '#14455f',
             ],
         ],
         'forest' => [

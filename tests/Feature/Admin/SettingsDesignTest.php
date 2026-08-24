@@ -449,12 +449,14 @@ it('resolves an empty palette when custom colours are malformed', function (): v
 it('emits palette and accent css vars for a preset', function (): void {
     Settings::set(['theme' => 'ocean']);
 
+    $ocean = config()->array('theme.presets.ocean.colors');
+
     expect((new SettingsService)->themeCss())
-        ->toContain('--wire-body-bg:#f0f9ff')
-        ->toContain('--wire-card-border:#bae6fd')
-        ->toContain('--wire-card-text:#0c4a6e')
-        ->toContain('--wire-header-bg:#0c4a6e')
-        ->toContain('--color-accent:#0ea5e9')
+        ->toContain('--wire-body-bg:'.$ocean['background'])
+        ->toContain('--wire-card-border:'.$ocean['card_border'])
+        ->toContain('--wire-card-text:'.$ocean['card_text'])
+        ->toContain('--wire-header-bg:'.$ocean['header_bg'])
+        ->toContain('--color-accent:'.$ocean['accent'])
         ->toContain('--color-accent-foreground:#ffffff');
 });
 
