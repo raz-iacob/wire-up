@@ -1041,12 +1041,16 @@ it('normalizes an empty background color to null when saving', function (): void
     expect(Page::query()->whereKey($page->id)->sole()->metadata['layout']['backgroundColor'])->toBeNull();
 });
 
-it('offers a shareable draft link on the editor, but only while the page is unpublished', function (): void {
+it('offers a shareable draft link from the preview bar, but only while the page is unpublished', function (): void {
     $draft = Page::factory()->create(['status' => ContentStatus::DRAFT, 'metadata' => ['published_locales' => []]]);
     $draft->slugs()->create(['locale' => 'en', 'slug' => 'draft-page']);
 
-    Livewire::test('pages::admin.pages-edit', ['page' => $draft])
-        ->assertSee('Copy draft link');
+    editor($draft)
+        ->assertDontSee('Share a link anyone can open')
+        ->call('preview')
+        ->assertSee('Share a link anyone can open')
+        ->assertSee('signature=', false)
+        ->assertSee('wire:click="update"', false);
 
     $live = Page::factory()->create([
         'status' => ContentStatus::PUBLISHED,
@@ -1055,8 +1059,28 @@ it('offers a shareable draft link on the editor, but only while the page is unpu
     ]);
     $live->slugs()->create(['locale' => 'en', 'slug' => 'live-page']);
 
-    Livewire::test('pages::admin.pages-edit', ['page' => $live])
-        ->assertDontSee('Copy draft link');
+    editor($live)->call('preview')->assertDontSee('Share a link anyone can open');
+});
+
+it('saves the draft as it hands out the share link, so the link matches the preview', function (): void {
+    $draft = Page::factory()->create(['title' => 'Draft', 'status' => ContentStatus::DRAFT, 'metadata' => ['published_locales' => []]]);
+    $draft->slugs()->create(['locale' => 'en', 'slug' => 'share-saves']);
+    $draft->updateBlocks([
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => ['heading' => ['en' => '<p>Before</p>']]],
+    ]);
+
+    $component = editor($draft->fresh());
+    $blockId = (string) array_key_first($component->get('blocks'));
+
+    $component->set("blocks.{$blockId}.content.heading.en", '<p>After</p>')->call('preview');
+
+    expect($draft->fresh()?->blocks()->first()?->content['heading']['en'])->toBe('<p>Before</p>');
+
+    $component->call('update')->assertHasNoErrors();
+
+    expect($draft->fresh()?->blocks()->first()?->content['heading']['en'])->toBe('<p>After</p>');
+
+    $this->get((string) $draft->fresh()?->previewUrl())->assertOk()->assertSee('After');
 });
 
 it('names the field in plain words when a published page is missing its title', function (): void {

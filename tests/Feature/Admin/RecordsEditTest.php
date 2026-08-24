@@ -391,14 +391,16 @@ it('keeps existing record metadata when saving a layout', function (): void {
         ->and($record->metadata['layout']['hideFooter'])->toBeTrue();
 });
 
-it('offers a shareable draft link while the record is unpublished', function (): void {
+it('offers a shareable draft link from the preview bar while the record is unpublished', function (): void {
     $type = typeWithFields();
     $record = makeRecord($type, 'Widget');
 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
-        ->assertSee('Copy draft link');
+        ->call('preview')
+        ->assertSee('Share a link anyone can open')
+        ->assertSee('signature=', false);
 
     $record->update([
         'status' => ContentStatus::PUBLISHED,
@@ -407,7 +409,8 @@ it('offers a shareable draft link while the record is unpublished', function ():
     ]);
 
     Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record->refresh()])
-        ->assertDontSee('Copy draft link');
+        ->call('preview')
+        ->assertDontSee('Share a link anyone can open');
 });
 
 it('duplicates a record block directly below the one it copied', function (): void {

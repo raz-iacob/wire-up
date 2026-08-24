@@ -4,7 +4,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
-- Share a draft before it goes live: the page and record editors gain a "Copy draft link" — a signed web address anyone can open without signing in, good for 7 days by default. Preview links are never indexed by search engines.
+- Share a draft before it goes live: open Preview on an unpublished page or record and use the share button in its top bar to copy a signed web address anyone can open without signing in, good for 7 days by default. Sharing saves the draft first, so the link shows exactly what you were previewing. Preview links are never indexed by search engines, and they work for the homepage too.
 - New block options: an icon instead of an image on feature cards, a "Frame the image" switch on the photo block, a "Related" source on collection blocks, a new "Previous / Next" block for records, and any video aspect ratio including the uploaded file's own.
 - Pages and records without a share image of their own now get one generated automatically: a 1200x630 card with the title, your accent colour and your logo, in your heading font. It is only ever a fallback — an image you upload or pick still wins, and the card never appears in your media library. Needs a headless browser on the server; without one nothing changes. `wireup:og:generate` rebuilds them all, and `WIREUP_OG_IMAGES=false` turns the whole thing off.
 - Duplicate a block from its ⋯ menu in the page and record editors. The copy lands directly below the original with all its content, and an anchor on the copy is made unique when you save.

@@ -155,13 +155,13 @@ final class SettingsService
         ];
     }
 
-    public function homePage(): ?Page
+    public function homePage(bool $publishedOnly = true): ?Page
     {
         $configured = Settings::get('home_page_id');
 
         if (is_numeric($configured)) {
             $page = Page::query()
-                ->published()
+                ->when($publishedOnly, fn (Builder $query): Builder => $query->published())
                 ->with(['translations', 'slugs'])
                 ->whereKey((int) $configured)
                 ->first();
@@ -172,7 +172,7 @@ final class SettingsService
         }
 
         return Page::query()
-            ->published()
+            ->when($publishedOnly, fn (Builder $query): Builder => $query->published())
             ->with(['translations', 'slugs'])
             ->whereHas('slugs', function (Builder $query): void {
                 $query->where('slug', 'home');

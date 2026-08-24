@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\ContentStatus;
 use App\Services\ImageService;
+use App\Services\SettingsService;
 use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
 use App\Traits\HasMedia;
@@ -112,12 +113,17 @@ final class Page extends Model
      */
     public function previewRouteParameters(?string $locale = null): array
     {
-        return ['slug' => $this->getSlug($locale)];
+        return $this->isHomePage() ? [] : ['slug' => $this->getSlug($locale)];
     }
 
     public function previewRouteName(): string
     {
-        return 'page';
+        return $this->isHomePage() ? 'home' : 'page';
+    }
+
+    public function isHomePage(): bool
+    {
+        return SettingsService::current()->homePage(publishedOnly: false)?->id === $this->id;
     }
 
     public function plainText(?string $locale = null): string

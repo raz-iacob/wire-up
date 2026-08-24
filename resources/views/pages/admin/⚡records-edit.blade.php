@@ -931,26 +931,6 @@ return new class extends Component
                     {{ __('Preview') }}
                 </flux:button>
 
-                @if ($record->getSlug($locale) && ! $record->isLiveInLocale($locale))
-                    <div x-data="{ copied: false }">
-                        <flux:button
-                            icon="link"
-                            variant="filled"
-                            class="w-full"
-                            x-on:click="
-                                navigator.clipboard.writeText(@js($record->previewUrl($locale)));
-                                copied = true;
-                                setTimeout(() => (copied = false), 1600);
-                            "
-                        >
-                            <span x-text="copied ? @js(__('Link copied')) : @js(__('Copy draft link'))">{{ __('Copy draft link') }}</span>
-                        </flux:button>
-                        <flux:text variant="subtle" class="mt-2 text-xs">
-                            {{ __('A link anyone can open to see this draft, good for :days days.', ['days' => config('wireup.draft_preview_days')]) }}
-                        </flux:text>
-                    </div>
-                @endif
-
                 <div class="grid grid-cols-2 gap-4">
                     <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
                     <flux:button wire:navigate href="{{ route('admin.records-index', $recordType) }}" icon="arrow-left">
@@ -1014,7 +994,37 @@ return new class extends Component
                     />
                 </div>
 
-                <flux:text size="sm" class="hidden sm:block">{{ __('Preview') }}</flux:text>
+                <div class="flex items-center gap-3">
+                    <flux:text size="sm" class="hidden sm:block">{{ __('Preview') }}</flux:text>
+
+                    @if ($record->getSlug($locale) && ! $record->isLiveInLocale($locale))
+                        <div x-data="{ copied: false }" class="flex items-center">
+                            <flux:button
+                                size="sm"
+                                variant="subtle"
+                                icon="share"
+                                square
+                                x-show="! copied"
+                                wire:click="update"
+                                x-on:click="
+                                    navigator.clipboard.writeText(@js($record->previewUrl($locale)));
+                                    copied = true;
+                                    setTimeout(() => (copied = false), 1600);
+                                "
+                                :tooltip="__('Share a link anyone can open to see this draft, good for :days days.', ['days' => config('wireup.draft_preview_days')])"
+                            />
+                            <flux:button
+                                size="sm"
+                                variant="subtle"
+                                icon="check"
+                                square
+                                x-show="copied"
+                                x-cloak
+                                :tooltip="__('Link copied')"
+                            />
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-4">

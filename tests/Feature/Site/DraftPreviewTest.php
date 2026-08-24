@@ -6,6 +6,7 @@ use App\Enums\ContentStatus;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Services\SettingsService;
 use Illuminate\Support\Facades\URL;
 
 function draftPage(string $slug = 'unfinished'): Page
@@ -104,4 +105,47 @@ it('expires the link after the configured number of days', function (): void {
 
     expect($page->previewUrl())->toContain('expires=')
         ->and(URL::hasValidSignature(request()->create($page->previewUrl())))->toBeTrue();
+});
+
+it('signs the homepage preview against the home route, not its slug', function (): void {
+    $home = SettingsService::current()->homePage(publishedOnly: false);
+    $home->update(['status' => ContentStatus::DRAFT, 'metadata' => ['published_locales' => []]]);
+
+    $link = $home->fresh()?->previewUrl();
+
+    expect($link)->toStartWith(route('home'))
+        ->and($link)->toContain('signature=');
+});
+
+it('shows a draft homepage through its preview link', function (): void {
+    $home = SettingsService::current()->homePage(publishedOnly: false);
+    $home->update(['status' => ContentStatus::DRAFT, 'metadata' => ['published_locales' => []]]);
+    $home->updateBlocks([
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => ['heading' => ['en' => '<p>Heading XXX</p>']]],
+    ]);
+
+    $this->get((string) $home->fresh()?->previewUrl())
+        ->assertOk()
+        ->assertSee('Heading XXX')
+        ->assertSee('This page is not published');
+});
+
+it('hides a draft homepage from a guest with no signature', function (): void {
+    $home = SettingsService::current()->homePage(publishedOnly: false);
+    $home->update(['status' => ContentStatus::DRAFT, 'metadata' => ['published_locales' => []]]);
+
+    $this->get(route('home'))->assertNotFound();
+});
+
+it('lets someone who can reach the admin see an unpublished homepage', function (): void {
+    $home = SettingsService::current()->homePage(publishedOnly: false);
+    $home->update(['status' => ContentStatus::DRAFT, 'metadata' => ['published_locales' => []]]);
+
+    $this->actingAsAdmin();
+
+    $this->get(route('home'))->assertOk()->assertSee('This page is not published');
+});
+
+it('still serves a published homepage to a guest', function (): void {
+    $this->get(route('home'))->assertOk()->assertDontSee('This page is not published');
 });
