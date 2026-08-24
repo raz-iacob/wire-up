@@ -24,7 +24,3 @@ yarn-error.log
 /.zed
 /tmp
 /tests/Browser/Screenshots
-
-# local-only content seeders for performance work, not shipped
-/database/seeders/DemoContentSeeder.php
-/database/seeders/StressSeeder.php
