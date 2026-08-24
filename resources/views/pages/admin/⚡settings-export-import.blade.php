@@ -168,6 +168,10 @@ return new class extends Component
 
         File::copy($path, $staged);
 
+        if ($this->bundle instanceof TemporaryUploadedFile) {
+            $this->bundle->delete();
+        }
+
         return $staged;
     }
 };

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\SiteBundle;
 use App\Services\SiteExporter;
 use App\Services\TransferService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -176,6 +177,24 @@ it('stages a copy of the bundle so the original is left alone', function (): voi
         ->call('startImport');
 
     expect(File::exists($bundle))->toBeTrue()
+        ->and(File::glob(config()->string('wireup.transfer_path').'/import-*.zip'))->toHaveCount(1);
+});
+
+it('does not leave the uploaded bundle on disk after staging it', function (): void {
+    Queue::fake();
+
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.settings-export-import')
+        ->set('bundle', UploadedFile::fake()->create('site.zip', 8));
+
+    $upload = (string) $component->get('bundle')->getRealPath();
+
+    expect(File::exists($upload))->toBeTrue();
+
+    $component->call('startImport');
+
+    expect(File::exists($upload))->toBeFalse()
         ->and(File::glob(config()->string('wireup.transfer_path').'/import-*.zip'))->toHaveCount(1);
 });
 
