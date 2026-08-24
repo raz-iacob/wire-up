@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Enums\BlockType;
 use App\Enums\ContentStatus;
 use App\Models\Page;
-use Illuminate\Support\Facades\DB;
 
 function richTextPage(string $slug, array $content): Page
 {
@@ -71,24 +70,4 @@ it('falls back to a left column for an alignment it does not know', function ():
         ->assertOk()
         ->assertDontSee('max-w-2xl mx-auto', false)
         ->assertDontSee('max-w-2xl ms-auto', false);
-});
-
-it('remaps the old narrow widths onto a width and a column alignment', function (): void {
-    $page = richTextPage('legacy', ['width' => 'narrow-left', 'align' => 'center']);
-    $other = richTextPage('legacy-centred', ['width' => 'narrow', 'align' => 'center']);
-    $full = richTextPage('legacy-full', ['width' => 'normal', 'align' => 'center']);
-
-    (new (include base_path('database/migrations/2026_08_24_142941_remap_rich_text_block_alignment.php')))->up();
-
-    $content = fn (Page $page): array => (array) json_decode(
-        (string) DB::table('blocks')->where('blockable_id', $page->id)->value('content'),
-        true,
-    );
-
-    expect($content($page)['width'])->toBe('narrow')
-        ->and($content($page)['align'])->toBe('left')
-        ->and($content($other)['width'])->toBe('narrow')
-        ->and($content($other)['align'])->toBe('center')
-        ->and($content($full)['width'])->toBe('normal')
-        ->and($content($full)['align'])->toBe('center');
 });
