@@ -1473,7 +1473,7 @@ it('renders stats as cards or with vertical dividers', function (): void {
         ->assertSee('border-(--wire-divider)', false);
 });
 
-it('renders a divider with the chosen thickness and card background colour', function (): void {
+it('renders a divider with the chosen thickness and the theme divider colour', function (): void {
     publishPageWithBlocks('divider-page', [
         ['id' => 'new-1', 'type' => 'divider', 'content' => ['size' => 'thick']],
     ]);
@@ -1481,8 +1481,8 @@ it('renders a divider with the chosen thickness and card background colour', fun
     $this->get(route('page', 'divider-page'))
         ->assertOk()
         ->assertSee('<hr', false)
-        ->assertSee('h-[3px]', false)
-        ->assertSee('bg-(--wire-divider)', false);
+        ->assertSee('height:3px', false)
+        ->assertSee('background-color:var(--wire-divider)', false);
 });
 
 it('renders a team block with photo, role, bio and social links', function (): void {

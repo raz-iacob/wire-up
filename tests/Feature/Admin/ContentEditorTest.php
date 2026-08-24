@@ -37,6 +37,9 @@ it('renders each block type partial', function (): void {
         ->assertSee('Heading')
         ->assertSee('Spacer size')
         ->assertSee('Thickness')
+        ->assertSee('Line style')
+        ->assertSee('Fade at both edges')
+        ->assertSee('Line color')
         ->assertSee('Display image on the right');
 });
 

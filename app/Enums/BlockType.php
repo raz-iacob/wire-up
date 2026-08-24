@@ -147,7 +147,7 @@ enum BlockType: string
             self::BREADCRUMB => __('The trail back to the home page, built automatically from where this page sits.'),
             self::RECORD_NAV => __('Links to the record published before and after this one, for reading a series in order. Shows nothing on a page.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
-            self::DIVIDER => __('A horizontal divider line in your chosen thickness.'),
+            self::DIVIDER => __('A horizontal divider line, in your chosen thickness, style and colour.'),
         };
     }
 
@@ -418,7 +418,7 @@ enum BlockType: string
                 'hasBackground' => false,
             ],
             self::SPACER => ['size' => 'medium'],
-            self::DIVIDER => ['size' => 'medium'],
+            self::DIVIDER => ['size' => 'medium', 'style' => 'solid', 'color' => '', 'width' => 'normal'],
         };
     }
 

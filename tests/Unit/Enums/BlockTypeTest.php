@@ -54,7 +54,7 @@ it('lists all backed values', function (): void {
 });
 
 it('seeds the divider default content and has no anchor', function (): void {
-    expect(BlockType::DIVIDER->defaultContent())->toBe(['size' => 'medium']);
+    expect(BlockType::DIVIDER->defaultContent())->toBe(['size' => 'medium', 'style' => 'solid', 'color' => '', 'width' => 'normal']);
     expect(BlockType::DIVIDER->hasAnchor())->toBeFalse();
     expect(BlockType::DIVIDER->editorTitle([], 'en'))->toBe('Divider');
 });
