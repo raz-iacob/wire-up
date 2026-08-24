@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\BlockType;
+use App\Enums\ContentStatus;
 use App\Models\Block;
 use App\Models\Page;
 use Illuminate\Support\Arr;
@@ -1038,4 +1039,22 @@ it('normalizes an empty background color to null when saving', function (): void
         ->assertHasNoErrors();
 
     expect(Page::query()->whereKey($page->id)->sole()->metadata['layout']['backgroundColor'])->toBeNull();
+});
+
+it('offers a shareable draft link on the editor, but only while the page is unpublished', function (): void {
+    $draft = Page::factory()->create(['status' => ContentStatus::DRAFT, 'metadata' => ['published_locales' => []]]);
+    $draft->slugs()->create(['locale' => 'en', 'slug' => 'draft-page']);
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $draft])
+        ->assertSee('Copy draft link');
+
+    $live = Page::factory()->create([
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'metadata' => ['published_locales' => ['en']],
+    ]);
+    $live->slugs()->create(['locale' => 'en', 'slug' => 'live-page']);
+
+    Livewire::test('pages::admin.pages-edit', ['page' => $live])
+        ->assertDontSee('Copy draft link');
 });

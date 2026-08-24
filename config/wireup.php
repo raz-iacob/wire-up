@@ -14,4 +14,6 @@ return [
 
     'backups_to_keep' => 5,
 
+    'draft_preview_days' => 7,
+
 ];

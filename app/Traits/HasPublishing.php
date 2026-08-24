@@ -8,9 +8,17 @@ use App\Enums\ContentStatus;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\URL;
 
 trait HasPublishing
 {
+    public function previewUrl(?string $locale = null): string
+    {
+        $expiry = now()->addDays(config()->integer('wireup.draft_preview_days'));
+
+        return URL::temporarySignedRoute($this->previewRouteName(), $expiry, $this->previewRouteParameters($locale));
+    }
+
     public function isLiveInLocale(?string $locale = null): bool
     {
         if ($this->status !== ContentStatus::PUBLISHED

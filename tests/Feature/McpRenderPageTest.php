@@ -73,21 +73,34 @@ it('renders at the requested viewport and full page', function (): void {
     });
 });
 
-it('refuses to render a draft page', function (): void {
-    $page = Page::factory()->create(['status' => ContentStatus::DRAFT]);
+it('renders a draft page through a signed preview link', function (): void {
+    fakeScreenshotProcess();
 
-    WireUpServer::tool(RenderPageTool::class, ['page' => $page->id])
-        ->assertHasErrors()
-        ->assertSee('is not published');
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT, 'metadata' => ['published_locales' => []]]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'draft-shot']);
+
+    WireUpServer::tool(RenderPageTool::class, ['page' => $page->id])->assertOk();
+
+    Process::assertRan(fn (PendingProcess $process): bool => collect((array) $process->command)
+        ->contains(fn (string $part): bool => str_contains($part, '/draft-shot') && str_contains($part, 'signature=')));
 });
 
-it('refuses to render a draft record', function (): void {
-    $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides']);
-    $record = Record::factory()->create(['record_type_id' => $type->id, 'status' => ContentStatus::DRAFT]);
+it('renders a draft record through a signed preview link', function (): void {
+    fakeScreenshotProcess();
 
-    WireUpServer::tool(RenderPageTool::class, ['record' => $record->id])
-        ->assertHasErrors()
-        ->assertSee('is not published');
+    $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides']);
+    $record = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Draft Guide'],
+        'status' => ContentStatus::DRAFT,
+        'metadata' => ['published_locales' => []],
+    ]);
+    $record->setSlugs();
+
+    WireUpServer::tool(RenderPageTool::class, ['record' => $record->id])->assertOk();
+
+    Process::assertRan(fn (PendingProcess $process): bool => collect((array) $process->command)
+        ->contains(fn (string $part): bool => str_contains($part, '/guides/') && str_contains($part, 'signature=')));
 });
 
 it('reports unknown ids', function (string $key, string $expected): void {
@@ -189,4 +202,12 @@ it('renders a published record at its public url', function (): void {
         ->assertSee(base64_encode(onePixel()));
 
     Process::assertRan(fn (PendingProcess $process): bool => str_contains(implode(' ', (array) $process->command), 'guides/'));
+});
+
+it('says plainly when there is no web address to render yet', function (): void {
+    $page = Page::factory()->create(['status' => ContentStatus::DRAFT, 'metadata' => ['published_locales' => []]]);
+
+    WireUpServer::tool(RenderPageTool::class, ['page' => $page->id])
+        ->assertHasErrors()
+        ->assertSee('has no web address yet');
 });

@@ -16,7 +16,7 @@ return new class extends Component
     {
         $query = Page::query()->with('blocks')->forSlug($slug);
 
-        if (auth()->user()?->canAccessAdmin()) {
+        if (auth()->user()?->canAccessAdmin() || request()->hasValidSignature()) {
             $this->page = $query->firstOrFail();
             $this->unpublished = ! $this->page->isLiveInLocale();
         } else {

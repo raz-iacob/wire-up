@@ -45,7 +45,7 @@ final class SeoService
 
     public function robots(Page|Record|null $content): string
     {
-        if (SettingsService::current()->noindex() || $content?->isNoindex() || $content?->isMembersOnly()) {
+        if (SettingsService::current()->noindex() || $content?->isNoindex() || $content?->isMembersOnly() || $content?->isLiveInLocale() === false) {
             return 'noindex, nofollow';
         }
 

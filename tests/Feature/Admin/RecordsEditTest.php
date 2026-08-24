@@ -390,3 +390,22 @@ it('keeps existing record metadata when saving a layout', function (): void {
         ->toHaveKey('members_only', true)
         ->and($record->metadata['layout']['hideFooter'])->toBeTrue();
 });
+
+it('offers a shareable draft link while the record is unpublished', function (): void {
+    $type = typeWithFields();
+    $record = makeRecord($type, 'Widget');
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->assertSee('Copy draft link');
+
+    $record->update([
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'metadata' => ['published_locales' => ['en']],
+    ]);
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record->refresh()])
+        ->assertDontSee('Copy draft link');
+});

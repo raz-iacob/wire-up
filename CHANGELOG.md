@@ -25,6 +25,8 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The video block is no longer limited to three aspect ratios: it can now take the shape of the uploaded file itself, or any ratio you type such as 16:10, so a recording no longer has to be cropped to fit.
 - Agents and the AI assistant can see what is waiting in the server import folder with a new `list-import-files` tool, instead of having to be told each file name before `upload-media` will work.
 - Deleting a page, record or media file through an outside agent such as Claude Desktop now has to be confirmed in the call itself, rather than going through immediately. The in-admin assistant is unchanged — it still asks you to approve each deletion in the chat.
+- Share a draft before it goes live: the page editor gains a "Copy draft link", a signed web address that anyone you send it to can open for 7 days without signing in. Preview links are never indexed by search engines, and the length is configurable.
+- The `render-page` tool can now screenshot a draft as well as a published page, so agents and the AI assistant can see work in progress instead of being told to publish it first.
 
 ## v0.1.1 — 2026-08-22
 

@@ -107,6 +107,19 @@ final class Page extends Model
         return route('page', $this->getSlug($locale));
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function previewRouteParameters(?string $locale = null): array
+    {
+        return ['slug' => $this->getSlug($locale)];
+    }
+
+    public function previewRouteName(): string
+    {
+        return 'page';
+    }
+
     public function plainText(?string $locale = null): string
     {
         $this->loadMissing('blocks');

@@ -88,6 +88,21 @@ final class Record extends Model
         return route('record', [$this->recordType->slug_prefix, $this->getSlug($locale)]);
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function previewRouteParameters(?string $locale = null): array
+    {
+        $this->loadMissing('recordType');
+
+        return ['recordType' => $this->recordType->slug_prefix, 'slug' => $this->getSlug($locale)];
+    }
+
+    public function previewRouteName(): string
+    {
+        return 'record';
+    }
+
     public function plainText(?string $locale = null): string
     {
         $locale ??= app()->getLocale();

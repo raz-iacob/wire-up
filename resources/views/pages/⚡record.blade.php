@@ -22,7 +22,7 @@ return new class extends Component
             ->with(['recordType', 'blocks', 'media', 'translations', 'slugs', 'categories'])
             ->forSlug($slug, null, $type->slug_prefix);
 
-        if (auth()->user()?->canAccessAdmin()) {
+        if (auth()->user()?->canAccessAdmin() || request()->hasValidSignature()) {
             $this->record = $query->firstOrFail();
             $this->unpublished = ! $this->record->isLiveInLocale();
         } else {

@@ -18,7 +18,7 @@ use Laravel\Mcp\Server\Tool;
 use RuntimeException;
 
 #[Name('render-page')]
-#[Description('Screenshot a page, record or site path in a headless browser so you can see how it actually looks. Pass one of page, record or path. Only published content is reachable — to check a draft\'s content instead, fetch its URL with an Accept: text/markdown header. Requires a headless browser on the server; the error explains how to install one if it is missing.')]
+#[Description('Screenshot a page, record or site path in a headless browser so you can see how it actually looks. Pass one of page, record or path. Drafts are rendered too, through a short-lived signed preview link. Requires a headless browser on the server; the error explains how to install one if it is missing.')]
 final class RenderPageTool extends Tool
 {
     public function handle(Request $request): Response
@@ -57,9 +57,9 @@ final class RenderPageTool extends Tool
     {
         return [
             'page' => $schema->integer()
-                ->description('Page id to render, as returned by list-pages. The page must be published.'),
+                ->description('Page id to render, as returned by list-pages. A draft is rendered through a short-lived preview link.'),
             'record' => $schema->integer()
-                ->description('Record id to render, as returned by list-records. The record must be published.'),
+                ->description('Record id to render, as returned by list-records. A draft is rendered through a short-lived preview link.'),
             'path' => $schema->string()
                 ->description('A site-relative path to render instead, starting with a slash, e.g. "/" or "/guides".'),
             'viewport' => $schema->string()
@@ -90,16 +90,18 @@ final class RenderPageTool extends Tool
             $page = Page::query()->with('slugs')->find($validated['page']);
 
             throw_if($page === null, InvalidArgumentException::class, "No page with id {$validated['page']}. Use list-pages to see the available pages.");
-            throw_unless($page->isLiveInLocale(), InvalidArgumentException::class, "Page {$page->id} is not published, so it has no public URL. Publish it with publish-page, or read its content with an Accept: text/markdown request.");
 
-            return $page->getUrl();
+            throw_if($page->getSlug() === '', InvalidArgumentException::class, "Page {$page->id} has no web address yet, so there is nothing to render. Give it a title and save it first.");
+
+            return $page->isLiveInLocale() ? $page->getUrl() : $page->previewUrl();
         }
 
         $record = Record::query()->with(['recordType', 'slugs'])->find($validated['record']);
 
         throw_if($record === null, InvalidArgumentException::class, "No record with id {$validated['record']}. Use list-records to see the available records.");
-        throw_unless($record->isLiveInLocale(), InvalidArgumentException::class, "Record {$record->id} is not published, so it has no public URL. Publish it with publish-record first.");
 
-        return $record->getUrl();
+        throw_if($record->getSlug() === '', InvalidArgumentException::class, "Record {$record->id} has no web address yet, so there is nothing to render. Give it a title and save it first.");
+
+        return $record->isLiveInLocale() ? $record->getUrl() : $record->previewUrl();
     }
 }
