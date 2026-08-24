@@ -45,7 +45,7 @@ final readonly class BlockMarkdown
             BlockType::TEAM => $this->team($block, $locale),
             BlockType::PRICING => $this->pricing($block, $locale),
             BlockType::CONTACT_FORM => $this->contactForm($block, $locale),
-            BlockType::BREADCRUMB, BlockType::SPACER => '',
+            BlockType::BREADCRUMB, BlockType::SPACER, BlockType::RECORD_NAV => '',
             BlockType::DIVIDER => '---',
         };
     }

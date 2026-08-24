@@ -50,7 +50,7 @@ it('sorts every case alphabetically by label', function (): void {
 });
 
 it('lists all backed values', function (): void {
-    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'collection', 'search', 'buttons', 'audio', 'downloads', 'rich-text', 'code', 'stats', 'team', 'pricing', 'contact-form', 'breadcrumb', 'spacer', 'divider']);
+    expect(BlockType::values())->toBe(['hero', 'text-image', 'location', 'accordion', 'gallery', 'video', 'photo', 'testimonials', 'sponsors', 'feature-cards', 'collection', 'search', 'buttons', 'audio', 'downloads', 'rich-text', 'code', 'stats', 'team', 'pricing', 'contact-form', 'breadcrumb', 'record-nav', 'spacer', 'divider']);
 });
 
 it('seeds the divider default content and has no anchor', function (): void {

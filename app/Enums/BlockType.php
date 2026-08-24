@@ -30,6 +30,7 @@ enum BlockType: string
     case PRICING = 'pricing';
     case CONTACT_FORM = 'contact-form';
     case BREADCRUMB = 'breadcrumb';
+    case RECORD_NAV = 'record-nav';
     case SPACER = 'spacer';
     case DIVIDER = 'divider';
 
@@ -77,6 +78,7 @@ enum BlockType: string
             self::PRICING => __('Pricing'),
             self::CONTACT_FORM => __('Contact Form'),
             self::BREADCRUMB => __('Breadcrumb'),
+            self::RECORD_NAV => __('Previous / Next'),
             self::SPACER => __('Spacer'),
             self::DIVIDER => __('Divider'),
         };
@@ -109,6 +111,7 @@ enum BlockType: string
             self::BREADCRUMB => 'chevron-right',
             self::SPACER => 'arrows-up-down',
             self::DIVIDER => 'minus',
+            self::RECORD_NAV => 'arrows-right-left',
         };
     }
 
@@ -142,6 +145,7 @@ enum BlockType: string
             self::PRICING => __('Pricing plans shown side by side, each with features and a button.'),
             self::CONTACT_FORM => __('A contact form that emails you and stores each submission.'),
             self::BREADCRUMB => __('The trail back to the home page, built automatically from where this page sits.'),
+            self::RECORD_NAV => __('Links to the record published before and after this one, for reading a series in order. Shows nothing on a page.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
             self::DIVIDER => __('A horizontal divider line in your chosen thickness.'),
         };
@@ -403,6 +407,13 @@ enum BlockType: string
                 'separator' => '/',
                 'showHome' => true,
                 'homeLabel' => [],
+                'hasBackground' => false,
+            ],
+            self::RECORD_NAV => [
+                'previousLabel' => [],
+                'nextLabel' => [],
+                'showTitles' => true,
+                'sameCategory' => false,
                 'hasBackground' => false,
             ],
             self::SPACER => ['size' => 'medium'],

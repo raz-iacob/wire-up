@@ -790,6 +790,17 @@ it('ignores item media sync for an unknown block or item', function (): void {
         ->assertSet('blocks.b1.content.items.0.avatar', null);
 });
 
+it('renders the prev/next block editor fields', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-n' => ['id' => 'new-n', 'type' => 'record-nav', 'position' => 0, 'content' => BlockType::RECORD_NAV->defaultContent()],
+        ])
+        ->assertSee('Previous label')
+        ->assertSee('Next label')
+        ->assertSee('Show the record titles')
+        ->assertSee('Stay within the same category');
+});
+
 it('renders the photo block editor fields', function (): void {
     editor($this->page)
         ->set('blocks', [

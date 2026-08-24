@@ -21,6 +21,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The photo block gains a "Frame the image" switch — a hairline border in your accent colour and a soft drop shadow that lifts screenshots and product shots off the page, without hand-written CSS.
 - The collection block gains a "Related" option: on a record it lists other records sharing a category with it, newest first, leaving the current one out. On a page it shows nothing. Saves hand-picking a list per record.
 - Fixed a crash on any page holding a collection or search block that an agent or the AI assistant created without choosing a layout — the page returned a server error instead of rendering.
+- A new "Previous / Next" block links a record to the ones published before and after it, so a series of guides or posts reads in order without hand-written links. It can stay inside the record's category, and shows nothing on a page.
 
 ## v0.1.1 — 2026-08-22
 
