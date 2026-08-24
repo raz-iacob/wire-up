@@ -1692,3 +1692,32 @@ it('keeps a centre-aligned narrow rich text block off the left edge', function (
     expect($content)->toContain('max-w-2xl mx-auto')
         ->not->toContain('<div class="max-w-2xl">');
 });
+
+it('renders a heading the editor style picker wrote into block body copy', function (): void {
+    publishPageWithBlocks('body-headings', [
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
+            'body' => ['en' => '<h2>A section inside the copy</h2><p>Body copy.</p>'],
+        ]],
+    ]);
+
+    $this->get(route('page', 'body-headings'))
+        ->assertOk()
+        ->assertSee('<h2>A section inside the copy</h2>', false)
+        ->assertSee('wire-prose', false);
+});
+
+it('does not mark a block heading field as prose, so its size stays the heading token', function (): void {
+    publishPageWithBlocks('heading-field', [
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
+            'heading' => ['en' => '<h2>Section title</h2>'],
+            'body' => ['en' => '<p>Body copy.</p>'],
+        ]],
+    ]);
+
+    $html = $this->get(route('page', 'heading-field'))->assertOk()->getContent();
+
+    preg_match('#<div class="([^"]*)"[^>]*>\s*<h2>Section title#', (string) $html, $wrapper);
+
+    expect($wrapper[1])->toContain('--wire-heading-size')
+        ->not->toContain('wire-prose');
+});

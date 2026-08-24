@@ -68,13 +68,13 @@
                 @endif
 
                 @if (strip_tags($address) !== '')
-                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&_p]:whitespace-pre-wrap [&>p]:my-1 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 opacity-90 *:first:mt-0 *:last:mb-0">
+                    <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&_p]:whitespace-pre-wrap [&>p]:my-1 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 opacity-90 *:first:mt-0 *:last:mb-0">
                         {!! $address !!}
                     </div>
                 @endif
 
                 @if (strip_tags($hours) !== '')
-                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&_p]:whitespace-pre-wrap [&>p]:my-1 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 opacity-90 *:first:mt-0 *:last:mb-0">
+                    <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&_p]:whitespace-pre-wrap [&>p]:my-1 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 opacity-90 *:first:mt-0 *:last:mb-0">
                         {!! $hours !!}
                     </div>
                 @endif

@@ -30,7 +30,7 @@
                 @endif
 
                 @if (strip_tags($body) !== '')
-                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 max-w-none leading-relaxed *:first:mt-0 *:last:mb-0">
+                    <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 max-w-none leading-relaxed *:first:mt-0 *:last:mb-0">
                         {!! $body !!}
                     </div>
                 @endif

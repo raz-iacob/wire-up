@@ -12,7 +12,7 @@
 
     <div x-data="editorSource">
         <flux:editor wire:model.lazy="{{ $path }}" :required="$required" class="**:data-[slot=content]:min-h-25!">
-            <flux:editor.toolbar items="bold italic underline | bullet ordered | align | link ~ undo redo | badge | source" />
+            <flux:editor.toolbar items="heading | bold italic underline | bullet ordered | align | link ~ undo redo | badge | source" />
             <flux:editor.content />
             <textarea
                 x-ref="source"

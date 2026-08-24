@@ -94,7 +94,7 @@
                         @endif
 
                         @if (strip_tags($plan['features']) !== '')
-                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&>p]:my-2 grow leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                            <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&>p]:my-2 grow leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
                                 {!! $plan['features'] !!}
                             </div>
                         @endif

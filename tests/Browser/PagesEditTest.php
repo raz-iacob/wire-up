@@ -214,10 +214,10 @@ it('strips formatting from pasted content but keeps paragraphs, lists and links'
     $browser = visit(route('admin.pages-edit', $page));
     $browser->assertNoJavascriptErrors();
 
-    $dirty = '<h1>Big title</h1><p>Hi <strong>bold</strong> <span style=\"color:red\">red</span> <a href=\"https://example.com\">link</a></p><ul><li>one</li></ul>';
+    $dirty = '<h2>Big title</h2><h5>Small title</h5><p>Hi <strong>bold</strong> <span style=\"color:red\">red</span> <a href=\"https://example.com\">link</a></p><ul><li>one</li></ul>';
 
     $browser->assertScript(
-        "(() => { const out = window.cleanPastedHtml('{$dirty}'); return !/<h1|<strong|<span|style=/.test(out) && out.includes('Big title') && out.includes('bold') && out.includes('href=\"https://example.com\"') && out.includes('<li>one</li>'); })()",
+        "(() => { const out = window.cleanPastedHtml('{$dirty}'); return !/<strong|<span|style=/.test(out) && out.includes('<h2>Big title</h2>') && out.includes('<h3>Small title</h3>') && out.includes('bold') && out.includes('href=\"https://example.com\"') && out.includes('<li>one</li>'); })()",
         true,
     );
 });

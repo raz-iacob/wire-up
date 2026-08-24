@@ -69,10 +69,21 @@ const Badge = Mark.create({
 });
 
 // Strips formatting from pasted content before it enters a rich-text editor:
-// headings and block wrappers become paragraphs, every other tag is unwrapped
-// to its text, and only paragraphs, line breaks, lists and links survive. Keeps
-// pastes from dragging in stray h1s, <strong>, inline styles, fonts, etc.
-const PASTE_ALLOWED_TAGS = new Set(["P", "BR", "UL", "OL", "LI", "A"]);
+// block wrappers become paragraphs, headings below the three the toolbar offers
+// are lifted to h3, every other tag is unwrapped to its text, and only
+// paragraphs, headings, line breaks, lists and links survive. Keeps pastes from
+// dragging in <strong>, inline styles, fonts, etc.
+const PASTE_ALLOWED_TAGS = new Set([
+    "P",
+    "BR",
+    "UL",
+    "OL",
+    "LI",
+    "A",
+    "H1",
+    "H2",
+    "H3",
+]);
 
 function cleanPastedHtml(html) {
     const doc = new DOMParser().parseFromString(html, "text/html");
@@ -83,7 +94,11 @@ function cleanPastedHtml(html) {
 
             const tag = el.tagName;
 
-            if (/^H[1-6]$/.test(tag) || tag === "DIV") {
+            if (/^H[4-6]$/.test(tag)) {
+                const heading = doc.createElement("h3");
+                heading.append(...el.childNodes);
+                el.replaceWith(heading);
+            } else if (tag === "DIV") {
                 const paragraph = doc.createElement("p");
                 paragraph.append(...el.childNodes);
                 el.replaceWith(paragraph);

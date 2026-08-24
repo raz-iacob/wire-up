@@ -26,6 +26,16 @@ it('renders the block editor on the pages edit screen', function (): void {
         ->assertSee('Add block');
 });
 
+it('offers the heading style picker in every rich-text toolbar', function (): void {
+    $html = editor($this->page)
+        ->set('blocks', [
+            'new-a' => ['id' => 'new-a', 'type' => 'rich-text', 'position' => 0, 'content' => []],
+        ])
+        ->html();
+
+    expect(mb_substr_count($html, 'data-editor="heading"'))->toBeGreaterThan(0);
+});
+
 it('renders each block type partial', function (): void {
     editor($this->page)
         ->set('blocks', [

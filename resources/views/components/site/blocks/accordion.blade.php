@@ -36,7 +36,7 @@
                         <flux:accordion.item :expanded="$loop->first">
                             <flux:accordion.heading>{{ $item['title'] }}</flux:accordion.heading>
                             <flux:accordion.content>
-                                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 leading-relaxed *:first:mt-0 *:last:mb-0">
+                                <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 leading-relaxed *:first:mt-0 *:last:mb-0">
                                     {!! $item['body'] !!}
                                 </div>
                             </flux:accordion.content>
