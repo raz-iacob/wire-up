@@ -6,6 +6,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | --- | --- |
 | resources/views/layouts/auth/** | .ai/rules/auth.md |
 | resources/views/components/site/blocks/** | .ai/rules/blocks.md |
+| tests/Browser/** | .ai/rules/browser.md |
 | ** | .ai/rules/general.md |
 | resources/js/editor.js | .ai/rules/js.md |
 | resources/views/layouts/** | .ai/rules/layouts.md |
