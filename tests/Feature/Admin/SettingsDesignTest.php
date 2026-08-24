@@ -348,54 +348,58 @@ it('stores the dark-mode header and footer logo items on update', function (): v
         ->and(Settings::get('logo_footer_dark')['id'])->toBe($footerDark->id);
 });
 
-it('persists a preset dark mode theme and defaults to the default dark preset', function (): void {
+it('leaves dark mode on by default and stores the switch', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
-        ->assertSet('theme_dark', config('theme.default_dark'))
-        ->set('theme_dark', 'slate')
+        ->assertSet('theme_dark', true)
         ->call('update')
         ->assertHasNoErrors();
 
-    expect(Settings::get('theme_dark'))->toBe('slate');
+    expect(Settings::get('theme_dark'))->toBe('on');
 });
 
 it('lets the admin turn dark mode off', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
-        ->set('theme_dark', 'none')
+        ->set('theme_dark', false)
         ->call('update')
         ->assertHasNoErrors();
 
     expect(Settings::get('theme_dark'))->toBe('none');
 });
 
-it('persists custom dark mode colors', function (): void {
+it('reads an older install that stored a preset key as dark mode being on', function (): void {
+    Settings::set(['theme_dark' => 'midnight']);
+
     $this->actingAsAdmin();
 
-    $palette = config('theme.presets.midnight.colors');
+    Livewire::test('pages::admin.settings-design')->assertSet('theme_dark', true);
+});
+
+it('persists custom dark mode colors alongside a custom theme', function (): void {
+    $this->actingAsAdmin();
+
+    $palette = config('theme.presets.blueprint.colors_dark');
 
     Livewire::test('pages::admin.settings-design')
-        ->set('theme_dark', 'custom')
+        ->set('theme', 'custom')
+        ->set('colors', config('theme.presets.blueprint.colors'))
         ->set('colors_dark', $palette)
         ->call('update')
         ->assertHasNoErrors();
 
-    expect(Settings::get('theme_dark'))->toBe('custom')
+    expect(Settings::get('theme_dark'))->toBe('on')
         ->and(Settings::get('colors_dark'))->toEqual($palette);
 });
 
-it('validates the dark mode theme is a known key and custom dark colors are complete', function (): void {
+it('validates custom dark colors are complete', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
-        ->set('theme_dark', 'vampire')
-        ->call('update')
-        ->assertHasErrors(['theme_dark']);
-
-    Livewire::test('pages::admin.settings-design')
-        ->set('theme_dark', 'custom')
+        ->set('theme', 'custom')
+        ->set('colors', config('theme.presets.blueprint.colors'))
         ->set('colors_dark', ['background' => '#010101'])
         ->call('update')
         ->assertHasErrors(['colors_dark.text']);
@@ -407,15 +411,17 @@ it('hydrates the stored dark palette on mount', function (): void {
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
-        ->assertSet('theme_dark', 'custom')
+        ->assertSet('theme_dark', true)
         ->assertSet('colors_dark.background', '#010101');
 });
 
-it('prefills the dark palette from the default dark preset when unset', function (): void {
+it('prefills the dark palette from the chosen theme when unset', function (): void {
+    Settings::set(['theme' => 'ocean']);
+
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-design')
-        ->assertSet('colors_dark', config('theme.presets.'.config('theme.default_dark').'.colors'));
+        ->assertSet('colors_dark', config('theme.presets.ocean.colors_dark'));
 });
 
 it('resolves the palette for a preset theme', function (): void {

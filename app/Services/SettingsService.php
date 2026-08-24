@@ -398,9 +398,28 @@ final class SettingsService
      */
     public function darkThemeColors(): array
     {
-        $theme = (string) config('site.theme_dark', '');
+        $mode = (string) config('site.theme_dark', '');
+        $mode = $mode === '' ? config()->string('theme.default_dark') : $mode;
 
-        return $this->paletteFromTheme($theme === '' ? config()->string('theme.default_dark') : $theme, 'site.colors_dark');
+        if ($mode === 'none') {
+            return [];
+        }
+
+        $theme = (string) config('site.theme', '');
+
+        if ($theme === 'custom' || $mode === 'custom') {
+            $custom = $this->normalizePalette(config('site.colors_dark', []));
+
+            if ($custom !== []) {
+                return $custom;
+            }
+
+            $theme = config()->string('theme.default');
+        }
+
+        $theme = $theme === '' ? config()->string('theme.default') : $theme;
+
+        return $this->normalizePalette(config()->array("theme.presets.$theme.colors_dark", []));
     }
 
     public function themeToggleEnabled(): bool
@@ -698,6 +717,14 @@ final class SettingsService
             ? config($customConfigKey, [])
             : config()->array("theme.presets.$theme.colors", []);
 
+        return $this->normalizePalette($colors);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function normalizePalette(mixed $colors): array
+    {
         if (! is_array($colors)) {
             return [];
         }

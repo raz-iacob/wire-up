@@ -29,7 +29,7 @@ final class UpdateDesignTool extends Tool
         $validated = $request->validate(
             [
                 'theme' => ['sometimes', 'string', Rule::in($options['themes'])],
-                'theme_dark' => ['sometimes', 'string', Rule::in($options['dark_themes'])],
+                'theme_dark' => ['sometimes', 'string', Rule::in($options['dark_modes'])],
                 'colors' => ['sometimes', 'array'],
                 'colors.*' => ['string', 'regex:/^#[0-9a-fA-F]{6}$/'],
                 'colors_dark' => ['sometimes', 'array'],
@@ -97,9 +97,9 @@ final class UpdateDesignTool extends Tool
 
         return [
             'theme' => $schema->string()->enum($options['themes'])->description('Color theme preset, or "custom" to use the colors argument.'),
-            'theme_dark' => $schema->string()->enum($options['dark_themes'])->description('Palette for visitors whose device prefers dark mode: "none" to disable, a preset, or "custom" with colors_dark.'),
+            'theme_dark' => $schema->string()->enum($options['dark_modes'])->description('Whether visitors whose device prefers dark mode get the theme\'s dark palette: "on" or "none". The palette comes from the chosen theme, or from colors_dark when theme is "custom".'),
             'colors' => $schema->object()->description('Custom palette keyed by slot (see options.color_slots in get-settings), hex values like "#1a2b3c". Requires theme "custom".'),
-            'colors_dark' => $schema->object()->description('Custom dark-mode palette keyed by slot, hex values like "#1a2b3c". Requires theme_dark "custom".'),
+            'colors_dark' => $schema->object()->description('Custom dark-mode palette keyed by slot, hex values like "#1a2b3c". Requires theme "custom".'),
             'heading_font' => $schema->string()->enum($options['fonts'])->description('Heading font, or "custom" with heading_font_custom.'),
             'body_font' => $schema->string()->enum($options['fonts'])->description('Body font, or "custom" with body_font_custom.'),
             'heading_font_custom' => $schema->string()->description('Google Font name used when heading_font is "custom".'),
@@ -124,7 +124,7 @@ final class UpdateDesignTool extends Tool
             'logo_header_dark' => $schema->integer()->description('Media id of the header logo shown in dark mode. Falls back to logo_header when unset.'),
             'logo_footer_dark' => $schema->integer()->description('Media id of the footer logo shown in dark mode. Falls back to logo_footer when unset.'),
             'favicon' => $schema->integer()->description('Media id of the browser tab icon. SVG and PNG both work; import one with upload-media.'),
-            'header_theme_toggle' => $schema->boolean()->description('Show a light/dark toggle in the header. Only has an effect when theme_dark is not "none".'),
+            'header_theme_toggle' => $schema->boolean()->description('Show a light/dark toggle in the header. Only has an effect when theme_dark is "on".'),
         ];
     }
 
@@ -134,7 +134,7 @@ final class UpdateDesignTool extends Tool
      */
     private function applyColors(array &$validated, array $slots): ?string
     {
-        foreach (['theme' => 'colors', 'theme_dark' => 'colors_dark'] as $themeKey => $colorsKey) {
+        foreach (['colors', 'colors_dark'] as $colorsKey) {
             if (isset($validated[$colorsKey])) {
                 $unknown = array_diff(array_keys($validated[$colorsKey]), $slots);
 
@@ -146,14 +146,14 @@ final class UpdateDesignTool extends Tool
                 $validated[$colorsKey] = [...$current, ...$validated[$colorsKey]];
             }
 
-            $theme = $validated[$themeKey] ?? SiteSettings::design()[$themeKey];
+            $theme = $validated['theme'] ?? SiteSettings::design()['theme'];
 
-            if ($theme === 'custom') {
+            if ($theme === 'custom' && ($colorsKey === 'colors' || isset($validated[$colorsKey]))) {
                 $colors = $validated[$colorsKey] ?? (is_array(config("site.$colorsKey")) ? config("site.$colorsKey") : []);
                 $missing = array_diff($slots, array_keys($colors));
 
                 if ($missing !== []) {
-                    $label = $themeKey === 'theme' ? 'custom theme' : 'custom dark theme';
+                    $label = $colorsKey === 'colors' ? 'custom theme' : 'custom dark theme';
 
                     return "The $label needs a color for every slot. Missing: ".implode(', ', $missing).'.';
                 }

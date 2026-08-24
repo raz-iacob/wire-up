@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+it('gives every preset a light and a dark palette covering every slot', function (): void {
+    $slots = array_keys(config()->array('theme.slots'));
+    $incomplete = [];
+
+    foreach (config()->array('theme.presets') as $key => $preset) {
+        foreach (['colors', 'colors_dark'] as $palette) {
+            $missing = array_diff($slots, array_keys($preset[$palette] ?? []));
+
+            if ($missing !== []) {
+                $incomplete[] = "{$key}.{$palette}: ".implode(', ', $missing);
+            }
+        }
+    }
+
+    expect($incomplete)->toBe([]);
+});
+
+it('only uses six-digit hex colours', function (): void {
+    $bad = [];
+
+    foreach (config()->array('theme.presets') as $key => $preset) {
+        foreach (['colors', 'colors_dark'] as $palette) {
+            foreach ($preset[$palette] as $slot => $hex) {
+                if (preg_match('/^#[0-9a-f]{6}$/', (string) $hex) !== 1) {
+                    $bad[] = "{$key}.{$palette}.{$slot} = {$hex}";
+                }
+            }
+        }
+    }
+
+    expect($bad)->toBe([]);
+});
+
+it('keeps a dark palette darker than its light counterpart', function (): void {
+    $luminance = function (string $hex): float {
+        [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+
+        return (0.2126 * $r + 0.7152 * $g + 0.0722 * $b) / 255;
+    };
+
+    $wrongWayRound = [];
+
+    foreach (config()->array('theme.presets') as $key => $preset) {
+        if ($luminance($preset['colors_dark']['background']) >= $luminance($preset['colors']['background'])) {
+            $wrongWayRound[] = $key;
+        }
+    }
+
+    expect($wrongWayRound)->toBe([]);
+});
+
+it('ships the blueprint preset in place of midnight', function (): void {
+    $presets = config()->array('theme.presets');
+
+    expect($presets)->toHaveKey('blueprint')
+        ->and($presets)->not->toHaveKey('midnight')
+        ->and($presets['blueprint']['colors_dark']['accent'])->toBe('#38b6ff');
+});

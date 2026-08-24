@@ -316,12 +316,12 @@ it('rejects incomplete or unknown custom colors', function (): void {
         ->assertSee('6-digit hex');
 });
 
-it('sets a preset dark mode theme and reports it', function (): void {
-    WireUpServer::tool(UpdateDesignTool::class, ['theme_dark' => 'midnight'])
+it('turns dark mode on and reports it', function (): void {
+    WireUpServer::tool(UpdateDesignTool::class, ['theme_dark' => 'on'])
         ->assertOk()
-        ->assertSee('"theme_dark":"midnight"');
+        ->assertSee('"theme_dark":"on"');
 
-    expect(Settings::get('theme_dark'))->toBe('midnight');
+    expect(Settings::get('theme_dark'))->toBe('on');
 
     WireUpServer::tool(UpdateDesignTool::class, ['theme_dark' => 'none'])->assertOk();
 
@@ -332,15 +332,16 @@ it('applies a full custom dark palette and rejects an incomplete one', function 
     $slots = array_keys(config()->array('theme.slots'));
     $colors = array_fill_keys($slots, '#0a0b0c');
 
-    WireUpServer::tool(UpdateDesignTool::class, ['theme_dark' => 'custom', 'colors_dark' => $colors])
+    Settings::set(['theme' => 'custom', 'colors' => $colors]);
+
+    WireUpServer::tool(UpdateDesignTool::class, ['colors_dark' => $colors])
         ->assertOk();
 
-    expect(Settings::get('theme_dark'))->toBe('custom')
-        ->and(Settings::get('colors_dark'))->toBe($colors);
+    expect(Settings::get('colors_dark'))->toBe($colors);
 
     Settings::set(['colors_dark' => []]);
 
-    WireUpServer::tool(UpdateDesignTool::class, ['theme_dark' => 'custom', 'colors_dark' => [$slots[0] => '#112233']])
+    WireUpServer::tool(UpdateDesignTool::class, ['colors_dark' => [$slots[0] => '#112233']])
         ->assertHasErrors()
         ->assertSee('custom dark theme');
 });

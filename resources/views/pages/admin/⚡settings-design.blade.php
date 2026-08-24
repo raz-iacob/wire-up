@@ -18,7 +18,7 @@ return new class extends Component
      */
     public array $colors = [];
 
-    public string $theme_dark;
+    public bool $theme_dark = true;
 
     /**
      * @var array<string, string>
@@ -101,8 +101,9 @@ return new class extends Component
 
         $this->theme = is_string($meta['theme'] ?? null) ? $meta['theme'] : config()->string('theme.default');
         $this->colors = $this->resolvePalette($this->theme, $meta);
-        $this->theme_dark = is_string($meta['theme_dark'] ?? null) ? $meta['theme_dark'] : config()->string('theme.default_dark');
-        $this->colors_dark = $this->resolveDarkPalette($this->theme_dark, $meta);
+        $storedDark = is_string($meta['theme_dark'] ?? null) ? $meta['theme_dark'] : config()->string('theme.default_dark');
+        $this->theme_dark = $storedDark !== 'none';
+        $this->colors_dark = $this->resolveDarkPalette($this->theme, $meta);
         $this->heading_font = $meta['heading_font'] ?? config()->string('theme.default_font');
         $this->body_font = $meta['body_font'] ?? config()->string('theme.default_font');
         $this->heading_font_custom = $meta['heading_font_custom'] ?? '';
@@ -139,7 +140,7 @@ return new class extends Component
 
         $rules = [
             'theme' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.presets')), 'custom'])],
-            'theme_dark' => ['required', 'string', Rule::in(['none', ...array_keys(config()->array('theme.presets')), 'custom'])],
+            'theme_dark' => ['boolean'],
             'heading_font' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.fonts')), 'custom'])],
             'body_font' => ['required', 'string', Rule::in([...array_keys(config()->array('theme.fonts')), 'custom'])],
             'heading_font_custom' => ['nullable', 'string', 'max:60', 'regex:/^[A-Za-z0-9 ]+$/', 'required_if:heading_font,custom'],
@@ -176,7 +177,7 @@ return new class extends Component
 
         foreach (array_keys(config()->array('theme.slots')) as $slot) {
             $rules["colors.$slot"] = ['required_if:theme,custom', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
-            $rules["colors_dark.$slot"] = ['required_if:theme_dark,custom', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
+            $rules["colors_dark.$slot"] = ['required_if:theme,custom', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
         }
 
         $validated = $this->validate($rules, [
@@ -190,12 +191,13 @@ return new class extends Component
         $metadata['heading_font_custom'] = mb_trim((string) ($validated['heading_font_custom'] ?? ''));
         $metadata['body_font_custom'] = mb_trim((string) ($validated['body_font_custom'] ?? ''));
         $metadata['custom_css'] = mb_trim((string) ($validated['custom_css'] ?? ''));
+        $metadata['theme_dark'] = $this->theme_dark ? 'on' : 'none';
 
         if ($this->theme === 'custom') {
             $metadata['colors'] = Arr::only($this->colors, array_keys(config()->array('theme.slots')));
         }
 
-        if ($this->theme_dark === 'custom') {
+        if ($this->theme === 'custom') {
             $metadata['colors_dark'] = Arr::only($this->colors_dark, array_keys(config()->array('theme.slots')));
         }
 
@@ -241,7 +243,7 @@ return new class extends Component
             return $this->onlyStringColors($meta['colors_dark']);
         }
 
-        return $this->presetColors(in_array($theme, ['custom', 'none'], true) ? config()->string('theme.default_dark') : $theme);
+        return $this->presetDarkColors($theme === 'custom' ? config()->string('theme.default') : $theme);
     }
 
     /**
@@ -250,6 +252,18 @@ return new class extends Component
     private function presetColors(string $preset): array
     {
         return $this->onlyStringColors(config()->array("theme.presets.$preset.colors", []));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function presetDarkColors(string $theme): array
+    {
+        $colors = $this->onlyStringColors(config()->array("theme.presets.$theme.colors_dark", []));
+
+        return $colors !== []
+            ? $colors
+            : $this->onlyStringColors(config()->array('theme.presets.'.config()->string('theme.default').'.colors_dark', []));
     }
 
     /**
@@ -302,11 +316,12 @@ return new class extends Component
             radii: @js(config('theme.radii')),
             borderWidths: @js(config('theme.border_widths')),
             presetPalettes: @js(collect($presets)->map(fn (array $p): array => $p['colors'])),
+            presetDarkPalettes: @js(collect($presets)->map(fn (array $p): array => $p['colors_dark'])),
             previewDark: false,
             get c() {
-                if (this.previewDark && $wire.theme_dark !== 'none') {
-                    return ($wire.theme_dark !== 'custom' && this.presetPalettes[$wire.theme_dark])
-                        ? this.presetPalettes[$wire.theme_dark]
+                if (this.previewDark && $wire.theme_dark) {
+                    return ($wire.theme !== 'custom' && this.presetDarkPalettes[$wire.theme])
+                        ? this.presetDarkPalettes[$wire.theme]
                         : ($wire.colors_dark || {})
                 }
 
@@ -361,7 +376,7 @@ return new class extends Component
     >
         <div class="order-2 md:sticky md:top-4 md:col-span-2">
             <flux:text class="mb-6">{{ __('Design the look of your public site — colours, fonts, and shape.') }}</flux:text>
-            <div class="mb-2 flex items-center justify-end gap-1" x-cloak x-show="$wire.theme_dark !== 'none'">
+            <div class="mb-2 flex items-center justify-end gap-1" x-cloak x-show="$wire.theme_dark">
                 <flux:button
                     size="sm"
                     variant="subtle"
@@ -406,7 +421,7 @@ return new class extends Component
                             <span>{{ __('About') }}</span>
                             <span
                                 x-cloak
-                                x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'"
+                                x-show="$wire.header_theme_toggle && $wire.theme_dark"
                                 class="inline-flex items-center"
                                 data-test="preview-theme-toggle"
                             >
@@ -445,7 +460,7 @@ return new class extends Component
                             <span>{{ __('Pricing') }}</span>
                             <span
                                 x-cloak
-                                x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'"
+                                x-show="$wire.header_theme_toggle && $wire.theme_dark"
                                 class="inline-flex items-center"
                                 data-test="preview-theme-toggle"
                             >
@@ -486,7 +501,7 @@ return new class extends Component
                         <div class="flex items-center justify-end gap-2">
                             <span
                                 x-cloak
-                                x-show="$wire.header_theme_toggle && $wire.theme_dark !== 'none'"
+                                x-show="$wire.header_theme_toggle && $wire.theme_dark"
                                 class="inline-flex items-center"
                                 data-test="preview-theme-toggle"
                             >
@@ -779,44 +794,14 @@ return new class extends Component
                 @endforeach
             </div>
 
-            <flux:select
-                variant="listbox"
-                wire:model="theme_dark"
+            <flux:switch
+                wire:model.live="theme_dark"
                 label="{{ __('Dark mode') }}"
-                description="{{ __('Optional palette for visitors whose device prefers dark mode.') }}"
-            >
-                <flux:select.option value="none">{{ __('Off') }}</flux:select.option>
-                @foreach ($presets as $key => $preset)
-                    <flux:select.option value="{{ $key }}">
-                        <span class="flex w-full items-center gap-3">
-                            <span class="flex-1">{{ $preset['label'] }}</span>
-                            <span class="flex items-center gap-1">
-                                @foreach (['background', 'primary_bg', 'header_bg', 'text'] as $s)
-                                    <span
-                                        class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30"
-                                        style="background-color: {{ $preset['colors'][$s] }}"
-                                    ></span>
-                                @endforeach
-                            </span>
-                        </span>
-                    </flux:select.option>
-                @endforeach
-                <flux:select.option value="custom">
-                    <span class="flex w-full items-center gap-3">
-                        <span class="flex-1">{{ __('Custom') }}</span>
-                        <span class="flex items-center gap-1">
-                            @foreach (['background', 'primary_bg', 'header_bg', 'text'] as $s)
-                                <span
-                                    class="size-4 rounded-full ring-1 ring-black/30 dark:ring-white/30"
-                                    style="background-color: {{ $colors_dark[$s] ?? '#cccccc' }}"
-                                ></span>
-                            @endforeach
-                        </span>
-                    </span>
-                </flux:select.option>
-            </flux:select>
+                description="{{ __('Serve this theme\'s dark palette to visitors whose device prefers dark mode.') }}"
+                align="left"
+            />
 
-            <div x-cloak x-show="$wire.theme_dark === 'custom'" class="space-y-6">
+            <div x-cloak x-show="$wire.theme === 'custom' && $wire.theme_dark" class="space-y-6">
                 @foreach ($slotsByGroup as $group => $groupSlots)
                     <div class="space-y-3">
                         <flux:heading size="sm">{{ __($group) }} — {{ __('Dark mode') }}</flux:heading>

@@ -26,10 +26,10 @@ function publishedPage(string $slug): Page
 }
 
 it('enables the theme toggle only with a dark theme and the setting on', function (): void {
-    Settings::set(['theme_dark' => 'midnight', 'header_theme_toggle' => true]);
+    Settings::set(['theme_dark' => 'on', 'header_theme_toggle' => true]);
     expect((new SettingsService)->themeToggleEnabled())->toBeTrue();
 
-    Settings::set(['theme_dark' => 'midnight', 'header_theme_toggle' => false]);
+    Settings::set(['theme_dark' => 'on', 'header_theme_toggle' => false]);
     expect((new SettingsService)->themeToggleEnabled())->toBeFalse();
 
     Settings::set(['theme_dark' => 'none', 'header_theme_toggle' => true]);
@@ -262,19 +262,26 @@ it('emits the default dark palette out of the box and none once disabled', funct
     expect((new SettingsService)->themeCss())->not->toContain('prefers-color-scheme');
 });
 
-it('emits a preset dark palette under prefers-color-scheme', function (): void {
-    Settings::set(['theme_dark' => 'midnight']);
+it('emits the chosen theme\'s dark palette under prefers-color-scheme', function (): void {
+    Settings::set(['theme' => 'blueprint', 'theme_dark' => 'on']);
 
     expect((new SettingsService)->themeCss())
         ->toContain(':root.dark{')
         ->toContain('@media(prefers-color-scheme:dark){:root:where(:not(.light)){')
-        ->toContain('--wire-body-bg:#0a0a0a')
-        ->toContain('--color-accent:#6366f1');
+        ->toContain('--wire-body-bg:#060a11')
+        ->toContain('--color-accent:#38b6ff');
+});
+
+it('reads an older install that stored a dark preset key as dark mode being on', function (): void {
+    Settings::set(['theme' => 'forest', 'theme_dark' => 'midnight']);
+
+    expect((new SettingsService)->themeCss())
+        ->toContain('--wire-body-bg:#052e16');
 });
 
 it('emits a custom dark palette with its accent tokens', function (): void {
     Settings::set(['theme_dark' => 'custom', 'colors_dark' => array_merge(
-        config()->array('theme.presets.midnight.colors'),
+        config()->array('theme.presets.blueprint.colors_dark'),
         ['accent' => '#fedcba'],
     )]);
 
@@ -540,9 +547,9 @@ it('returns null when no published homepage can be resolved', function (): void 
 });
 
 it('resolves a theme slot color from the active preset', function (): void {
-    config()->set('site.theme', 'midnight');
+    config()->set('site.theme', 'blueprint');
 
-    expect((new SettingsService)->color('header_bg'))->toBe('#0a0a0a');
+    expect((new SettingsService)->color('header_bg'))->toBe('#ffffff');
 });
 
 it('resolves a custom theme slot color', function (): void {

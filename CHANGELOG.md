@@ -4,6 +4,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
+- Every colour theme now ships a matching dark palette, so dark mode is a single switch instead of a second theme to pick. Choose Ocean and visitors on a dark device get Ocean's dark palette. The Midnight theme is replaced by **Blueprint** — the palette this site uses — which carries both a light and a dark half. Sites that had picked a separate dark theme keep dark mode switched on; a custom theme still gets its own dark colours.
 - The "Allow this user to sign in" switch is now locked when turning it off would lock you out of your own account, or leave the site with no full-access user who can still sign in — with the reason shown next to it. The check that protects the last full-access role now also ignores accounts that are switched off.
 - A header or footer menu item styled as a button no longer picks up the underline hover effect meant for links — it fades slightly instead, like every other button on the site.
 - The divider block gains a line style, a colour and a width: solid, faded at both edges, faded to the left or right, dotted or dashed; any colour you like or the theme's own; and content width or edge to edge.

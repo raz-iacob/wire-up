@@ -75,7 +75,7 @@ final readonly class SiteSettings
     {
         return [
             'themes' => [...array_keys(config()->array('theme.presets')), 'custom'],
-            'dark_themes' => ['none', ...array_keys(config()->array('theme.presets')), 'custom'],
+            'dark_modes' => ['on', 'none'],
             'fonts' => [...array_keys(config()->array('theme.fonts')), 'custom'],
             'heading_sizes' => array_keys(config()->array('theme.heading_sizes')),
             'body_sizes' => array_keys(config()->array('theme.body_sizes')),
