@@ -15,7 +15,7 @@
         "php": "^8.5.0",
         "ext-zip": "*",
         "enshrined/svg-sanitize": "^0.22.0",
-        "intervention/image": "^4.2.1",
+        "intervention/image": "^4.3.0",
         "laravel/ai": "^0.10.3",
         "laravel/fortify": "^1.38",
         "laravel/framework": "^13.26.1",
