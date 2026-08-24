@@ -86,9 +86,12 @@ final class Block extends Model
     {
         $locale ??= app()->getLocale();
 
-        return (string) (
-            data_get($this->content, "{$field}.{$locale}", data_get($this->content, $field.'.'.config()->string('app.default_locale', 'en'), ''))
-        );
+        return $this->asString(data_get($this->content, "{$field}.{$locale}", data_get($this->content, $field.'.'.config()->string('app.default_locale', 'en'), '')));
+    }
+
+    public function plain(string $field, string $default = ''): string
+    {
+        return $this->asString(data_get($this->content, $field, $default), $default);
     }
 
     public function plainText(?string $locale = null): string
@@ -258,6 +261,11 @@ final class Block extends Model
     {
         return ($this->content[$field]['link']['type'] ?? null) === 'url'
             && (bool) ($this->content[$field]['link']['newTab'] ?? false);
+    }
+
+    private function asString(mixed $value, string $default = ''): string
+    {
+        return is_scalar($value) ? (string) $value : $default;
     }
 
     private function toPlainText(string $value): string

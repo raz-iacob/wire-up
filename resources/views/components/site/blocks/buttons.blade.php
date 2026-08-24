@@ -17,7 +17,7 @@
             'text' => $block->text("items.{$i}.text"),
             'url' => $block->ctaUrl("items.{$i}"),
             'newTab' => data_get($item, 'link.type') === 'url' && (bool) data_get($item, 'link.newTab'),
-            'variant' => (string) data_get($item, 'variant', 'primary'),
+            'variant' => $block->plain("items.{$i}.variant", 'primary'),
         ])
         ->filter(fn (array $button): bool => $button['text'] !== '' && $button['url'] !== null)
         ->values();

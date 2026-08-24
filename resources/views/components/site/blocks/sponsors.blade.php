@@ -17,8 +17,8 @@
             'logo' => $block->imageUrl("items.{$i}.logo", ['w' => 400]),
             'name' => $block->text("items.{$i}.name"),
             'alt' => $block->text("items.{$i}.name") ?: $block->imageAlt("items.{$i}.logo"),
-            'link' => mb_trim((string) data_get($item, 'link', '')),
-            'tier' => mb_trim((string) data_get($item, 'tier', '')),
+            'link' => mb_trim($block->plain("items.{$i}.link")),
+            'tier' => mb_trim($block->plain("items.{$i}.tier")),
         ])
         ->filter(fn (array $item): bool => $item['logo'] !== null)
         ->values();
