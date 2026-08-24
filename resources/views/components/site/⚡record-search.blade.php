@@ -78,7 +78,7 @@ return new class extends Component
 <div>
     @php
         $hasBg = (bool) ($content['hasBackground'] ?? false);
-        $layout = in_array($content['layout'] ?? 'grid', ['grid', 'list'], true) ? $content['layout'] : 'grid';
+        $layout = in_array($content['layout'] ?? 'grid', ['grid', 'list'], true) ? ($content['layout'] ?? 'grid') : 'grid';
         $columns = (int) ($content['columns'] ?? 3);
         $showImage = (bool) ($content['showImage'] ?? true);
         $hasHeading = strip_tags($heading) !== '';

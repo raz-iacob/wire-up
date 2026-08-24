@@ -333,3 +333,28 @@ it('renders a translatable boolean badge from the active locale value', function
         ->assertSee('Last One')
         ->assertSee('Clearance');
 });
+
+it('renders a collection block whose content omits the layout key', function (): void {
+    $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides', 'fields' => []]);
+    collectionRecord($type, 'Build a page');
+
+    $slug = collectionPage($type->id, [
+        'source' => 'latest',
+        'recordTypeId' => $type->id,
+    ]);
+
+    $this->get(route('page', $slug))
+        ->assertOk()
+        ->assertSee('Build a page');
+});
+
+it('renders a paginated collection block whose content omits the layout key', function (): void {
+    $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides', 'fields' => []]);
+    collectionRecord($type, 'Build a page');
+
+    Livewire::test('site.record-collection', [
+        'blockId' => 'b1',
+        'mode' => 'paged',
+        'content' => ['source' => 'latest', 'recordTypeId' => $type->id, 'perPage' => 6],
+    ])->assertOk()->assertSee('Build a page');
+});
