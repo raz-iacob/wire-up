@@ -24,6 +24,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - A new "Previous / Next" block links a record to the ones published before and after it, so a series of guides or posts reads in order without hand-written links. It can stay inside the record's category, and shows nothing on a page.
 - The video block is no longer limited to three aspect ratios: it can now take the shape of the uploaded file itself, or any ratio you type such as 16:10, so a recording no longer has to be cropped to fit.
 - Agents and the AI assistant can see what is waiting in the server import folder with a new `list-import-files` tool, instead of having to be told each file name before `upload-media` will work.
+- Deleting a page, record or media file through an outside agent such as Claude Desktop now has to be confirmed in the call itself, rather than going through immediately. The in-admin assistant is unchanged — it still asks you to approve each deletion in the chat.
 
 ## v0.1.1 — 2026-08-22
 

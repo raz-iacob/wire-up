@@ -279,3 +279,21 @@ it('forbids sending for users without the assistant ability', function (): void 
 
     SiteAssistant::assertNeverPrompted();
 });
+
+it('deletes only after the owner confirms, without the model passing the confirm flag', function (): void {
+    $this->actingAsAdmin();
+    $page = Page::factory()->create();
+
+    SiteAssistant::fake([new ToolCall('c1', 'delete-page', ['page' => $page->id]), 'Ready to delete.']);
+
+    $component = Livewire::test('admin.assistant')
+        ->call('send', 'Delete it')
+        ->assertSet('messages.1.pending.0.status', 'awaiting');
+
+    expect(Page::query()->whereKey($page->id)->exists())->toBeTrue();
+
+    $component->call('confirmAction', 1, 0)
+        ->assertSet('messages.1.pending.0.status', 'confirmed');
+
+    expect(Page::query()->whereKey($page->id)->exists())->toBeFalse();
+});

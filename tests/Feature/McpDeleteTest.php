@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Ai\Agents\SiteAssistant;
+use App\Ai\Tools\ConfirmationTool;
 use App\Mcp\Servers\WireUpServer;
 use App\Mcp\Tools\DeleteMediaTool;
 use App\Mcp\Tools\DeletePageTool;
@@ -14,6 +15,7 @@ use App\Models\Record;
 use App\Models\RecordType;
 use App\Models\Settings;
 use App\Models\Slug;
+use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Illuminate\Support\Facades\Storage;
 
 it('deletes a page with its blocks, slugs and translations', function (): void {
@@ -21,7 +23,7 @@ it('deletes a page with its blocks, slugs and translations', function (): void {
     $page->slugs()->create(['locale' => 'en', 'slug' => 'scratch-page']);
     $page->updateBlocks([['id' => 'new-1', 'type' => 'divider', 'content' => ['size' => 'medium']]]);
 
-    WireUpServer::tool(DeletePageTool::class, ['page' => $page->id])
+    WireUpServer::tool(DeletePageTool::class, ['page' => $page->id, 'confirm' => true])
         ->assertOk()
         ->assertSee('Scratch Page');
 
@@ -34,7 +36,7 @@ it('refuses to delete the homepage', function (): void {
     $page = Page::factory()->create(['title' => 'Front Door']);
     Settings::set(['home_page_id' => $page->id]);
 
-    WireUpServer::tool(DeletePageTool::class, ['page' => $page->id])
+    WireUpServer::tool(DeletePageTool::class, ['page' => $page->id, 'confirm' => true])
         ->assertHasErrors()
         ->assertSee('is the homepage and cannot be deleted');
 
@@ -42,7 +44,7 @@ it('refuses to delete the homepage', function (): void {
 });
 
 it('reports an unknown page id', function (): void {
-    WireUpServer::tool(DeletePageTool::class, ['page' => 999999])
+    WireUpServer::tool(DeletePageTool::class, ['page' => 999999, 'confirm' => true])
         ->assertHasErrors(['No page with id 999999. Use list-pages to see the available pages.']);
 });
 
@@ -55,7 +57,7 @@ it('deletes a record', function (): void {
     $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides']);
     $record = Record::factory()->create(['record_type_id' => $type->id, 'title' => 'Old Guide']);
 
-    WireUpServer::tool(DeleteRecordTool::class, ['record' => $record->id])
+    WireUpServer::tool(DeleteRecordTool::class, ['record' => $record->id, 'confirm' => true])
         ->assertOk()
         ->assertSee('Old Guide');
 
@@ -63,7 +65,7 @@ it('deletes a record', function (): void {
 });
 
 it('reports an unknown record id', function (): void {
-    WireUpServer::tool(DeleteRecordTool::class, ['record' => 999999])
+    WireUpServer::tool(DeleteRecordTool::class, ['record' => 999999, 'confirm' => true])
         ->assertHasErrors(['No record with id 999999. Use list-records to see the available records.']);
 });
 
@@ -78,7 +80,7 @@ it('deletes an unused media file', function (): void {
 
     $media = Media::factory()->create(['source' => 'media/stray.png', 'filename' => 'stray.png', 'thumbnail' => null]);
 
-    WireUpServer::tool(DeleteMediaTool::class, ['media' => $media->id])
+    WireUpServer::tool(DeleteMediaTool::class, ['media' => $media->id, 'confirm' => true])
         ->assertOk()
         ->assertSee('stray.png');
 
@@ -94,7 +96,7 @@ it('refuses to delete media that is still in use and says what uses it', functio
     $page = Page::factory()->create(['title' => 'Uses The Image']);
     $page->media()->attach($media, ['role' => 'og_image', 'locale' => 'en', 'position' => 0]);
 
-    WireUpServer::tool(DeleteMediaTool::class, ['media' => $media->id])
+    WireUpServer::tool(DeleteMediaTool::class, ['media' => $media->id, 'confirm' => true])
         ->assertHasErrors()
         ->assertSee('still in use by');
 
@@ -102,7 +104,7 @@ it('refuses to delete media that is still in use and says what uses it', functio
 });
 
 it('reports an unknown media id', function (): void {
-    WireUpServer::tool(DeleteMediaTool::class, ['media' => 999999])
+    WireUpServer::tool(DeleteMediaTool::class, ['media' => 999999, 'confirm' => true])
         ->assertHasErrors(['No media with id 999999. Use list-media to see the library.']);
 });
 
@@ -125,7 +127,7 @@ it('advertises each delete tool with the id it needs', function (string $tool, s
     $advertised = resolve($tool)->toArray();
 
     expect($advertised['name'])->toBe($name)
-        ->and($advertised['inputSchema']['required'])->toBe([$argument])
+        ->and($advertised['inputSchema']['required'])->toBe(['confirm', $argument])
         ->and($advertised['inputSchema']['properties'])->toHaveKey($argument)
         ->and($advertised['description'])->toContain('cannot be undone');
 })->with([
@@ -133,3 +135,29 @@ it('advertises each delete tool with the id it needs', function (string $tool, s
     'record' => [DeleteRecordTool::class, 'delete-record', 'record'],
     'media' => [DeleteMediaTool::class, 'delete-media', 'media'],
 ]);
+
+it('refuses to delete anything unless the call confirms it', function (string $tool, array $arguments): void {
+    WireUpServer::tool($tool, $arguments)
+        ->assertHasErrors();
+})->with([
+    'page' => [DeletePageTool::class, ['page' => 1]],
+    'record' => [DeleteRecordTool::class, ['record' => 1]],
+    'media' => [DeleteMediaTool::class, ['media' => 1]],
+]);
+
+it('keeps a page that was asked to be deleted without confirmation', function (): void {
+    $page = Page::factory()->create();
+
+    WireUpServer::tool(DeletePageTool::class, ['page' => $page->id, 'confirm' => false])
+        ->assertHasErrors(['Deleting a page is permanent and cannot be undone. Check with the site owner first, then call this again with "confirm": true.']);
+
+    expect(Page::query()->whereKey($page->id)->exists())->toBeTrue();
+});
+
+it('hides the confirm flag from the in-admin assistant, which approves in its own UI', function (): void {
+    $tool = new ConfirmationTool(resolve(DeletePageTool::class));
+
+    expect($tool->schema(new JsonSchemaTypeFactory))
+        ->toHaveKey('page')
+        ->not->toHaveKey('confirm');
+});

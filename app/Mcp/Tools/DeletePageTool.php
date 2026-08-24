@@ -24,8 +24,14 @@ final class DeletePageTool extends Tool implements RequiresConfirmation
     public function handle(Request $request): Response
     {
         $validated = $request->validate(
-            ['page' => ['required', 'integer']],
-            ['page.required' => 'Pass the page id. Use list-pages to find it.'],
+            [
+                'page' => ['required', 'integer'],
+                'confirm' => ['accepted'],
+            ],
+            [
+                'page.required' => 'Pass the page id. Use list-pages to find it.',
+                'confirm.accepted' => 'Deleting a page is permanent and cannot be undone. Check with the site owner first, then call this again with "confirm": true.',
+            ],
         );
 
         $page = Page::query()->with('slugs')->find($validated['page']);
@@ -54,6 +60,9 @@ final class DeletePageTool extends Tool implements RequiresConfirmation
     public function schema(JsonSchema $schema): array
     {
         return [
+            'confirm' => $schema->boolean()
+                ->required()
+                ->description('Must be true. Deleting is permanent, so confirm with the site owner before setting it.'),
             'page' => $schema->integer()
                 ->required()
                 ->description('The id of the page to delete, as returned by list-pages.'),

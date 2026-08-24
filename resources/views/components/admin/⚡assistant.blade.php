@@ -162,7 +162,7 @@ return new class extends Component
             return;
         }
 
-        new McpServerTool(resolve($class))->handle(new ToolRequest($pending['args']));
+        new McpServerTool(resolve($class))->handle(new ToolRequest([...$pending['args'], 'confirm' => true]));
 
         $this->messages[$message]['pending'][$action]['status'] = 'confirmed';
     }

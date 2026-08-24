@@ -23,8 +23,14 @@ final class DeleteMediaTool extends Tool implements RequiresConfirmation
     public function handle(Request $request): Response
     {
         $validated = $request->validate(
-            ['media' => ['required', 'integer']],
-            ['media.required' => 'Pass the media id. Use list-media to find it.'],
+            [
+                'media' => ['required', 'integer'],
+                'confirm' => ['accepted'],
+            ],
+            [
+                'media.required' => 'Pass the media id. Use list-media to find it.',
+                'confirm.accepted' => 'Deleting a file is permanent and cannot be undone. Check with the site owner first, then call this again with "confirm": true.',
+            ],
         );
 
         $media = Media::query()->find($validated['media']);
@@ -53,6 +59,9 @@ final class DeleteMediaTool extends Tool implements RequiresConfirmation
     public function schema(JsonSchema $schema): array
     {
         return [
+            'confirm' => $schema->boolean()
+                ->required()
+                ->description('Must be true. Deleting is permanent, so confirm with the site owner before setting it.'),
             'media' => $schema->integer()
                 ->required()
                 ->description('The id of the media item to delete, as returned by list-media.'),

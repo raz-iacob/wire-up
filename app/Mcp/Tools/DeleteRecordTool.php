@@ -23,8 +23,14 @@ final class DeleteRecordTool extends Tool implements RequiresConfirmation
     public function handle(Request $request): Response
     {
         $validated = $request->validate(
-            ['record' => ['required', 'integer']],
-            ['record.required' => 'Pass the record id. Use list-records to find it.'],
+            [
+                'record' => ['required', 'integer'],
+                'confirm' => ['accepted'],
+            ],
+            [
+                'record.required' => 'Pass the record id. Use list-records to find it.',
+                'confirm.accepted' => 'Deleting a record is permanent and cannot be undone. Check with the site owner first, then call this again with "confirm": true.',
+            ],
         );
 
         $record = Record::query()->with(['recordType', 'slugs'])->find($validated['record']);
@@ -50,6 +56,9 @@ final class DeleteRecordTool extends Tool implements RequiresConfirmation
     public function schema(JsonSchema $schema): array
     {
         return [
+            'confirm' => $schema->boolean()
+                ->required()
+                ->description('Must be true. Deleting is permanent, so confirm with the site owner before setting it.'),
             'record' => $schema->integer()
                 ->required()
                 ->description('The id of the record to delete, as returned by list-records.'),
