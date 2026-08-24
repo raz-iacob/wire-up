@@ -43,8 +43,9 @@ return new class extends Component
 
         $this->brand = $service->title() ?: config()->string('app.name');
         $this->tagline = $service->description();
-        $this->logo = $service->logoUrl('logo_footer');
-        $this->logoDark = $service->logoUrl('logo_footer_dark');
+        $logos = $service->logosForSurface('logo_footer', 'footer_bg');
+        $this->logo = $logos['light'];
+        $this->logoDark = $logos['dark'];
 
         $this->year = (int) now()->year;
     }

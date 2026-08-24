@@ -59,8 +59,9 @@ return new class extends Component
         $this->buttons = array_values(array_filter($this->items, fn (array $item): bool => in_array($item['appearance'], ['button', 'icon'], true)));
 
         $this->brand = $service->title() ?: config()->string('app.name');
-        $this->logo = $service->logoUrl('logo_header');
-        $this->logoDark = $service->logoUrl('logo_header_dark');
+        $logos = $service->logosForSurface('logo_header', 'header_bg');
+        $this->logo = $logos['light'];
+        $this->logoDark = $logos['dark'];
 
         $this->position = $this->transparent ? 'absolute inset-x-0 top-0 z-40' : ($sticky ? 'sticky top-0 z-40 shadow-sm' : 'relative');
 

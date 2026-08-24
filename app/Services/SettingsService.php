@@ -330,6 +330,23 @@ final class SettingsService
         return $url === null ? null : ['url' => $url, 'height' => 50];
     }
 
+    /**
+     * @return array{light: ?string, dark: ?string}
+     */
+    public function logosForSurface(string $role, string $slot): array
+    {
+        $onLight = $this->logoUrl($role);
+        $onDark = $this->logoUrl($role.'_dark');
+
+        $lightPalette = $this->themeColors();
+        $darkPalette = $this->darkThemeColors() ?: $lightPalette;
+
+        return [
+            'light' => $this->isDarkSurface($lightPalette, $slot) ? ($onDark ?: $onLight) : $onLight,
+            'dark' => $this->isDarkSurface($darkPalette, $slot) ? ($onDark ?: $onLight) : ($onLight ?: $onDark),
+        ];
+    }
+
     public function logoUrl(string $role, string $crop = 'default', int $maxHeight = 320): ?string
     {
         $item = config('site.'.$role);
@@ -676,6 +693,22 @@ final class SettingsService
             'display' => self::normalizeMenuDisplay(null),
             'items' => [],
         ];
+    }
+
+    /**
+     * @param  array<string, string>  $palette
+     */
+    private function isDarkSurface(array $palette, string $slot): bool
+    {
+        $hex = $palette[$slot] ?? null;
+
+        if (! is_string($hex) || preg_match('/^#[0-9a-fA-F]{6}$/', $hex) !== 1) {
+            return false;
+        }
+
+        [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+
+        return (0.2126 * (float) $r + 0.7152 * (float) $g + 0.0722 * (float) $b) / 255 < 0.5;
     }
 
     private function resolveHomePage(bool $publishedOnly): ?Page
