@@ -8,10 +8,12 @@ use App\Enums\FieldType;
 use App\Enums\MediaType;
 use Carbon\CarbonInterface;
 use Database\Factories\RecordTypeFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * @property-read int $id
@@ -32,8 +34,56 @@ final class RecordType extends Model
     use HasFactory;
 
     /**
+     * @var list<string>
+     */
+    protected $with = ['translations'];
+
+    /**
+     * @return MorphMany<Translation, $this>
+     */
+    public function translations(): MorphMany
+    {
+        return $this->morphMany(Translation::class, 'translatable');
+    }
+
+    public function nameFor(?string $locale = null, ?string $fallback = null): string
+    {
+        $translated = $this->nameTranslations()[$locale ?? app()->getLocale()] ?? '';
+
+        return $translated !== '' ? $translated : ($fallback ?? (string) $this->getRawOriginal('name'));
+    }
+
+    /**
      * @return array<string, string>
      */
+    public function nameTranslations(): array
+    {
+        return $this->translations
+            ->where('key', 'name')
+            ->mapWithKeys(fn (Translation $translation): array => [$translation->locale => (string) $translation->body])
+            ->all();
+    }
+
+    /**
+     * @param  array<string, string>  $names
+     */
+    public function syncNameTranslations(array $names): void
+    {
+        foreach ($names as $locale => $name) {
+            $name = mb_trim($name);
+
+            if ($name === '') {
+                $this->translations()->where('key', 'name')->where('locale', $locale)->delete();
+
+                continue;
+            }
+
+            $this->translations()->updateOrCreate(['key' => 'name', 'locale' => $locale], ['body' => $name]);
+        }
+
+        $this->unsetRelation('translations');
+    }
+
     public function casts(): array
     {
         return [
@@ -195,5 +245,18 @@ final class RecordType extends Model
         }
 
         return null;
+    }
+
+    protected static function booted(): void
+    {
+        self::deleting(fn (self $type) => $type->translations()->delete());
+    }
+
+    /**
+     * @return Attribute<string, never>
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::get(fn (mixed $stored): string => $this->nameFor(app()->getLocale(), (string) $stored));
     }
 }

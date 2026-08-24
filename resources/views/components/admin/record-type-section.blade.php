@@ -1,6 +1,7 @@
 @props([
     'type',
     'index',
+    'extraLocales' => [],
 ])
 
 <div
@@ -59,6 +60,17 @@
                     />
                     <flux:error name="types.{{ $index }}.name" />
                 </flux:field>
+                @foreach ($extraLocales as $code => $language)
+                    <flux:field wire:key="rtype-name-{{ $type['_key'] }}-{{ $code }}">
+                        <flux:label>{{ __('Name in :language', ['language' => $language]) }}</flux:label>
+                        <flux:input
+                            wire:model="types.{{ $index }}.translations.{{ $code }}"
+                            :placeholder="$type['name']"
+                        />
+                        <flux:error name="types.{{ $index }}.translations.{{ $code }}" />
+                    </flux:field>
+                @endforeach
+
                 <flux:field>
                     <flux:label>{{ __('URL prefix') }}</flux:label>
                     <flux:input

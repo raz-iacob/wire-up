@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Record;
+use App\Models\RecordType;
 use App\Models\User;
 
 return [
@@ -23,6 +24,7 @@ return [
         'media' => Media::class,
         'record' => Record::class,
         'category' => Category::class,
+        'record_type' => RecordType::class,
         'user' => User::class,
     ],
 ];

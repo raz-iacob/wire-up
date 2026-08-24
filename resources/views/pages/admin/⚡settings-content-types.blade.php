@@ -58,6 +58,20 @@ return new class extends Component
         ));
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function extraLocales(): array
+    {
+        $localization = resolve('localization');
+        $default = $localization->getDefaultLocale();
+
+        return collect($localization->getActiveLocales())
+            ->except($default)
+            ->mapWithKeys(fn (array $locale, string $code): array => [$code => (string) ($locale['name'] ?? $code)])
+            ->all();
+    }
+
     public function addPreset(string $key): void
     {
         $preset = RecordTypePresets::find($key);
@@ -73,6 +87,7 @@ return new class extends Component
             'id' => null,
             'key' => $preset['key'],
             'name' => $preset['name'],
+            'translations' => [],
             'slug_prefix' => $preset['slug_prefix'],
             'icon' => $preset['icon'],
             'breadcrumbs' => false,
@@ -88,6 +103,7 @@ return new class extends Component
             'id' => null,
             'key' => '',
             'name' => '',
+            'translations' => [],
             'slug_prefix' => '',
             'icon' => 'rectangle-stack',
             'breadcrumbs' => false,
@@ -203,8 +219,11 @@ return new class extends Component
                     $this->types[$position]['id'] = $type->id;
                     $this->types[$position]['key'] = $type->key;
                 } else {
-                    $update->handle(RecordType::query()->findOrFail($row['id']), $attributes);
+                    $type = RecordType::query()->findOrFail($row['id']);
+                    $update->handle($type, $attributes);
                 }
+
+                $type->syncNameTranslations(is_array($row['translations'] ?? null) ? $row['translations'] : []);
             }
         });
 
@@ -318,7 +337,8 @@ return new class extends Component
             '_key' => (string) $this->seq++,
             'id' => $type->id,
             'key' => $type->key,
-            'name' => $type->name,
+            'name' => (string) $type->getRawOriginal('name'),
+            'translations' => $type->nameTranslations(),
             'slug_prefix' => $type->slug_prefix,
             'icon' => $type->icon,
             'breadcrumbs' => $type->breadcrumbs,
@@ -408,6 +428,8 @@ return new class extends Component
 
         foreach (array_keys($this->types) as $index) {
             $rules["types.$index.name"] = ['required', 'string', 'max:255'];
+            $rules["types.$index.translations"] = ['array'];
+            $rules["types.$index.translations.*"] = ['nullable', 'string', 'max:255'];
             $rules["types.$index.slug_prefix"] = [
                 'required', 'string', 'lowercase', 'max:255',
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
@@ -518,7 +540,11 @@ return new class extends Component
                     @else
                         <div wire:sort="reorderTypes" class="space-y-3">
                             @foreach ($types as $index => $type)
-                                <x-admin.record-type-section :type="$type" :index="$index" />
+                                <x-admin.record-type-section
+                                    :type="$type"
+                                    :index="$index"
+                                    :extra-locales="$this->extraLocales()"
+                                />
                             @endforeach
                         </div>
                     @endif
