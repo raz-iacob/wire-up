@@ -35,9 +35,7 @@ return new class extends Component
     {
         $locale = resolve('localization')->getDefaultLocale();
 
-        $this->types = RecordType::query()
-            ->orderBy('position')
-            ->get()
+        $this->types = RecordType::ordered()
             ->map(fn (RecordType $type): array => $this->hydrateType($type, $locale))
             ->all();
     }

@@ -32,15 +32,24 @@ return new class extends Component
     #[Computed]
     public function recordTypeStats(): array
     {
-        return RecordType::query()
-            ->orderBy('position')
-            ->get()
+        $totals = Record::query()
+            ->selectRaw('record_type_id, count(*) as total')
+            ->groupBy('record_type_id')
+            ->pluck('total', 'record_type_id');
+
+        $published = Record::query()
+            ->published()
+            ->selectRaw('record_type_id, count(*) as total')
+            ->groupBy('record_type_id')
+            ->pluck('total', 'record_type_id');
+
+        return RecordType::ordered()
             ->map(fn (RecordType $type): array => [
                 'key' => $type->key,
                 'name' => $type->name,
                 'icon' => $type->icon,
-                'total' => $type->records()->count(),
-                'published' => $type->records()->published()->count(),
+                'total' => (int) ($totals[$type->id] ?? 0),
+                'published' => (int) ($published[$type->id] ?? 0),
             ])
             ->all();
     }
@@ -66,7 +75,7 @@ return new class extends Component
     #[Computed]
     public function unreadMessages(): int
     {
-        return Submission::query()->unread()->count();
+        return Submission::unreadCount();
     }
 
     /**
@@ -105,7 +114,7 @@ return new class extends Component
     public function recentActivity(): array
     {
         $records = Record::query()
-            ->with(['recordType', 'editor'])
+            ->with(['recordType', 'editor', 'translations'])
             ->latest('updated_at')
             ->limit(8)
             ->get()
@@ -120,7 +129,7 @@ return new class extends Component
             ->all();
 
         $pages = Page::query()
-            ->with('editor')
+            ->with(['editor', 'translations'])
             ->latest('updated_at')
             ->limit(8)
             ->get()

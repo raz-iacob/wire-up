@@ -109,6 +109,7 @@ return new class extends Component
     public function pages(): LengthAwarePaginator
     {
         $paginator = Page::query()
+            ->with('translations')
             ->when($this->status, function (Builder $query, string $status): Builder {
                 if ($status === ContentStatus::SCHEDULED->value) {
                     return $query->where('status', ContentStatus::PUBLISHED)

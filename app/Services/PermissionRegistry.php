@@ -24,7 +24,7 @@ final class PermissionRegistry
      */
     public static function resources(): array
     {
-        return [...self::staticResources(), ...self::recordResources()];
+        return once(fn (): array => [...self::staticResources(), ...self::recordResources()]);
     }
 
     /**
@@ -78,9 +78,7 @@ final class PermissionRegistry
 
             $crud = array_map(fn (PermissionAction $action): string => $action->value, PermissionAction::cases());
 
-            return RecordType::query()
-                ->orderBy('position')
-                ->get()
+            return RecordType::ordered()
                 ->map(fn (RecordType $type): array => [
                     'key' => 'records.'.$type->key,
                     'label' => $type->name,

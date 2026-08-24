@@ -39,7 +39,7 @@ final class SettingsService
 
     public static function current(): self
     {
-        return new self;
+        return once(fn (): self => new self);
     }
 
     /**
@@ -157,28 +157,7 @@ final class SettingsService
 
     public function homePage(bool $publishedOnly = true): ?Page
     {
-        $configured = Settings::get('home_page_id');
-
-        if (is_numeric($configured)) {
-            $page = Page::query()
-                ->when($publishedOnly, fn (Builder $query): Builder => $query->published())
-                ->with(['translations', 'slugs'])
-                ->whereKey((int) $configured)
-                ->first();
-
-            if ($page instanceof Page) {
-                return $page;
-            }
-        }
-
-        return Page::query()
-            ->when($publishedOnly, fn (Builder $query): Builder => $query->published())
-            ->with(['translations', 'slugs'])
-            ->whereHas('slugs', function (Builder $query): void {
-                $query->where('slug', 'home');
-            })
-            ->orderBy('id')
-            ->first();
+        return $publishedOnly ? once(fn (): ?Page => $this->resolveHomePage(true)) : $this->resolveHomePage(false);
     }
 
     public function homePageId(): ?int
@@ -678,6 +657,32 @@ final class SettingsService
             'display' => self::normalizeMenuDisplay(null),
             'items' => [],
         ];
+    }
+
+    private function resolveHomePage(bool $publishedOnly): ?Page
+    {
+        $configured = Settings::get('home_page_id');
+
+        if (is_numeric($configured)) {
+            $page = Page::query()
+                ->when($publishedOnly, fn (Builder $query): Builder => $query->published())
+                ->with(['translations', 'slugs'])
+                ->whereKey((int) $configured)
+                ->first();
+
+            if ($page instanceof Page) {
+                return $page;
+            }
+        }
+
+        return Page::query()
+            ->when($publishedOnly, fn (Builder $query): Builder => $query->published())
+            ->with(['translations', 'slugs'])
+            ->whereHas('slugs', function (Builder $query): void {
+                $query->where('slug', 'home');
+            })
+            ->orderBy('id')
+            ->first();
     }
 
     /**

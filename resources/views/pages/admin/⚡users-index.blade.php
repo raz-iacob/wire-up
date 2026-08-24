@@ -37,6 +37,9 @@ return new class extends Component
 
     public int $perPage = 20;
 
+    /** @var Collection<int, Role>|null */
+    private ?Collection $roles = null;
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -58,7 +61,7 @@ return new class extends Component
     #[Computed]
     public function assignableRoles(): Collection
     {
-        return Role::query()
+        return $this->roles ??= Role::query()
             ->where(fn (Builder $query): Builder => $query->where('bypass', true)->orWhere('abilities', '<>', '[]'))
             ->orderBy('id')
             ->get();

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Once;
 use Locale;
 
 /**
@@ -35,6 +36,11 @@ final class Submission extends Model
 {
     /** @use HasFactory<SubmissionFactory> */
     use HasFactory;
+
+    public static function unreadCount(): int
+    {
+        return once(fn (): int => self::query()->unread()->count());
+    }
 
     /**
      * @return array<string, string>
@@ -80,6 +86,12 @@ final class Submission extends Model
     public function block(): BelongsTo
     {
         return $this->belongsTo(Block::class);
+    }
+
+    protected static function booted(): void
+    {
+        self::saved(fn () => Once::flush());
+        self::deleted(fn () => Once::flush());
     }
 
     /**

@@ -20,7 +20,7 @@
             {{ __('Dashboard') }}</flux:sidebar.item>
         <livewire:admin.sidebar-analytics />
         @can('inbox.view')
-            @php($unreadSubmissions = \App\Models\Submission::query()->unread()->count())
+            @php($unreadSubmissions = \App\Models\Submission::unreadCount())
             <flux:sidebar.item
                 icon="inbox"
                 :href="route('admin.inbox-index')"

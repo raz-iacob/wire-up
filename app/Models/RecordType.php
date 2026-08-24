@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Once;
 
 /**
  * @property-read int $id
@@ -37,6 +38,14 @@ final class RecordType extends Model
      * @var list<string>
      */
     protected $with = ['translations'];
+
+    /**
+     * @return Collection<int, self>
+     */
+    public static function ordered(): Collection
+    {
+        return once(fn (): Collection => self::query()->orderBy('position')->get());
+    }
 
     /**
      * @return MorphMany<Translation, $this>
@@ -250,6 +259,8 @@ final class RecordType extends Model
     protected static function booted(): void
     {
         self::deleting(fn (self $type) => $type->translations()->delete());
+        self::saved(fn () => Once::flush());
+        self::deleted(fn () => Once::flush());
     }
 
     /**

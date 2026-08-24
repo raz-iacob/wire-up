@@ -33,6 +33,12 @@ final class Settings extends Model
      */
     public static function cached(): array
     {
+        $warm = cache()->get(self::CACHE_KEY);
+
+        if (is_array($warm)) {
+            return $warm;
+        }
+
         try {
             if (! Schema::hasTable('settings')) {
                 return [];

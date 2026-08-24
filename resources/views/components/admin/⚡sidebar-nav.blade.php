@@ -16,7 +16,7 @@ return new class extends Component
     #[Computed]
     public function recordTypes(): Collection
     {
-        return RecordType::query()->orderBy('position')->get();
+        return RecordType::ordered();
     }
 
     #[On('content-types-updated')]
@@ -27,7 +27,9 @@ return new class extends Component
 };
 ?>
 
-<div>
+{{-- display:contents keeps the required Livewire root out of the sidebar's flex column,
+     so each type sits on its own row like the items around it --}}
+<div class="contents">
     @if ($this->recordTypes->isNotEmpty())
         @foreach ($this->recordTypes as $recordType)
             @can('records.'.$recordType->key.'.view')

@@ -74,9 +74,7 @@ return new class extends Component
             return [];
         }
 
-        return RecordType::query()
-            ->orderBy('position')
-            ->get()
+        return RecordType::ordered()
             ->filter(fn (RecordType $type): bool => (bool) auth()->user()?->can("records.{$type->key}.view"))
             ->map(fn (RecordType $type): array => [
                 'heading' => $type->name,
@@ -184,9 +182,7 @@ return new class extends Component
             'can' => 'settings.view',
         ];
 
-        $recordTypes = RecordType::query()
-            ->orderBy('position')
-            ->get()
+        $recordTypes = RecordType::ordered()
             ->map(fn (RecordType $type): array => [
                 'label' => $type->name,
                 'description' => __('Content'),

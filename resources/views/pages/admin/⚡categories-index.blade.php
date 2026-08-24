@@ -68,6 +68,7 @@ return new class extends Component
     public function categories(): LengthAwarePaginator
     {
         $paginator = Category::query()
+            ->with('translations')
             ->when($this->search, fn (Builder $query, string $search): Builder => $query->whereTranslationLike('name', $search));
 
         if ($this->sortBy === 'name') {
