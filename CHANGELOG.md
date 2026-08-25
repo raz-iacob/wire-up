@@ -5,6 +5,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 ## Unreleased
 
 - Fixed `composer install` failing on a fresh checkout with a database cache store: the app read the cache table while booting, before the first migration had created it.
+- Sunset, Rose, Royal, Mono and Sand are redrawn in both light and dark: a neutral base carrying one confident accent, rather than the hue washed across the page, the header and the body text. Slate's and Blueprint's link and button colours are corrected too, so all ten themes now clear WCAG AA on every text pair in both palettes.
 - The rich text editor gains a text colour control. Pick Accent, Muted or Default and the colour is stored as a theme token, so it follows your palette and flips correctly in dark mode; a custom colour is there when you need one. This is how a two-tone heading is made — previously a colour typed into the source view was silently thrown away when the block was next opened.
 - The Forest theme is replaced by **Lagoon**, a teal-and-deep-navy palette in both light and dark. Sites using Forest should pick a new theme; nothing else changes.
 - Themes now carry their own hero colour. The hero used to borrow the header's, which for most themes was the same as the page — in dark mode every single theme rendered the hero as an invisible band. Each theme now sets a Hero background and text, and the custom colour editor gains a Hero group. A palette saved before this falls back to the header colours, so nothing changes until you set them.
