@@ -11,6 +11,15 @@ it('caches settings as a key/value map', function (): void {
     expect(Settings::cached())->toMatchArray(['site_name' => 'Acme']);
 });
 
+it('boots without the cache table so artisan runs before the first migration', function (): void {
+    config(['cache.default' => 'database']);
+    app()->forgetInstance('cache');
+    app()->forgetInstance('cache.store');
+    Schema::dropIfExists('cache');
+
+    expect(Settings::cached())->toBe([]);
+});
+
 it('returns an empty array when the database is unreachable', function (): void {
     Schema::shouldReceive('hasTable')->andThrow(unreachableDatabase());
 
