@@ -179,6 +179,7 @@ enum BlockType: string
                     'image' => null,
                     'video' => null,
                     'gradient' => ['start' => null, 'end' => null, 'direction' => 'to-b'],
+                    'effect' => ['name' => 'none', 'intensity' => 'subtle', 'color' => null],
                 ],
                 'ctaPrimary' => $cta,
                 'ctaSecondary' => $cta,

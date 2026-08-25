@@ -91,6 +91,34 @@
         </flux:radio.group>
     </div>
 
+    <flux:select
+        wire:model.live="{{ $c }}.background.effect.name"
+        variant="listbox"
+        label="{{ __('Animated effect') }}"
+        description="{{ __('Drawn over the background in your accent colour.') }}"
+    >
+        <flux:select.option value="none">{{ __('None') }}</flux:select.option>
+        <flux:select.option value="circuit">{{ __('Circuit board') }}</flux:select.option>
+    </flux:select>
+
+    <div x-show="{{ $b }}?.background?.effect?.name === 'circuit'" class="grid gap-4 sm:grid-cols-2">
+        <flux:radio.group
+            wire:model.lazy="{{ $c }}.background.effect.intensity"
+            label="{{ __('Effect intensity') }}"
+            variant="segmented"
+        >
+            <flux:radio value="subtle" label="{{ __('Subtle') }}" />
+            <flux:radio value="bold" label="{{ __('Bold') }}" />
+        </flux:radio.group>
+
+        <flux:color-picker
+            wire:model="{{ $c }}.background.effect.color"
+            clearable
+            label="{{ __('Effect color') }}"
+            placeholder="{{ __('Accent') }}"
+        />
+    </div>
+
     <div class="grid gap-4 sm:grid-cols-2">
         <flux:radio.group wire:model.lazy="{{ $c }}.align" label="{{ __('Text alignment') }}" variant="segmented">
             <flux:radio value="left" icon="bars-3-bottom-left" label="{{ __('Left') }}" />

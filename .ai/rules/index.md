@@ -13,6 +13,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Mail/** | .ai/rules/mail.md |
 | app/Mcp/** | .ai/rules/mcp.md |
 | resources/views/pages/** | .ai/rules/pages.md |
+| resources/views/components/site/blocks/partials/circuit.blade.php | .ai/rules/partials.md |
 | app/Services/*.php | .ai/rules/services.md |
 | tests/** | .ai/rules/tests.md |
 | app/Mcp/Tools/** | .ai/rules/tools.md |

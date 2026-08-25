@@ -275,6 +275,99 @@ it('falls back to theme colors for an inherited hero gradient', function (): voi
         ->assertSee('color:var(--wire-hero-text, var(--wire-header-text))', false);
 });
 
+it('draws no hero effect layer by default', function (): void {
+    publishPageWithBlocks('plain-hero', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => ['heading' => ['en' => 'Plain hero']]],
+    ]);
+
+    $this->get(route('page', 'plain-hero'))
+        ->assertOk()
+        ->assertDontSee('wire-circuit', false);
+});
+
+it('layers the circuit effect over the chosen hero background', function (): void {
+    publishPageWithBlocks('circuit-hero', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => [
+            'heading' => ['en' => 'Circuit hero'],
+            'background' => [
+                'type' => 'color',
+                'gradient' => ['start' => '#ff0000', 'end' => '#0000ff', 'direction' => 'to-r'],
+                'effect' => ['name' => 'circuit'],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'circuit-hero'))
+        ->assertOk()
+        ->assertSee('linear-gradient(to right, #ff0000, #0000ff)', false)
+        ->assertSee('class="wire-circuit"', false)
+        ->assertSee('wc-term-flare', false);
+});
+
+it('scopes circuit gradient and pattern ids to the block', function (): void {
+    $page = publishPageWithBlocks('two-circuit-heroes', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => [
+            'heading' => ['en' => 'First'],
+            'background' => ['effect' => ['name' => 'circuit']],
+        ]],
+        ['id' => 'new-2', 'type' => 'hero', 'content' => [
+            'heading' => ['en' => 'Second'],
+            'background' => ['effect' => ['name' => 'circuit']],
+        ]],
+    ]);
+
+    $html = $this->get(route('page', 'two-circuit-heroes'))->assertOk()->getContent();
+
+    foreach ($page->blocks as $block) {
+        expect($html)->toContain("wc-bloom-{$block->id}")->toContain("wc-grid-{$block->id}");
+    }
+
+    expect(mb_substr_count($html, 'id="wc-bloom-'))->toBe(2);
+});
+
+it('marks a bold circuit effect and honours a colour override', function (): void {
+    publishPageWithBlocks('bold-circuit-hero', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => [
+            'heading' => ['en' => 'Bold circuit'],
+            'background' => ['effect' => ['name' => 'circuit', 'intensity' => 'bold', 'color' => '#38b6ff']],
+        ]],
+    ]);
+
+    $this->get(route('page', 'bold-circuit-hero'))
+        ->assertOk()
+        ->assertSee('wire-circuit wire-circuit-bold', false)
+        ->assertSee('--wire-fx:#38b6ff', false);
+});
+
+it('falls back to safe defaults for unknown circuit effect values', function (): void {
+    publishPageWithBlocks('odd-circuit-hero', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => [
+            'heading' => ['en' => 'Odd circuit'],
+            'background' => ['effect' => ['name' => 'circuit', 'intensity' => 'nonsense', 'color' => 'red;background:url(x)']],
+        ]],
+    ]);
+
+    $this->get(route('page', 'odd-circuit-hero'))
+        ->assertOk()
+        ->assertSee('class="wire-circuit"', false)
+        ->assertDontSee('wire-circuit-bold', false)
+        ->assertDontSee('--wire-fx', false);
+});
+
+it('ignores an unknown hero effect name', function (): void {
+    publishPageWithBlocks('unknown-effect-hero', [
+        ['id' => 'new-1', 'type' => 'hero', 'content' => [
+            'heading' => ['en' => 'Unknown effect'],
+            'background' => ['effect' => ['name' => 'plasma']],
+        ]],
+    ]);
+
+    $this->get(route('page', 'unknown-effect-hero'))
+        ->assertOk()
+        ->assertSee('Unknown effect')
+        ->assertDontSee('wire-circuit', false);
+});
+
 it('applies separate heading and subheading colors', function (): void {
     publishPageWithBlocks('two-color-hero', [
         ['id' => 'new-1', 'type' => 'hero', 'content' => [
