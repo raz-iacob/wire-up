@@ -24,15 +24,6 @@
     $headingColor = ($content['headingColor'] ?? null) ?: null;
     $subheadingColor = ($content['subheadingColor'] ?? null) ?: null;
 
-    $effect = $block->plain('background.effect.name', 'none');
-    $effect = in_array($effect, ['circuit'], true) ? $effect : 'none';
-
-    $effectIntensity = $block->plain('background.effect.intensity', 'subtle');
-    $effectIntensity = in_array($effectIntensity, ['subtle', 'bold'], true) ? $effectIntensity : 'subtle';
-
-    $effectColor = $block->plain('background.effect.color');
-    $effectColor = preg_match('/^[#a-zA-Z0-9(),.%\s-]+$/', $effectColor) === 1 ? $effectColor : '';
-
     $styles = ['color:var(--wire-hero-text, var(--wire-header-text))'];
 
     if ($type === 'color') {
@@ -104,10 +95,6 @@
         >
             <source src="{{ $bgVideo }}" />
         </video>
-    @endif
-
-    @if ($effect === 'circuit')
-        <x-site.blocks.partials.circuit :uid="$block->id" :intensity="$effectIntensity" :color="$effectColor" />
     @endif
 
     <div @class([
