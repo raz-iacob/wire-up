@@ -8,6 +8,13 @@
 
 **Wire-Up** is an opinionated, strict and fully tested Livewire Laravel Starter Kit.
 
+### [wire-up.dev](https://wire-up.dev)
+
+The live site is the fastest way to get a sense of what you are installing: a tour of the
+[features](https://wire-up.dev/features), the [block catalogue](https://wire-up.dev/blocks), and
+[twelve guides](https://wire-up.dev/guides) split between running a site and building one. It is
+itself a Wire-Up site, built through the admin and the MCP server rather than by editing templates.
+
 ---
 
 ### Key Features
@@ -253,6 +260,9 @@ Cursor, and other MCP clients) can build and edit the site programmatically:
 
 ## Documentation
 
+- [Wire-Up guides](https://wire-up.dev/guides) - Twelve guides covering both sides of the handover
+- [Block catalogue](https://wire-up.dev/blocks) - Every block type, what it does and when to reach for it
+- [AI and agents](https://wire-up.dev/ai-and-agents) - The MCP server and the in-admin assistant
 - [Laravel Documentation](https://laravel.com/docs)
 - [Livewire Documentation](https://livewire.laravel.com/docs)
 - [Flux UI Documentation](https://fluxui.dev/docs)
