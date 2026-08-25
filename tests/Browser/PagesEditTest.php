@@ -532,3 +532,18 @@ it('propagates the admin dark appearance to the preview iframe', function (): vo
         ->assertScript("document.querySelector('iframe').src.includes('_scheme=dark')", true)
         ->assertScript("document.querySelector('iframe').contentWindow.document.documentElement.classList.contains('dark')", true);
 });
+
+it('opens a rich-text block without a javascript error', function (): void {
+    $page = Page::factory()->create([
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'rich-text-editor']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => ['width' => 'narrow']],
+    ]);
+
+    $this->actingAsAdmin();
+
+    visit(route('admin.pages-edit', $page))->assertNoJavascriptErrors();
+});

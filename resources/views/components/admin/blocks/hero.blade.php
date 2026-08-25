@@ -2,7 +2,7 @@
 
 @php
     $c = "blocks.{$index}.content";
-    $b = '$wire.blocks['.json_encode((string) $index).'].content';
+    $b = "\$wire.blocks['".addslashes((string) $index)."'].content";
     $settings = \App\Services\SettingsService::current();
     $headerBg = $settings->color('header_bg') ?? '#ffffff';
 @endphp

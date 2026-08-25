@@ -4,6 +4,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
+- Fixed a JavaScript error that broke the rich text block's settings in the page editor, which left its Width and Alignment controls dead.
 - The Forest theme is replaced by **Lagoon**, a teal-and-deep-navy palette in both light and dark. Sites using Forest should pick a new theme; nothing else changes.
 - Themes now carry their own hero colour. The hero used to borrow the header's, which for most themes was the same as the page — in dark mode every single theme rendered the hero as an invisible band. Each theme now sets a Hero background and text, and the custom colour editor gains a Hero group. A palette saved before this falls back to the header colours, so nothing changes until you set them.
 - Your logo now follows the bar it sits on rather than the colour scheme. Themes like Ocean, Forest and Mono put a dark header on a light page, where the dark-ink logo used to disappear; the light version is used there instead, and the header and footer are judged separately.

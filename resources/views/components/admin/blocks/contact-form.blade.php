@@ -2,7 +2,7 @@
 
 @php
     $c = "blocks.{$index}.content";
-    $b = '$wire.blocks['.json_encode((string) $index).'].content';
+    $b = "\$wire.blocks['".addslashes((string) $index)."'].content";
     $builtins = ['name' => __('Name'), 'email' => __('Email'), 'phone' => __('Phone'), 'subject' => __('Subject'), 'message' => __('Message')];
     $fieldTypes = ['text' => __('Text'), 'textarea' => __('Paragraph'), 'email' => __('Email'), 'tel' => __('Phone'), 'number' => __('Number'), 'select' => __('Dropdown'), 'checkbox' => __('Checkbox')];
     $customFields = data_get($block, 'content.customFields', []);

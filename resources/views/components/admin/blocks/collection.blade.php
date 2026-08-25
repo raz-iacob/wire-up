@@ -2,7 +2,7 @@
 
 @php
     $c = "blocks.{$index}.content";
-    $b = '$wire.blocks['.json_encode((string) $index).'].content';
+    $b = "\$wire.blocks['".addslashes((string) $index)."'].content";
     $content = data_get($block, 'content', []);
     $selectedTypeId = data_get($content, 'recordTypeId');
     $source = data_get($content, 'source', 'latest');
