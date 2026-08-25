@@ -90,7 +90,7 @@ return [
                 'background' => '#ffffff', 'text' => '#0a1220', 'muted' => '#5a6a7f',
                 'card_bg' => '#f7f9fc', 'card_text' => '#0a1220', 'card_border' => '#e2e9f1', 'divider' => '#e4eaf1',
                 'input_bg' => '#ffffff', 'input_text' => '#0a1220', 'input_border' => '#d3dde8',
-                'hero_bg' => '#e4edf7', 'hero_text' => '#0a1220',
+                'hero_bg' => '#ffffff', 'hero_text' => '#0a1220',
                 'header_bg' => '#ffffff', 'header_text' => '#0a1220', 'footer_bg' => '#f7f9fc', 'footer_text' => '#35475e',
                 'primary_bg' => '#0a1220', 'primary_text' => '#ffffff', 'secondary_bg' => '#eef3f9', 'secondary_text' => '#0a1220', 'primary_border' => '#0a1220', 'accent' => '#0d7fc7', 'secondary_border' => '#dde5ee',
             ],
