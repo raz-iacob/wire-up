@@ -2,7 +2,7 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
-## Unreleased
+## v0.2.0 — 2026-08-25
 
 - Blueprint's primary button reads more clearly in dark mode: white text on a deeper blue, instead of dark text on a bright cyan. The accent colour is unchanged, so links and headings look exactly as they did.
 - Blueprint's hero now sits on the page colour in dark mode rather than a lighter navy band, so the top of a page reads as one surface.
