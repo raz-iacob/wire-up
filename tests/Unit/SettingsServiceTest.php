@@ -273,10 +273,10 @@ it('emits the chosen theme\'s dark palette under prefers-color-scheme', function
 });
 
 it('reads an older install that stored a dark preset key as dark mode being on', function (): void {
-    Settings::set(['theme' => 'forest', 'theme_dark' => 'midnight']);
+    Settings::set(['theme' => 'sunset', 'theme_dark' => 'midnight']);
 
     expect((new SettingsService)->themeCss())
-        ->toContain('--wire-body-bg:#052e16');
+        ->toContain('--wire-body-bg:'.config()->string('theme.presets.sunset.colors_dark.background'));
 });
 
 it('emits a custom dark palette with its accent tokens', function (): void {

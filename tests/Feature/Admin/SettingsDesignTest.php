@@ -69,7 +69,7 @@ it('keeps the custom palette when switching to a preset and back', function (): 
     Livewire::test('pages::admin.settings-design')
         ->set('theme', 'custom')
         ->set('colors.primary_bg', '#abcdef')
-        ->set('theme', 'forest')
+        ->set('theme', 'sunset')
         ->set('theme', 'custom')
         ->assertSet('colors.primary_bg', '#abcdef');
 });

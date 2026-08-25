@@ -48,11 +48,11 @@ it('updates the preview live from a deferred property change without a server ro
 
     $page->assertScript("getComputedStyle(document.querySelector('[data-test=preview-body]')).backgroundColor", 'rgb(255, 255, 255)');
 
-    $page->script("window.Livewire.all().find(c => c.\$wire.get('theme') !== undefined).\$wire.set('theme', 'forest', false); void 0");
+    $page->script("window.Livewire.all().find(c => c.\$wire.get('theme') !== undefined).\$wire.set('theme', 'sunset', false); void 0");
     $page->wait(0.3);
 
     $page->assertNoJavascriptErrors()
-        ->assertScript("getComputedStyle(document.querySelector('[data-test=preview-body]')).backgroundColor", 'rgb(240, 253, 244)');
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=preview-body]')).backgroundColor", 'rgb(255, 247, 237)');
 });
 
 it('confines preview font selection to the preview and leaves the admin chrome untouched', function (): void {
