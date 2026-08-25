@@ -96,3 +96,33 @@ it('gives every hero a band you can actually see against the page', function ():
     expect($flat)->toBe([])
         ->and($unreadable)->toBe([]);
 });
+
+it('keeps the primary button visible against the hero band', function (): void {
+    $luminance = function (string $hex): float {
+        [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+        $channel = fn (float $c): float => ($c /= 255) <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+
+        return 0.2126 * $channel((float) $r) + 0.7152 * $channel((float) $g) + 0.0722 * $channel((float) $b);
+    };
+
+    $ratio = function (string $a, string $b) use ($luminance): float {
+        $first = $luminance($a);
+        $second = $luminance($b);
+
+        return (max($first, $second) + 0.05) / (min($first, $second) + 0.05);
+    };
+
+    $lost = [];
+
+    foreach (config()->array('theme.presets') as $key => $preset) {
+        foreach (['colors', 'colors_dark'] as $palette) {
+            $p = $preset[$palette];
+
+            if ($ratio($p['primary_bg'], $p['hero_bg']) < 1.6) {
+                $lost[] = "{$key}.{$palette}";
+            }
+        }
+    }
+
+    expect($lost)->toBe([]);
+});
