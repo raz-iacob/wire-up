@@ -1733,3 +1733,17 @@ it('tags every block wrapper with its type so site CSS can hook onto it', functi
         ->assertSee('data-block="hero"', false)
         ->assertSee('data-block="rich-text"', false);
 });
+
+it('keeps a theme-token text colour in block copy', function (): void {
+    publishPageWithBlocks('two-tone', [
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
+            'heading' => ['en' => '<h2>Ship it. <span data-color-token="accent" style="color:var(--wire-accent)">Hand over the keys.</span></h2>'],
+            'body' => ['en' => '<p>Copy</p>'],
+        ]],
+    ]);
+
+    $this->get(route('page', 'two-tone'))
+        ->assertOk()
+        ->assertSee('data-color-token="accent"', false)
+        ->assertSee('style="color:var(--wire-accent)"', false);
+});

@@ -547,3 +547,27 @@ it('opens a rich-text block without a javascript error', function (): void {
 
     visit(route('admin.pages-edit', $page))->assertNoJavascriptErrors();
 });
+
+it('keeps a theme-token text colour through an editor round-trip', function (): void {
+    $page = Page::factory()->create([
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'colour-round-trip']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => [
+            'heading' => ['en' => '<h2>Ship it. <span data-color-token="accent" style="color:var(--wire-accent)">Hand over.</span></h2>'],
+        ]],
+    ]);
+
+    $this->actingAsAdmin();
+
+    $browser = visit(route('admin.pages-edit', $page));
+    $browser->script('document.querySelectorAll("button").forEach(b => { if (b.textContent.trim() === "Rich text") b.click(); });');
+    $browser->wait(1);
+
+    $html = $browser->script('(() => { const e = document.querySelector("[data-flux-editor]"); return e?._tiptap ? e._tiptap.getHTML() : ""; })()');
+
+    expect($html)->toContain('data-color-token="accent"')
+        ->toContain('color:var(--wire-accent)');
+});

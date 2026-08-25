@@ -68,6 +68,74 @@ const Badge = Mark.create({
     },
 });
 
+// Inline text colour. Theme tokens render as var(--wire-*) so the colour flips
+// with the light/dark palette; a custom hex is kept verbatim for the rare case
+// that needs one. Only whitelisted tokens resolve, so nothing arbitrary reaches
+// the style attribute.
+const COLOR_TOKENS = {
+    accent: "--wire-accent",
+    muted: "--wire-muted",
+    text: "--wire-body-text",
+};
+
+const TextColor = Mark.create({
+    name: "textColor",
+    inclusive: false,
+
+    addAttributes() {
+        return {
+            token: {
+                default: null,
+                parseHTML: (el) => el.getAttribute("data-color-token"),
+                renderHTML: (attrs) =>
+                    attrs.token ? { "data-color-token": attrs.token } : {},
+            },
+            color: {
+                default: null,
+                parseHTML: (el) => el.getAttribute("data-color"),
+                renderHTML: (attrs) =>
+                    attrs.color ? { "data-color": attrs.color } : {},
+            },
+        };
+    },
+
+    parseHTML() {
+        return [{ tag: "span[data-color-token]" }, { tag: "span[data-color]" }];
+    },
+
+    renderHTML({ HTMLAttributes }) {
+        const token = HTMLAttributes["data-color-token"];
+        const value = COLOR_TOKENS[token]
+            ? `var(${COLOR_TOKENS[token]})`
+            : HTMLAttributes["data-color"];
+
+        return [
+            "span",
+            mergeAttributes(
+                HTMLAttributes,
+                value ? { style: `color:${value}` } : {},
+            ),
+            0,
+        ];
+    },
+
+    addCommands() {
+        return {
+            setTextColor:
+                (attrs = {}) =>
+                ({ commands }) =>
+                    commands.setMark(this.name, {
+                        token: attrs.token ?? null,
+                        color: attrs.token ? null : (attrs.color ?? null),
+                    }),
+            unsetTextColor:
+                () =>
+                ({ commands }) =>
+                    commands.unsetMark(this.name),
+        };
+    },
+});
+
 // Strips formatting from pasted content before it enters a rich-text editor:
 // block wrappers become paragraphs, headings below the three the toolbar offers
 // are lifted to h3, every other tag is unwrapped to its text, and only
@@ -122,7 +190,7 @@ function cleanPastedHtml(html) {
 window.cleanPastedHtml = cleanPastedHtml;
 
 document.addEventListener("flux:editor", (e) => {
-    e.detail.registerExtensions([Badge]);
+    e.detail.registerExtensions([Badge, TextColor]);
 
     e.detail.init(({ editor }) => {
         const root = (editor.options?.element ?? editor.view?.dom)?.closest(

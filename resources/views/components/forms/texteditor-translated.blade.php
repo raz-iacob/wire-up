@@ -1,4 +1,4 @@
-@props(['name' => 'title', 'locale' => 'en', 'label' => null, 'required' => false, 'multiLocale' => false, 'toolbar' => 'heading | bold italic underline | bullet ordered | align | link ~ undo redo'])
+@props(['name' => 'title', 'locale' => 'en', 'label' => null, 'required' => false, 'multiLocale' => false, 'toolbar' => 'heading | bold italic underline | textcolor | bullet ordered | align | link ~ undo redo'])
 
 <flux:field wire:key="{{ $name }}-{{ $locale }}">
     <div class="flex items-center gap-3">
