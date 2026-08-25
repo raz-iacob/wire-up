@@ -4,6 +4,8 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
+- Blueprint's primary button reads more clearly in dark mode: white text on a deeper blue, instead of dark text on a bright cyan. The accent colour is unchanged, so links and headings look exactly as they did.
+- Blueprint's hero now sits on the page colour in dark mode rather than a lighter navy band, so the top of a page reads as one surface.
 - Fixed `composer install` failing on a fresh checkout with a database cache store: the app read the cache table while booting, before the first migration had created it.
 - Sunset, Rose, Royal, Mono and Sand are redrawn in both light and dark: a neutral base carrying one confident accent, rather than the hue washed across the page, the header and the body text. Slate's and Blueprint's link and button colours are corrected too, so all ten themes now clear WCAG AA on every text pair in both palettes.
 - The rich text editor gains a text colour control. Pick Accent, Muted or Default and the colour is stored as a theme token, so it follows your palette and flips correctly in dark mode; a custom colour is there when you need one. This is how a two-tone heading is made — previously a colour typed into the source view was silently thrown away when the block was next opened.

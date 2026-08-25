@@ -98,9 +98,9 @@ return [
                 'background' => '#060a11', 'text' => '#e7eef8', 'muted' => '#8d9bb0',
                 'card_bg' => '#0b111b', 'card_text' => '#e7eef8', 'card_border' => '#1b2634', 'divider' => '#17212f',
                 'input_bg' => '#0b111b', 'input_text' => '#e7eef8', 'input_border' => '#253141',
-                'hero_bg' => '#141d2c', 'hero_text' => '#e7eef8',
+                'hero_bg' => '#060a11', 'hero_text' => '#e7eef8',
                 'header_bg' => '#060a11', 'header_text' => '#e7eef8', 'footer_bg' => '#04070d', 'footer_text' => '#9fb0c4',
-                'primary_bg' => '#38b6ff', 'primary_text' => '#04121f', 'secondary_bg' => '#111a26', 'secondary_text' => '#e7eef8', 'primary_border' => '#38b6ff', 'accent' => '#38b6ff', 'secondary_border' => '#2a3646',
+                'primary_bg' => '#0b73b4', 'primary_text' => '#ffffff', 'secondary_bg' => '#111a26', 'secondary_text' => '#e7eef8', 'primary_border' => '#0b73b4', 'accent' => '#38b6ff', 'secondary_border' => '#2a3646',
             ],
         ],
         'ocean' => [
