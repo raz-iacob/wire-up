@@ -14,6 +14,7 @@
         :multi-locale="$multiLocale"
         label="{{ __('Heading') }}"
     />
+    <x-admin.blocks.partials.heading-level :name="$c" />
     <x-forms.texteditor-translated
         name="{{ $c }}.subheading"
         :locale="$locale"
@@ -120,6 +121,15 @@
             <flux:select.option value="large">{{ __('Large') }}</flux:select.option>
             <flux:select.option value="screen">{{ __('Full screen') }}</flux:select.option>
         </flux:select>
+    </div>
+
+    <div x-show="({{ $b }}?.width ?? 'full') !== 'container'" x-cloak>
+        <flux:switch
+            wire:model.live="{{ $c }}.flush"
+            label="{{ __('Butt the next block against the hero') }}"
+            description="{{ __('Off leaves the usual block spacing below.') }}"
+            align="left"
+        />
     </div>
 
     @foreach (['ctaPrimary' => __('Primary button'), 'ctaSecondary' => __('Secondary button')] as $cta => $ctaLabel)

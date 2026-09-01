@@ -82,6 +82,7 @@ return new class extends Component
         $columns = (int) ($content['columns'] ?? 3);
         $showImage = (bool) ($content['showImage'] ?? true);
         $hasHeading = strip_tags($heading) !== '';
+        $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
         $term = $this->term();
         $groups = $this->groups();
     @endphp
@@ -94,7 +95,7 @@ return new class extends Component
         <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
             @if ($hasHeading)
                 <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-center text-(length:--wire-heading-size) tracking-tight">
-                    {!! $heading !!}
+                    <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                 </div>
             @endif
 

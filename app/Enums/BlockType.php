@@ -167,11 +167,13 @@ enum BlockType: string
         return match ($this) {
             self::HERO => [
                 'heading' => [],
+                'headingLevel' => '',
                 'subheading' => [],
                 'align' => 'center',
                 'verticalAlign' => 'center',
                 'width' => 'full',
                 'height' => 'auto',
+                'flush' => true,
                 'headingColor' => null,
                 'subheadingColor' => null,
                 'background' => [
@@ -185,6 +187,7 @@ enum BlockType: string
             ],
             self::TEXT_IMAGE => [
                 'heading' => [],
+                'headingLevel' => '',
                 'body' => [],
                 'image' => null,
                 'reverseLayout' => false,
@@ -194,6 +197,7 @@ enum BlockType: string
             ],
             self::LOCATION => [
                 'heading' => [],
+                'headingLevel' => '',
                 'name' => [],
                 'address' => [],
                 'hours' => [],
@@ -211,6 +215,7 @@ enum BlockType: string
             ],
             self::ACCORDION => [
                 'heading' => [],
+                'headingLevel' => '',
                 'icon' => 'chevron',
                 'exclusive' => true,
                 'hasBackground' => false,
@@ -220,6 +225,7 @@ enum BlockType: string
             ],
             self::GALLERY => [
                 'heading' => [],
+                'headingLevel' => '',
                 'media' => [],
                 'columns' => 3,
                 'lightbox' => true,
@@ -238,6 +244,7 @@ enum BlockType: string
                 'controls' => true,
                 'hasBackground' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
             ],
             self::PHOTO => [
@@ -247,6 +254,7 @@ enum BlockType: string
                 'hasBackground' => false,
                 'imageLink' => ['link' => ['type' => 'url', 'value' => '', 'newTab' => false]],
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
             ],
             self::TESTIMONIALS => [
@@ -257,6 +265,7 @@ enum BlockType: string
                 'cardBg' => null,
                 'cardText' => null,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
                 'items' => [
                     ['id' => (string) Str::uuid(), 'quote' => [], 'author' => [], 'role' => [], 'avatar' => null, 'rating' => 0],
@@ -269,6 +278,7 @@ enum BlockType: string
                 'grayscale' => false,
                 'showNames' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
                 'items' => [
                     ['id' => (string) Str::uuid(), 'logo' => null, 'name' => [], 'link' => '', 'tier' => ''],
@@ -283,6 +293,7 @@ enum BlockType: string
                 'cardBg' => null,
                 'cardText' => null,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
                 'items' => [
                     ['id' => (string) Str::uuid(), 'media' => 'image', 'image' => null, 'icon' => '', 'title' => [], 'body' => [], 'cta' => $cta],
@@ -302,6 +313,7 @@ enum BlockType: string
                 'pagination' => 'none',
                 'hasBackground' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'button' => [
                     'enabled' => false,
                     'text' => [],
@@ -312,6 +324,7 @@ enum BlockType: string
                 'sources' => [],
                 'labels' => [],
                 'heading' => [],
+                'headingLevel' => '',
                 'placeholder' => [],
                 'layout' => 'grid',
                 'columns' => 3,
@@ -330,6 +343,7 @@ enum BlockType: string
                 'audio' => null,
                 'hasBackground' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
             ],
             self::DOWNLOADS => [
@@ -337,10 +351,12 @@ enum BlockType: string
                 'columns' => 1,
                 'hasBackground' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
             ],
             self::RICH_TEXT => [
                 'heading' => [],
+                'headingLevel' => '',
                 'body' => [],
                 'width' => 'normal',
                 'align' => 'left',
@@ -353,6 +369,7 @@ enum BlockType: string
                 'wrap' => false,
                 'hasBackground' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
             ],
             self::STATS => [
@@ -360,6 +377,7 @@ enum BlockType: string
                 'layout' => 'plain',
                 'hasBackground' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
                 'items' => [
                     ['id' => (string) Str::uuid(), 'value' => [], 'label' => []],
@@ -370,6 +388,7 @@ enum BlockType: string
                 'layout' => 'circle',
                 'hasBackground' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
                 'items' => [
                     ['id' => (string) Str::uuid(), 'photo' => null, 'name' => [], 'role' => [], 'bio' => [], 'socials' => ['email' => '', 'website' => '', 'linkedin' => '', 'x' => '', 'instagram' => '']],
@@ -379,6 +398,7 @@ enum BlockType: string
                 'columns' => 3,
                 'hasBackground' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'intro' => [],
                 'items' => [
                     ['id' => (string) Str::uuid(), 'name' => [], 'price' => [], 'period' => [], 'description' => [], 'features' => [], 'featured' => false, 'badge' => [], 'cta' => $cta],
@@ -389,6 +409,7 @@ enum BlockType: string
                 'layout' => 'stacked',
                 'hasBackground' => false,
                 'heading' => [],
+                'headingLevel' => '',
                 'description' => [],
                 'submitText' => [],
                 'successMessage' => [],

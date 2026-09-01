@@ -385,6 +385,8 @@ return [
 
     'default_block_spacing' => 'default',
 
+    'default_block_space_top' => true,
+
     'block_spacings' => [
         'small' => 'Small',
         'default' => 'Default',

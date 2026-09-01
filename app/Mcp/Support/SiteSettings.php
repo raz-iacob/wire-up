@@ -59,6 +59,7 @@ final readonly class SiteSettings
             'colors_dark' => is_array($meta['colors_dark'] ?? null) ? $meta['colors_dark'] : [],
             'heading_font_custom' => is_string($meta['heading_font_custom'] ?? null) ? $meta['heading_font_custom'] : '',
             'body_font_custom' => is_string($meta['body_font_custom'] ?? null) ? $meta['body_font_custom'] : '',
+            'block_space_top' => (bool) ($meta['block_space_top'] ?? config()->boolean('theme.default_block_space_top')),
             'header_transparent' => (bool) ($meta['header_transparent'] ?? false),
             'header_sticky' => (bool) ($meta['header_sticky'] ?? false),
             'footer_transparent' => (bool) ($meta['footer_transparent'] ?? false),

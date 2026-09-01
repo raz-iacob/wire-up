@@ -2,6 +2,7 @@
 
 @php
     $content = $block->content ?? [];
+    $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
     $heading = $block->text('heading');
     $intro = $block->text('intro');
     $rawItems = is_array($content['items'] ?? null) ? $content['items'] : [];
@@ -57,7 +58,7 @@
                         <div>
                             @if (strip_tags($heading) !== '')
                                 <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
-                                    {!! $heading !!}
+                                    <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                                 </div>
                             @endif
                             @if (strip_tags($intro) !== '')
@@ -161,7 +162,7 @@
                     <div class="lg:sticky lg:top-24">
                         @if (strip_tags($heading) !== '')
                             <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
-                                {!! $heading !!}
+                                <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                             </div>
                         @endif
                         @if (strip_tags($intro) !== '')
@@ -221,7 +222,7 @@
                     <div>
                         @if (strip_tags($heading) !== '')
                             <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
-                                {!! $heading !!}
+                                <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                             </div>
                         @endif
                         @if (strip_tags($intro) !== '')

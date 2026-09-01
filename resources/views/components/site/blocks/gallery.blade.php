@@ -2,6 +2,7 @@
 
 @php
     $content = $block->content ?? [];
+    $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
     $heading = $block->text('heading');
     $rawMedia = is_array($content['media'] ?? null) ? $content['media'] : [];
     $columns = max(2, min(6, (int) ($content['columns'] ?? 3)));
@@ -53,7 +54,7 @@
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         @if ($heading)
             <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
-                {!! $heading !!}
+                <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
             </div>
         @endif
 

@@ -12,6 +12,7 @@
         :multi-locale="$multiLocale"
         label="{{ __('Heading') }}"
     />
+    <x-admin.blocks.partials.heading-level :name="$c" />
     <x-forms.texteditor-translated
         name="{{ $c }}.body"
         :locale="$locale"

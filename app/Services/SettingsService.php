@@ -642,6 +642,11 @@ final class SettingsService
         return $links;
     }
 
+    public function blockSpaceTop(): bool
+    {
+        return (bool) config('site.block_space_top', config()->boolean('theme.default_block_space_top'));
+    }
+
     public function blockSpacing(): string
     {
         $value = (string) config('site.block_spacing', '');

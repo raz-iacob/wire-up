@@ -2,6 +2,7 @@
 
 @php
     $content = $block->content ?? [];
+    $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
     $heading = $block->text('heading');
     $intro = $block->text('intro');
     $hasBg = (bool) ($content['hasBackground'] ?? false);
@@ -89,7 +90,7 @@
             <div class="mb-8">
                 @if ($heading !== '')
                     <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
-                        {!! $heading !!}
+                        <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                     </div>
                 @endif
                 @if (strip_tags($intro) !== '')

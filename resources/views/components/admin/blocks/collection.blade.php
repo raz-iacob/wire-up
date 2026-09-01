@@ -22,6 +22,7 @@
         :multi-locale="$multiLocale"
         label="{{ __('Heading') }}"
     />
+    <x-admin.blocks.partials.heading-level :name="$c" />
 
     <flux:select
         wire:model.live="{{ $c }}.recordTypeId"

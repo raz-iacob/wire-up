@@ -12,6 +12,7 @@
         :multi-locale="$multiLocale"
         label="{{ __('Heading') }}"
     />
+    <x-admin.blocks.partials.heading-level :name="$c" />
 
     <div class="flex flex-col gap-2">
         <flux:label>{{ __('Items') }}</flux:label>

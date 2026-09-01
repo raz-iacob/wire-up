@@ -1,7 +1,11 @@
-@props(['block'])
+@props(['block', 'page' => null])
 
 @php
     $content = $block->content ?? [];
+    $headingLevel = \App\Services\BlockHeading::level(
+        $content['headingLevel'] ?? null,
+        $page instanceof \App\Models\Record ? 'h2' : 'h1',
+    );
     $heading = $block->text('heading');
     $subheading = $block->text('subheading');
 
@@ -114,7 +118,7 @@
                 class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline max-w-3xl text-[length:calc(var(--wire-heading-size)*1.2)] font-bold tracking-tight md:text-[length:calc(var(--wire-heading-size)*1.5)]"
                 @if ($headingColor) style="color:{{ $headingColor }}" @endif
             >
-                {!! $heading !!}
+                <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
             </div>
         @endif
 

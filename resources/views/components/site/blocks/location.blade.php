@@ -2,6 +2,7 @@
 
 @php
     $content = $block->content ?? [];
+    $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
     $heading = $block->text('heading');
     $name = $block->text('name');
     $address = $block->text('address');
@@ -41,7 +42,7 @@
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         @if ($heading)
             <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
-                {!! $heading !!}
+                <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
             </div>
         @endif
 

@@ -13,7 +13,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Mail/** | .ai/rules/mail.md |
 | app/Mcp/** | .ai/rules/mcp.md |
 | resources/views/pages/** | .ai/rules/pages.md |
-| app/Services/*.php | .ai/rules/services.md |
+| app/Services/*.php, app/Services/SiteImporter.php | .ai/rules/services.md |
 | tests/** | .ai/rules/tests.md |
 | app/Mcp/Tools/** | .ai/rules/tools.md |
 | app/Traits/HasBlocks.php, app/Traits/HasPublishing.php | .ai/rules/traits.md |

@@ -2,6 +2,7 @@
 
 @php
     $content = $block->content ?? [];
+    $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
     $currentRecord = $page instanceof \App\Models\Record ? $page : null;
     $hasBg = (bool) ($content['hasBackground'] ?? false);
     $layout = in_array($content['layout'] ?? 'grid', ['grid', 'list', 'carousel'], true) ? ($content['layout'] ?? 'grid') : 'grid';
@@ -71,7 +72,7 @@
                         <div class="mx-auto flex max-w-(--wire-container) flex-wrap items-center justify-between gap-4 px-(--wire-gutter)">
                             @if ($hasHeading)
                                 <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
-                                    {!! $heading !!}
+                                    <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                                 </div>
                             @endif
 
@@ -140,7 +141,7 @@
                 <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                     @if ($hasHeading)
                         <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-10 text-(length:--wire-heading-size) tracking-tight">
-                            {!! $heading !!}
+                            <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                         </div>
                     @endif
 

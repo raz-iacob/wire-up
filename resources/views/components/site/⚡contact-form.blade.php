@@ -469,12 +469,13 @@ return new class extends Component
 
 @php
     $inputClass = 'wire-field w-full px-4 py-3 text-base focus:outline-none rounded-(--wire-radius) bg-(--wire-input-bg) text-(--wire-input-text)';
+    $headingLevel = \App\Services\BlockHeading::level($this->config['headingLevel'] ?? null);
 @endphp
 
 <div>
     @if ($this->heading !== '')
         <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
-            {!! $this->heading !!}
+            <x-site.blocks.heading :html="$this->heading" :level="$headingLevel" />
         </div>
     @endif
 

@@ -2,6 +2,7 @@
 
 @php
     $content = $block->content ?? [];
+    $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
     $code = $block->plain('code');
     $language = $block->plain('language', 'plaintext');
     $language = preg_match('/^[a-z0-9]+$/', $language) === 1 ? $language : 'plaintext';
@@ -24,7 +25,7 @@
                 <div class="mb-8">
                     @if (strip_tags($heading) !== '')
                         <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
-                            {!! $heading !!}
+                            <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                         </div>
                     @endif
                     @if (strip_tags($intro) !== '')

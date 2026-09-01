@@ -11,6 +11,7 @@
         :multi-locale="$multiLocale"
         label="{{ __('Heading') }}"
     />
+    <x-admin.blocks.partials.heading-level :name="$c" />
 
     <livewire:admin.media-selector
         wire:model="{{ $c }}.media"

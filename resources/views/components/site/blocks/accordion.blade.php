@@ -2,6 +2,7 @@
 
 @php
     $content = $block->content ?? [];
+    $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
     $heading = $block->text('heading');
     $rawItems = is_array($content['items'] ?? null) ? $content['items'] : [];
     $iconMode = ($content['icon'] ?? 'chevron') === 'plus-minus' ? 'plus-minus' : 'chevron';
@@ -26,7 +27,7 @@
         <div class="max-w-3xl">
             @if ($heading)
                 <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
-                    {!! $heading !!}
+                    <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                 </div>
             @endif
 

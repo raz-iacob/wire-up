@@ -82,6 +82,7 @@ it('seeds the code default content shape', function (): void {
         'wrap' => false,
         'hasBackground' => false,
         'heading' => [],
+        'headingLevel' => '',
         'intro' => [],
     ]);
 });

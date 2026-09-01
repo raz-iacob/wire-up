@@ -27,6 +27,13 @@
         'large' => '-mb-20',
         default => '-mb-16',
     };
+    $spaceTopClass = match ($spacing) {
+        'small' => 'pt-12',
+        'large' => 'pt-20',
+        default => 'pt-16',
+    };
+
+    $spaceTop = \App\Services\SettingsService::current()->blockSpaceTop();
 
     $blocks = $page->blocks;
     $lastIndex = $blocks->count() - 1;
@@ -38,13 +45,15 @@
             $anchor = $block->type->hasAnchor() ? mb_trim((string) ($block->content['anchor'] ?? '')) : '';
             $isFullWidthHero = $block->type === \App\Enums\BlockType::HERO
                 && ($block->content['width'] ?? 'full') !== 'container';
+            $isFlush = $isFullWidthHero && ($block->content['flush'] ?? true);
         @endphp
         <div
             data-block="{{ $block->type->value }}"
             @class([
                 'scroll-mt-24' => $anchor !== '',
-                $flushTopClass => $isFullWidthHero && $index > 0,
-                $flushBottomClass => $isFullWidthHero && $index < $lastIndex,
+                $spaceTopClass => $spaceTop && $index === 0 && ! $isFullWidthHero,
+                $flushTopClass => $isFlush && $index > 0,
+                $flushBottomClass => $isFlush && $index < $lastIndex,
             ])
             @if ($anchor !== '') id="{{ $anchor }}" @endif
         >

@@ -45,6 +45,8 @@ return new class extends Component
 
     public string $block_spacing;
 
+    public bool $block_space_top = true;
+
     public string $header_layout;
 
     public bool $header_transparent = false;
@@ -114,6 +116,7 @@ return new class extends Component
         $this->border_width = is_string($meta['border_width'] ?? null) ? $meta['border_width'] : config()->string('theme.default_border_width');
         $this->container = is_string($meta['container'] ?? null) ? $meta['container'] : config()->string('theme.default_container');
         $this->block_spacing = is_string($meta['block_spacing'] ?? null) ? $meta['block_spacing'] : config()->string('theme.default_block_spacing');
+        $this->block_space_top = (bool) ($meta['block_space_top'] ?? config()->boolean('theme.default_block_space_top'));
         $this->header_layout = is_string($meta['header_layout'] ?? null) ? $meta['header_layout'] : config()->string('theme.default_header_layout');
         $this->header_transparent = (bool) ($meta['header_transparent'] ?? false);
         $this->header_sticky = (bool) ($meta['header_sticky'] ?? false);
@@ -151,6 +154,7 @@ return new class extends Component
             'border_width' => ['required', 'string', Rule::in(array_keys(config()->array('theme.border_widths')))],
             'container' => ['required', 'string', Rule::in(array_keys(config()->array('theme.containers')))],
             'block_spacing' => ['required', 'string', Rule::in(array_keys(config()->array('theme.block_spacings')))],
+            'block_space_top' => ['boolean'],
             'header_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.header_layouts')))],
             'header_transparent' => ['boolean'],
             'header_sticky' => ['boolean'],
@@ -187,7 +191,7 @@ return new class extends Component
             'body_font_custom.regex' => __('Use only letters, numbers and spaces for the font name.'),
         ]);
 
-        $metadata = Arr::only($validated, ['theme', 'theme_dark', 'heading_font', 'body_font', 'heading_font_custom', 'body_font_custom', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'header_layout', 'header_transparent', 'header_sticky', 'header_theme_toggle', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
+        $metadata = Arr::only($validated, ['theme', 'theme_dark', 'heading_font', 'body_font', 'heading_font_custom', 'body_font_custom', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'block_space_top', 'header_layout', 'header_transparent', 'header_sticky', 'header_theme_toggle', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
         $metadata['heading_font_custom'] = mb_trim((string) ($validated['heading_font_custom'] ?? ''));
         $metadata['body_font_custom'] = mb_trim((string) ($validated['body_font_custom'] ?? ''));
         $metadata['custom_css'] = mb_trim((string) ($validated['custom_css'] ?? ''));
@@ -894,6 +898,13 @@ return new class extends Component
                     @endforeach
                 </flux:select>
             </div>
+
+            <flux:switch
+                wire:model="block_space_top"
+                label="{{ __('Space above the first block') }}"
+                description="{{ __('Skipped when the page opens with a full-width hero.') }}"
+                align="left"
+            />
 
             <flux:separator variant="subtle" />
 
