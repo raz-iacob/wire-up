@@ -19,10 +19,13 @@ final class RecordTypeFactory extends Factory
     public function definition(): array
     {
         $word = fake()->unique()->word();
+        $prefix = Str::slug(Str::plural($word));
 
         return [
             'key' => $word,
-            'slug_prefix' => Str::slug(Str::plural($word)),
+            'slug_prefix' => RecordType::query()->where('slug_prefix', $prefix)->exists()
+                ? $prefix.'-'.Str::lower(Str::random(6))
+                : $prefix,
             'icon' => 'rectangle-stack',
             'name' => Str::title(Str::plural($word)),
             'fields' => [],

@@ -443,3 +443,39 @@ it('allows renaming a content type prefix onto an existing page slug', function 
         ->assertOk()
         ->assertSee('"slug_prefix":"handbook"');
 });
+
+it('switches the detail and listing pages of a content type through the tool', function (): void {
+    $type = mcpProductType();
+
+    WireUpServer::tool(UpdateContentTypeTool::class, [
+        'type' => 'product',
+        'has_detail_page' => false,
+        'has_index_page' => true,
+    ])->assertOk();
+
+    $type->refresh();
+
+    expect($type->has_detail_page)->toBeFalse()->and($type->has_index_page)->toBeTrue();
+});
+
+it('leaves the detail and listing pages alone when the tool omits them', function (): void {
+    $type = mcpProductType();
+
+    WireUpServer::tool(UpdateContentTypeTool::class, ['type' => 'product', 'name' => 'Gear'])->assertOk();
+
+    $type->refresh();
+
+    expect($type->has_detail_page)->toBeTrue()->and($type->has_index_page)->toBeFalse();
+});
+
+it('creates a content type that only feeds cards', function (): void {
+    WireUpServer::tool(CreateContentTypeTool::class, [
+        'name' => 'Services',
+        'has_detail_page' => false,
+        'has_index_page' => true,
+    ])->assertOk();
+
+    $type = RecordType::query()->where('key', 'services')->sole();
+
+    expect($type->has_detail_page)->toBeFalse()->and($type->has_index_page)->toBeTrue();
+});

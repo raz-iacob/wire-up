@@ -35,6 +35,8 @@ final readonly class Records
             'slug_prefix' => $type->slug_prefix,
             'icon' => $type->icon,
             'breadcrumbs' => $type->breadcrumbs,
+            'has_detail_page' => $type->has_detail_page,
+            'has_index_page' => $type->has_index_page,
             'record_count' => $type->records()->count(),
             'fields' => array_map(self::fieldSummary(...), $type->fields),
         ];

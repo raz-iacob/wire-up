@@ -89,6 +89,8 @@ return new class extends Component
             'slug_prefix' => $preset['slug_prefix'],
             'icon' => $preset['icon'],
             'breadcrumbs' => false,
+            'has_detail_page' => true,
+            'has_index_page' => false,
             'fields' => array_map(fn (array $field): array => $this->hydrateField($field, $locale), $preset['fields']),
             'open' => true,
         ];
@@ -105,6 +107,8 @@ return new class extends Component
             'slug_prefix' => '',
             'icon' => 'rectangle-stack',
             'breadcrumbs' => false,
+            'has_detail_page' => true,
+            'has_index_page' => false,
             'fields' => [],
             'open' => true,
         ];
@@ -207,6 +211,8 @@ return new class extends Component
                     'icon' => $row['icon'],
                     'name' => $row['name'],
                     'breadcrumbs' => (bool) $row['breadcrumbs'],
+                    'has_detail_page' => (bool) ($row['has_detail_page'] ?? true),
+                    'has_index_page' => (bool) ($row['has_index_page'] ?? false),
                     'fields' => $this->serializeFields($row['fields'], $locale),
                     'position' => $position,
                 ];
@@ -340,6 +346,8 @@ return new class extends Component
             'slug_prefix' => $type->slug_prefix,
             'icon' => $type->icon,
             'breadcrumbs' => $type->breadcrumbs,
+            'has_detail_page' => $type->has_detail_page,
+            'has_index_page' => $type->has_index_page,
             'fields' => array_map(fn (array $field): array => $this->hydrateField($field, $locale), $type->fields),
             'open' => false,
         ];
@@ -435,6 +443,8 @@ return new class extends Component
                 Rule::unique('record_types', 'slug_prefix')->ignore($this->types[$index]['id']),
             ];
             $rules["types.$index.breadcrumbs"] = ['boolean'];
+            $rules["types.$index.has_detail_page"] = ['boolean'];
+            $rules["types.$index.has_index_page"] = ['boolean'];
             $rules["types.$index.fields"] = ['array'];
             $rules["types.$index.fields.*.key"] = [
                 'required', 'string', 'distinct', 'regex:/^[a-z][a-z0-9_]*$/',

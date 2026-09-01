@@ -29,6 +29,8 @@ final class UpdateContentTypeTool extends Tool
                 'slug_prefix' => ['nullable', 'string', 'lowercase', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::notIn(Records::reservedPrefixes())],
                 'icon' => ['nullable', 'string', 'max:255'],
                 'breadcrumbs' => ['nullable', 'boolean'],
+                'has_detail_page' => ['nullable', 'boolean'],
+                'has_index_page' => ['nullable', 'boolean'],
                 ...Records::fieldRules(),
             ],
             [
@@ -58,6 +60,12 @@ final class UpdateContentTypeTool extends Tool
 
         if (($validated['breadcrumbs'] ?? null) !== null) {
             $attributes['breadcrumbs'] = (bool) $validated['breadcrumbs'];
+        }
+
+        foreach (['has_detail_page', 'has_index_page'] as $flag) {
+            if (($validated[$flag] ?? null) !== null) {
+                $attributes[$flag] = (bool) $validated[$flag];
+            }
         }
 
         if (($validated['slug_prefix'] ?? null) !== null) {
@@ -100,6 +108,12 @@ final class UpdateContentTypeTool extends Tool
 
             'breadcrumbs' => $schema->boolean()
                 ->description('Whether every record page of this type shows the breadcrumb trail back to the home page.'),
+
+            'has_detail_page' => $schema->boolean()
+                ->description('Whether each record of this type gets its own page. False also drops the records from the sitemap and site search, and renders collection cards unlinked.'),
+
+            'has_index_page' => $schema->boolean()
+                ->description('Whether a listing of this type publishes at /{prefix}. A page with the same web address takes precedence.'),
 
             'fields' => $schema->array()
                 ->items($schema->object())

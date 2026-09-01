@@ -13,16 +13,24 @@ return new class extends Component
 
     public bool $unpublished = false;
 
+    public bool $unreachable = false;
+
     public function mount(string $recordType, string $slug): void
     {
         $type = RecordType::query()->where('slug_prefix', $recordType)->firstOrFail();
+
+        $staff = auth()->user()?->canAccessAdmin() || request()->hasValidSignature();
+
+        abort_if(! $type->has_detail_page && ! $staff, 404);
+
+        $this->unreachable = ! $type->has_detail_page;
 
         $query = Record::query()
             ->where('record_type_id', $type->id)
             ->with(['recordType', 'blocks', 'media', 'translations', 'slugs', 'categories'])
             ->forSlug($slug, null, $type->slug_prefix);
 
-        if (auth()->user()?->canAccessAdmin() || request()->hasValidSignature()) {
+        if ($staff) {
             $this->record = $query->firstOrFail();
             $this->unpublished = ! $this->record->isLiveInLocale();
         } else {
@@ -62,7 +70,9 @@ return new class extends Component
 
     <x-site.page-content :page="$record" />
 
-    @if ($unpublished)
+    @if ($unreachable)
+        <x-site.unpublished-notice :message="__('This content type has no detail pages, so visitors cannot reach this')" />
+    @elseif ($unpublished)
         <x-site.unpublished-notice :message="__('This record is not published')" />
     @endif
 </div>

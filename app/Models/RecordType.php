@@ -24,6 +24,8 @@ use Illuminate\Support\Once;
  * @property-read string $name
  * @property-read array<int, array<string, mixed>> $fields
  * @property-read bool $breadcrumbs
+ * @property-read bool $has_detail_page
+ * @property-read bool $has_index_page
  * @property-read int $position
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
@@ -98,6 +100,8 @@ final class RecordType extends Model
         return [
             'fields' => 'array',
             'breadcrumbs' => 'boolean',
+            'has_detail_page' => 'boolean',
+            'has_index_page' => 'boolean',
             'position' => 'integer',
         ];
     }

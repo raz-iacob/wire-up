@@ -252,7 +252,10 @@ final readonly class BlockMarkdown
             }
 
             $excerpt = $record->displayExcerpt();
-            $lines[] = '- ['.$record->displayHeading().']('.$record->getUrl($locale).')'.($excerpt !== '' ? ': '.$excerpt : '');
+            $suffix = $excerpt !== '' ? ': '.$excerpt : '';
+            $lines[] = $record->hasDetailPage()
+                ? '- ['.$record->displayHeading().']('.$record->getUrl($locale).')'.$suffix
+                : '- '.$record->displayHeading().$suffix;
         }
 
         return $this->join([

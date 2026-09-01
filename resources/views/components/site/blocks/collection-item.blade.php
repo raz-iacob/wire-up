@@ -10,7 +10,8 @@
 ])
 
 @php
-    $url = $record->getUrl();
+    $linked = $record->hasDetailPage();
+    $url = $linked ? $record->getUrl() : null;
     $heading = $record->displayHeading();
     $excerpt = $record->displayExcerpt();
     $image = $showImage ? $record->primaryImageUrl($layout === 'list' ? 400 : 900) : null;
@@ -45,7 +46,7 @@
 @endphp
 
 @if ($layout === 'list')
-    <a href="{{ $url }}" class="group flex items-start gap-6 py-6">
+    <{{ $linked ? 'a' : 'div' }} @if ($linked) href="{{ $url }}" @endif class="group flex items-start gap-6 py-6">
         @if ($image)
             <img
                 src="{{ $image }}"
@@ -73,10 +74,10 @@
                 <p class="mt-2 font-medium">{{ implode(' · ', $meta) }}</p>
             @endif
         </div>
-    </a>
+    </{{ $linked ? 'a' : 'div' }}>
 @else
-    <a
-        href="{{ $url }}"
+    <{{ $linked ? 'a' : 'div' }}
+        @if ($linked) href="{{ $url }}" @endif
         class="group wire-card flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm transition hover:shadow-md"
         @if ($cardStyle !== '') style="{{ $cardStyle }}" @endif
     >
@@ -102,5 +103,5 @@
                 <p class="mt-auto pt-1 font-medium">{{ implode(' · ', $meta) }}</p>
             @endif
         </div>
-    </a>
+    </{{ $linked ? 'a' : 'div' }}>
 @endif

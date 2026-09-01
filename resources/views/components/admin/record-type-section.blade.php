@@ -88,6 +88,20 @@
                 align="left"
             />
 
+            <flux:switch
+                wire:model.live="types.{{ $index }}.has_detail_page"
+                label="{{ __('Give each record its own page') }}"
+                description="{{ __('Off when the records only feed cards. Cards stop linking anywhere and the records leave the sitemap and site search.') }}"
+                align="left"
+            />
+
+            <flux:switch
+                wire:model="types.{{ $index }}.has_index_page"
+                label="{{ __('Publish a listing at the URL prefix') }}"
+                description="{{ __('Lists every published record of this type. A page with the same web address wins.') }}"
+                align="left"
+            />
+
             <div class="space-y-3">
                 <div class="flex items-center justify-between gap-3">
                     <flux:label>{{ __('Fields') }}</flux:label>

@@ -31,6 +31,8 @@ final class CreateContentTypeTool extends Tool
                 'slug_prefix' => ['nullable', 'string', 'lowercase', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::notIn(Records::reservedPrefixes())],
                 'icon' => ['nullable', 'string', 'max:255'],
                 'breadcrumbs' => ['nullable', 'boolean'],
+                'has_detail_page' => ['nullable', 'boolean'],
+                'has_index_page' => ['nullable', 'boolean'],
                 ...Records::fieldRules(),
             ],
             [
@@ -75,6 +77,8 @@ final class CreateContentTypeTool extends Tool
             'slug_prefix' => $slugPrefix,
             'icon' => (string) ($validated['icon'] ?? $preset['icon'] ?? 'rectangle-stack'),
             'breadcrumbs' => (bool) ($validated['breadcrumbs'] ?? false),
+            'has_detail_page' => (bool) ($validated['has_detail_page'] ?? true),
+            'has_index_page' => (bool) ($validated['has_index_page'] ?? false),
             'fields' => $fields,
         ]);
 
@@ -104,6 +108,12 @@ final class CreateContentTypeTool extends Tool
 
             'breadcrumbs' => $schema->boolean()
                 ->description('Show the breadcrumb trail back to the home page on every record page of this type. Defaults to false.'),
+
+            'has_detail_page' => $schema->boolean()
+                ->description('Give each record its own page at /{prefix}/{slug}. Defaults to true. Set false when the records only feed cards: the detail route 404s, cards render unlinked, and the records leave the sitemap and site search.'),
+
+            'has_index_page' => $schema->boolean()
+                ->description('Publish a listing of every published record of this type at /{prefix}. Defaults to false. A page whose web address matches the prefix takes precedence.'),
 
             'fields' => $schema->array()
                 ->items($schema->object())

@@ -375,7 +375,7 @@ final class SeoService
             ->published()
             ->with($with)
             ->get()
-            ->reject(fn (Record $record): bool => $record->isNoindex() || $record->isMembersOnly())
+            ->reject(fn (Record $record): bool => $record->isNoindex() || $record->isMembersOnly() || ! $record->hasDetailPage())
             ->values();
     }
 

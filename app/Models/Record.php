@@ -81,6 +81,13 @@ final class Record extends Model
         return $this->belongsTo(RecordType::class);
     }
 
+    public function hasDetailPage(): bool
+    {
+        $this->loadMissing('recordType');
+
+        return $this->recordType->has_detail_page;
+    }
+
     public function getUrl(?string $locale = null): string
     {
         $this->loadMissing('recordType');

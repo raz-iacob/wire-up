@@ -60,6 +60,10 @@ final class SiteSearchQuery
      */
     private function recordGroup(RecordType $type, string $query, int $perType): ?array
     {
+        if (! $type->has_detail_page) {
+            return null;
+        }
+
         $base = Record::query()
             ->where('record_type_id', $type->id)
             ->publishedInLocale()
