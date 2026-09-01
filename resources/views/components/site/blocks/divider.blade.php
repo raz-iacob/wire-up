@@ -13,9 +13,7 @@
         ? $style
         : 'solid';
 
-    $color = $block->plain('color');
-    $color = preg_match('/^[#a-zA-Z0-9(),.%\s-]+$/', $color) === 1 ? $color : '';
-    $color = $color !== '' ? $color : 'var(--wire-divider)';
+    $color = \App\Services\BlockColor::safe($block->plain('color'), 'var(--wire-divider)');
 
     $full = $block->plain('width', 'normal') === 'full';
 

@@ -13,6 +13,10 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Body copy gains a Line height setting (tight, normal, relaxed or loose) and a List indent setting. Prose was locked at a 1.625 line height, which is a lot on a text-heavy page; relaxed is still the default so nothing moves until you change it. Lists inside cards indent by the same amount as lists in body text now, a 4px difference where the two used to disagree.
 - The header can be given an exact height in pixels, and the logo an exact height of its own. Logo sizes used to jump 24 → 32 → 56px, so an ordinary 40px logo was unreachable; a number now overrides the size preset. Both are empty by default, which fits the header to its content as before.
 - Content width takes a number as well as the three presets, and the side gutter — fixed at 24px since the beginning — is settable too. Choose "Custom" for the width to type a pixel value.
+- The text-and-image block gains an image shape, image corners, an uneven column split and its own background colour. It was always a 50/50 grid with the image at one fixed radius, and its background could only be the theme's card colour. The location block shares that grid and gets the split and the colours too. Every default is what the block already did.
+- The hero can be given an exact height in pixels, exact heading and subheading sizes, and its faded subheading can be switched to full contrast. Height was auto, large or full screen with nothing in between, and the type scale was derived from your heading size with no way to override it.
+- Feature cards can now scroll as a carousel or stack as a list, not just sit in a grid, and take a "view more" button of their own. Carousels and block-level buttons used to mean turning your content into a content type and using a collection block instead.
+- The contact block can panel just the form, leaving the heading on the page background — its background used to paint the whole section, so that arrangement was not expressible. The message box takes a row count, and the submit button can sit left, centre or right.
 
 ## v0.2.0 — 2026-08-25
 

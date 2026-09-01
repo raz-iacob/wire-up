@@ -12,6 +12,20 @@
     $reverse = (bool) ($content['reverseLayout'] ?? false);
     $hasBg = (bool) ($content['hasBackground'] ?? false);
 
+    $sectionStyle = $hasBg ? \App\Services\BlockColor::style([
+        'background-color' => $content['bg'] ?? null,
+        'color' => $content['textColor'] ?? null,
+    ]) : '';
+
+    $split = in_array($content['columnSplit'] ?? 'even', ['even', 'text-wide', 'image-wide'], true)
+        ? ($content['columnSplit'] ?? 'even')
+        : 'even';
+    $gridCols = match ($split) {
+        'text-wide' => $reverse ? 'md:grid-cols-[2fr_3fr]' : 'md:grid-cols-[3fr_2fr]',
+        'image-wide' => $reverse ? 'md:grid-cols-[3fr_2fr]' : 'md:grid-cols-[2fr_3fr]',
+        default => 'md:grid-cols-2',
+    };
+
     $mapRaw = mb_trim($block->plain('map'));
     $isUrl = str_starts_with($mapRaw, 'http');
     $mapsKey = \App\Services\SettingsService::current()->googleMapsApiKey();
@@ -34,11 +48,14 @@
     $showDirections = $directions['enabled'] && $directions['text'] !== '' && $directions['url'] !== null;
 @endphp
 
-<section @class([
-    'w-full',
-    'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
-    ($pad ?? 'py-16') => $hasBg,
-])>
+<section
+    @class([
+        'w-full',
+        'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+        ($pad ?? 'py-16') => $hasBg,
+    ])
+    @if ($sectionStyle !== '') style="{{ $sectionStyle }}" @endif
+>
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         @if ($heading)
             <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
@@ -47,7 +64,8 @@
         @endif
 
         <div @class([
-            'grid gap-8 md:grid-cols-2 md:items-center md:gap-10' => $mapRaw !== '',
+            'grid gap-8 md:items-center md:gap-10' => $mapRaw !== '',
+            $gridCols => $mapRaw !== '',
         ])>
             @if ($mapRaw !== '')
                 <div @class(['md:order-last' => $reverse])>

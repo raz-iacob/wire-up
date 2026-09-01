@@ -65,6 +65,27 @@
         />
     </div>
 
+    <div x-show="{{ $b }}?.hasBackground" x-cloak class="grid gap-4 md:grid-cols-2">
+        <flux:color-picker
+            wire:model="{{ $c }}.bg"
+            clearable
+            label="{{ __('Background color') }}"
+            placeholder="{{ __('Theme') }}"
+        />
+        <flux:color-picker
+            wire:model="{{ $c }}.textColor"
+            clearable
+            label="{{ __('Text color') }}"
+            placeholder="{{ __('Theme') }}"
+        />
+    </div>
+
+    <flux:radio.group wire:model.lazy="{{ $c }}.columnSplit" variant="segmented" label="{{ __('Column split') }}">
+        <flux:radio value="even" label="{{ __('Even') }}" />
+        <flux:radio value="text-wide" label="{{ __('Wider text') }}" />
+        <flux:radio value="image-wide" label="{{ __('Wider map') }}" />
+    </flux:radio.group>
+
     <flux:switch
         wire:model.live="{{ $c }}.directions.enabled"
         label="{{ __('Show a directions button') }}"

@@ -35,15 +35,10 @@
 
     $badgeClass = 'rounded-full bg-current/10 px-2.5 py-1 text-xs font-bold text-(--wire-accent)';
 
-    $safeColor = fn (mixed $value): string => is_string($value) && preg_match('/^[#a-zA-Z0-9(),.%\s-]+$/', $value) === 1 ? $value : '';
-
-    $cardStyle = collect([
-        'background-color' => $safeColor($cardBg),
-        'color' => $safeColor($cardText),
-    ])
-        ->filter(fn (string $value): bool => $value !== '')
-        ->map(fn (string $value, string $property): string => "{$property}:{$value}")
-        ->implode(';');
+    $cardStyle = \App\Services\BlockColor::style([
+        'background-color' => $cardBg,
+        'color' => $cardText,
+    ]);
 
     $excerptClass = $dimText ? 'leading-(--wire-body-leading) opacity-80' : 'leading-(--wire-body-leading)';
     $fieldsUnderTitle = $fieldPosition === 'under-title';

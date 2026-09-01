@@ -2,6 +2,7 @@
     'item',
     'inputClass' => '',
     'layout' => 'stacked',
+    'textareaRows' => 5,
 ])
 
 @php($field = $item['field'])
@@ -25,7 +26,7 @@
             <textarea
                 id="cf-{{ $field['key'] }}"
                 wire:model="{{ $field['key'] }}"
-                rows="5"
+                rows="{{ $textareaRows }}"
                 class="{{ $inputClass }}"
                 @if ($field['placeholder'] !== '') placeholder="{{ $field['placeholder'] }}" @endif
                 @unless ($hasLabel) aria-label="{{ $field['aria'] }}" @endunless
@@ -80,7 +81,7 @@
                     <textarea
                         id="cf-{{ $field['id'] }}"
                         wire:model="{{ $path }}"
-                        rows="5"
+                        rows="{{ $textareaRows }}"
                         class="{{ $inputClass }}"
                         @unless ($hasLabel) aria-label="{{ $field['aria'] }}" @endunless
                     ></textarea>

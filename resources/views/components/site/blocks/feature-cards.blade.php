@@ -57,6 +57,14 @@
 
     $cardBg = ($content['cardBg'] ?? null) ?: ($hasBg ? 'var(--wire-body-bg)' : 'var(--wire-card-bg)');
     $cardText = ($content['cardText'] ?? null) ?: ($hasBg ? 'var(--wire-body-text)' : 'var(--wire-card-text)');
+
+    $layout = in_array($content['layout'] ?? 'grid', ['grid', 'list', 'carousel'], true) ? ($content['layout'] ?? 'grid') : 'grid';
+
+    $buttonEnabled = (bool) data_get($content, 'button.enabled', false);
+    $buttonText = $block->text('button.text');
+    $buttonUrl = $buttonEnabled ? $block->ctaUrl('button') : null;
+    $buttonNewTab = $block->ctaOpensNewTab('button');
+    $hasButton = $buttonUrl !== null && strip_tags($buttonText) !== '';
 @endphp
 
 <section @class([
@@ -81,19 +89,99 @@
         @endif
 
         @if ($items->isNotEmpty())
-            <div class="grid grid-cols-1 gap-6 {{ $gridCols }}">
-                @foreach ($items as $item)
-                    <x-site.blocks.feature-card
-                        :item="$item"
-                        :image-height-class="$imageHeightClass"
-                        :icon-size-class="$iconSizeClass"
-                        :image-rounded="$imageRounded"
-                        :card-style="$cardStyle"
-                        :card-bg="$cardBg"
-                        :card-text="$cardText"
-                        wire:key="feature-card-{{ $loop->index }}"
-                    />
-                @endforeach
+            @if ($layout === 'carousel')
+                <div
+                    x-data="{
+                        atStart: true,
+                        atEnd: false,
+                        scroll(dir) {
+                            const t = this.$refs.track;
+                            t.scrollBy({ left: dir * t.clientWidth * 0.8, behavior: 'smooth' });
+                        },
+                        update() {
+                            const t = this.$refs.track;
+                            this.atStart = t.scrollLeft <= 1;
+                            this.atEnd = Math.ceil(t.scrollLeft + t.offsetWidth) >= t.scrollWidth;
+                        },
+                    }"
+                    x-init="$nextTick(() => update())"
+                >
+                    @if ($items->count() > 1)
+                        <div class="mb-6 hidden justify-end gap-2 sm:flex">
+                            <flux:button
+                                square
+                                variant="subtle"
+                                icon="chevron-left"
+                                x-on:click="scroll(-1)"
+                                x-bind:disabled="atStart"
+                                class="disabled:opacity-40"
+                                :aria-label="__('Previous')"
+                            />
+                            <flux:button
+                                square
+                                variant="subtle"
+                                icon="chevron-right"
+                                x-on:click="scroll(1)"
+                                x-bind:disabled="atEnd"
+                                class="disabled:opacity-40"
+                                :aria-label="__('Next')"
+                            />
+                        </div>
+                    @endif
+
+                    <div
+                        x-ref="track"
+                        x-on:scroll="update()"
+                        class="[&::-webkit-scrollbar]:hidden flex snap-x snap-mandatory scrollbar-none items-stretch gap-6 overflow-x-auto scroll-smooth pb-2"
+                    >
+                        @foreach ($items as $item)
+                            <div
+                                class="w-[80vw] shrink-0 snap-start sm:w-72 lg:w-80"
+                                wire:key="feature-card-{{ $loop->index }}"
+                            >
+                                <x-site.blocks.feature-card
+                                    :item="$item"
+                                    :image-height-class="$imageHeightClass"
+                                    :icon-size-class="$iconSizeClass"
+                                    :image-rounded="$imageRounded"
+                                    :card-style="$cardStyle"
+                                    :card-bg="$cardBg"
+                                    :card-text="$cardText"
+                                />
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                <div @class([
+                    'grid grid-cols-1 gap-6',
+                    $gridCols => $layout === 'grid',
+                    'lg:w-3/4' => $layout === 'list',
+                ])>
+                    @foreach ($items as $item)
+                        <x-site.blocks.feature-card
+                            :item="$item"
+                            :image-height-class="$imageHeightClass"
+                            :icon-size-class="$iconSizeClass"
+                            :image-rounded="$imageRounded"
+                            :card-style="$cardStyle"
+                            :card-bg="$cardBg"
+                            :card-text="$cardText"
+                            wire:key="feature-card-{{ $loop->index }}"
+                        />
+                    @endforeach
+                </div>
+            @endif
+        @endif
+
+        @if ($hasButton)
+            <div class="mt-10 flex justify-center">
+                <a
+                    href="{{ $buttonUrl }}"
+                    @if ($buttonNewTab) target="_blank" rel="noopener noreferrer" @endif
+                    class="inline-flex items-center justify-center rounded-(--wire-btn-radius) border px-6 py-2.5 text-sm font-medium transition hover:opacity-80"
+                    style="border-color: var(--wire-primary-bg); color: var(--wire-primary-bg)"
+                >{{ strip_tags($buttonText) }}</a>
             </div>
         @endif
     </div>

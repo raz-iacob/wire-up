@@ -116,12 +116,44 @@
             <flux:select.option value="container">{{ __('Container') }}</flux:select.option>
         </flux:select>
 
-        <flux:select wire:model.lazy="{{ $c }}.height" variant="listbox" label="{{ __('Height') }}">
+        <flux:select wire:model.live="{{ $c }}.height" variant="listbox" label="{{ __('Height') }}">
             <flux:select.option value="auto">{{ __('Fit content') }}</flux:select.option>
             <flux:select.option value="large">{{ __('Large') }}</flux:select.option>
             <flux:select.option value="screen">{{ __('Full screen') }}</flux:select.option>
+            <flux:select.option value="custom">{{ __('Exact height') }}</flux:select.option>
         </flux:select>
     </div>
+
+    <div x-show="{{ $b }}?.height === 'custom'" x-cloak>
+        <flux:input
+            type="number"
+            min="120"
+            max="2000"
+            wire:model.lazy="{{ $c }}.customHeight"
+            label="{{ __('Height in pixels') }}"
+        />
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+        <flux:input
+            type="number"
+            min="12"
+            max="160"
+            wire:model.lazy="{{ $c }}.headingSize"
+            label="{{ __('Heading size in pixels') }}"
+            description="{{ __('Empty follows the theme.') }}"
+        />
+        <flux:input
+            type="number"
+            min="10"
+            max="96"
+            wire:model.lazy="{{ $c }}.subheadingSize"
+            label="{{ __('Subheading size in pixels') }}"
+            description="{{ __('Empty follows the theme.') }}"
+        />
+    </div>
+
+    <flux:switch wire:model.live="{{ $c }}.dimSubheading" label="{{ __('Fade the subheading') }}" align="left" />
 
     <div x-show="({{ $b }}?.width ?? 'full') !== 'container'" x-cloak>
         <flux:switch

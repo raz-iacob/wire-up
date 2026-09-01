@@ -39,6 +39,46 @@
         />
     </div>
 
+    <div x-show="{{ $b }}?.hasBackground" x-cloak class="grid gap-4 md:grid-cols-2">
+        <flux:color-picker
+            wire:model="{{ $c }}.bg"
+            clearable
+            label="{{ __('Background color') }}"
+            placeholder="{{ __('Theme') }}"
+        />
+        <flux:color-picker
+            wire:model="{{ $c }}.textColor"
+            clearable
+            label="{{ __('Text color') }}"
+            placeholder="{{ __('Theme') }}"
+        />
+    </div>
+
+    <flux:radio.group wire:model.lazy="{{ $c }}.columnSplit" variant="segmented" label="{{ __('Column split') }}">
+        <flux:radio value="even" label="{{ __('Even') }}" />
+        <flux:radio value="text-wide" label="{{ __('Wider text') }}" />
+        <flux:radio value="image-wide" label="{{ __('Wider image') }}" />
+    </flux:radio.group>
+
+    <div class="grid gap-4 md:grid-cols-2">
+        <flux:select wire:model.lazy="{{ $c }}.imageRatio" variant="listbox" label="{{ __('Image shape') }}">
+            <flux:select.option value="auto">{{ __('Its own') }}</flux:select.option>
+            <flux:select.option value="1:1">{{ __('Square') }}</flux:select.option>
+            <flux:select.option value="4:3">4:3</flux:select.option>
+            <flux:select.option value="3:2">3:2</flux:select.option>
+            <flux:select.option value="16:9">16:9</flux:select.option>
+            <flux:select.option value="3:4">{{ __('Portrait') }}</flux:select.option>
+        </flux:select>
+
+        <flux:select wire:model.lazy="{{ $c }}.imageRadius" variant="listbox" label="{{ __('Image corners') }}">
+            <flux:select.option value="default">{{ __('Default') }}</flux:select.option>
+            <flux:select.option value="none">{{ __('Square') }}</flux:select.option>
+            <flux:select.option value="small">{{ __('Small') }}</flux:select.option>
+            <flux:select.option value="large">{{ __('Large') }}</flux:select.option>
+            <flux:select.option value="full">{{ __('Round') }}</flux:select.option>
+        </flux:select>
+    </div>
+
     @foreach (['ctaPrimary' => __('Primary button'), 'ctaSecondary' => __('Secondary button')] as $cta => $ctaLabel)
         <flux:switch
             wire:model.live="{{ $c }}.{{ $cta }}.enabled"

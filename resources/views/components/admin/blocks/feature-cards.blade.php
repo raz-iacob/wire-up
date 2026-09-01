@@ -223,11 +223,19 @@
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
-        <flux:radio.group wire:model.live="{{ $c }}.columns" variant="segmented" label="{{ __('Columns') }}">
-            @foreach ([2, 3, 4] as $columnOption)
-                <flux:radio value="{{ $columnOption }}" label="{{ $columnOption }}" />
-            @endforeach
+        <flux:radio.group wire:model.live="{{ $c }}.layout" variant="segmented" label="{{ __('Layout') }}">
+            <flux:radio value="grid" icon="squares-2x2" label="{{ __('Grid') }}" />
+            <flux:radio value="list" icon="list-bullet" label="{{ __('List') }}" />
+            <flux:radio value="carousel" icon="view-columns" label="{{ __('Carousel') }}" />
         </flux:radio.group>
+
+        <div x-show="({{ $b }}?.layout ?? 'grid') === 'grid'" x-cloak>
+            <flux:radio.group wire:model.live="{{ $c }}.columns" variant="segmented" label="{{ __('Columns') }}">
+                @foreach ([2, 3, 4] as $columnOption)
+                    <flux:radio value="{{ $columnOption }}" label="{{ $columnOption }}" />
+                @endforeach
+            </flux:radio.group>
+        </div>
 
         <flux:select wire:model.live="{{ $c }}.imageHeight" variant="listbox" label="{{ __('Image height') }}">
             <flux:select.option value="icon">{{ __('Icon') }}</flux:select.option>
@@ -261,5 +269,53 @@
             label="{{ __('Card text') }}"
             placeholder="{{ __('Theme') }}"
         />
+    </div>
+
+    <flux:switch wire:model.live="{{ $c }}.button.enabled" label="{{ __('Show a “view more” button') }}" align="left" />
+
+    <div x-show="{{ $b }}?.button?.enabled" x-cloak class="grid gap-4 md:grid-cols-2">
+        <x-forms.input-translated
+            name="{{ $c }}.button.text"
+            :locale="$locale"
+            :multi-locale="$multiLocale"
+            label="{{ __('Button text') }}"
+        />
+
+        <flux:select wire:model.live="{{ $c }}.button.link.type" variant="listbox" label="{{ __('Link to') }}">
+            <flux:select.option value="page">{{ __('A page') }}</flux:select.option>
+            <flux:select.option value="url">{{ __('External URL') }}</flux:select.option>
+            <flux:select.option value="anchor">{{ __('Section on this page') }}</flux:select.option>
+        </flux:select>
+
+        <div class="col-span-2">
+            @if (data_get($block, 'content.button.link.type', 'url') === 'page')
+                <flux:select
+                    wire:model="{{ $c }}.button.link.value"
+                    variant="listbox"
+                    searchable
+                    placeholder="{{ __('Choose a page') }}"
+                    label="{{ __('Page') }}"
+                >
+                    @foreach ($pageOptions as $pageId => $pageTitle)
+                        <flux:select.option value="{{ $pageId }}">{{ $pageTitle }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+            @elseif (data_get($block, 'content.button.link.type', 'url') === 'anchor')
+                <flux:input
+                    wire:model.lazy="{{ $c }}.button.link.value"
+                    label="{{ __('Section anchor') }}"
+                    placeholder="#contact"
+                />
+            @else
+                <div class="flex flex-col gap-3">
+                    <x-forms.url-input wire:model.lazy="{{ $c }}.button.link.value" label="{{ __('URL') }}" />
+                    <flux:switch
+                        wire:model.lazy="{{ $c }}.button.link.newTab"
+                        label="{{ __('Open in a new tab') }}"
+                        align="left"
+                    />
+                </div>
+            @endif
+        </div>
     </div>
 </div>

@@ -239,4 +239,35 @@
     />
 
     <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />
+
+    <div class="grid gap-4 md:grid-cols-2">
+        <flux:color-picker
+            wire:model="{{ $c }}.panelBg"
+            clearable
+            label="{{ __('Form panel background') }}"
+            placeholder="{{ __('None') }}"
+        />
+        <flux:color-picker
+            wire:model="{{ $c }}.panelText"
+            clearable
+            label="{{ __('Form panel text') }}"
+            placeholder="{{ __('Theme') }}"
+        />
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+        <flux:input
+            type="number"
+            min="2"
+            max="30"
+            wire:model.lazy="{{ $c }}.textareaRows"
+            label="{{ __('Message box rows') }}"
+        />
+
+        <flux:radio.group wire:model.lazy="{{ $c }}.submitAlign" variant="segmented" label="{{ __('Submit button') }}">
+            <flux:radio value="left" icon="bars-3-bottom-left" label="{{ __('Left') }}" />
+            <flux:radio value="center" icon="bars-3" label="{{ __('Center') }}" />
+            <flux:radio value="right" icon="bars-3-bottom-right" label="{{ __('Right') }}" />
+        </flux:radio.group>
+    </div>
 </div>

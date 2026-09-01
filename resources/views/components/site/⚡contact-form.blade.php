@@ -470,6 +470,18 @@ return new class extends Component
 @php
     $inputClass = 'wire-field w-full px-4 py-3 text-base focus:outline-none rounded-(--wire-btn-radius) bg-(--wire-input-bg) text-(--wire-input-text)';
     $headingLevel = \App\Services\BlockHeading::level($this->config['headingLevel'] ?? null);
+
+    $panelStyle = \App\Services\BlockColor::style([
+        'background-color' => $this->config['panelBg'] ?? null,
+        'color' => $this->config['panelText'] ?? null,
+    ]);
+
+    $textareaRows = is_numeric($this->config['textareaRows'] ?? null) ? (int) $this->config['textareaRows'] : 5;
+    $textareaRows = $textareaRows >= 2 && $textareaRows <= 30 ? $textareaRows : 5;
+
+    $submitAlign = in_array($this->config['submitAlign'] ?? 'left', ['left', 'center', 'right'], true)
+        ? ($this->config['submitAlign'] ?? 'left')
+        : 'left';
 @endphp
 
 <div>
@@ -493,21 +505,26 @@ return new class extends Component
         <form
             wire:submit="submit"
             novalidate
-            @class(['flex flex-col gap-5', 'mx-auto max-w-xl' => $this->layout === 'stacked'])
+            @class([
+                'flex flex-col gap-5',
+                'mx-auto max-w-xl' => $this->layout === 'stacked',
+                'rounded-(--wire-radius) p-6 sm:p-8' => $panelStyle !== '',
+            ])
+            @if ($panelStyle !== '') style="{{ $panelStyle }}" @endif
         >
             @if ($this->layout === 'split')
                 <div class="md:grid md:grid-cols-2 md:items-start md:gap-8">
                     <div class="flex flex-col gap-5">
                         @foreach ($this->orderedFields as $item)
                             @if ($item['field']['column'] !== 'right')
-                                @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass])
+                                @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'textareaRows' => $textareaRows])
                             @endif
                         @endforeach
                     </div>
                     <div class="flex flex-col gap-5 max-md:mt-5">
                         @foreach ($this->orderedFields as $item)
                             @if ($item['field']['column'] === 'right')
-                                @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass])
+                                @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'textareaRows' => $textareaRows])
                             @endif
                         @endforeach
                     </div>
@@ -515,7 +532,7 @@ return new class extends Component
             @else
                 <div @class(['grid gap-5', 'md:grid-cols-2' => $this->layout === 'full'])>
                     @foreach ($this->orderedFields as $item)
-                        @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'layout' => $this->layout])
+                        @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'layout' => $this->layout, 'textareaRows' => $textareaRows])
                     @endforeach
                 </div>
             @endif
@@ -541,7 +558,11 @@ return new class extends Component
                 </div>
             @enderror
 
-            <div>
+            <div @class([
+                'flex',
+                'justify-center' => $submitAlign === 'center',
+                'justify-end' => $submitAlign === 'right',
+            ])>
                 <button
                     type="submit"
                     class="wire-btn inline-flex items-center justify-center rounded-(--wire-btn-radius) bg-(--wire-primary-bg) px-6 py-3 text-base font-medium text-(--wire-primary-text) transition [--wire-btn-border:var(--wire-primary-border)] hover:opacity-90 disabled:opacity-50"

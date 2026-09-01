@@ -21,7 +21,33 @@
     $width = $content['width'] ?? 'full';
     $height = $content['height'] ?? 'auto';
 
-    $isCover = in_array($height, ['large', 'screen'], true);
+    $customHeight = is_numeric($content['customHeight'] ?? null) ? (int) $content['customHeight'] : null;
+    $customHeight = $customHeight !== null && $customHeight >= 120 && $customHeight <= 2000 ? $customHeight : null;
+    $isCustomHeight = $height === 'custom' && $customHeight !== null;
+
+    $isCover = in_array($height, ['large', 'screen'], true) || $isCustomHeight;
+
+    $headingSize = is_numeric($content['headingSize'] ?? null) ? (int) $content['headingSize'] : null;
+    $headingSize = $headingSize !== null && $headingSize >= 12 && $headingSize <= 160 ? $headingSize : null;
+
+    $subheadingSize = is_numeric($content['subheadingSize'] ?? null) ? (int) $content['subheadingSize'] : null;
+    $subheadingSize = $subheadingSize !== null && $subheadingSize >= 10 && $subheadingSize <= 96 ? $subheadingSize : null;
+
+    $dimSubheading = (bool) ($content['dimSubheading'] ?? true);
+
+    $textStyle = function (?string $color, ?int $size): string {
+        $parts = [];
+
+        if (\App\Services\BlockColor::safe($color) !== '') {
+            $parts[] = 'color:'.\App\Services\BlockColor::safe($color);
+        }
+
+        if ($size !== null) {
+            $parts[] = "font-size:{$size}px";
+        }
+
+        return implode(';', $parts);
+    };
     $isContainer = $width === 'container';
     $overlayContent = ! $isCover && ($imageDesktop || $bgVideo);
 
@@ -29,6 +55,10 @@
     $subheadingColor = ($content['subheadingColor'] ?? null) ?: null;
 
     $styles = ['color:var(--wire-hero-text, var(--wire-header-text))'];
+
+    if ($isCustomHeight) {
+        $styles[] = "min-height:{$customHeight}px";
+    }
 
     if ($type === 'color') {
         $gradient = $bg['gradient'] ?? [];
@@ -64,6 +94,7 @@
         'mx-auto max-w-(--wire-container) my-12 md:my-16' => $isContainer,
         'flex min-h-[70vh]' => $height === 'large',
         'flex min-h-svh' => $height === 'screen',
+        'flex' => $isCustomHeight,
     ])
     style="{{ implode(';', $styles) }}"
 >
@@ -115,8 +146,13 @@
     ])>
         @if ($heading)
             <div
-                class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline max-w-3xl text-[length:calc(var(--wire-heading-size)*1.2)] font-bold tracking-tight md:text-[length:calc(var(--wire-heading-size)*1.5)]"
-                @if ($headingColor) style="color:{{ $headingColor }}" @endif
+                @class([
+                    '[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline max-w-3xl font-bold tracking-tight',
+                    'text-[length:calc(var(--wire-heading-size)*1.2)] md:text-[length:calc(var(--wire-heading-size)*1.5)]' => $headingSize === null,
+                ])
+                @if ($textStyle($headingColor, $headingSize) !== '')
+                    style="{{ $textStyle($headingColor, $headingSize) }}"
+                @endif
             >
                 <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
             </div>
@@ -124,8 +160,14 @@
 
         @if ($subheading)
             <div
-                class="[&_a]:text-(--wire-accent) [&_a]:underline max-w-2xl text-[length:calc(var(--wire-body-size)*1.1)] opacity-90 md:text-[length:calc(var(--wire-body-size)*1.25)]"
-                @if ($subheadingColor) style="color:{{ $subheadingColor }}" @endif
+                @class([
+                    '[&_a]:text-(--wire-accent) [&_a]:underline max-w-2xl',
+                    'text-[length:calc(var(--wire-body-size)*1.1)] md:text-[length:calc(var(--wire-body-size)*1.25)]' => $subheadingSize === null,
+                    'opacity-90' => $dimSubheading,
+                ])
+                @if ($textStyle($subheadingColor, $subheadingSize) !== '')
+                    style="{{ $textStyle($subheadingColor, $subheadingSize) }}"
+                @endif
             >
                 {!! $subheading !!}
             </div>

@@ -9,6 +9,38 @@
     $reverse = (bool) ($content['reverseLayout'] ?? false);
     $hasBg = (bool) ($content['hasBackground'] ?? false);
 
+    $sectionStyle = $hasBg ? \App\Services\BlockColor::style([
+        'background-color' => $content['bg'] ?? null,
+        'color' => $content['textColor'] ?? null,
+    ]) : '';
+
+    $split = in_array($content['columnSplit'] ?? 'even', ['even', 'text-wide', 'image-wide'], true)
+        ? ($content['columnSplit'] ?? 'even')
+        : 'even';
+    $textFirst = $reverse;
+    $gridCols = match ($split) {
+        'text-wide' => $textFirst ? 'md:grid-cols-[3fr_2fr]' : 'md:grid-cols-[2fr_3fr]',
+        'image-wide' => $textFirst ? 'md:grid-cols-[2fr_3fr]' : 'md:grid-cols-[3fr_2fr]',
+        default => 'md:grid-cols-2',
+    };
+
+    $ratioClass = match ($content['imageRatio'] ?? 'auto') {
+        '1:1' => 'aspect-square h-full',
+        '4:3' => 'aspect-4/3 h-full',
+        '3:2' => 'aspect-3/2 h-full',
+        '16:9' => 'aspect-video h-full',
+        '3:4' => 'aspect-3/4 h-full',
+        default => '',
+    };
+
+    $imageRadiusClass = match ($content['imageRadius'] ?? 'default') {
+        'none' => 'rounded-none',
+        'small' => 'rounded-(--wire-radius)',
+        'large' => 'rounded-[calc(var(--wire-radius)*3)]',
+        'full' => 'rounded-full',
+        default => 'rounded-[calc(var(--wire-radius)*1.5)]',
+    };
+
     $defaultBg = ['ctaPrimary' => 'var(--wire-primary-bg)', 'ctaSecondary' => 'var(--wire-secondary-bg)'];
     $defaultText = ['ctaPrimary' => 'var(--wire-primary-text)', 'ctaSecondary' => 'var(--wire-secondary-text)'];
     $defaultBorder = ['ctaPrimary' => 'var(--wire-primary-border)', 'ctaSecondary' => 'var(--wire-secondary-border)'];
@@ -27,14 +59,18 @@
         ->values();
 @endphp
 
-<section @class([
-    'w-full',
-    'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
-    ($pad ?? 'py-16') => $hasBg,
-])>
+<section
+    @class([
+        'w-full',
+        'bg-(--wire-card-bg) text-(--wire-card-text)' => $hasBg,
+        ($pad ?? 'py-16') => $hasBg,
+    ])
+    @if ($sectionStyle !== '') style="{{ $sectionStyle }}" @endif
+>
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         <div @class([
-            'md:grid md:grid-cols-2 md:items-center md:gap-10' => $image,
+            'md:grid md:items-center md:gap-10' => $image,
+            $gridCols => $image,
         ])>
             <div class="flex flex-col gap-5">
                 @if ($heading)
@@ -69,7 +105,7 @@
                         src="{{ $image }}"
                         alt="{{ $block->imageAlt('image') }}"
                         loading="lazy"
-                        class="w-full rounded-[calc(var(--wire-radius)*1.5)] object-cover"
+                        @class(['w-full object-cover', $ratioClass, $imageRadiusClass])
                     />
                 </div>
             @endif
