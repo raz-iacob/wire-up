@@ -73,6 +73,10 @@ return new class extends Component
         $layout = in_array($content['layout'] ?? 'grid', ['grid', 'list'], true) ? ($content['layout'] ?? 'grid') : 'grid';
         $columns = (int) ($content['columns'] ?? 3);
         $showImage = (bool) ($content['showImage'] ?? true);
+        $cardBg = is_string($content['cardBg'] ?? null) ? $content['cardBg'] : '';
+        $cardText = is_string($content['cardText'] ?? null) ? $content['cardText'] : '';
+        $dimText = (bool) ($content['dimText'] ?? true);
+        $fieldPosition = ($content['fieldPosition'] ?? 'footer') === 'under-title' ? 'under-title' : 'footer';
         $hasHeading = strip_tags($heading) !== '';
         $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
 
@@ -102,6 +106,10 @@ return new class extends Component
                         :columns="$columns"
                         :show-image="$showImage"
                         :fields="$displayFields"
+                        :card-bg="$cardBg"
+                        :card-text="$cardText"
+                        :dim-text="$dimText"
+                        :field-position="$fieldPosition"
                         :block-id="$blockId"
                     />
                 </div>

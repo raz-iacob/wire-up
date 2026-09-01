@@ -9,6 +9,10 @@
     $columns = (int) ($content['columns'] ?? 3);
     $columns = in_array($columns, [2, 3, 4], true) ? $columns : 3;
     $showImage = (bool) ($content['showImage'] ?? true);
+    $cardBg = is_string($content['cardBg'] ?? null) ? $content['cardBg'] : '';
+    $cardText = is_string($content['cardText'] ?? null) ? $content['cardText'] : '';
+    $dimText = (bool) ($content['dimText'] ?? true);
+    $fieldPosition = ($content['fieldPosition'] ?? 'footer') === 'under-title' ? 'under-title' : 'footer';
     $heading = $block->text('heading');
     $hasHeading = strip_tags($heading) !== '';
 
@@ -131,6 +135,10 @@
                                     :record="$record"
                                     :show-image="$showImage"
                                     :fields="$displayFields"
+                                    :card-bg="$cardBg"
+                                    :card-text="$cardText"
+                                    :dim-text="$dimText"
+                                    :field-position="$fieldPosition"
                                     layout="grid"
                                 />
                             </div>
@@ -151,6 +159,10 @@
                         :columns="$columns"
                         :show-image="$showImage"
                         :fields="$displayFields"
+                        :card-bg="$cardBg"
+                        :card-text="$cardText"
+                        :dim-text="$dimText"
+                        :field-position="$fieldPosition"
                         :block-id="$block->id"
                     />
 

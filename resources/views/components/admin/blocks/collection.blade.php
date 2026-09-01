@@ -149,11 +149,36 @@
                 <flux:pillbox.option :value="$field['key']" :label="$selectedType->fieldLabel($field)" />
             @endforeach
         </flux:pillbox>
+
+        <flux:radio.group
+            wire:model.lazy="{{ $c }}.fieldPosition"
+            variant="segmented"
+            label="{{ __('Where those fields sit') }}"
+        >
+            <flux:radio value="footer" label="{{ __('At the bottom') }}" />
+            <flux:radio value="under-title" label="{{ __('Under the title') }}" />
+        </flux:radio.group>
     @endif
 
     <div class="flex flex-col gap-4">
         <flux:switch wire:model.live="{{ $c }}.showImage" label="{{ __('Show each record\'s image') }}" align="left" />
+        <flux:switch wire:model.live="{{ $c }}.dimText" label="{{ __('Dim the description') }}" align="left" />
         <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />
+    </div>
+
+    <div x-show="{{ $b }}?.layout !== 'list'" x-cloak class="grid gap-4 md:grid-cols-2">
+        <flux:color-picker
+            wire:model="{{ $c }}.cardBg"
+            clearable
+            label="{{ __('Card background') }}"
+            placeholder="{{ __('Transparent') }}"
+        />
+        <flux:color-picker
+            wire:model="{{ $c }}.cardText"
+            clearable
+            label="{{ __('Card text') }}"
+            placeholder="{{ __('Theme') }}"
+        />
     </div>
 
     <flux:switch wire:model.live="{{ $c }}.button.enabled" label="{{ __('Show a “view more” button') }}" align="left" />

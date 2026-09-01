@@ -1,4 +1,13 @@
-@props(['record', 'showImage' => true, 'layout' => 'grid', 'fields' => []])
+@props([
+    'record',
+    'showImage' => true,
+    'layout' => 'grid',
+    'fields' => [],
+    'cardBg' => '',
+    'cardText' => '',
+    'dimText' => true,
+    'fieldPosition' => 'footer',
+])
 
 @php
     $url = $record->getUrl();
@@ -25,6 +34,19 @@
     }
 
     $badgeClass = 'rounded-full bg-current/10 px-2.5 py-1 text-xs font-bold text-(--wire-accent)';
+
+    $safeColor = fn (mixed $value): string => is_string($value) && preg_match('/^[#a-zA-Z0-9(),.%\s-]+$/', $value) === 1 ? $value : '';
+
+    $cardStyle = collect([
+        'background-color' => $safeColor($cardBg),
+        'color' => $safeColor($cardText),
+    ])
+        ->filter(fn (string $value): bool => $value !== '')
+        ->map(fn (string $value, string $property): string => "{$property}:{$value}")
+        ->implode(';');
+
+    $excerptClass = $dimText ? 'leading-relaxed opacity-80' : 'leading-relaxed';
+    $fieldsUnderTitle = $fieldPosition === 'under-title';
 @endphp
 
 @if ($layout === 'list')
@@ -46,10 +68,13 @@
                     @endforeach
                 </div>
             @endif
-            @if ($excerpt !== '')
-                <p class="mt-1 leading-relaxed opacity-80">{{ $excerpt }}</p>
+            @if ($fieldsUnderTitle && $meta !== [])
+                <p class="mt-2 font-medium">{{ implode(' · ', $meta) }}</p>
             @endif
-            @if ($meta !== [])
+            @if ($excerpt !== '')
+                <p class="mt-1 {{ $excerptClass }}">{{ $excerpt }}</p>
+            @endif
+            @if (! $fieldsUnderTitle && $meta !== [])
                 <p class="mt-2 font-medium">{{ implode(' · ', $meta) }}</p>
             @endif
         </div>
@@ -58,6 +83,7 @@
     <a
         href="{{ $url }}"
         class="group wire-card flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm transition hover:shadow-md"
+        @if ($cardStyle !== '') style="{{ $cardStyle }}" @endif
     >
         @if ($image)
             <img src="{{ $image }}" alt="{{ $heading }}" loading="lazy" class="aspect-4/3 w-full object-cover" />
@@ -71,10 +97,13 @@
                     @endforeach
                 </div>
             @endif
-            @if ($excerpt !== '')
-                <p class="leading-relaxed opacity-80">{{ $excerpt }}</p>
+            @if ($fieldsUnderTitle && $meta !== [])
+                <p class="font-medium">{{ implode(' · ', $meta) }}</p>
             @endif
-            @if ($meta !== [])
+            @if ($excerpt !== '')
+                <p class="{{ $excerptClass }}">{{ $excerpt }}</p>
+            @endif
+            @if (! $fieldsUnderTitle && $meta !== [])
                 <p class="mt-auto pt-1 font-medium">{{ implode(' · ', $meta) }}</p>
             @endif
         </div>

@@ -1,4 +1,15 @@
-@props(['records', 'layout' => 'grid', 'columns' => 3, 'showImage' => true, 'fields' => [], 'blockId'])
+@props([
+    'records',
+    'layout' => 'grid',
+    'columns' => 3,
+    'showImage' => true,
+    'fields' => [],
+    'blockId',
+    'cardBg' => '',
+    'cardText' => '',
+    'dimText' => true,
+    'fieldPosition' => 'footer',
+])
 
 @php
     $gridCols = match ((int) $columns) {
@@ -15,6 +26,10 @@
                 :record="$record"
                 :show-image="$showImage"
                 :fields="$fields"
+                :card-bg="$cardBg"
+                :card-text="$cardText"
+                :dim-text="$dimText"
+                :field-position="$fieldPosition"
                 layout="list"
                 wire:key="collection-{{ $blockId }}-{{ $record->id }}"
             />
@@ -27,6 +42,10 @@
                 :record="$record"
                 :show-image="$showImage"
                 :fields="$fields"
+                :card-bg="$cardBg"
+                :card-text="$cardText"
+                :dim-text="$dimText"
+                :field-position="$fieldPosition"
                 layout="grid"
                 wire:key="collection-{{ $blockId }}-{{ $record->id }}"
             />

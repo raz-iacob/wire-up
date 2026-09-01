@@ -395,3 +395,124 @@ it('renders a paginated collection block whose content omits the layout key', fu
         'content' => ['source' => 'latest', 'recordTypeId' => $type->id, 'perPage' => 6],
     ])->assertOk()->assertSee('Build a page');
 });
+
+it('leaves collection cards unpainted by default', function (): void {
+    $type = RecordType::factory()->create(['key' => 'post', 'slug_prefix' => 'posts', 'fields' => []]);
+    collectionRecord($type, 'Plain Card');
+
+    $html = (string) $this->get(collectionPage($type->id))->assertOk()->getContent();
+
+    expect($html)->toContain('Plain Card')
+        ->and($html)->not->toContain('background-color:#');
+});
+
+it('paints the cards with a chosen background and text colour', function (): void {
+    $type = RecordType::factory()->create(['key' => 'post', 'slug_prefix' => 'posts', 'fields' => []]);
+    collectionRecord($type, 'Painted Card');
+
+    $html = (string) $this->get(collectionPage($type->id, [
+        'cardBg' => '#123456',
+        'cardText' => '#ffffff',
+    ]))->assertOk()->getContent();
+
+    expect($html)->toContain('background-color:#123456;color:#ffffff');
+});
+
+it('paints carousel cards too, but never the list layout', function (string $layout, bool $painted): void {
+    $type = RecordType::factory()->create(['key' => 'post', 'slug_prefix' => 'posts', 'fields' => []]);
+    collectionRecord($type, 'Card '.$layout);
+
+    $html = (string) $this->get(collectionPage($type->id, [
+        'layout' => $layout,
+        'cardBg' => '#123456',
+    ]))->assertOk()->getContent();
+
+    expect(str_contains($html, 'background-color:#123456'))->toBe($painted);
+})->with([
+    'carousel' => ['carousel', true],
+    'list' => ['list', false],
+]);
+
+it('discards a card colour that could break out of the style attribute', function (string $colour): void {
+    $type = RecordType::factory()->create(['key' => 'post', 'slug_prefix' => 'posts', 'fields' => []]);
+    collectionRecord($type, 'Guarded Card');
+
+    $html = (string) $this->get(collectionPage($type->id, ['cardBg' => $colour]))->assertOk()->getContent();
+
+    expect($html)->toContain('Guarded Card')
+        ->and($html)->not->toContain('background-image')
+        ->and($html)->not->toContain('background-color:red');
+})->with([
+    'a second declaration' => 'red;background-image:url(https://evil.test/x.png)',
+    'a url' => 'url(https://evil.test/x.png)',
+]);
+
+it('keeps a var() card colour, which carries no colon', function (): void {
+    $type = RecordType::factory()->create(['key' => 'post', 'slug_prefix' => 'posts', 'fields' => []]);
+    collectionRecord($type, 'Token Card');
+
+    expect((string) $this->get(collectionPage($type->id, ['cardBg' => 'var(--wire-card-bg)']))->assertOk()->getContent())
+        ->toContain('background-color:var(--wire-card-bg)');
+});
+
+it('dims the description by default and stops when asked', function (bool $dim, bool $expected): void {
+    $type = RecordType::factory()->create([
+        'key' => 'post',
+        'slug_prefix' => 'posts',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'prefills' => 'title', 'translatable' => true],
+            ['key' => 'overview', 'type' => 'rich-text', 'prefills' => 'description', 'translatable' => true],
+        ],
+    ]);
+    collectionRecord($type, 'Dimmed Post');
+
+    $html = (string) $this->get(collectionPage($type->id, ['dimText' => $dim]))->assertOk()->getContent();
+
+    expect(str_contains($html, 'leading-relaxed opacity-80'))->toBe($expected);
+})->with([
+    'dimmed' => [true, true],
+    'full contrast' => [false, false],
+]);
+
+function placedWidgetType(): RecordType
+{
+    $type = RecordType::factory()->create([
+        'key' => 'product',
+        'slug_prefix' => 'products',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'prefills' => 'title', 'translatable' => true],
+            ['key' => 'overview', 'type' => 'rich-text', 'prefills' => 'description', 'translatable' => true],
+            ['key' => 'sku', 'type' => 'text', 'label' => ['en' => 'SKU']],
+        ],
+    ]);
+
+    $record = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'title' => ['en' => 'Placed Widget'],
+        'data' => ['heading' => ['en' => 'Placed Widget'], 'overview' => ['en' => '<p>A widget.</p>'], 'sku' => 'SKU-42'],
+        'metadata' => ['published_locales' => ['en']],
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $record->setSlugs();
+
+    return $type;
+}
+
+it('footers the extra fields below the description by default', function (): void {
+    $type = placedWidgetType();
+
+    $html = (string) $this->get(collectionPage($type->id, ['fields' => ['sku']]))->assertOk()->getContent();
+
+    expect($html)->toContain('mt-auto pt-1 font-medium')
+        ->and(mb_strpos($html, 'SKU-42'))->toBeGreaterThan(mb_strpos($html, 'A widget.'));
+});
+
+it('moves the extra fields under the title', function (): void {
+    $type = placedWidgetType();
+
+    $html = (string) $this->get(collectionPage($type->id, ['fields' => ['sku'], 'fieldPosition' => 'under-title']))->assertOk()->getContent();
+
+    expect($html)->not->toContain('mt-auto pt-1 font-medium')
+        ->and(mb_strpos($html, 'SKU-42'))->toBeLessThan(mb_strpos($html, 'A widget.'));
+});
