@@ -25,13 +25,13 @@
                 'ms-auto' => $narrow && $align === 'right',
             ])>
                 @if (strip_tags($heading) !== '')
-                    <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-6 text-(length:--wire-heading-size) tracking-tight">
+                    <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-6 text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                         <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                     </div>
                 @endif
 
                 @if (strip_tags($body) !== '')
-                    <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 max-w-none leading-relaxed *:first:mt-0 *:last:mb-0">
+                    <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-(--wire-list-indent) [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-(--wire-list-indent) [&_li]:my-1 max-w-none leading-(--wire-body-leading) *:first:mt-0 *:last:mb-0">
                         {!! $body !!}
                     </div>
                 @endif

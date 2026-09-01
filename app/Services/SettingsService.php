@@ -473,6 +473,10 @@ final class SettingsService
             }
         }
 
+        $buttonRadiusKey = (string) config('site.button_radius', '') ?: config()->string('theme.default_button_radius');
+        $buttonRadius = config()->string("theme.button_radii.$buttonRadiusKey", '');
+        $root[] = '--wire-btn-radius:'.($buttonRadius !== '' ? $buttonRadius : 'var(--wire-radius)');
+
         $borderWidthKey = (string) config('site.border_width', '') ?: config()->string('theme.default_border_width');
         $borderWidth = config()->string("theme.border_widths.$borderWidthKey", '');
         if ($borderWidth !== '') {
@@ -491,11 +495,19 @@ final class SettingsService
 
         $containerKey = (string) config('site.container', '') ?: config()->string('theme.default_container');
         $container = config()->string("theme.containers.$containerKey", '');
+
+        if ($containerKey === 'custom') {
+            $width = $this->pixelSetting('container_width', 'theme.container_width_min', 'theme.container_width_max')
+                ?? config()->integer('theme.default_container_width');
+            $container = "{$width}px";
+        }
+
         if ($container !== '') {
             $root[] = "--wire-container:$container";
         }
 
-        $root[] = '--wire-gutter:1.5rem';
+        $gutter = $this->pixelSetting('gutter', 'theme.gutter_min', 'theme.gutter_max');
+        $root[] = '--wire-gutter:'.($gutter === null ? '1.5rem' : "{$gutter}px");
         $fullGutter = $containerKey === 'full'
             ? match ($this->blockSpacing()) {
                 'small' => '3rem',
@@ -513,6 +525,28 @@ final class SettingsService
         }
         if ($bodySize !== '') {
             $root[] = "--wire-body-size:$bodySize";
+        }
+
+        $leadingKey = (string) config('site.body_leading', '') ?: config()->string('theme.default_body_leading');
+        $leading = config()->string("theme.body_leadings.$leadingKey", '');
+        if ($leading !== '') {
+            $root[] = "--wire-body-leading:$leading";
+        }
+
+        $indentKey = (string) config('site.list_indent', '') ?: config()->string('theme.default_list_indent');
+        $indent = config()->string("theme.list_indents.$indentKey", '');
+        if ($indent !== '') {
+            $root[] = "--wire-list-indent:$indent";
+        }
+
+        $headerHeight = $this->headerHeight();
+        if ($headerHeight !== null) {
+            $root[] = "--wire-header-height:{$headerHeight}px";
+        }
+
+        $logoHeight = $this->headerLogoHeight();
+        if ($logoHeight !== null) {
+            $root[] = "--wire-logo-height:{$logoHeight}px";
         }
 
         $css = ':root{'.implode(';', $root).'}'.($dark === [] ? '' : '.dark{'.implode(';', $dark).'}');
@@ -640,6 +674,16 @@ final class SettingsService
         }
 
         return $links;
+    }
+
+    public function headerHeight(): ?int
+    {
+        return $this->pixelSetting('header_height', 'theme.header_height_min', 'theme.header_height_max');
+    }
+
+    public function headerLogoHeight(): ?int
+    {
+        return $this->pixelSetting('header_logo_height', 'theme.header_logo_height_min', 'theme.header_logo_height_max');
     }
 
     public function blockSpaceTop(): bool
@@ -777,6 +821,19 @@ final class SettingsService
         return $palette;
     }
 
+    private function pixelSetting(string $key, string $minKey, string $maxKey): ?int
+    {
+        $value = config("site.{$key}");
+
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $pixels = (int) $value;
+
+        return $pixels >= config()->integer($minKey) && $pixels <= config()->integer($maxKey) ? $pixels : null;
+    }
+
     /**
      * @param  array<string, string>  $palette
      * @return list<string>
@@ -785,12 +842,20 @@ final class SettingsService
     {
         $declarations = [];
         foreach ($palette as $slot => $hex) {
+            if ($hex === '') {
+                continue;
+            }
+
             $name = match ($slot) {
                 'background' => 'body-bg',
                 'text' => 'body-text',
                 default => str_replace('_', '-', $slot),
             };
             $declarations[] = "--wire-$name:$hex";
+        }
+
+        if (($palette['heading'] ?? '') === '') {
+            $declarations[] = '--wire-heading:var(--wire-body-text)';
         }
 
         return $declarations;

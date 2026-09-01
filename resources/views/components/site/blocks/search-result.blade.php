@@ -13,7 +13,7 @@
         <div class="min-w-0">
             <h3 class="text-lg font-semibold tracking-tight group-hover:text-(--wire-accent)">{{ $title }}</h3>
             @if ($excerpt !== '')
-                <p class="mt-1 leading-relaxed opacity-80">{{ $excerpt }}</p>
+                <p class="mt-1 leading-(--wire-body-leading) opacity-80">{{ $excerpt }}</p>
             @endif
         </div>
     </a>
@@ -28,7 +28,7 @@
         <div class="flex grow flex-col gap-2 p-5">
             <h3 class="text-lg font-semibold tracking-tight group-hover:text-(--wire-accent)">{{ $title }}</h3>
             @if ($excerpt !== '')
-                <p class="leading-relaxed opacity-80">{{ $excerpt }}</p>
+                <p class="leading-(--wire-body-leading) opacity-80">{{ $excerpt }}</p>
             @endif
         </div>
     </a>

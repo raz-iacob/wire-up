@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-it('gives every preset a light and a dark palette covering every slot', function (): void {
-    $slots = array_keys(config()->array('theme.slots'));
+it('gives every preset a light and a dark palette covering every required slot', function (): void {
+    $slots = array_keys(array_filter(
+        config()->array('theme.slots'),
+        fn (array $definition): bool => ! ($definition['optional'] ?? false),
+    ));
     $incomplete = [];
 
     foreach (config()->array('theme.presets') as $key => $preset) {
@@ -119,4 +122,19 @@ it('keeps the primary button visible against the hero band', function (): void {
     }
 
     expect($lost)->toBe([]);
+});
+
+it('leaves optional slots out of the presets so they fall back instead of restyling a site', function (): void {
+    $optional = array_keys(array_filter(
+        config()->array('theme.slots'),
+        fn (array $definition): bool => (bool) ($definition['optional'] ?? false),
+    ));
+
+    expect($optional)->not->toBe([]);
+
+    foreach (config()->array('theme.presets') as $key => $preset) {
+        foreach (['colors', 'colors_dark'] as $palette) {
+            expect(array_intersect($optional, array_keys($preset[$palette] ?? [])))->toBe([], "{$key}.{$palette}");
+        }
+    }
 });

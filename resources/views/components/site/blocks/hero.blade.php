@@ -142,7 +142,7 @@
                     <a
                         href="{{ $cta['url'] }}"
                         @if ($cta['newTab']) target="_blank" rel="noopener noreferrer" @endif
-                        class="wire-btn inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
+                        class="wire-btn inline-flex items-center justify-center rounded-(--wire-btn-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
                         style="background-color:{{ $cta['bg'] }};color:{{ $cta['fg'] }};--wire-btn-border:{{ $cta['border'] }}"
                     >{{ $cta['text'] }}</a>
                 @endforeach

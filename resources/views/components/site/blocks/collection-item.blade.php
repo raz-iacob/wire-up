@@ -45,7 +45,7 @@
         ->map(fn (string $value, string $property): string => "{$property}:{$value}")
         ->implode(';');
 
-    $excerptClass = $dimText ? 'leading-relaxed opacity-80' : 'leading-relaxed';
+    $excerptClass = $dimText ? 'leading-(--wire-body-leading) opacity-80' : 'leading-(--wire-body-leading)';
     $fieldsUnderTitle = $fieldPosition === 'under-title';
 @endphp
 

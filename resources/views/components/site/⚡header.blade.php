@@ -34,6 +34,10 @@ return new class extends Component
 
     public string $logoSize;
 
+    public ?int $height = null;
+
+    public ?int $logoHeight = null;
+
     public string $navSize;
 
     public string $navHover;
@@ -48,6 +52,8 @@ return new class extends Component
         $sticky = (bool) config('site.header_sticky', false);
 
         $logoSize = config('site.header_logo_size');
+        $this->height = $service->headerHeight();
+        $this->logoHeight = $service->headerLogoHeight();
         $this->logoSize = is_string($logoSize) ? $logoSize : config()->string('theme.default_header_logo_size');
         $navSize = config('site.header_nav_size');
         $this->navSize = is_string($navSize) ? $navSize : config()->string('theme.default_header_nav_size');
@@ -103,13 +109,22 @@ return new class extends Component
 >
     @switch ($layout)
         @case ('centered')
-            <div class="relative mx-auto max-w-(--wire-container) space-y-6 px-(--wire-gutter) py-8 text-center">
+            <div
+                class="relative mx-auto flex max-w-(--wire-container) flex-col justify-center space-y-6 px-(--wire-gutter) py-8 text-center"
+                @if ($height) style="min-height:{{ $height }}px" @endif
+            >
                 <div class="absolute inset-e-6 top-4 max-md:hidden">
                     <x-site.theme-toggle />
                     <x-site.language-picker :languages="$this->languages" />
                 </div>
                 <div class="flex justify-center">
-                    <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
+                    <x-site.brand
+                        :logo="$logo"
+                        :logo-dark="$logoDark"
+                        :brand="$brand"
+                        :size="$logoSize"
+                        :height="$logoHeight"
+                    />
                 </div>
                 <x-site.nav
                     :items="$items"
@@ -120,8 +135,17 @@ return new class extends Component
             </div>
             @break
         @case ('split')
-            <div class="mx-auto grid max-w-(--wire-container) grid-cols-3 items-center gap-6 px-(--wire-gutter) py-4">
-                <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
+            <div
+                class="mx-auto grid max-w-(--wire-container) grid-cols-3 items-center gap-6 px-(--wire-gutter) py-4"
+                @if ($height) style="min-height:{{ $height }}px" @endif
+            >
+                <x-site.brand
+                    :logo="$logo"
+                    :logo-dark="$logoDark"
+                    :brand="$brand"
+                    :size="$logoSize"
+                    :height="$logoHeight"
+                />
                 <x-site.nav :items="$links" :size="$navSize" :hover="$navHover" class="justify-center max-md:hidden" />
                 <div class="flex items-center justify-end gap-4 max-md:hidden">
                     <x-site.nav :items="$buttons" :size="$navSize" :hover="$navHover" />
@@ -131,13 +155,31 @@ return new class extends Component
             </div>
             @break
         @case ('minimal')
-            <div class="mx-auto flex max-w-(--wire-container) items-center justify-between px-(--wire-gutter) py-4">
-                <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
+            <div
+                class="mx-auto flex max-w-(--wire-container) items-center justify-between px-(--wire-gutter) py-4"
+                @if ($height) style="min-height:{{ $height }}px" @endif
+            >
+                <x-site.brand
+                    :logo="$logo"
+                    :logo-dark="$logoDark"
+                    :brand="$brand"
+                    :size="$logoSize"
+                    :height="$logoHeight"
+                />
             </div>
             @break
         @default
-            <div class="mx-auto flex max-w-(--wire-container) items-center justify-between gap-6 px-(--wire-gutter) py-4">
-                <x-site.brand :logo="$logo" :logo-dark="$logoDark" :brand="$brand" :size="$logoSize" />
+            <div
+                class="mx-auto flex max-w-(--wire-container) items-center justify-between gap-6 px-(--wire-gutter) py-4"
+                @if ($height) style="min-height:{{ $height }}px" @endif
+            >
+                <x-site.brand
+                    :logo="$logo"
+                    :logo-dark="$logoDark"
+                    :brand="$brand"
+                    :size="$logoSize"
+                    :height="$logoHeight"
+                />
                 <div class="flex items-center gap-6 max-md:hidden">
                     <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" />
                     <x-site.theme-toggle />

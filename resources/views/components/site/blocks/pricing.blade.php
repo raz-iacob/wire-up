@@ -50,12 +50,12 @@
             @if ($hasHeading)
                 <div class="mb-12">
                     @if (strip_tags($heading) !== '')
-                        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                             <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                         </div>
                     @endif
                     @if (strip_tags($intro) !== '')
-                        <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                        <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-(--wire-body-leading) opacity-80 *:first:mt-0 *:last:mb-0">
                             {!! $intro !!}
                         </div>
                     @endif
@@ -91,11 +91,11 @@
                         @endif
 
                         @if ($plan['description'] !== '')
-                            <p class="leading-relaxed opacity-80">{{ $plan['description'] }}</p>
+                            <p class="leading-(--wire-body-leading) opacity-80">{{ $plan['description'] }}</p>
                         @endif
 
                         @if (strip_tags($plan['features']) !== '')
-                            <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&>p]:my-2 grow leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                            <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&_ul]:list-disc [&_ul]:pl-(--wire-list-indent) [&_ol]:list-decimal [&_ol]:pl-(--wire-list-indent) [&_li]:my-1 [&>p]:my-2 grow leading-(--wire-body-leading) opacity-80 *:first:mt-0 *:last:mb-0">
                                 {!! $plan['features'] !!}
                             </div>
                         @endif
@@ -104,7 +104,7 @@
                             <a
                                 href="{{ $plan['cta']['url'] }}"
                                 @if ($plan['cta']['newTab']) target="_blank" rel="noopener noreferrer" @endif
-                                class="wire-btn mt-auto inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
+                                class="wire-btn mt-auto inline-flex items-center justify-center rounded-(--wire-btn-radius) px-6 py-3 text-base font-medium transition hover:opacity-90"
                                 style="background-color:{{ $plan['cta']['bg'] }};color:{{ $plan['cta']['fg'] }};--wire-btn-border:var(--wire-primary-border)"
                             >{{ $plan['cta']['text'] }}</a>
                         @endif

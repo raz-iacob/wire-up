@@ -40,7 +40,7 @@
                     <a
                         href="{{ $button['url'] }}"
                         @if ($button['newTab']) target="_blank" rel="noopener noreferrer" @endif
-                        class="wire-btn inline-flex items-center justify-center rounded-(--wire-radius) px-6 py-3 text-base font-medium transition hover:opacity-90 {{ $variantClass($button['variant']) }}"
+                        class="wire-btn inline-flex items-center justify-center rounded-(--wire-btn-radius) px-6 py-3 text-base font-medium transition hover:opacity-90 {{ $variantClass($button['variant']) }}"
                     >{{ $button['text'] }}</a>
                 @endforeach
             </div>

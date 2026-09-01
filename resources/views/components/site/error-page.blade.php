@@ -13,7 +13,7 @@
                         {{ __('Error') }} {{ $code }}
                     </div>
                     <h1 class="mt-4 text-[calc(var(--wire-heading-size)*1.5)] font-normal">{{ $title }}</h1>
-                    <p class="mt-3 leading-relaxed text-(--wire-muted)">{{ $message }}</p>
+                    <p class="mt-3 leading-(--wire-body-leading) text-(--wire-muted)">{{ $message }}</p>
                 </div>
             </main>
         </div>

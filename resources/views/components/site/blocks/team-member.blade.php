@@ -2,7 +2,7 @@
 
 @php
     $bio = strip_tags($member['bio']) !== '' ? $member['bio'] : '';
-    $bioClass = 'leading-relaxed opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0';
+    $bioClass = 'leading-(--wire-body-leading) opacity-80 [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 *:first:mt-0 *:last:mb-0';
     $cardClass = $hasBg ? 'bg-(--wire-body-bg) text-(--wire-body-text)' : 'bg-(--wire-card-bg) text-(--wire-card-text)';
 @endphp
 

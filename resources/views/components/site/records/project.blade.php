@@ -20,7 +20,7 @@
             <h1 class="text-(length:--wire-heading-size) tracking-tight">{{ $heading }}</h1>
 
             @if (strip_tags($overview) !== '')
-                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 max-w-none leading-relaxed *:first:mt-0 *:last:mb-0">
+                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 max-w-none leading-(--wire-body-leading) *:first:mt-0 *:last:mb-0">
                     {!! $overview !!}
                 </div>
             @endif
@@ -31,7 +31,7 @@
                         href="{{ $link }}"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="inline-flex items-center gap-2 rounded-(--wire-radius) border border-current/15 px-4 py-2 text-sm font-medium transition hover:bg-current/5"
+                        class="inline-flex items-center gap-2 rounded-(--wire-btn-radius) border border-current/15 px-4 py-2 text-sm font-medium transition hover:bg-current/5"
                     >
                         <span>{{ $linkLabel }}</span>
                         <flux:icon name="arrow-up-right" class="size-4 text-(--wire-accent)" />

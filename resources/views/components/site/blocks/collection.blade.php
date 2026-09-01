@@ -75,7 +75,7 @@
                     @if ($hasHeading || $hasButton || $records->count() > 1)
                         <div class="mx-auto flex max-w-(--wire-container) flex-wrap items-center justify-between gap-4 px-(--wire-gutter)">
                             @if ($hasHeading)
-                                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                                     <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                                 </div>
                             @endif
@@ -85,7 +85,7 @@
                                     <a
                                         href="{{ $buttonUrl }}"
                                         @if ($buttonNewTab) target="_blank" rel="noopener noreferrer" @endif
-                                        class="inline-flex items-center justify-center rounded-(--wire-radius) border px-6 py-2.5 text-sm font-medium transition hover:opacity-80"
+                                        class="inline-flex items-center justify-center rounded-(--wire-btn-radius) border px-6 py-2.5 text-sm font-medium transition hover:opacity-80"
                                         style="border-color: var(--wire-primary-bg); color: var(--wire-primary-bg)"
                                     >{{ strip_tags($buttonText) }}</a>
                                 @endif
@@ -148,7 +148,7 @@
             @else
                 <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
                     @if ($hasHeading)
-                        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-10 text-(length:--wire-heading-size) tracking-tight">
+                        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-10 text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                             <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                         </div>
                     @endif
@@ -171,7 +171,7 @@
                             <a
                                 href="{{ $buttonUrl }}"
                                 @if ($buttonNewTab) target="_blank" rel="noopener noreferrer" @endif
-                                class="inline-flex items-center justify-center rounded-(--wire-radius) border px-6 py-2.5 text-sm font-medium transition hover:opacity-80"
+                                class="inline-flex items-center justify-center rounded-(--wire-btn-radius) border px-6 py-2.5 text-sm font-medium transition hover:opacity-80"
                                 style="border-color: var(--wire-primary-bg); color: var(--wire-primary-bg)"
                             >{{ strip_tags($buttonText) }}</a>
                         </div>

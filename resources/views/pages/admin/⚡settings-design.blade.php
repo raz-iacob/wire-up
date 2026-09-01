@@ -37,11 +37,21 @@ return new class extends Component
 
     public string $body_size;
 
+    public string $body_leading;
+
+    public string $list_indent;
+
     public string $radius;
+
+    public string $button_radius;
 
     public string $border_width;
 
     public string $container;
+
+    public ?int $container_width = null;
+
+    public ?int $gutter = null;
 
     public string $block_spacing;
 
@@ -56,6 +66,10 @@ return new class extends Component
     public bool $header_theme_toggle = false;
 
     public string $header_logo_size;
+
+    public ?int $header_height = null;
+
+    public ?int $header_logo_height = null;
 
     public string $header_nav_size;
 
@@ -112,9 +126,14 @@ return new class extends Component
         $this->body_font_custom = $meta['body_font_custom'] ?? '';
         $this->heading_size = $meta['heading_size'] ?? config()->string('theme.default_heading_size');
         $this->body_size = $meta['body_size'] ?? config()->string('theme.default_body_size');
+        $this->body_leading = is_string($meta['body_leading'] ?? null) ? $meta['body_leading'] : config()->string('theme.default_body_leading');
+        $this->list_indent = is_string($meta['list_indent'] ?? null) ? $meta['list_indent'] : config()->string('theme.default_list_indent');
         $this->radius = $meta['radius'] ?? config()->string('theme.default_radius');
+        $this->button_radius = is_string($meta['button_radius'] ?? null) ? $meta['button_radius'] : config()->string('theme.default_button_radius');
         $this->border_width = is_string($meta['border_width'] ?? null) ? $meta['border_width'] : config()->string('theme.default_border_width');
         $this->container = is_string($meta['container'] ?? null) ? $meta['container'] : config()->string('theme.default_container');
+        $this->container_width = is_numeric($meta['container_width'] ?? null) ? (int) $meta['container_width'] : null;
+        $this->gutter = is_numeric($meta['gutter'] ?? null) ? (int) $meta['gutter'] : null;
         $this->block_spacing = is_string($meta['block_spacing'] ?? null) ? $meta['block_spacing'] : config()->string('theme.default_block_spacing');
         $this->block_space_top = (bool) ($meta['block_space_top'] ?? config()->boolean('theme.default_block_space_top'));
         $this->header_layout = is_string($meta['header_layout'] ?? null) ? $meta['header_layout'] : config()->string('theme.default_header_layout');
@@ -122,6 +141,8 @@ return new class extends Component
         $this->header_sticky = (bool) ($meta['header_sticky'] ?? false);
         $this->header_theme_toggle = (bool) ($meta['header_theme_toggle'] ?? false);
         $this->header_logo_size = is_string($meta['header_logo_size'] ?? null) ? $meta['header_logo_size'] : config()->string('theme.default_header_logo_size');
+        $this->header_height = is_numeric($meta['header_height'] ?? null) ? (int) $meta['header_height'] : null;
+        $this->header_logo_height = is_numeric($meta['header_logo_height'] ?? null) ? (int) $meta['header_logo_height'] : null;
         $this->header_nav_size = is_string($meta['header_nav_size'] ?? null) ? $meta['header_nav_size'] : config()->string('theme.default_header_nav_size');
         $this->header_nav_hover = is_string($meta['header_nav_hover'] ?? null) ? $meta['header_nav_hover'] : config()->string('theme.default_header_nav_hover');
         $this->footer_layout = is_string($meta['footer_layout'] ?? null) ? $meta['footer_layout'] : config()->string('theme.default_footer_layout');
@@ -150,9 +171,14 @@ return new class extends Component
             'body_font_custom' => ['nullable', 'string', 'max:60', 'regex:/^[A-Za-z0-9 ]+$/', 'required_if:body_font,custom'],
             'heading_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.heading_sizes')))],
             'body_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.body_sizes')))],
+            'body_leading' => ['required', 'string', Rule::in(array_keys(config()->array('theme.body_leadings')))],
+            'list_indent' => ['required', 'string', Rule::in(array_keys(config()->array('theme.list_indents')))],
             'radius' => ['required', 'string', Rule::in(array_keys(config()->array('theme.radii')))],
+            'button_radius' => ['required', 'string', Rule::in(array_keys(config()->array('theme.button_radii')))],
             'border_width' => ['required', 'string', Rule::in(array_keys(config()->array('theme.border_widths')))],
             'container' => ['required', 'string', Rule::in(array_keys(config()->array('theme.containers')))],
+            'container_width' => ['nullable', 'integer', 'min:'.config()->integer('theme.container_width_min'), 'max:'.config()->integer('theme.container_width_max'), 'required_if:container,custom'],
+            'gutter' => ['nullable', 'integer', 'min:'.config()->integer('theme.gutter_min'), 'max:'.config()->integer('theme.gutter_max')],
             'block_spacing' => ['required', 'string', Rule::in(array_keys(config()->array('theme.block_spacings')))],
             'block_space_top' => ['boolean'],
             'header_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.header_layouts')))],
@@ -160,6 +186,8 @@ return new class extends Component
             'header_sticky' => ['boolean'],
             'header_theme_toggle' => ['boolean'],
             'header_logo_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.element_sizes')))],
+            'header_height' => ['nullable', 'integer', 'min:'.config()->integer('theme.header_height_min'), 'max:'.config()->integer('theme.header_height_max')],
+            'header_logo_height' => ['nullable', 'integer', 'min:'.config()->integer('theme.header_logo_height_min'), 'max:'.config()->integer('theme.header_logo_height_max')],
             'header_nav_size' => ['required', 'string', Rule::in(array_keys(config()->array('theme.element_sizes')))],
             'header_nav_hover' => ['required', 'string', Rule::in(array_keys(config()->array('theme.nav_hover_states')))],
             'footer_layout' => ['required', 'string', Rule::in(array_keys(config()->array('theme.footer_layouts')))],
@@ -179,9 +207,10 @@ return new class extends Component
             'auth_image.id' => ['nullable', 'integer', 'exists:media,id'],
         ];
 
-        foreach (array_keys(config()->array('theme.slots')) as $slot) {
-            $rules["colors.$slot"] = ['required_if:theme,custom', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
-            $rules["colors_dark.$slot"] = ['required_if:theme,custom', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
+        foreach (config()->array('theme.slots') as $slot => $definition) {
+            $presence = ($definition['optional'] ?? false) ? 'nullable' : 'required_if:theme,custom';
+            $rules["colors.$slot"] = [$presence, 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
+            $rules["colors_dark.$slot"] = [$presence, 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
         }
 
         $validated = $this->validate($rules, [
@@ -191,7 +220,7 @@ return new class extends Component
             'body_font_custom.regex' => __('Use only letters, numbers and spaces for the font name.'),
         ]);
 
-        $metadata = Arr::only($validated, ['theme', 'theme_dark', 'heading_font', 'body_font', 'heading_font_custom', 'body_font_custom', 'heading_size', 'body_size', 'radius', 'border_width', 'container', 'block_spacing', 'block_space_top', 'header_layout', 'header_transparent', 'header_sticky', 'header_theme_toggle', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
+        $metadata = Arr::only($validated, ['theme', 'theme_dark', 'heading_font', 'body_font', 'heading_font_custom', 'body_font_custom', 'heading_size', 'body_size', 'radius', 'border_width', 'button_radius', 'body_leading', 'list_indent', 'container', 'container_width', 'gutter', 'block_spacing', 'block_space_top', 'header_layout', 'header_height', 'header_logo_height', 'header_transparent', 'header_sticky', 'header_theme_toggle', 'header_logo_size', 'header_nav_size', 'header_nav_hover', 'footer_layout', 'footer_transparent', 'auth_layout', 'auth_image_side']);
         $metadata['heading_font_custom'] = mb_trim((string) ($validated['heading_font_custom'] ?? ''));
         $metadata['body_font_custom'] = mb_trim((string) ($validated['body_font_custom'] ?? ''));
         $metadata['custom_css'] = mb_trim((string) ($validated['custom_css'] ?? ''));
@@ -800,7 +829,12 @@ return new class extends Component
                         <flux:heading size="sm">{{ __($group) }}</flux:heading>
                         <div class="grid gap-4 sm:grid-cols-2">
                             @foreach ($groupSlots as $slot => $def)
-                                <flux:color-picker wire:model="colors.{{ $slot }}" label="{{ __($def['label']) }}" />
+                                <flux:color-picker
+                                    wire:model="colors.{{ $slot }}"
+                                    label="{{ __($def['label']) }}"
+                                    :clearable="(bool) ($def['optional'] ?? false)"
+                                    :placeholder="($def['optional'] ?? false) ? __('Text colour') : null"
+                                />
                             @endforeach
                         </div>
                     </div>
@@ -823,6 +857,8 @@ return new class extends Component
                                 <flux:color-picker
                                     wire:model="colors_dark.{{ $slot }}"
                                     label="{{ __($def['label']) }}"
+                                    :clearable="(bool) ($def['optional'] ?? false)"
+                                    :placeholder="($def['optional'] ?? false) ? __('Text colour') : null"
                                 />
                             @endforeach
                         </div>
@@ -887,11 +923,45 @@ return new class extends Component
                         <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>
                     @endforeach
                 </flux:select>
-                <flux:select variant="listbox" wire:model="container" label="{{ __('Content width') }}">
+                <flux:select variant="listbox" wire:model="button_radius" label="{{ __('Button & input radius') }}">
+                    @foreach (array_keys(config('theme.button_radii')) as $key)
+                        <flux:select.option value="{{ $key }}">
+                            {{ $key === 'inherit' ? __('Same as corners') : ucfirst($key) }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:select variant="listbox" wire:model="body_leading" label="{{ __('Line height') }}">
+                    @foreach (array_keys(config('theme.body_leadings')) as $key)
+                        <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:select variant="listbox" wire:model="list_indent" label="{{ __('List indent') }}">
+                    @foreach (array_keys(config('theme.list_indents')) as $key)
+                        <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:select variant="listbox" wire:model.live="container" label="{{ __('Content width') }}">
                     @foreach (array_keys(config('theme.containers')) as $key)
                         <flux:select.option value="{{ $key }}">{{ ucfirst($key) }}</flux:select.option>
                     @endforeach
                 </flux:select>
+                <div x-show="$wire.container === 'custom'" x-cloak>
+                    <flux:input
+                        type="number"
+                        wire:model="container_width"
+                        :min="config('theme.container_width_min')"
+                        :max="config('theme.container_width_max')"
+                        label="{{ __('Content width in pixels') }}"
+                    />
+                </div>
+                <flux:input
+                    type="number"
+                    wire:model="gutter"
+                    :min="config('theme.gutter_min')"
+                    :max="config('theme.gutter_max')"
+                    label="{{ __('Side gutter in pixels') }}"
+                    placeholder="24"
+                />
                 <flux:select variant="listbox" wire:model="block_spacing" label="{{ __('Block spacing') }}">
                     @foreach (config('theme.block_spacings') as $key => $label)
                         <flux:select.option value="{{ $key }}">{{ __($label) }}</flux:select.option>
@@ -994,6 +1064,22 @@ return new class extends Component
                                 <flux:select.option value="{{ $value }}">{{ __($label) }}</flux:select.option>
                             @endforeach
                         </flux:select>
+                        <flux:input
+                            type="number"
+                            wire:model="header_logo_height"
+                            :min="config('theme.header_logo_height_min')"
+                            :max="config('theme.header_logo_height_max')"
+                            label="{{ __('Exact logo height in pixels') }}"
+                            description="{{ __('Overrides the logo size.') }}"
+                        />
+                        <flux:input
+                            type="number"
+                            wire:model="header_height"
+                            :min="config('theme.header_height_min')"
+                            :max="config('theme.header_height_max')"
+                            label="{{ __('Header height in pixels') }}"
+                            description="{{ __('Leave empty to fit the content.') }}"
+                        />
                         <flux:select variant="listbox" wire:model="header_nav_size" label="{{ __('Navigation size') }}">
                             @foreach (config('theme.element_sizes') as $value => $label)
                                 <flux:select.option value="{{ $value }}">{{ __($label) }}</flux:select.option>

@@ -28,7 +28,7 @@
 
                     $itemClasses = \Illuminate\Support\Arr::toCssClasses([
                         'font-medium transition',
-                        'rounded-(--wire-radius) px-4 py-2 bg-(--wire-primary-bg) text-(--wire-primary-text)' => $isButton,
+                        'rounded-(--wire-btn-radius) px-4 py-2 bg-(--wire-primary-bg) text-(--wire-primary-text)' => $isButton,
                         'text-sm' => $size === 'sm',
                         'text-base' => $size === 'md',
                         'text-lg' => $size === 'lg',

@@ -36,11 +36,11 @@
                 <h1 class="text-(length:--wire-heading-size) tracking-tight">{{ $heading }}</h1>
 
                 @if (strip_tags($overview) !== '')
-                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 max-w-none leading-relaxed *:first:mt-0 *:last:mb-0">
+                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-4 max-w-none leading-(--wire-body-leading) *:first:mt-0 *:last:mb-0">
                         {!! $overview !!}
                     </div>
                 @elseif ($record->description !== '')
-                    <p class="leading-relaxed">{{ $record->description }}</p>
+                    <p class="leading-(--wire-body-leading)">{{ $record->description }}</p>
                 @endif
             </div>
         </div>

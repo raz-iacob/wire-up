@@ -468,25 +468,25 @@ return new class extends Component
 ?>
 
 @php
-    $inputClass = 'wire-field w-full px-4 py-3 text-base focus:outline-none rounded-(--wire-radius) bg-(--wire-input-bg) text-(--wire-input-text)';
+    $inputClass = 'wire-field w-full px-4 py-3 text-base focus:outline-none rounded-(--wire-btn-radius) bg-(--wire-input-bg) text-(--wire-input-text)';
     $headingLevel = \App\Services\BlockHeading::level($this->config['headingLevel'] ?? null);
 @endphp
 
 <div>
     @if ($this->heading !== '')
-        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
+        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
             <x-site.blocks.heading :html="$this->heading" :level="$headingLevel" />
         </div>
     @endif
 
     @if (strip_tags($this->intro) !== '')
-        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-6 leading-relaxed">
+        <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-6 leading-(--wire-body-leading)">
             {!! $this->intro !!}
         </div>
     @endif
 
     @if ($this->sent)
-        <div class="wire-field [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline rounded-(--wire-radius) bg-(--wire-input-bg) p-4 leading-relaxed text-(--wire-input-text)">
+        <div class="wire-field [&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline rounded-(--wire-radius) bg-(--wire-input-bg) p-4 leading-(--wire-body-leading) text-(--wire-input-text)">
             {!! $this->successMessage !!}
         </div>
     @else
@@ -544,7 +544,7 @@ return new class extends Component
             <div>
                 <button
                     type="submit"
-                    class="wire-btn inline-flex items-center justify-center rounded-(--wire-radius) bg-(--wire-primary-bg) px-6 py-3 text-base font-medium text-(--wire-primary-text) transition [--wire-btn-border:var(--wire-primary-border)] hover:opacity-90 disabled:opacity-50"
+                    class="wire-btn inline-flex items-center justify-center rounded-(--wire-btn-radius) bg-(--wire-primary-bg) px-6 py-3 text-base font-medium text-(--wire-primary-text) transition [--wire-btn-border:var(--wire-primary-border)] hover:opacity-90 disabled:opacity-50"
                     wire:loading.attr="disabled"
                     wire:target="submit"
                 >

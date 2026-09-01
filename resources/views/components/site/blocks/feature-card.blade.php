@@ -27,7 +27,7 @@
     @endif
 
     @if (strip_tags($item['body']) !== '')
-        <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 grow leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+        <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-(--wire-list-indent) [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-(--wire-list-indent) [&_li]:my-0.5 grow leading-(--wire-body-leading) opacity-80 *:first:mt-0 *:last:mb-0">
             {!! $item['body'] !!}
         </div>
     @endif
@@ -36,7 +36,7 @@
         <a
             href="{{ $item['cta']['url'] }}"
             @if ($item['cta']['newTab']) target="_blank" rel="noopener noreferrer" @endif
-            class="wire-btn mt-1 inline-flex items-center justify-center rounded-(--wire-radius) px-5 py-2.5 text-sm font-medium transition hover:opacity-90"
+            class="wire-btn mt-1 inline-flex items-center justify-center rounded-(--wire-btn-radius) px-5 py-2.5 text-sm font-medium transition hover:opacity-90"
             style="background-color:{{ $item['cta']['bg'] }};color:{{ $item['cta']['fg'] }};--wire-btn-border:var(--wire-primary-border)"
         >{{ $item['cta']['text'] }}</a>
     @endif

@@ -468,7 +468,7 @@ it('dims the description by default and stops when asked', function (bool $dim, 
 
     $html = (string) $this->get(collectionPage($type->id, ['dimText' => $dim]))->assertOk()->getContent();
 
-    expect(str_contains($html, 'leading-relaxed opacity-80'))->toBe($expected);
+    expect(str_contains($html, 'leading-(--wire-body-leading) opacity-80'))->toBe($expected);
 })->with([
     'dimmed' => [true, true],
     'full contrast' => [false, false],

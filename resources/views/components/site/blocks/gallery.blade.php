@@ -53,7 +53,7 @@
 >
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         @if ($heading)
-            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
+            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                 <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
             </div>
         @endif

@@ -57,12 +57,12 @@
                     @if ($hasHeading)
                         <div>
                             @if (strip_tags($heading) !== '')
-                                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                                     <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                                 </div>
                             @endif
                             @if (strip_tags($intro) !== '')
-                                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-(--wire-body-leading) opacity-80 *:first:mt-0 *:last:mb-0">
                                     {!! $intro !!}
                                 </div>
                             @endif
@@ -122,7 +122,7 @@
                             @endif
 
                             @if (strip_tags($item['quote']) !== '')
-                                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 grow leading-relaxed *:first:mt-0 *:last:mb-0">
+                                <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 grow leading-(--wire-body-leading) *:first:mt-0 *:last:mb-0">
                                     {!! $item['quote'] !!}
                                 </div>
                             @endif
@@ -161,12 +161,12 @@
                 <div class="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
                     <div class="lg:sticky lg:top-24">
                         @if (strip_tags($heading) !== '')
-                            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                                 <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                             </div>
                         @endif
                         @if (strip_tags($intro) !== '')
-                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-4 max-w-prose leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-4 max-w-prose leading-(--wire-body-leading) opacity-80 *:first:mt-0 *:last:mb-0">
                                 {!! $intro !!}
                             </div>
                         @endif
@@ -207,7 +207,7 @@
                                             </div>
                                         @endif
                                         @if (strip_tags($item['quote']) !== '')
-                                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed *:first:mt-0 *:last:mb-0">
+                                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-(--wire-body-leading) *:first:mt-0 *:last:mb-0">
                                                 {!! $item['quote'] !!}
                                             </div>
                                         @endif
@@ -221,12 +221,12 @@
                 @if ($hasHeading)
                     <div>
                         @if (strip_tags($heading) !== '')
-                            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                            <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                                 <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                             </div>
                         @endif
                         @if (strip_tags($intro) !== '')
-                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                            <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-(--wire-body-leading) opacity-80 *:first:mt-0 *:last:mb-0">
                                 {!! $intro !!}
                             </div>
                         @endif
@@ -251,7 +251,7 @@
                                     @endif
 
                                     @if (strip_tags($item['quote']) !== '')
-                                        <blockquote class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 text-2xl leading-relaxed font-medium tracking-tight *:first:mt-0 *:last:mb-0">
+                                        <blockquote class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 text-2xl leading-(--wire-body-leading) font-medium tracking-tight *:first:mt-0 *:last:mb-0">
                                             {!! $item['quote'] !!}
                                         </blockquote>
                                     @endif
@@ -302,7 +302,7 @@
                                     @endif
 
                                     @if (strip_tags($item['quote']) !== '')
-                                        <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 grow leading-relaxed *:first:mt-0 *:last:mb-0">
+                                        <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 grow leading-(--wire-body-leading) *:first:mt-0 *:last:mb-0">
                                             {!! $item['quote'] !!}
                                         </div>
                                     @endif

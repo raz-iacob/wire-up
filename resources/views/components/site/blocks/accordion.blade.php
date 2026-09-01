@@ -26,7 +26,7 @@
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter)">
         <div class="max-w-3xl">
             @if ($heading)
-                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight">
+                <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline mb-8 text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                     <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                 </div>
             @endif
@@ -37,7 +37,7 @@
                         <flux:accordion.item :expanded="$loop->first">
                             <flux:accordion.heading>{{ $item['title'] }}</flux:accordion.heading>
                             <flux:accordion.content>
-                                <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 leading-relaxed *:first:mt-0 *:last:mb-0">
+                                <div class="wire-prose [&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-(--wire-list-indent) [&_ol]:pl-(--wire-list-indent) leading-(--wire-body-leading) *:first:mt-0 *:last:mb-0">
                                     {!! $item['body'] !!}
                                 </div>
                             </flux:accordion.content>

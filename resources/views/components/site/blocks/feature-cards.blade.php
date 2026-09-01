@@ -68,12 +68,12 @@
         @if ($hasHeading)
             <div class="mb-12">
                 @if (strip_tags($heading) !== '')
-                    <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight">
+                    <div class="[&>p]:m-0 [&_a]:text-(--wire-accent) [&_a]:underline text-(length:--wire-heading-size) tracking-tight text-(--wire-heading)">
                         <x-site.blocks.heading :html="$heading" :level="$headingLevel" />
                     </div>
                 @endif
                 @if (strip_tags($intro) !== '')
-                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-relaxed opacity-80 *:first:mt-0 *:last:mb-0">
+                    <div class="[&_a]:text-(--wire-accent) [&_a]:underline [&>p]:my-2 mt-3 leading-(--wire-body-leading) opacity-80 *:first:mt-0 *:last:mb-0">
                         {!! $intro !!}
                     </div>
                 @endif

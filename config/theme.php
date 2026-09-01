@@ -22,6 +22,7 @@ return [
     'slots' => [
         'background' => ['label' => 'Background', 'group' => 'General'],
         'text' => ['label' => 'Text', 'group' => 'General'],
+        'heading' => ['label' => 'Heading', 'group' => 'General', 'optional' => true],
         'muted' => ['label' => 'Muted text', 'group' => 'General'],
         'accent' => ['label' => 'Accent', 'group' => 'General'],
         'divider' => ['label' => 'Divider', 'group' => 'General'],
@@ -330,6 +331,23 @@ return [
         'xl' => '1.25rem',
     ],
 
+    'default_body_leading' => 'relaxed',
+
+    'body_leadings' => [
+        'tight' => '1.4',
+        'normal' => '1.5',
+        'relaxed' => '1.625',
+        'loose' => '1.8',
+    ],
+
+    'default_list_indent' => 'default',
+
+    'list_indents' => [
+        'small' => '1rem',
+        'default' => '1.5rem',
+        'large' => '2rem',
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Border radius (rem)
@@ -343,6 +361,17 @@ return [
         'small' => '0.25rem',
         'default' => '0.5rem',
         'large' => '1rem',
+    ],
+
+    'default_button_radius' => 'inherit',
+
+    'button_radii' => [
+        'inherit' => '',
+        'none' => '0px',
+        'small' => '0.25rem',
+        'default' => '0.5rem',
+        'large' => '1rem',
+        'full' => '9999px',
     ],
 
     /*
@@ -370,7 +399,20 @@ return [
         'medium' => '72rem',
         'large' => '80rem',
         'full' => '100%',
+        'custom' => '',
     ],
+
+    'default_container_width' => 1200,
+
+    'container_width_min' => 480,
+
+    'container_width_max' => 2400,
+
+    'default_gutter' => 24,
+
+    'gutter_min' => 0,
+
+    'gutter_max' => 96,
 
     /*
     |--------------------------------------------------------------------------
@@ -392,6 +434,14 @@ return [
         'default' => 'Default',
         'large' => 'Large',
     ],
+
+    'header_height_min' => 48,
+
+    'header_height_max' => 200,
+
+    'header_logo_height_min' => 16,
+
+    'header_logo_height_max' => 120,
 
     'default_header_logo_size' => 'md',
     'default_header_nav_size' => 'md',
