@@ -78,7 +78,7 @@
 @else
     <{{ $linked ? 'a' : 'div' }}
         @if ($linked) href="{{ $url }}" @endif
-        class="group wire-card flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm transition hover:shadow-md"
+        class="group wire-card wire-card--collection flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm transition hover:shadow-md"
         @if ($cardStyle !== '') style="{{ $cardStyle }}" @endif
     >
         @if ($image)

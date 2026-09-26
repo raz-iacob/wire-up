@@ -202,8 +202,10 @@ final class SettingsService
      */
     public function interfaceTranslationLocales(): array
     {
+        $default = resolve('localization')->getDefaultLocale();
+
         return resolve('localization')->getActiveLocaleCodes()
-            ->reject(fn (string $code): bool => $code === 'en')
+            ->sortBy(fn (string $code): int => $code === $default ? 1 : 0)
             ->values()
             ->all();
     }

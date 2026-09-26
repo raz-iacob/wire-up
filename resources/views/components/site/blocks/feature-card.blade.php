@@ -3,7 +3,7 @@
 <article
     @class([
         'flex h-full flex-col gap-4',
-        'wire-card rounded-(--wire-radius) p-6 shadow-sm' => $cardStyle,
+        'wire-card wire-card--feature rounded-(--wire-radius) p-6 shadow-sm' => $cardStyle,
     ])
     @if ($cardStyle) style="background-color:{{ $cardBg }};color:{{ $cardText }}" @endif
 >

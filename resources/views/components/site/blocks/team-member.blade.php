@@ -8,7 +8,7 @@
 
 @switch ($layout)
     @case ('card')
-        <article class="wire-card flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm {{ $cardClass }}">
+        <article class="wire-card wire-card--team flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm {{ $cardClass }}">
             @if ($member['photo'])
                 <img
                     src="{{ $member['photo'] }}"
@@ -95,7 +95,7 @@
         </article>
         @break
     @default
-        <article class="wire-card flex h-full flex-col items-center rounded-(--wire-radius) p-8 text-center shadow-sm {{ $cardClass }}">
+        <article class="wire-card wire-card--team flex h-full flex-col items-center rounded-(--wire-radius) p-8 text-center shadow-sm {{ $cardClass }}">
             @if ($member['photo'])
                 <img
                     src="{{ $member['photo'] }}"

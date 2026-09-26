@@ -49,17 +49,19 @@ it('scans the visitor-facing views into a grouped, de-duplicated catalog', funct
         ->and($strings->count())->toBe($strings->unique()->count());
 });
 
-it('lists only non-english active locales for translation', function (): void {
+it('lists every active locale, with the site\'s own language last', function (): void {
+    expect(SettingsService::current()->interfaceTranslationLocales())->toBe(['en']);
+
     activateTranslationLocale('nl');
 
-    expect(SettingsService::current()->interfaceTranslationLocales())->toBe(['nl']);
+    expect(SettingsService::current()->interfaceTranslationLocales())->toBe(['nl', 'en']);
 });
 
-it('enables interface translations only with sign-ups on and a non-english locale', function (): void {
+it('enables interface translations whenever sign-ups are on, English-only included', function (): void {
     expect(SettingsService::current()->showsInterfaceTranslations())->toBeFalse();
 
     config()->set('site.allow_registration', true);
-    expect(SettingsService::current()->showsInterfaceTranslations())->toBeFalse();
+    expect(SettingsService::current()->showsInterfaceTranslations())->toBeTrue();
 
     activateTranslationLocale('nl');
     expect(SettingsService::current()->showsInterfaceTranslations())->toBeTrue();

@@ -20,9 +20,9 @@ it('advertises the interface translation tools with their schema', function (): 
         ->and(resolve(UpdateInterfaceTranslationsTool::class)->toArray()['inputSchema']['required'])->toBe(['locale', 'translations']);
 });
 
-it('reports when there is no language to translate into', function (): void {
+it('rejects a locale the site does not use', function (): void {
     WireUpServer::tool(UpdateInterfaceTranslationsTool::class, ['locale' => 'nl', 'translations' => ['Log in' => 'x']])
-        ->assertHasErrors(['There are no non-English languages active to translate into.']);
+        ->assertHasErrors(['Unknown locale. Use one of: en.']);
 });
 
 it('lists translatable strings, target languages, and saved translations', function (): void {
@@ -37,11 +37,11 @@ it('lists translatable strings, target languages, and saved translations', funct
         ->assertSee('update-interface-translations');
 });
 
-it('reports no languages when only english is active', function (): void {
+it('offers the site\'s own language when it is the only one active', function (): void {
     WireUpServer::tool(GetInterfaceTranslationsTool::class)
         ->assertOk()
-        ->assertSee('"locales":[]')
-        ->assertSee('Enable another language');
+        ->assertSee('"code":"en"')
+        ->assertSee('reword');
 });
 
 it('saves interface translations for a language and reports unknown strings', function (): void {
@@ -68,11 +68,13 @@ it('clears a translation when saved empty', function (): void {
     expect(Settings::get('ui_translations'))->toBe([]);
 });
 
-it('rejects a non-translatable locale', function (): void {
-    mcpActivateLocale('nl');
+it('rewords a string in the site\'s own language', function (): void {
+    WireUpServer::tool(UpdateInterfaceTranslationsTool::class, [
+        'locale' => 'en',
+        'translations' => ['Made with Wire-Up' => 'Designed & Developed by Raz'],
+    ])->assertOk();
 
-    WireUpServer::tool(UpdateInterfaceTranslationsTool::class, ['locale' => 'en', 'translations' => ['Log in' => 'x']])
-        ->assertHasErrors(['Unknown or non-translatable locale']);
+    expect(Settings::get('ui_translations'))->toBe(['en' => ['Made with Wire-Up' => 'Designed & Developed by Raz']]);
 });
 
 it('requires a locale', function (): void {

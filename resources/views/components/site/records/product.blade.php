@@ -72,7 +72,7 @@
                         x-swipe
                         x-on:swipe-left="next()"
                         x-on:swipe-right="prev()"
-                        class="wire-card group relative block aspect-4/3 w-full cursor-zoom-in overflow-hidden rounded-[calc(var(--wire-radius)*1.5)] bg-(--wire-card-bg)"
+                        class="wire-card wire-card--media group relative block aspect-4/3 w-full cursor-zoom-in overflow-hidden rounded-[calc(var(--wire-radius)*1.5)] bg-(--wire-card-bg)"
                     >
                         <img :src="items[active].poster" :alt="items[active].alt" class="size-full object-contain" />
                         <template x-if="items[active].type === 'video'">
@@ -92,7 +92,7 @@
                                     type="button"
                                     x-on:click="active = {{ $i }}"
                                     :class="active === {{ $i }} ? 'ring-2 ring-(--wire-accent) ring-offset-2' : 'opacity-70 hover:opacity-100'"
-                                    class="wire-card relative overflow-hidden rounded-(--wire-radius) bg-(--wire-card-bg) transition"
+                                    class="wire-card wire-card--media relative overflow-hidden rounded-(--wire-radius) bg-(--wire-card-bg) transition"
                                     wire:key="product-thumb-{{ $i }}"
                                 >
                                     <img

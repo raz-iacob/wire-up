@@ -15,7 +15,7 @@ final class ExportSiteCommand extends Command
 {
     public function handle(SiteExporter $exporter): int
     {
-        $path = $this->pathOption() ?? config()->string('wireup.transfer_path').'/site-'.now()->format('Y-m-d-His').'.zip';
+        $path = $this->pathOption() ?? config()->string('wireup.transfer_path').'/'.SiteExporter::bundleName();
 
         $manifest = $exporter->export($path, (bool) $this->option('with-secrets'));
 

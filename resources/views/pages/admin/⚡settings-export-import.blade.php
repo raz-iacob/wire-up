@@ -56,7 +56,7 @@ return new class extends Component
         $this->authorize('settings.edit');
 
         $directory = config()->string('wireup.transfer_path');
-        $name = 'site-'.now()->format('Y-m-d-His').'.zip';
+        $name = SiteExporter::bundleName();
 
         $exporter->export($directory.'/'.$name, $this->withSecrets);
 

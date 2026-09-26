@@ -76,7 +76,7 @@
                         <div
                             @class([
                                 'text-center',
-                                'wire-card rounded-(--wire-radius) p-6 shadow-sm' => $layout === 'cards',
+                                'wire-card wire-card--stat rounded-(--wire-radius) p-6 shadow-sm' => $layout === 'cards',
                                 'bg-(--wire-body-bg) text-(--wire-body-text)' => $layout === 'cards' && $hasBg,
                                 'bg-(--wire-card-bg) text-(--wire-card-text)' => $layout === 'cards' && ! $hasBg,
                             ])

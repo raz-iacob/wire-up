@@ -66,7 +66,7 @@
                 @foreach ($plans as $plan)
                     <article
                         @class([
-                            'wire-card relative flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm',
+                            'wire-card wire-card--pricing relative flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm',
                             'bg-(--wire-body-bg) text-(--wire-body-text)' => $hasBg,
                             'bg-(--wire-card-bg) text-(--wire-card-text)' => ! $hasBg,
                             'ring-2 ring-(--wire-accent)' => $plan['featured'],

@@ -18,7 +18,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
 #[Name('update-interface-translations')]
-#[Description('Save translations of the interface strings for one language. Pass a map of the exact English source string to its translation; entries are merged with any existing ones, and an empty translation clears it. Use get-interface-translations first for the strings and languages.')]
+#[Description('Set the wording of the interface strings for one language. Pass a map of the exact English source string to the replacement; entries are merged with any existing ones, and an empty value clears one. The site\'s own language counts, so passing "en" rewords what English visitors read rather than translating. Use get-interface-translations first for the strings and languages.')]
 final class UpdateInterfaceTranslationsTool extends Tool
 {
     public function handle(Request $request): Response
@@ -32,9 +32,7 @@ final class UpdateInterfaceTranslationsTool extends Tool
             ],
             [
                 'locale.required' => 'Pass the "locale" to translate into.',
-                'locale.in' => $targetLocales === []
-                    ? 'There are no non-English languages active to translate into. Enable another language first.'
-                    : 'Unknown or non-translatable locale. Translate into one of: '.implode(', ', $targetLocales).'.',
+                'locale.in' => 'Unknown locale. Use one of: '.implode(', ', $targetLocales).'.',
                 'translations.required' => 'Pass "translations" as a map of English string to its translation.',
                 'translations.array' => 'Pass "translations" as a map of English string to its translation.',
             ],
@@ -92,11 +90,11 @@ final class UpdateInterfaceTranslationsTool extends Tool
     {
         return [
             'locale' => $schema->string()
-                ->description('The language code to translate into, from get-interface-translations (any active non-English locale).')
+                ->description('The language code to set wording for, from get-interface-translations. Any active locale, including the site\'s own.')
                 ->required(),
 
             'translations' => $schema->object()
-                ->description('A map of the exact English source string to its translation, e.g. {"Log in": "Inloggen", "My account": "Mijn account"}. Only strings from get-interface-translations are stored; unknown ones are reported back. An empty value clears that translation.')
+                ->description('A map of the exact English source string to its replacement, e.g. {"Log in": "Inloggen"} to translate, or {"Made with Wire-Up": "Designed by us"} with locale "en" to reword. Only strings from get-interface-translations are stored; unknown ones are reported back. An empty value clears one.')
                 ->required(),
         ];
     }

@@ -1296,6 +1296,12 @@ return new class extends Component
                         <flux:heading size="lg">{{ __('Custom CSS') }}</flux:heading>
                         <flux:text class="mt-2">{{ __('These rules are added to every page on your site.') }}</flux:text>
                     </div>
+
+                    <flux:callout variant="secondary" icon="information-circle">
+                        <flux:callout.text>
+                            {{ __('Hooks you can target: every block carries data-block="hero", data-block="collection" and so on, a record page carries data-record="<content type>", a block heading wrapper matches [class*="--wire-heading-size"], and body copy carries .wire-prose. Cards share .wire-card and each kind adds its own: .wire-card--collection, --feature, --testimonial, --pricing, --team, --stat, --search and --media for record photos.') }}
+                        </flux:callout.text>
+                    </flux:callout>
                     <flux:textarea
                         wire:model="custom_css"
                         rows="12"

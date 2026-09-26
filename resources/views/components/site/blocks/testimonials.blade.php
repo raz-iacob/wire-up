@@ -106,7 +106,7 @@
                 >
                     @foreach ($items as $item)
                         <article
-                            class="wire-card flex w-[86vw] shrink-0 snap-start flex-col gap-5 rounded-(--wire-radius) p-8 shadow-sm sm:w-96 md:w-120"
+                            class="wire-card wire-card--testimonial flex w-[86vw] shrink-0 snap-start flex-col gap-5 rounded-(--wire-radius) p-8 shadow-sm sm:w-96 md:w-120"
                             style="background-color:{{ $cardBg }};color:{{ $cardText }}"
                         >
                             @if ($item['rating'] > 0)
@@ -176,7 +176,7 @@
                         <div class="flex flex-col gap-6">
                             @foreach ($items as $item)
                                 <article
-                                    class="wire-card flex items-start gap-5 rounded-(--wire-radius) p-6 shadow-sm"
+                                    class="wire-card wire-card--testimonial flex items-start gap-5 rounded-(--wire-radius) p-6 shadow-sm"
                                     style="background-color:{{ $cardBg }};color:{{ $cardText }}"
                                 >
                                     @if ($item['avatar'])
@@ -286,7 +286,7 @@
                         <div class="grid grid-cols-1 gap-6 {{ $gridCols }} {{ $hasHeading ? 'mt-12' : '' }}">
                             @foreach ($items as $item)
                                 <article
-                                    class="wire-card flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm"
+                                    class="wire-card wire-card--testimonial flex h-full flex-col gap-5 rounded-(--wire-radius) p-6 shadow-sm"
                                     style="background-color:{{ $cardBg }};color:{{ $cardText }}"
                                 >
                                     @if ($item['rating'] > 0)

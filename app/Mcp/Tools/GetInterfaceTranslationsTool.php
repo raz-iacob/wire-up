@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Mcp\Support\Pages;
+use App\Services\SettingsService;
 use App\Services\UiStrings;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -22,11 +23,7 @@ final class GetInterfaceTranslationsTool extends Tool
         $active = $localization->getActiveLocales();
 
         $locales = [];
-        foreach (array_keys($active) as $code) {
-            if ($code === 'en') {
-                continue;
-            }
-
+        foreach (SettingsService::current()->interfaceTranslationLocales() as $code) {
             $locales[] = ['code' => $code, 'name' => is_string($active[$code]['name'] ?? null) ? $active[$code]['name'] : $code];
         }
 
@@ -43,9 +40,7 @@ final class GetInterfaceTranslationsTool extends Tool
             'locales' => $locales,
             'strings' => UiStrings::strings(),
             'translations' => $translations,
-            'hint' => $locales === []
-                ? 'There are no languages to translate into — the source strings are English and no other language is active. Enable another language in the site settings first.'
-                : 'Translate each entry in "strings" and save it with update-interface-translations(locale, {"English string": "translation"}). Untranslated strings fall back to English.',
+            'hint' => 'Save wording with update-interface-translations(locale, {"English string": "replacement"}). The site\'s own language is listed too, so an English-only site can reword a string rather than translate it — pass "en" to change what English visitors read. Anything left unset falls back to the English source.',
         ]);
     }
 }

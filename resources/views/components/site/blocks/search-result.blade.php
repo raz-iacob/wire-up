@@ -20,7 +20,7 @@
 @else
     <a
         href="{{ $url }}"
-        class="group wire-card flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm transition hover:shadow-md"
+        class="group wire-card wire-card--search flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm transition hover:shadow-md"
     >
         @if ($image)
             <img src="{{ $image }}" alt="{{ $title }}" loading="lazy" class="aspect-4/3 w-full object-cover" />

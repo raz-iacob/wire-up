@@ -134,7 +134,7 @@ final class UpdateDesignTool extends Tool
             'header_nav_hover' => $schema->string()->enum($options['nav_hover_states'])->description('Navigation hover effect.'),
             'footer_layout' => $schema->string()->enum($options['footer_layouts'])->description('Footer layout variant.'),
             'footer_transparent' => $schema->boolean()->description('Render the footer without a background.'),
-            'custom_css' => $schema->string()->description('Extra CSS appended to the public site.'),
+            'custom_css' => $schema->string()->description('Extra CSS appended to the public site. Target the markup Wire-Up emits rather than classes in the content, which the admin editor strips: every block wrapper carries data-block="<block key>" plus id="<anchor>" when the block has an anchor, a record page root carries data-record="<content type key>", a block heading wrapper matches [class*="--wire-heading-size"], and body copy carries .wire-prose. Cards all carry .wire-card and each kind adds one of .wire-card--collection, --feature, --testimonial, --pricing, --team, --stat, --search, or --media for a record photo frame, so a rule for one kind of card no longer leaks to the others. Scope header and footer rules to [data-site-header] and [data-site-footer], never bare header/footer.'),
             'logo_header' => $schema->integer()->description('Media id of the header logo image.'),
             'logo_footer' => $schema->integer()->description('Media id of the footer logo image.'),
             'logo_header_dark' => $schema->integer()->description('Media id of the header logo shown in dark mode. Falls back to logo_header when unset.'),

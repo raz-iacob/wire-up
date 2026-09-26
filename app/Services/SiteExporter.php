@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use RuntimeException;
 use ZipArchive;
 
@@ -16,6 +17,13 @@ final class SiteExporter
     public static function current(): self
     {
         return new self;
+    }
+
+    public static function bundleName(?string $timestamp = null): string
+    {
+        $slug = Str::slug(SettingsService::current()->title());
+
+        return ($slug !== '' ? $slug : 'site').'-'.($timestamp ?? now()->format('Y-m-d-His')).'.zip';
     }
 
     /**

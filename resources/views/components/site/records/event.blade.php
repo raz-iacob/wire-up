@@ -39,7 +39,7 @@
     <div class="mx-auto max-w-(--wire-container) px-(--wire-gutter) py-16">
         <div @class(['md:flex md:items-start md:gap-10' => $photo])>
             @if ($photo)
-                <div class="wire-card aspect-square w-full max-w-xs overflow-hidden rounded-[calc(var(--wire-radius)*1.5)] bg-(--wire-card-bg) md:w-1/4 md:max-w-none md:shrink-0">
+                <div class="wire-card wire-card--media aspect-square w-full max-w-xs overflow-hidden rounded-[calc(var(--wire-radius)*1.5)] bg-(--wire-card-bg) md:w-1/4 md:max-w-none md:shrink-0">
                     <img
                         src="{{ $imageUrl($photo, 900) }}"
                         alt="{{ $photo->alt_text ?? $heading }}"
