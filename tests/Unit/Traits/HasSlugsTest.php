@@ -107,10 +107,6 @@ it('generates slugs from enum cased attributes', function (): void {
     {
         use HasFactory, HasSlugs;
 
-        protected $casts = [
-            'status' => ContentStatus::class,
-        ];
-
         protected static function boot(): void
         {
             parent::boot();
@@ -127,6 +123,13 @@ it('generates slugs from enum cased attributes', function (): void {
         protected function slugAttributes(): array
         {
             return ['title', 'status'];
+        }
+
+        protected function casts(): array
+        {
+            return [
+                'status' => ContentStatus::class,
+            ];
         }
     };
 

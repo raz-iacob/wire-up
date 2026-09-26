@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Carbon\CarbonInterface;
 use Database\Factories\SubmissionFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -97,7 +98,8 @@ final class Submission extends Model
     /**
      * @param  Builder<$this>  $query
      */
-    protected function scopeUnread(Builder $query): void
+    #[Scope]
+    protected function unread(Builder $query): void
     {
         $query->whereNull('read_at');
     }

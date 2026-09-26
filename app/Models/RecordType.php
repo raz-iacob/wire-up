@@ -8,6 +8,7 @@ use App\Enums\FieldType;
 use App\Enums\MediaType;
 use Carbon\CarbonInterface;
 use Database\Factories\RecordTypeFactory;
+use Illuminate\Database\Eloquent\Attributes\RouteKey;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,6 +32,7 @@ use Illuminate\Support\Once;
  * @property-read CarbonInterface $updated_at
  * @property-read Collection<int, Record> $records
  */
+#[RouteKey('key')]
 final class RecordType extends Model
 {
     /** @use HasFactory<RecordTypeFactory> */
@@ -104,11 +106,6 @@ final class RecordType extends Model
             'has_index_page' => 'boolean',
             'position' => 'integer',
         ];
-    }
-
-    public function getRouteKeyName(): string
-    {
-        return 'key';
     }
 
     /**

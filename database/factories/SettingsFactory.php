@@ -18,7 +18,7 @@ final class SettingsFactory extends Factory
     public function definition(): array
     {
         return [
-            'key' => $this->faker->unique()->slug(2),
+            'key' => fake()->unique()->slug(2),
             'value' => null,
         ];
     }

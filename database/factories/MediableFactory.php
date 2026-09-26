@@ -27,24 +27,24 @@ final class MediableFactory extends Factory
             'mediable_id' => $page->id,
             'mediable_type' => $page->getMorphClass(),
             'locale' => fn () => Locale::query()->inRandomOrder()->first()->code,
-            'role' => $this->faker->randomElement(['poster', 'banner', 'thumbnail']),
+            'role' => fake()->randomElement(['poster', 'banner', 'thumbnail']),
             'crop' => [
                 'desktop' => [
-                    'x' => $this->faker->numberBetween(0, 100),
-                    'y' => $this->faker->numberBetween(0, 100),
-                    'w' => $this->faker->numberBetween(100, 800),
-                    'h' => $this->faker->numberBetween(100, 600),
+                    'x' => fake()->numberBetween(0, 100),
+                    'y' => fake()->numberBetween(0, 100),
+                    'w' => fake()->numberBetween(100, 800),
+                    'h' => fake()->numberBetween(100, 600),
                 ],
                 'mobile' => [
-                    'x' => $this->faker->numberBetween(0, 100),
-                    'y' => $this->faker->numberBetween(0, 100),
-                    'w' => $this->faker->numberBetween(100, 800),
-                    'h' => $this->faker->numberBetween(100, 600),
+                    'x' => fake()->numberBetween(0, 100),
+                    'y' => fake()->numberBetween(0, 100),
+                    'w' => fake()->numberBetween(100, 800),
+                    'h' => fake()->numberBetween(100, 600),
                 ],
             ],
             'metadata' => null,
-            'position' => $this->faker->numberBetween(0, 10),
-            'published' => $this->faker->boolean(80),
+            'position' => fake()->numberBetween(0, 10),
+            'published' => fake()->boolean(80),
         ];
     }
 }

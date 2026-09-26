@@ -62,7 +62,7 @@ trait HasBlockBuilder
 
         $this->blocks = collect($blocks)
             ->mapWithKeys(fn (array $block, int $index): array => [
-                $block['id'] => [...$block, 'position' => $index],
+                $block['id'] => array_merge($block, ['position' => $index]),
             ])
             ->all();
 
@@ -477,9 +477,7 @@ trait HasBlockBuilder
         $order[] = $key;
         $this->blocks[$id]['content']['fieldOrder'] = $order;
 
-        if (! isset($this->blocks[$id]['content']['fields'][$key])) {
-            $this->blocks[$id]['content']['fields'][$key] = ['required' => false, 'label' => [], 'placeholder' => [], 'column' => 'left'];
-        }
+        $this->blocks[$id]['content']['fields'][$key] ??= ['required' => false, 'label' => [], 'placeholder' => [], 'column' => 'left'];
     }
 
     public function addContactField(string $id): void
@@ -563,7 +561,7 @@ trait HasBlockBuilder
 
         $this->blocks = collect($ids)
             ->mapWithKeys(fn (string $blockId, int $index): array => [
-                $blockId => [...$this->blocks[$blockId], 'position' => $index],
+                $blockId => array_merge($this->blocks[$blockId], ['position' => $index]),
             ])
             ->all();
     }
@@ -596,7 +594,7 @@ trait HasBlockBuilder
 
         $this->blocks = collect($blocks)
             ->mapWithKeys(fn (array $block, int $index): array => [
-                $block['id'] => [...$block, 'position' => $index],
+                $block['id'] => array_merge($block, ['position' => $index]),
             ])
             ->all();
     }
@@ -614,7 +612,7 @@ trait HasBlockBuilder
             ->reject(fn (array $block): bool => (string) $block['id'] === $this->selectedBlock)
             ->values()
             ->mapWithKeys(fn (array $block, int $index): array => [
-                $block['id'] => [...$block, 'position' => $index],
+                $block['id'] => array_merge($block, ['position' => $index]),
             ])
             ->all();
 

@@ -58,7 +58,7 @@ return new class extends Component
             ],
         ]);
 
-        if ($this->photo || $this->photoRemoved) {
+        if ($this->photo instanceof TemporaryUploadedFile || $this->photoRemoved) {
             $this->deletePhoto();
 
             $credentials['photo'] = $this->photo instanceof TemporaryUploadedFile

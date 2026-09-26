@@ -20,8 +20,8 @@ final class TranslationFactory extends Factory
     public function definition(): array
     {
         return [
-            'key' => $this->faker->word(),
-            'body' => $this->faker->sentence(),
+            'key' => fake()->word(),
+            'body' => fake()->sentence(),
             'locale' => fn () => Locale::query()->inRandomOrder()->first()->code ?? 'en',
             'translatable_id' => fn () => Page::factory()->create()->id,
             'translatable_type' => Page::class,
