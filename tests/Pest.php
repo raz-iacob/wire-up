@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
+use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Playwright\Playwright;
 use Tests\TestCase;
 
@@ -34,10 +35,21 @@ pest()->extend(TestCase::class)
     ->in('Browser', 'Console', 'Feature', 'Unit');
 
 pest()->beforeEach(function (): void {
-    Playwright::setTimeout(15_000);
+    Playwright::setTimeout(ParallelTesting::token() ? 60_000 : 15_000);
 })->in('Browser');
 
 expect()->extend('toBeOne', fn () => $this->toBe(1));
+
+function assertScriptEventually(PendingAwaitablePage $browser, string $expression, mixed $expected, float $seconds = 15.0): void
+{
+    $deadline = microtime(true) + $seconds;
+
+    while (microtime(true) < $deadline && $browser->script($expression) !== $expected) {
+        $browser->wait(0.1);
+    }
+
+    $browser->assertScript($expression, $expected);
+}
 
 function something(): void
 {

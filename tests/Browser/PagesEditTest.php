@@ -269,7 +269,7 @@ it('reorders testimonial items with saved avatars then saves without errors', fu
     $comp = "window.Livewire.all().find(c => c.\$wire.get('blocks') !== undefined)";
     $testimonialItems = "(() => { const b = Object.values($comp.\$wire.get('blocks')).find(b => b.type === 'testimonials'); return b.content.items.map(i => i.id).join(','); })()";
 
-    $browser->assertScript($testimonialItems, 'three,one,two');
+    assertScriptEventually($browser, $testimonialItems, 'three,one,two');
 
     $browser->script("$comp.\$wire.update(); void 0");
     $browser->wait(1.0);
@@ -314,7 +314,7 @@ it('reorders feature cards with saved images then saves without errors', functio
     $comp = "window.Livewire.all().find(c => c.\$wire.get('blocks') !== undefined)";
     $items = "(() => { const b = Object.values($comp.\$wire.get('blocks')).find(b => b.type === 'feature-cards'); return b.content.items.map(i => i.id).join(','); })()";
 
-    $browser->assertScript($items, 'three,one,two');
+    assertScriptEventually($browser, $items, 'three,one,two');
 
     $browser->script("$comp.\$wire.update(); void 0");
     $browser->wait(1.0);
@@ -359,7 +359,7 @@ it('reorders sponsors with saved logos then saves without errors', function (): 
     $comp = "window.Livewire.all().find(c => c.\$wire.get('blocks') !== undefined)";
     $items = "(() => { const b = Object.values($comp.\$wire.get('blocks')).find(b => b.type === 'sponsors'); return b.content.items.map(i => i.id).join(','); })()";
 
-    $browser->assertScript($items, 'three,one,two');
+    assertScriptEventually($browser, $items, 'three,one,two');
 
     $browser->script("$comp.\$wire.update(); void 0");
     $browser->wait(1.0);

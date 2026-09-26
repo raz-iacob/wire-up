@@ -18,31 +18,29 @@ final class MediaFactory extends Factory
      */
     public function definition(): array
     {
-        $type = $this->faker->randomElement(MediaType::cases());
-
         return [
-            'type' => $type,
-            'source' => $this->generateSource($type),
-            'etag' => $this->faker->md5(),
-            'filename' => $this->faker->word().'.'.$this->getExtension($type),
-            'alt_text' => $this->faker->sentence(),
-            'mime_type' => $this->getMimeType($type),
-            'thumbnail' => $type === MediaType::VIDEO
-                ? 'thumbnails/'.$this->faker->uuid().'.jpg'
+            'type' => fake()->randomElement(MediaType::cases()),
+            'source' => fn (array $attributes): string => $this->generateSource($this->typeOf($attributes)),
+            'etag' => fake()->md5(),
+            'filename' => fn (array $attributes): string => fake()->word().'.'.$this->getExtension($this->typeOf($attributes)),
+            'alt_text' => fake()->sentence(),
+            'mime_type' => fn (array $attributes): string => $this->getMimeType($this->typeOf($attributes)),
+            'thumbnail' => fn (array $attributes): ?string => $this->typeOf($attributes) === MediaType::VIDEO
+                ? 'thumbnails/'.fake()->uuid().'.jpg'
                 : null,
-            'size' => $this->faker->numberBetween(1024, 10485760),
-            'duration' => in_array($type, [MediaType::AUDIO, MediaType::VIDEO], true)
-                ? $this->faker->numberBetween(30, 7200)
+            'size' => fake()->numberBetween(1024, 10485760),
+            'duration' => fn (array $attributes): ?int => in_array($this->typeOf($attributes), [MediaType::AUDIO, MediaType::VIDEO], true)
+                ? fake()->numberBetween(30, 7200)
                 : null,
-            'width' => $type === MediaType::DOCUMENT ? null : $this->faker->numberBetween(100, 4000),
-            'height' => $type === MediaType::DOCUMENT ? null : $this->faker->numberBetween(100, 3000),
+            'width' => fn (array $attributes): ?int => $this->typeOf($attributes) === MediaType::DOCUMENT ? null : fake()->numberBetween(100, 4000),
+            'height' => fn (array $attributes): ?int => $this->typeOf($attributes) === MediaType::DOCUMENT ? null : fake()->numberBetween(100, 3000),
         ];
     }
 
     public function pexels(): static
     {
-        $pexelsId = $this->faker->numberBetween(1000, 9999999);
-        $photographer = $this->faker->name();
+        $pexelsId = fake()->numberBetween(1000, 9999999);
+        $photographer = fake()->name();
 
         return $this->state(fn (): array => [
             'type' => MediaType::IMAGE,
@@ -51,7 +49,7 @@ final class MediaFactory extends Factory
                 'source' => 'pexels',
                 'pexels_id' => $pexelsId,
                 'photographer' => $photographer,
-                'photographer_url' => 'https://www.pexels.com/@'.$this->faker->userName(),
+                'photographer_url' => 'https://www.pexels.com/@'.fake()->userName(),
                 'pexels_url' => 'https://www.pexels.com/photo/'.$pexelsId,
             ],
         ]);
@@ -61,9 +59,9 @@ final class MediaFactory extends Factory
     {
         return $this->state(fn (): array => [
             'type' => MediaType::VIDEO,
-            'source' => $this->faker->randomElement([
-                'https://www.youtube.com/watch?v='.$this->faker->regexify('[A-Za-z0-9_-]{11}'),
-                'https://vimeo.com/'.$this->faker->numberBetween(100000, 999999999),
+            'source' => fake()->randomElement([
+                'https://www.youtube.com/watch?v='.fake()->regexify('[A-Za-z0-9_-]{11}'),
+                'https://vimeo.com/'.fake()->numberBetween(100000, 999999999),
             ]),
             'filename' => null,
             'mime_type' => null,
@@ -71,35 +69,43 @@ final class MediaFactory extends Factory
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function typeOf(array $attributes): MediaType
+    {
+        $type = $attributes['type'] ?? null;
+
+        return $type instanceof MediaType ? $type : MediaType::tryFrom((string) $type) ?? MediaType::IMAGE;
+    }
+
     private function generateSource(MediaType $type): string
     {
         return match ($type) {
-            MediaType::IMAGE => 'images/'.$this->faker->uuid().'.jpg',
-            MediaType::VIDEO => $this->faker->boolean()
-                ? 'videos/'.$this->faker->uuid().'.mp4'
-                : 'https://www.youtube.com/watch?v='.$this->faker->regexify('[A-Za-z0-9_-]{11}'),
-            MediaType::DOCUMENT => 'documents/'.$this->faker->uuid().'.pdf',
-            MediaType::AUDIO => 'audio/'.$this->faker->uuid().'.mp3',
+            MediaType::IMAGE => 'images/'.fake()->uuid().'.jpg',
+            MediaType::VIDEO => 'videos/'.fake()->uuid().'.mp4',
+            MediaType::DOCUMENT => 'documents/'.fake()->uuid().'.pdf',
+            MediaType::AUDIO => 'audio/'.fake()->uuid().'.mp3',
         };
     }
 
     private function getExtension(MediaType $type): string
     {
         return match ($type) {
-            MediaType::IMAGE => $this->faker->randomElement(['jpg', 'jpeg', 'png', 'webp']),
-            MediaType::VIDEO => $this->faker->randomElement(['mp4', 'mov', 'avi']),
-            MediaType::DOCUMENT => $this->faker->randomElement(['pdf', 'doc', 'docx']),
-            MediaType::AUDIO => $this->faker->randomElement(['mp3', 'wav', 'ogg']),
+            MediaType::IMAGE => fake()->randomElement(['jpg', 'jpeg', 'png', 'webp']),
+            MediaType::VIDEO => fake()->randomElement(['mp4', 'mov', 'avi']),
+            MediaType::DOCUMENT => fake()->randomElement(['pdf', 'doc', 'docx']),
+            MediaType::AUDIO => fake()->randomElement(['mp3', 'wav', 'ogg']),
         };
     }
 
     private function getMimeType(MediaType $type): string
     {
         return match ($type) {
-            MediaType::IMAGE => $this->faker->randomElement(['image/jpeg', 'image/png', 'image/webp']),
-            MediaType::VIDEO => $this->faker->randomElement(['video/mp4', 'video/quicktime', 'video/avi']),
-            MediaType::DOCUMENT => $this->faker->randomElement(['application/pdf', 'application/msword']),
-            MediaType::AUDIO => $this->faker->randomElement(['audio/mpeg', 'audio/wav', 'audio/ogg']),
+            MediaType::IMAGE => fake()->randomElement(['image/jpeg', 'image/png', 'image/webp']),
+            MediaType::VIDEO => fake()->randomElement(['video/mp4', 'video/quicktime', 'video/avi']),
+            MediaType::DOCUMENT => fake()->randomElement(['application/pdf', 'application/msword']),
+            MediaType::AUDIO => fake()->randomElement(['audio/mpeg', 'audio/wav', 'audio/ogg']),
         };
     }
 }
