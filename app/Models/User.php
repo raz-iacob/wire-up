@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\SettingsService;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -34,6 +35,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read bool $active
  * @property-read string $locale
  * @property-read CarbonInterface|null $last_seen_at
+ * @property-read CarbonInterface|null $invited_at
  * @property-read string|null $user_agent
  * @property-read string|null $last_ip
  * @property-read string|null $remember_token
@@ -54,6 +56,15 @@ final class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    public function sendEmailVerificationNotification(): void
+    {
+        if (! SettingsService::current()->mailConfigured()) {
+            return;
+        }
+
+        parent::sendEmailVerificationNotification();
+    }
 
     /**
      * @return array<string, string>
@@ -76,6 +87,7 @@ final class User extends Authenticatable implements MustVerifyEmail
             'active' => 'boolean',
             'locale' => 'string',
             'last_seen_at' => 'datetime',
+            'invited_at' => 'datetime',
             'user_agent' => 'string',
             'last_ip' => 'string',
             'remember_token' => 'string',

@@ -42,6 +42,7 @@ final class UserFactory extends Factory
             'active' => fake()->boolean(),
             'locale' => fake()->languageCode(),
             'last_seen_at' => fake()->optional(0.7)->dateTimeBetween('-1 year', 'now'),
+            'invited_at' => null,
             'user_agent' => fake()->userAgent(),
             'last_ip' => fake()->ipv4(),
             'remember_token' => Str::random(10),

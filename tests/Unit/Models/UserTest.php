@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Notification;
 
 it('reports admin access from the role', function (): void {
     expect(User::factory()->owner()->create()->canAccessAdmin())->toBeTrue();
@@ -35,6 +37,7 @@ test('to array', function (): void {
             'last_ip',
             'created_at',
             'updated_at',
+            'invited_at',
         ]);
 });
 
@@ -58,4 +61,24 @@ it('has photo_url attribute', function (): void {
     expect($user->photo_url)
         ->toBeString()
         ->toContain('avatars/user-123.jpg');
+});
+
+it('does not send a verification email that cannot be delivered', function (): void {
+    Notification::fake();
+    config()->set('mail.default', 'log');
+
+    $user = User::factory()->unverified()->create();
+    $user->sendEmailVerificationNotification();
+
+    Notification::assertNotSentTo($user, VerifyEmail::class);
+});
+
+it('sends the verification email once a provider can deliver', function (): void {
+    Notification::fake();
+    config()->set('mail.default', 'array');
+
+    $user = User::factory()->unverified()->create();
+    $user->sendEmailVerificationNotification();
+
+    Notification::assertSentTo($user, VerifyEmail::class);
 });

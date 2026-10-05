@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use App\Actions\InviteAdminAction;
+use App\Actions\SendAdminInviteAction;
 use App\Actions\UpdateUserAction;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\SettingsService;
 use App\Traits\WithSorting;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
@@ -67,6 +69,12 @@ return new class extends Component
             ->get();
     }
 
+    #[Computed]
+    public function mailConfigured(): bool
+    {
+        return SettingsService::current()->mailConfigured();
+    }
+
     public function create(#[CurrentUser] User $inviter, InviteAdminAction $action): void
     {
         $this->authorize('users.create');
@@ -79,10 +87,17 @@ return new class extends Component
 
         $role = Role::query()->findOrFail($validated['roleId']);
 
-        $user = $action->handle($inviter, $this->name, $this->email, $role);
+        ['user' => $user, 'status' => $status] = $action->handle($inviter, $this->name, $this->email, $role);
 
         Flux::modal('add-new')->close();
-        Flux::toast(__('Invitation email sent to '.$user->email));
+
+        $status === SendAdminInviteAction::NOT_CONFIGURED
+            ? Flux::toast(
+                text: __(':name was added, but no invitation could be emailed because no email provider is set up. Set one up under Settings → Integrations, then send the invitation from their profile.', ['name' => $user->name]),
+                variant: 'warning',
+                duration: 10000,
+            )
+            : Flux::toast(__('Invitation email sent to :email', ['email' => $user->email]));
     }
 
     public function toggleStatus(User $user, UpdateUserAction $action): void
@@ -253,6 +268,13 @@ return new class extends Component
 
     <flux:modal name="add-new" class="md:w-96">
         <flux:heading size="lg" class="mb-6">{{ __('Add a new user') }}</flux:heading>
+        @unless ($this->mailConfigured)
+            <flux:callout variant="warning" icon="exclamation-triangle" class="mb-6">
+                <flux:callout.text>
+                    {{ __('No email provider is set up, so the invitation cannot be emailed yet. You can still add the user and send the invitation later from their profile.') }}
+                </flux:callout.text>
+            </flux:callout>
+        @endunless
         <form wire:submit="create" class="space-y-6">
             <flux:input wire:model="name" label="{{ __('Name') }}" badge="Required" autofocus />
             <flux:input wire:model="email" label="{{ __('Email') }}" badge="Required" />

@@ -9,6 +9,7 @@ use App\Models\RecordType;
 use App\Models\Role;
 use App\Models\Submission;
 use App\Models\User;
+use App\Services\SettingsService;
 use App\Services\VisitorCounter;
 use Carbon\CarbonInterface;
 use Flux\DateRange;
@@ -24,6 +25,12 @@ return new class extends Component
     public function mount(): void
     {
         $this->datesFilter = new DateRange(now()->subDays(30)->startOfDay(), now()->endOfDay());
+    }
+
+    #[Computed]
+    public function mailConfigured(): bool
+    {
+        return SettingsService::current()->mailConfigured();
     }
 
     /**
@@ -200,6 +207,23 @@ return new class extends Component
     @php
         $new = $this->newInPeriod();
     @endphp
+
+    @can('settings.edit')
+        @unless ($this->mailConfigured)
+            <flux:callout inline icon="exclamation-triangle" color="amber">
+                <flux:callout.heading>{{ __('No email provider is set up') }}</flux:callout.heading>
+                <flux:callout.text>
+                    {{ __('Nothing your site sends will reach anyone — invitations, contact form notifications and password resets are all written to a log file instead of being delivered.') }}
+                </flux:callout.text>
+                <x-slot name="actions">
+                    <flux:button
+                        :href="route('admin.settings-integrations')"
+                        wire:navigate
+                    >{{ __('Set up email') }}</flux:button>
+                </x-slot>
+            </flux:callout>
+        @endunless
+    @endcan
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>

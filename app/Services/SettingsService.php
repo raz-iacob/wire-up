@@ -175,6 +175,28 @@ final class SettingsService
         return $this->localeValue(config('site.description'));
     }
 
+    public function mailConfigured(): bool
+    {
+        if ($this->smtpSettingsComplete()) {
+            return true;
+        }
+
+        return ! in_array(config('mail.default'), ['log', 'null', null, ''], true);
+    }
+
+    public function smtpSettingsComplete(): bool
+    {
+        foreach (['mail_host', 'mail_username', 'mail_password', 'mail_from_address'] as $key) {
+            $value = config("site.{$key}");
+
+            if (! is_string($value) || $value === '') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function contactEmail(): string
     {
         $email = config('site.contact_email');

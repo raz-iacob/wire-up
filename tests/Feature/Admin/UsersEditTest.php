@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\AdminInvite;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
@@ -614,4 +616,72 @@ it('cannot demote the only full-access user who can still sign in', function ():
         ->assertHasErrors('roleId');
 
     expect($owner->fresh()->role->key)->toBe('owner');
+});
+
+it('shows when an invitation was sent and offers to resend it', function (): void {
+    $this->actingAsAdmin();
+
+    $user = User::factory()->create([
+        'invited_at' => now()->subDays(3),
+        'last_seen_at' => null,
+    ]);
+
+    Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->assertSee('Invitation sent on')
+        ->assertSee('Resend invitation');
+});
+
+it('offers to send a first invitation when none ever went out', function (): void {
+    $this->actingAsAdmin();
+
+    $user = User::factory()->create(['invited_at' => null, 'last_seen_at' => null]);
+
+    Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->assertSee('No invitation has reached this user yet')
+        ->assertSee('Send invitation')
+        ->assertDontSee('Resend invitation');
+});
+
+it('hides the invitation notice once the user has signed in', function (): void {
+    $this->actingAsAdmin();
+
+    $user = User::factory()->create([
+        'invited_at' => now()->subDays(3),
+        'last_seen_at' => now()->subHour(),
+    ]);
+
+    Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->assertDontSee('Invitation sent on')
+        ->assertDontSee('Send invitation');
+});
+
+it('resends the invitation and stamps the date', function (): void {
+    $this->actingAsAdmin();
+    Notification::fake();
+
+    $user = User::factory()->create(['invited_at' => null, 'last_seen_at' => null]);
+
+    Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->call('resendInvite')
+        ->assertHasNoErrors();
+
+    Notification::assertSentTo($user, AdminInvite::class);
+
+    expect($user->refresh()->invited_at)->not->toBeNull();
+});
+
+it('refuses to resend when no email provider can deliver', function (): void {
+    $this->actingAsAdmin();
+    Notification::fake();
+    config()->set('mail.default', 'log');
+
+    $user = User::factory()->create(['invited_at' => null, 'last_seen_at' => null]);
+
+    Livewire::test('pages::admin.users-edit', ['user' => $user])
+        ->call('resendInvite')
+        ->assertHasNoErrors();
+
+    Notification::assertNotSentTo($user, AdminInvite::class);
+
+    expect($user->refresh()->invited_at)->toBeNull();
 });

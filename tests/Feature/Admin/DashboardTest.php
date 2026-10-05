@@ -186,3 +186,32 @@ it('adds users and visitors together in the online tile', function (): void {
 
     expect($component->instance()->onlineUsers->count() + $component->instance()->visitorsOnline)->toBe(5);
 });
+
+it('warns on the dashboard when no email provider can deliver', function (): void {
+    $this->actingAsAdmin();
+    config()->set('mail.default', 'log');
+
+    Livewire::test('pages::admin.dashboard')
+        ->assertSee('No email provider is set up')
+        ->assertSee('Set up email');
+});
+
+it('drops the email warning once a provider is set up', function (): void {
+    $this->actingAsAdmin();
+    config()->set('mail.default', 'smtp');
+
+    Livewire::test('pages::admin.dashboard')
+        ->assertDontSee('No email provider is set up');
+});
+
+it('drops the email warning when the site smtp settings are filled in', function (): void {
+    $this->actingAsAdmin();
+    config()->set('mail.default', 'log');
+    config()->set('site.mail_host', 'smtp.example.com');
+    config()->set('site.mail_username', 'postmaster');
+    config()->set('site.mail_password', 'secret');
+    config()->set('site.mail_from_address', 'hello@example.com');
+
+    Livewire::test('pages::admin.dashboard')
+        ->assertDontSee('No email provider is set up');
+});

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\SendAdminInviteAction;
 use App\Actions\UpdateUserAction;
 use App\Actions\UpdateUserPasswordAction;
 use App\Models\Role;
@@ -11,6 +12,7 @@ use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -66,6 +68,34 @@ return new class extends Component
         }
 
         return null;
+    }
+
+    #[Computed]
+    public function invitePending(): bool
+    {
+        return $this->user->last_seen_at === null;
+    }
+
+    public function resendInvite(#[CurrentUser] User $inviter, SendAdminInviteAction $action): void
+    {
+        $this->authorize('users.edit');
+
+        $status = $action->handle($inviter, $this->user);
+
+        $this->user->refresh();
+
+        match ($status) {
+            SendAdminInviteAction::NOT_CONFIGURED => Flux::toast(
+                text: __('No email provider is set up, so the invitation cannot be sent. Set one up under Settings → Integrations.'),
+                variant: 'warning',
+                duration: 10000,
+            ),
+            Password::RESET_LINK_SENT => Flux::toast(__('Invitation email sent to :email', ['email' => $this->user->email])),
+            default => Flux::toast(
+                text: __('The invitation could not be sent just yet. Please try again in a minute.'),
+                variant: 'warning',
+            ),
+        };
     }
 
     public function update(#[CurrentUser] User $editor, UpdateUserAction $action, UpdateUserPasswordAction $updatePassword): void
@@ -166,6 +196,26 @@ return new class extends Component
 >
     <div class="md:col-span-3">
         <div class="mb-10 max-w-5xl space-y-6">
+            @if ($this->invitePending)
+                <flux:callout
+                    :variant="$user->invited_at ? 'secondary' : 'warning'"
+                    :icon="$user->invited_at ? 'envelope' : 'exclamation-triangle'"
+                >
+                    <flux:callout.text>
+                        @if ($user->invited_at)
+                            {{ __('Invitation sent on :date. This user has not signed in yet.', ['date' => $user->invited_at->isoFormat('LL')]) }}
+                        @else
+                            {{ __('No invitation has reached this user yet, and they have never signed in.') }}
+                        @endif
+                    </flux:callout.text>
+                    <x-slot name="actions">
+                        <flux:button size="sm" wire:click="resendInvite" wire:loading.attr="disabled">
+                            {{ $user->invited_at ? __('Resend invitation') : __('Send invitation') }}
+                        </flux:button>
+                    </x-slot>
+                </flux:callout>
+            @endif
+
             <flux:fieldset class="pb-6">
                 <flux:legend>{{ __('Account') }}</flux:legend>
                 <flux:description>{{ __('Update the user\'s name and email associated with this account.') }}</flux:description>
