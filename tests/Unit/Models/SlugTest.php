@@ -28,7 +28,7 @@ it('has morphTo relationship with sluggable', function (): void {
     $page = Page::factory()->create();
     $slug = Slug::factory()->create([
         'sluggable_id' => $page->id,
-        'sluggable_type' => Page::class,
+        'sluggable_type' => $page->getMorphClass(),
     ]);
 
     expect($slug->sluggable)->toBeInstanceOf(Page::class)
