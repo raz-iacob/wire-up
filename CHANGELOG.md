@@ -26,6 +26,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - A user's profile shows whether their invitation actually went out — the date it was sent, or a warning that none has reached them — with a button to send or resend it. That is the way to deliver an invitation that failed earlier: set up an email provider under Settings → Integrations, then open the user and send it. The notice disappears once they have signed in.
 - The admin dashboard warns when no email provider is set up, with a button straight to the setting. A new site writes mail to a log file rather than sending it, so until you set a provider up nothing reaches anyone — invitations, contact form notifications and password resets all quietly disappear. Only users who can change settings see it, and it goes away once email is working.
 - The address-confirmation email sent when an account is created is no longer queued when it cannot be delivered. It used to be written to the log file and counted as sent, which left new accounts looking as though they had been emailed something.
+- The AI assistant now runs on version 1.0 of Laravel's AI SDK, and your existing conversations are carried across during the update so chat history is kept. Before updating, answer or dismiss anything the assistant is still waiting for you to approve — a pending "delete this page?" prompt, for example. An approval left open during the update cannot be carried over and is dropped.
 
 ## v0.2.0 — 2026-08-25
 

@@ -16,7 +16,7 @@
         "ext-zip": "*",
         "enshrined/svg-sanitize": "^0.22.0",
         "intervention/image": "^4.3.4",
-        "laravel/ai": "^0.10.3",
+        "laravel/ai": "^1.0.1",
         "laravel/fortify": "^1.40",
         "laravel/framework": "^13.34.0",
         "league/html-to-markdown": "^5.1.2",

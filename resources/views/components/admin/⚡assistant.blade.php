@@ -287,9 +287,10 @@ return new class extends Component
             return [];
         }
 
-        $decoded = json_decode((string) $row->tool_calls, true);
+        $steps = json_decode((string) $row->steps, true);
 
-        $tools = collect(is_array($decoded) ? $decoded : [])
+        $tools = collect(is_array($steps) ? $steps : [])
+            ->flatMap(fn (mixed $step): array => is_array($step) && is_array($step['tool_calls'] ?? null) ? $step['tool_calls'] : [])
             ->pluck('name')
             ->filter(fn (mixed $name): bool => is_string($name) && ! in_array($name, $confirmable, true))
             ->map(fn (string $name): array => ['name' => $name, 'status' => 'done'])
