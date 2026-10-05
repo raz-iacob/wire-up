@@ -2,7 +2,7 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
-## Unreleased
+## v0.3.0 — 2026-10-05
 
 - Block headings are now real heading elements, so a Wire-Up page finally has a document outline for search engines and screen readers — until now every one of them was a `<div>` and only card titles were real headings. A hero heads its page as the `<h1>`, every other block is an `<h2>`, and each block gains a Heading level control for the cases that need an `<h3>`. Two things follow from it: a block heading now takes your heading font where it used to take the body font, which is visible if you have picked different fonts for the two; and a level you chose from the editor's style picker is left exactly as you set it. Agents and the AI assistant can set it too, through a `headingLevel` field on any block with a heading.
 - A page that does not open with a full-width hero no longer sits flush against the header. There is now space above the first block, sized by your Block spacing setting, and Settings → Design gains a "Space above the first block" switch to turn it off. It is on for a new site and off on a site that already exists, so nothing moves under you on upgrade — turn it on when you want it.
