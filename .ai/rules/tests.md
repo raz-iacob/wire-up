@@ -10,10 +10,16 @@ Schema::withoutForeignKeyConstraints() is a silent no-op on SQLite whenever a tr
 
 Don't suppress foreign keys to make bulk writes work. Order them instead: delete children before parents, insert parents before children. Malformed data then fails loudly rather than importing broken rows. See App\Services\SiteImporter, which deletes in reverse SiteBundle::TABLES order and inserts in forward order.
 
-## Refresh the TIA baseline before trusting a coverage number
-`composer test:unit` runs pest with --tia --coverage. TIA cannot record while a coverage report is active, so it silently reuses whatever baseline is on disk. After editing any file that baseline is stale and coverage under-reports — you get phantom uncovered lines, often with a blank or missing line number as the tell.
+## Re-anchor the TIA baseline in its own run, or coverage lies
+`composer test:unit` runs pest with `--tia --coverage`. Pest skips TIA whenever a coverage report is active — it says so on stdout — and silently reuses whatever baseline is on disk. After you edit a file, the baseline has no edges for the new lines, so exactly the files you touched report as partly uncovered while everything else sits at 100%. That shape is the tell: a handful of just-edited files at 50-70%, not scattered noise.
 
-Run `composer test:unit:fresh` to get a true reading. This also matters before committing: the pre-commit hook runs `composer test`, so a stale baseline can block an otherwise clean commit. Priming with :fresh first avoids it.
+Adding `--fresh` to the same command cannot fix it, because TIA is skipped before `--fresh` means anything. The re-anchor has to be its own run, with no `--coverage`:
+
+    vendor/bin/pest --tia --fresh --parallel
+
+`composer test:unit:fresh` now does exactly that and then runs the coverage check. Run it after editing anything and before committing, because the pre-commit hook runs `composer test` and a stale baseline blocks an otherwise clean commit.
+
+To confirm a number is real rather than a TIA artifact, measure without TIA at all — `vendor/bin/pest --parallel --coverage`. If that says 100% and the gate does not, the baseline is stale, not your code.
 
 ## A cached config lets a parallel run drop your dev database
 `bootstrap/cache/config.php` makes Laravel skip both `config/*.php` and phpunit.xml's `<env>`, so `DB_CONNECTION=sqlite` is ignored and the suite points at the real dev database. It has wiped the dev DB twice (2026-07-13, 2026-08-23 — the second time losing the local wire-up.dev content and both export bundles).

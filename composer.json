@@ -110,7 +110,10 @@
             "npm run test:lint"
         ],
         "test:unit": "@php -d memory_limit=-1 vendor/bin/pest --tia --parallel --coverage --exactly=100.0",
-        "test:unit:fresh": "@php -d memory_limit=-1 vendor/bin/pest --tia --fresh --parallel --coverage --exactly=100.0",
+        "test:unit:fresh": [
+            "@php -d memory_limit=-1 vendor/bin/pest --tia --fresh --parallel",
+            "@test:unit"
+        ],
         "test:types": "phpstan --memory-limit=2G",
         "test": [
             "@test:type-coverage",
