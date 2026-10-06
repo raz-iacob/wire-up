@@ -6,6 +6,7 @@ use App\Enums\ContentStatus;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Role;
 use App\Models\Settings;
 use App\Models\User;
 use App\Services\SiteBundle;
@@ -277,3 +278,16 @@ it('fails on a bundle with unreadable json', function (): void {
 
     SiteImporter::current()->inspect($path);
 })->throws(RuntimeException::class, 'unreadable manifest.json');
+
+it('grants the preset roles access to imported content types', function (): void {
+    $bundle = makeBundle([
+        'record_types' => [[
+            'id' => 9, 'key' => 'course', 'slug_prefix' => 'courses', 'icon' => 'cube', 'name' => 'Courses',
+            'fields' => '[]', 'breadcrumbs' => 0, 'position' => 0, 'created_at' => null, 'updated_at' => null,
+        ]],
+    ]);
+
+    SiteImporter::current()->import($bundle, null);
+
+    expect(Role::query()->where('key', 'editor')->firstOrFail()->hasAbility('records.course.edit'))->toBeTrue();
+});

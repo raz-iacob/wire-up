@@ -15,6 +15,10 @@ final readonly class CreateRecordTypeAction
     {
         $attributes['position'] ??= (int) RecordType::query()->max('position') + 1;
 
-        return RecordType::query()->create($attributes);
+        $recordType = RecordType::query()->create($attributes);
+
+        new GrantRecordTypeAbilitiesAction()->handle($recordType->key);
+
+        return $recordType;
     }
 }

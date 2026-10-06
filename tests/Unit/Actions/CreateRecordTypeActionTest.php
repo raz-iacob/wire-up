@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\CreateRecordTypeAction;
 use App\Models\RecordType;
+use App\Models\Role;
 
 it('creates a record type and assigns the next position', function (): void {
     RecordType::factory()->create(['position' => 5]);
@@ -30,4 +31,15 @@ it('respects an explicit position', function (): void {
     ]);
 
     expect($type->position)->toBe(3);
+});
+
+it('lets administrators and editors work with a content type as soon as it exists', function (): void {
+    resolve(CreateRecordTypeAction::class)->handle([
+        'key' => 'service',
+        'slug_prefix' => 'services',
+        'name' => 'Service',
+    ]);
+
+    expect(Role::query()->where('key', 'admin')->firstOrFail()->hasAbility('records.service.delete'))->toBeTrue()
+        ->and(Role::query()->where('key', 'editor')->firstOrFail()->hasAbility('records.service.edit'))->toBeTrue();
 });

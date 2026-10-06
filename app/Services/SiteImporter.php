@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Actions\GrantRecordTypeAbilitiesAction;
+use App\Models\RecordType;
 use App\Models\Settings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -68,6 +70,7 @@ final class SiteImporter
 
             $this->replace($site, $ownerId);
             $this->restoreMedia($zip, $audit['sources']);
+            $this->grantRecordTypeAbilities();
             $this->flushCaches();
 
             return ['manifest' => $manifest, 'problems' => [], 'tables' => $tables, 'media' => $media, 'imported' => true];
@@ -205,6 +208,15 @@ final class SiteImporter
 
         foreach ($sources as $source) {
             $disk->put($source, (string) $zip->getFromName($source));
+        }
+    }
+
+    private function grantRecordTypeAbilities(): void
+    {
+        $grant = new GrantRecordTypeAbilitiesAction;
+
+        foreach (RecordType::query()->pluck('key') as $key) {
+            $grant->handle((string) $key);
         }
     }
 

@@ -8,6 +8,8 @@ use App\Enums\PermissionAction;
 
 final class RolePresets
 {
+    public const array RECORD_TYPE_GRANTEES = ['admin', 'editor', 'author'];
+
     /**
      * @return array<int, array{key: string, name: string, abilities: array<int, string>, bypass: bool, is_protected: bool}>
      */
@@ -64,6 +66,18 @@ final class RolePresets
         }
 
         return null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function recordTypeActions(string $roleKey): array
+    {
+        return match ($roleKey) {
+            'admin', 'editor' => array_map(fn (PermissionAction $action): string => $action->value, PermissionAction::cases()),
+            'author' => [PermissionAction::View->value, PermissionAction::Create->value, PermissionAction::Edit->value],
+            default => [],
+        };
     }
 
     /**
