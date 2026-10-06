@@ -47,7 +47,9 @@ return new class extends Component
         $status = $action->handle($credentials, $this->password);
 
         throw_if($status !== Password::PASSWORD_RESET, ValidationException::withMessages([
-            'email' => [__(is_string($status) ? $status : '')],
+            'email' => [$status === Password::INVALID_TOKEN
+                ? __('This link has expired or is no longer valid. Request a new one.')
+                : __(is_string($status) ? $status : '')],
         ]));
 
         RateLimiter::clear($this->throttleKey());

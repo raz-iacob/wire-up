@@ -2,6 +2,10 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
+## Unreleased
+
+- An invitation link now stays valid for seven days instead of an hour, so a new admin who opens their invitation the next day can still set a password. It used to fail with "This password reset token is invalid" with no hint that the link had simply expired. That message now says the link has expired or is no longer valid and to request a new one. Ordinary password-reset links keep their one-hour limit.
+
 ## v0.3.0 — 2026-10-05
 
 - Block headings are now real heading elements, so a Wire-Up page finally has a document outline for search engines and screen readers — until now every one of them was a `<div>` and only card titles were real headings. A hero heads its page as the `<h1>`, every other block is an `<h2>`, and each block gains a Heading level control for the cases that need an `<h3>`. Two things follow from it: a block heading now takes your heading font where it used to take the body font, which is visible if you have picked different fonts for the two; and a level you chose from the editor's style picker is left exactly as you set it. Agents and the AI assistant can set it too, through a `headingLevel` field on any block with a heading.

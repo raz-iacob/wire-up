@@ -83,3 +83,54 @@ it('updates remember token when resetting password', function (): void {
     expect($user->refresh()->remember_token)->not->toBe('old-token')
         ->and($user->remember_token)->not->toBeNull();
 });
+
+it('accepts an invitation token for a week', function (): void {
+    $user = User::factory()->create(['invited_at' => now(), 'last_seen_at' => null]);
+
+    $token = Password::broker('invitations')->createToken($user);
+
+    $this->travel(6)->days();
+
+    $status = resolve(CreateUserPasswordAction::class)->handle([
+        'email' => $user->email,
+        'token' => $token,
+        'password' => 'new-password',
+        'password_confirmation' => 'new-password',
+    ], 'new-password');
+
+    expect($status)->toBe(Password::PASSWORD_RESET);
+});
+
+it('rejects an invitation token after a week', function (): void {
+    $user = User::factory()->create(['invited_at' => now(), 'last_seen_at' => null]);
+
+    $token = Password::broker('invitations')->createToken($user);
+
+    $this->travel(8)->days();
+
+    $status = resolve(CreateUserPasswordAction::class)->handle([
+        'email' => $user->email,
+        'token' => $token,
+        'password' => 'new-password',
+        'password_confirmation' => 'new-password',
+    ], 'new-password');
+
+    expect($status)->toBe(Password::INVALID_TOKEN);
+});
+
+it('keeps the one hour limit for a user who has already signed in', function (): void {
+    $user = User::factory()->create(['invited_at' => now()->subWeek(), 'last_seen_at' => now()]);
+
+    $token = Password::broker('invitations')->createToken($user);
+
+    $this->travel(1)->day();
+
+    $status = resolve(CreateUserPasswordAction::class)->handle([
+        'email' => $user->email,
+        'token' => $token,
+        'password' => 'new-password',
+        'password_confirmation' => 'new-password',
+    ], 'new-password');
+
+    expect($status)->toBe(Password::INVALID_TOKEN);
+});

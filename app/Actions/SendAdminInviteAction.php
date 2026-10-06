@@ -19,7 +19,7 @@ final readonly class SendAdminInviteAction
             return self::NOT_CONFIGURED;
         }
 
-        $status = Password::sendResetLink(['email' => $invitee->email],
+        $status = Password::broker('invitations')->sendResetLink(['email' => $invitee->email],
             function (User $user, string $token) use ($inviter): void {
                 $user->notify(new AdminInvite($inviter->name, $token));
             }

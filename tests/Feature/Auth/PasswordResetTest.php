@@ -79,7 +79,7 @@ it('fails with invalid token', function (): void {
         ->set('password_confirmation', 'pass123WORD!@£')
         ->call('resetPassword');
 
-    $response->assertHasErrors(['email']);
+    $response->assertHasErrors(['email' => __('This link has expired or is no longer valid. Request a new one.')]);
 });
 
 it('fails with non-existent email', function (): void {
