@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Playwright\Playwright;
+use Tests\Support\FakeStripe;
 use Tests\TestCase;
 
 throw_if(file_exists(__DIR__.'/../bootstrap/cache/config.php'), RuntimeException::class, 'bootstrap/cache/config.php exists, which overrides the sqlite test connection and points the suite '
@@ -27,6 +29,7 @@ pest()->extend(TestCase::class)
         Process::preventStrayProcesses();
         Validator::fakeDnsLookups();
         Sleep::fake();
+        $this->app->instance(FakeStripe::class, FakeStripe::install());
 
         config(['media.cache_path' => storage_path('framework/images/test-'.(ParallelTesting::token() ?: 'single'))]);
 
@@ -37,6 +40,26 @@ pest()->extend(TestCase::class)
 pest()->beforeEach(function (): void {
     Playwright::setTimeout(ParallelTesting::token() ? 60_000 : 15_000);
 })->in('Browser');
+
+function stripe(): FakeStripe
+{
+    return resolve(FakeStripe::class);
+}
+
+/**
+ * @param  array<string, mixed>  $object
+ */
+function stripeWebhook(string $type, array $object, ?string $secret = null): TestResponse
+{
+    $payload = (string) json_encode(['id' => 'evt_'.Str::random(14), 'object' => 'event', 'type' => $type, 'data' => ['object' => $object]]);
+    $timestamp = time();
+    $signature = hash_hmac('sha256', $timestamp.'.'.$payload, $secret ?? config()->string('cashier.webhook.secret'));
+
+    return test()->call('POST', route('cashier.webhook'), server: [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_STRIPE_SIGNATURE' => 't='.$timestamp.',v1='.$signature,
+    ], content: $payload);
+}
 
 expect()->extend('toBeOne', fn () => $this->toBe(1));
 

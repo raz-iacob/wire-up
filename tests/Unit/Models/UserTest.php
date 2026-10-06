@@ -38,6 +38,7 @@ test('to array', function (): void {
             'created_at',
             'updated_at',
             'invited_at',
+            'trial_ends_at',
         ]);
 });
 

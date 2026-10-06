@@ -19,8 +19,10 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Illuminate\Translation\FileLoader;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Cashier\Cashier;
 use Laravel\Fortify\Fortify;
 
 final class AppServiceProvider extends ServiceProvider
@@ -28,6 +30,7 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         Fortify::ignoreRoutes();
+        Cashier::ignoreRoutes();
 
         $this->app->singleton('localization', LocalizationService::class);
 
@@ -106,6 +109,16 @@ final class AppServiceProvider extends ServiceProvider
             config()->set('ai.default', $aiProvider);
             config()->set('ai.providers.'.$aiProvider.'.key', $aiApiKey);
         }
+
+        foreach (['key' => 'stripe_publishable_key', 'secret' => 'stripe_secret_key', 'webhook.secret' => 'stripe_webhook_secret'] as $cashierKey => $settingKey) {
+            $value = config('site.'.$settingKey);
+
+            if (is_string($value) && $value !== '') {
+                config()->set('cashier.'.$cashierKey, $value);
+            }
+        }
+
+        config()->set('cashier.currency', Str::lower(SettingsService::current()->currency()));
 
         if (SettingsService::current()->smtpSettingsComplete()) {
             $mailFromName = config('site.mail_from_name');

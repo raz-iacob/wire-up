@@ -10,14 +10,19 @@ use App\Livewire\Forms\GoogleMapsIntegrationForm;
 use App\Livewire\Forms\MailIntegrationForm;
 use App\Livewire\Forms\PexelsIntegrationForm;
 use App\Livewire\Forms\SlackIntegrationForm;
+use App\Livewire\Forms\StripeIntegrationForm;
 use App\Services\IntegrationTester;
 use App\Services\IntegrationTestResult;
+use App\Services\PublicUrlGuard;
 use App\Services\SettingsService;
+use App\Services\StripeService;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Stripe\Exception\ApiErrorException;
 
 return new class extends Component
 {
@@ -32,6 +37,8 @@ return new class extends Component
     public AssistantIntegrationForm $assistantForm;
 
     public MailIntegrationForm $mailForm;
+
+    public StripeIntegrationForm $stripeForm;
 
     public CustomCodeForm $customCodeForm;
 
@@ -60,6 +67,7 @@ return new class extends Component
         $this->assistantForm->ai_provider = in_array(config('site.ai_provider'), ['anthropic', 'openai', 'gemini'], true) ? config()->string('site.ai_provider') : 'anthropic';
         $this->assistantForm->ai_api_key = is_string(config('site.ai_api_key')) ? config()->string('site.ai_api_key') : '';
         $this->assistantForm->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : 'claude-opus-4-8';
+        $this->stripeForm->stripe_publishable_key = $this->savedSetting('stripe_publishable_key');
         $this->customCodeForm->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
         $this->customCodeForm->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
 
@@ -187,6 +195,96 @@ return new class extends Component
         Flux::toast(__('AI Assistant connected.'), variant: 'success');
     }
 
+    public function connectStripe(UpdateSettingsAction $action, StripeService $stripe, PublicUrlGuard $guard): void
+    {
+        $this->authorize('settings.edit');
+
+        $this->stripeForm->stripe_publishable_key = mb_trim($this->stripeForm->stripe_publishable_key);
+        $this->stripeForm->stripe_secret_key = mb_trim($this->stripeForm->stripe_secret_key);
+        $this->stripeForm->stripe_webhook_secret = mb_trim($this->stripeForm->stripe_webhook_secret);
+
+        $validated = $this->stripeForm->validate();
+
+        $publishableKey = (string) $validated['stripe_publishable_key'];
+        $secretKey = (string) ($validated['stripe_secret_key'] ?: $this->savedSetting('stripe_secret_key'));
+
+        if ($secretKey === '') {
+            $this->addError('stripeForm.stripe_secret_key', __('Enter your Stripe secret key.'));
+
+            return;
+        }
+
+        if ($stripe->isLiveKey($publishableKey) !== $stripe->isLiveKey($secretKey)) {
+            $this->addError('stripeForm.stripe_secret_key', __('Both keys must be test keys, or both live keys.'));
+
+            return;
+        }
+
+        try {
+            $accountName = $stripe->accountName($secretKey);
+            $webhook = $this->stripeWebhook($stripe, $guard, $secretKey, (string) $validated['stripe_webhook_secret']);
+        } catch (ApiErrorException $exception) {
+            $this->addError('stripeForm.stripe_secret_key', __('Stripe said: :reason', ['reason' => Str::limit($exception->getMessage(), 200)]));
+
+            return;
+        }
+
+        $action->handle([
+            'stripe_publishable_key' => $publishableKey,
+            'stripe_secret_key' => $secretKey,
+            'stripe_webhook_secret' => $webhook['secret'],
+            'stripe_webhook_endpoint_id' => $webhook['id'],
+        ]);
+
+        $this->stripeForm->reset('stripe_secret_key', 'stripe_webhook_secret');
+
+        Flux::modal('integration-stripe')->close();
+        Flux::toast(__('Stripe connected to :account.', ['account' => $accountName]), variant: 'success');
+    }
+
+    public function disconnectStripe(UpdateSettingsAction $action, StripeService $stripe): void
+    {
+        $this->authorize('settings.edit');
+
+        $secretKey = $this->savedSetting('stripe_secret_key');
+        $endpointId = $this->savedSetting('stripe_webhook_endpoint_id');
+
+        if ($secretKey !== '' && $endpointId !== '') {
+            try {
+                $stripe->deleteWebhookEndpoint($secretKey, $endpointId);
+            } catch (ApiErrorException) {
+                Flux::toast(__('Disconnected, but the webhook could not be removed from Stripe. Delete it in your Stripe dashboard.'), variant: 'warning');
+            }
+        }
+
+        $action->handle(array_fill_keys(['stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'stripe_webhook_endpoint_id'], ''));
+
+        $this->stripeForm->reset();
+
+        Flux::modal('integration-stripe')->close();
+        Flux::toast(__('Disconnected.'), variant: 'success');
+    }
+
+    #[Computed]
+    public function stripeSecretHint(): string
+    {
+        $secretKey = $this->savedSetting('stripe_secret_key');
+
+        return $secretKey === '' ? '' : Str::before($secretKey, '_').'_'.Str::betweenFirst($secretKey, '_', '_').'_…'.Str::substr($secretKey, -4);
+    }
+
+    #[Computed]
+    public function stripeWebhookIsAutomatic(): bool
+    {
+        return $this->savedSetting('stripe_webhook_endpoint_id') !== '';
+    }
+
+    #[Computed]
+    public function stripeWebhookUrl(): string
+    {
+        return route('cashier.webhook');
+    }
+
     #[Computed]
     public function testEmailRecipient(): string
     {
@@ -308,6 +406,34 @@ return new class extends Component
             ->layout('layouts::admin');
     }
 
+    /**
+     * @return array{id: string, secret: string}
+     */
+    private function stripeWebhook(StripeService $stripe, PublicUrlGuard $guard, string $secretKey, string $typedSecret): array
+    {
+        try {
+            $guard->assertPublic($this->stripeWebhookUrl());
+        } catch (InvalidArgumentException) {
+            return ['id' => '', 'secret' => $typedSecret !== '' ? $typedSecret : $this->savedSetting('stripe_webhook_secret')];
+        }
+
+        $previousSecretKey = $this->savedSetting('stripe_secret_key');
+        $previousEndpointId = $this->savedSetting('stripe_webhook_endpoint_id');
+
+        if ($previousSecretKey !== '' && $previousEndpointId !== '') {
+            $stripe->deleteWebhookEndpoint($previousSecretKey, $previousEndpointId);
+        }
+
+        return $stripe->createWebhookEndpoint($secretKey, $this->stripeWebhookUrl());
+    }
+
+    private function savedSetting(string $key): string
+    {
+        $value = config('site.'.$key);
+
+        return is_string($value) ? $value : '';
+    }
+
     private function allowsAnotherTest(): bool
     {
         $key = 'integration-test:'.auth()->id();
@@ -333,6 +459,42 @@ return new class extends Component
 <x-admin.settings-layout>
     <div class="space-y-10">
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            @php($stripeConnected = $this->stripeForm->stripe_publishable_key !== '')
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
+                        <svg viewBox="0 0 32 32" class="size-7" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="32" height="32" rx="6" fill="#635BFF" />
+                            <path fill="#fff" d="M14.9 12.6c0-.9.8-1.3 2-1.3 1.8 0 4 .5 5.8 1.5V7.3a15.4 15.4 0 0 0-5.8-1.1c-4.7 0-7.9 2.5-7.9 6.6 0 6.4 8.8 5.4 8.8 8.2 0 1.1-.9 1.4-2.2 1.4-1.9 0-4.4-.8-6.3-1.9v5.6c2.1.9 4.3 1.3 6.3 1.3 4.8 0 8.2-2.4 8.2-6.6-.1-6.9-8.9-5.7-8.9-8.2Z" />
+                        </svg>
+                    </div>
+                    <flux:modal.trigger name="integration-stripe">
+                        <flux:button
+                            size="sm"
+                            :variant="$stripeConnected ? 'primary' : 'outline'"
+                            :icon="$stripeConnected ? 'check' : null"
+                        >
+                            {{ $stripeConnected ? __('Connected') : __('Connect') }}
+                        </flux:button>
+                    </flux:modal.trigger>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <flux:heading size="lg">Stripe</flux:heading>
+                        @if ($stripeConnected)
+                            <flux:badge
+                                size="sm"
+                                :color="str_contains($this->stripeForm->stripe_publishable_key, '_live_') ? 'green' : 'amber'"
+                            >
+                                {{ str_contains($this->stripeForm->stripe_publishable_key, '_live_') ? __('Live') : __('Test mode') }}
+                            </flux:badge>
+                        @endif
+                    </div>
+                    <flux:text>{{ __('Take payments for products and subscriptions.') }}</flux:text>
+                </div>
+            </flux:card>
+
             @php($pexelsConnected = $this->pexelsForm->pexels_api_key !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
@@ -562,6 +724,63 @@ return new class extends Component
             </form>
         </flux:modal>
 
+        <flux:modal name="integration-stripe" class="w-full md:max-w-lg">
+            <form wire:submit="connectStripe" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Connect Stripe') }}</flux:heading>
+                    <flux:text class="mt-2">{{ __('Find both keys in your Stripe dashboard under Developers → API keys.') }}</flux:text>
+                </div>
+
+                <flux:input
+                    wire:model="stripeForm.stripe_publishable_key"
+                    :label="__('Publishable key')"
+                    placeholder="pk_test_…"
+                />
+
+                <flux:input
+                    wire:model="stripeForm.stripe_secret_key"
+                    type="password"
+                    viewable
+                    :label="__('Secret key')"
+                    :placeholder="$this->stripeSecretHint() !== '' ? $this->stripeSecretHint() : 'sk_test_…'"
+                    :description="$this->stripeSecretHint() !== '' ? __('Leave blank to keep the saved key.') : null"
+                />
+
+                <flux:separator variant="subtle" />
+
+                @if ($this->stripeWebhookIsAutomatic())
+                    <flux:text>{{ __('Stripe sends payment updates to this site automatically.') }}</flux:text>
+                @else
+                    <div class="space-y-4">
+                        <flux:input
+                            :value="$this->stripeWebhookUrl()"
+                            readonly
+                            copyable
+                            :label="__('Webhook URL')"
+                            :description="__('Set up automatically when this site is publicly reachable. Otherwise add this URL as a webhook in Stripe and paste its signing secret below.')"
+                        />
+
+                        <flux:input
+                            wire:model="stripeForm.stripe_webhook_secret"
+                            type="password"
+                            viewable
+                            :label="__('Webhook signing secret')"
+                            placeholder="whsec_…"
+                        />
+                    </div>
+                @endif
+
+                <div class="flex items-center justify-between gap-4">
+                    @if ($stripeConnected)
+                        <flux:button variant="subtle" wire:click="disconnectStripe">{{ __('Disconnect') }}</flux:button>
+                    @else
+                        <span></span>
+                    @endif
+                    <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+
         <flux:modal name="integration-pexels" class="w-full md:max-w-lg">
             <form wire:submit="connectPexels" class="space-y-6">
                 <div>
@@ -770,7 +989,7 @@ return new class extends Component
         <form
             wire:submit="updateCustomCode"
             wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
-            data-warn-dirty-ignore="pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key,slack_webhook_url"
+            data-warn-dirty-ignore="stripe_publishable_key,stripe_secret_key,stripe_webhook_secret,pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key,slack_webhook_url"
             class="max-w-3xl space-y-6"
         >
             <div class="space-y-3">

@@ -32,7 +32,10 @@ final class UserFactory extends Factory
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
             'photo' => fake()->optional(0.3)->randomElement(['avatars/user-1.jpg', 'avatars/user-2.jpg', 'avatars/user-3.jpg']),
-            'stripe_id' => fake()->uuid(),
+            'stripe_id' => null,
+            'pm_type' => null,
+            'pm_last_four' => null,
+            'trial_ends_at' => null,
             'metadata' => [
                 'phone' => fake()->phoneNumber(),
                 'address' => fake()->address(),
@@ -65,6 +68,13 @@ final class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function stripeCustomer(): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'stripe_id' => 'cus_'.Str::lower(Str::random(14)),
         ]);
     }
 

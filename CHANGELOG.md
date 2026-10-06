@@ -5,6 +5,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 ## Unreleased
 
 - An invitation link now stays valid for seven days instead of an hour, so a new admin who opens their invitation the next day can still set a password. It used to fail with "This password reset token is invalid" with no hint that the link had simply expired. That message now says the invitation has expired and to ask for a new one, or that the link has expired for an ordinary reset. Ordinary password-reset links keep their one-hour limit.
+- Settings → Integrations has a Stripe card for taking payments. Paste your publishable and secret keys and Wire-Up checks them with Stripe, then registers its webhook in your Stripe account so payment updates reach the site. A site Stripe cannot reach yet shows the webhook address to add by hand, with a box for its signing secret. The secret key is never shown again once saved; leave the box blank to keep it. The card shows whether you are in test or live mode, and disconnecting removes the webhook from Stripe too.
 
 ## v0.3.0 — 2026-10-05
 

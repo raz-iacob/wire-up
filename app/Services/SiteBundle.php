@@ -49,6 +49,10 @@ final class SiteBundle
         'mail_from_name',
         'mail_encryption',
         'google_maps_api_key',
+        'stripe_publishable_key',
+        'stripe_secret_key',
+        'stripe_webhook_secret',
+        'stripe_webhook_endpoint_id',
     ];
 
     /**

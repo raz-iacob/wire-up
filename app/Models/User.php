@@ -16,6 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Laravel\Cashier\Billable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
@@ -29,6 +30,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read CarbonInterface|null $two_factor_confirmed_at
  * @property-read string|null $photo
  * @property-read string|null $stripe_id
+ * @property-read string|null $pm_type
+ * @property-read string|null $pm_last_four
+ * @property-read CarbonInterface|null $trial_ends_at
  * @property-read array<string, mixed>|null $metadata
  * @property-read int|null $role_id
  * @property-read Role|null $role
@@ -48,6 +52,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
     'password',
     'remember_token',
     'stripe_id',
+    'pm_type',
+    'pm_last_four',
     'two_factor_secret',
     'two_factor_recovery_codes',
     'two_factor_confirmed_at',
@@ -55,7 +61,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 final class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use Billable, HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     public function sendEmailVerificationNotification(): void
     {
@@ -82,6 +88,9 @@ final class User extends Authenticatable implements MustVerifyEmail
             'two_factor_confirmed_at' => 'datetime',
             'photo' => 'string',
             'stripe_id' => 'string',
+            'pm_type' => 'string',
+            'pm_last_four' => 'string',
+            'trial_ends_at' => 'datetime',
             'metadata' => 'json',
             'role_id' => 'integer',
             'active' => 'boolean',
