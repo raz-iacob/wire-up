@@ -32,6 +32,7 @@ final class UiStrings
     {
         return [
             'Account' => [resource_path('views/pages/⚡account.blade.php')],
+            'Cart' => [resource_path('views/pages/⚡cart.blade.php')],
             'Sign in' => [resource_path('views/pages/auth')],
             'Site' => [resource_path('views/components/site')],
         ];

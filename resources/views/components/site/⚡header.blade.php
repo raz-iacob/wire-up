@@ -115,6 +115,7 @@ return new class extends Component
             >
                 <div class="absolute inset-e-6 top-4 max-md:hidden">
                     <x-site.theme-toggle />
+                    <livewire:site.cart-icon :key="'cart-icon-centered'" />
                     <x-site.language-picker :languages="$this->languages" />
                 </div>
                 <div class="flex justify-center">
@@ -150,6 +151,7 @@ return new class extends Component
                 <div class="flex items-center justify-end gap-4 max-md:hidden">
                     <x-site.nav :items="$buttons" :size="$navSize" :hover="$navHover" />
                     <x-site.theme-toggle />
+                    <livewire:site.cart-icon :key="'cart-icon-split'" />
                     <x-site.language-picker :languages="$this->languages" />
                 </div>
             </div>
@@ -183,6 +185,7 @@ return new class extends Component
                 <div class="flex items-center gap-6 max-md:hidden">
                     <x-site.nav :items="$items" :size="$navSize" :hover="$navHover" />
                     <x-site.theme-toggle />
+                    <livewire:site.cart-icon :key="'cart-icon-default'" />
                     <x-site.language-picker :languages="$this->languages" />
                 </div>
             </div>
@@ -227,6 +230,7 @@ return new class extends Component
 
                 <div class="flex items-center gap-4">
                     <x-site.theme-toggle />
+                    <livewire:site.cart-icon :key="'cart-icon-drawer'" />
                     <x-site.language-picker :languages="$this->languages" align="start" />
                 </div>
             </div>

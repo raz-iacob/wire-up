@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Record;
+use App\Models\RecordType;
 
 final readonly class ShopService
 {
@@ -19,6 +20,21 @@ final readonly class ShopService
     public function sellsOnline(): bool
     {
         return $this->stripe->configured();
+    }
+
+    public function isOpen(): bool
+    {
+        return $this->sellsOnline() && once(fn (): bool => RecordType::query()->where('sellable', true)->exists());
+    }
+
+    public function toMinor(string $amount): int
+    {
+        return (int) round((float) $amount * 10 ** SettingsService::current()->currencyDecimals());
+    }
+
+    public function formatMinor(int $amount): string
+    {
+        return SettingsService::current()->formatMoney($amount / 10 ** SettingsService::current()->currencyDecimals());
     }
 
     public function isSellable(Record $record): bool

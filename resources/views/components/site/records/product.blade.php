@@ -39,6 +39,7 @@
     $heading = $record->fieldValue('heading', true) ?: $record->title;
     $overview = (string) ($record->fieldValue('overview', true) ?? '');
 
+    $shop = resolve(\App\Services\ShopService::class);
     $isSold = (bool) $record->fieldValue('sold', false) || $record->stock === 0;
 
     $price = $record->fieldValue('current_price', false);
@@ -203,6 +204,10 @@
                             <span class="line-through opacity-50">{{ $settings->formatMoney($compare) }}</span>
                         @endif
                     </div>
+                @endif
+
+                @if ($shop->isPurchasable($record) && ! $shop->isSubscription($record))
+                    <livewire:site.buy-box :record="$record" :key="'buy-box-'.$record->id" />
                 @endif
             </div>
         </div>

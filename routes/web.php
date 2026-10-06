@@ -17,6 +17,8 @@ Route::group(['prefix' => resolve('localization')->setLocale()], function (): vo
 
     Route::livewire('/', 'pages::home')->middleware(MarkdownForAgents::class)->name('home');
 
+    Route::livewire('cart', 'pages::cart')->name('cart');
+
     Route::middleware('guest')->group(function (): void {
         Route::livewire('login', 'pages::auth.login')->name('login');
         Route::livewire('register', 'pages::auth.register')->name('register');

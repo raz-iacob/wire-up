@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\ContentStatus;
+use App\Models\Record;
+use App\Models\RecordType;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\SQLiteDatabaseDoesNotExistException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -59,6 +62,32 @@ function stripeWebhook(string $type, array $object, ?string $secret = null): Tes
         'CONTENT_TYPE' => 'application/json',
         'HTTP_STRIPE_SIGNATURE' => 't='.$timestamp.',v1='.$signature,
     ], content: $payload);
+}
+
+function connectStripe(): void
+{
+    config(['cashier.key' => 'pk_test_1', 'cashier.secret' => 'sk_test_1', 'cashier.webhook.secret' => 'whsec_1']);
+}
+
+/**
+ * @param  array<string, mixed>  $data
+ * @param  array<string, mixed>  $attributes
+ */
+function sellableRecord(array $data = ['current_price' => '19.99'], array $attributes = [], bool $sellable = true): Record
+{
+    $type = $sellable ? RecordType::factory()->sellable()->create() : RecordType::factory()->create();
+
+    $record = Record::factory()->create([
+        'record_type_id' => $type->id,
+        'data' => $data,
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        ...$attributes,
+    ]);
+
+    $record->slugs()->create(['locale' => config()->string('app.default_locale', 'en'), 'slug' => 'item-'.$record->id, 'base_path' => $type->slug_prefix]);
+
+    return $record;
 }
 
 expect()->extend('toBeOne', fn () => $this->toBe(1));
