@@ -33,6 +33,7 @@ final class CreateContentTypeTool extends Tool
                 'breadcrumbs' => ['nullable', 'boolean'],
                 'has_detail_page' => ['nullable', 'boolean'],
                 'has_index_page' => ['nullable', 'boolean'],
+                'sellable' => ['nullable', 'boolean'],
                 ...Records::fieldRules(),
             ],
             [
@@ -65,6 +66,12 @@ final class CreateContentTypeTool extends Tool
             ? Records::serializeFields($validated['fields'], $locale)
             : ($preset['fields'] ?? []);
 
+        $sellable = (bool) ($validated['sellable'] ?? $preset['sellable'] ?? false);
+
+        if ($sellable) {
+            $fields = RecordTypePresets::withSellableFields($fields);
+        }
+
         $slugPrefix = (string) ($validated['slug_prefix'] ?? $preset['slug_prefix'] ?? Records::suggestSlugPrefix($name));
 
         if ($this->prefixTaken($slugPrefix)) {
@@ -79,6 +86,7 @@ final class CreateContentTypeTool extends Tool
             'breadcrumbs' => (bool) ($validated['breadcrumbs'] ?? false),
             'has_detail_page' => (bool) ($validated['has_detail_page'] ?? true),
             'has_index_page' => (bool) ($validated['has_index_page'] ?? false),
+            'sellable' => $sellable,
             'fields' => $fields,
         ]);
 
@@ -114,6 +122,9 @@ final class CreateContentTypeTool extends Tool
 
             'has_index_page' => $schema->boolean()
                 ->description('Publish a listing of every published record of this type at /{prefix}. Defaults to false. A page whose web address matches the prefix takes precedence.'),
+
+            'sellable' => $schema->boolean()
+                ->description('Sell the records of this type: adds current_price (money), billing (select: One-time, Monthly, Yearly) and shippable (boolean) fields if missing, and shows a buy button on each record once Stripe is connected. Defaults to true for the product preset, false otherwise.'),
 
             'fields' => $schema->array()
                 ->items($schema->object())

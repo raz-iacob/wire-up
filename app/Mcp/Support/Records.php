@@ -37,6 +37,7 @@ final readonly class Records
             'breadcrumbs' => $type->breadcrumbs,
             'has_detail_page' => $type->has_detail_page,
             'has_index_page' => $type->has_index_page,
+            'sellable' => $type->sellable,
             'record_count' => $type->records()->count(),
             'fields' => array_map(self::fieldSummary(...), $type->fields),
         ];

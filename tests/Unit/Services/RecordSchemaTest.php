@@ -181,3 +181,16 @@ it('skips invalid event dates and empty locations', function (): void {
     expect($node['@type'])->toBe('Event')
         ->and($node)->not->toHaveKeys(['startDate', 'endDate', 'location']);
 });
+
+it('marks a product out of stock when none are left', function (): void {
+    $record = schemaRecord('product', ['current_price' => '10'], ['title' => ['en' => 'Lamp'], 'stock' => 0]);
+
+    expect(schemaNodes($record)[0]['offers']['availability'])->toBe('https://schema.org/OutOfStock');
+});
+
+it('marks a product out of stock when it is flagged as sold', function (): void {
+    $fields = [...RecordTypePresets::find('product')['fields'], ['key' => 'sold', 'type' => 'boolean', 'translatable' => false]];
+    $record = schemaRecord('product', ['current_price' => '10', 'sold' => true], ['title' => ['en' => 'Chair']], fields: $fields);
+
+    expect(schemaNodes($record)[0]['offers']['availability'])->toBe('https://schema.org/OutOfStock');
+});

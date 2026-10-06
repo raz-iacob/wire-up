@@ -479,3 +479,30 @@ it('creates a content type that only feeds cards', function (): void {
 
     expect($type->has_detail_page)->toBeFalse()->and($type->has_index_page)->toBeTrue();
 });
+
+it('creates a sellable content type with its shop fields', function (): void {
+    WireUpServer::tool(CreateContentTypeTool::class, ['name' => 'Workshops', 'sellable' => true])
+        ->assertOk()
+        ->assertSee('"sellable":true');
+
+    $type = RecordType::query()->where('slug_prefix', 'workshops')->firstOrFail();
+
+    expect(array_column($type->fields, 'key'))->toBe(['current_price', 'billing', 'shippable']);
+});
+
+it('switches an existing content type to sellable and keeps its shop fields on later edits', function (): void {
+    $type = RecordType::factory()->create(['key' => 'kit', 'fields' => []]);
+
+    WireUpServer::tool(UpdateContentTypeTool::class, ['type' => 'kit', 'sellable' => true])->assertOk();
+
+    expect($type->refresh()->sellable)->toBeTrue()
+        ->and(array_column($type->fields, 'key'))->toBe(['current_price', 'billing', 'shippable']);
+
+    WireUpServer::tool(UpdateContentTypeTool::class, ['type' => 'kit', 'fields' => [['key' => 'colour', 'type' => 'text', 'label' => 'Colour']]])->assertOk();
+
+    expect(array_column($type->refresh()->fields, 'key'))->toBe(['colour', 'current_price', 'billing', 'shippable']);
+
+    WireUpServer::tool(UpdateContentTypeTool::class, ['type' => 'kit', 'name' => 'Kits'])->assertOk();
+
+    expect(array_column($type->refresh()->fields, 'key'))->toBe(['colour', 'current_price', 'billing', 'shippable']);
+});

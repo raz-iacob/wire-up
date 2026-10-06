@@ -39,7 +39,7 @@
     $heading = $record->fieldValue('heading', true) ?: $record->title;
     $overview = (string) ($record->fieldValue('overview', true) ?? '');
 
-    $isSold = (bool) $record->fieldValue('sold', false);
+    $isSold = (bool) $record->fieldValue('sold', false) || $record->stock === 0;
 
     $price = $record->fieldValue('current_price', false);
     $compare = $record->fieldValue('regular_price', false);

@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read int $id
  * @property-read int $record_type_id
  * @property-read array<string, mixed>|null $data
+ * @property-read int|null $stock
  * @property-read array<string, mixed>|null $metadata
  * @property-read array<int, string> $published_locales
  * @property-read ContentStatus $status
@@ -63,6 +64,7 @@ final class Record extends Model
             'id' => 'integer',
             'record_type_id' => 'integer',
             'data' => 'array',
+            'stock' => 'integer',
             'metadata' => 'array',
             'status' => ContentStatus::class,
             'published_at' => 'datetime',

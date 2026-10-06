@@ -224,3 +224,52 @@ it('allows a URL prefix that matches an existing page slug', function (): void {
 
     $this->assertDatabaseHas('record_types', ['slug_prefix' => 'guides']);
 });
+
+it('adds the shop fields the moment a type is switched to sellable', function (): void {
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.settings-content-types')
+        ->call('addCustom')
+        ->set('types.0.name', 'Classes')
+        ->set('types.0.slug_prefix', 'classes')
+        ->set('types.0.sellable', true);
+
+    expect(array_column($component->get('types.0.fields'), 'key'))->toBe(['current_price', 'billing', 'shippable']);
+
+    $component->set('types.0.sellable', false)->set('types.0.sellable', true);
+
+    expect($component->get('types.0.fields'))->toHaveCount(3);
+
+    $component->call('update')->assertHasNoErrors();
+
+    $type = RecordType::query()->where('slug_prefix', 'classes')->firstOrFail();
+
+    expect($type->sellable)->toBeTrue()
+        ->and(array_column($type->fields, 'key'))->toBe(['current_price', 'billing', 'shippable']);
+});
+
+it('keeps the shop fields on a sellable type even when they are removed', function (): void {
+    $this->actingAsAdmin();
+    $type = RecordType::factory()->sellable()->create(['slug_prefix' => 'courses']);
+
+    $component = Livewire::test('pages::admin.settings-content-types')
+        ->assertSet('types.0.sellable', true);
+
+    foreach ($component->get('types.0.fields') as $field) {
+        $component->call('removeField', $field['_key']);
+    }
+
+    $component->call('update')->assertHasNoErrors();
+
+    expect(array_column($type->refresh()->fields, 'key'))->toBe(['current_price', 'billing', 'shippable']);
+});
+
+it('starts the product preset as sellable and a custom type as not', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-content-types')
+        ->call('addPreset', 'product')
+        ->call('addCustom')
+        ->assertSet('types.0.sellable', true)
+        ->assertSet('types.1.sellable', false);
+});

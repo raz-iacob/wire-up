@@ -22,6 +22,7 @@ final class RecordFactory extends Factory
         return [
             'record_type_id' => RecordType::factory(),
             'data' => [],
+            'stock' => null,
             'metadata' => ['published_locales' => [config()->string('app.default_locale', 'en')]],
             'status' => ContentStatus::DRAFT,
             'published_at' => null,

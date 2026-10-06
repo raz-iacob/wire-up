@@ -8,6 +8,14 @@ use App\Enums\FieldType;
 
 final class RecordTypePresets
 {
+    public const string PRICE_FIELD = 'current_price';
+
+    public const string BILLING_FIELD = 'billing';
+
+    public const string SHIPPABLE_FIELD = 'shippable';
+
+    public const array BILLING_OPTIONS = ['One-time', 'Monthly', 'Yearly'];
+
     /**
      * @return array<int, array<string, mixed>>
      */
@@ -39,6 +47,31 @@ final class RecordTypePresets
     }
 
     /**
+     * @param  array<int, array<string, mixed>>  $fields
+     * @return array<int, array<string, mixed>>
+     */
+    public static function withSellableFields(array $fields): array
+    {
+        $sellableFields = self::sellableFields();
+
+        foreach ($fields as $index => $field) {
+            if (array_key_exists((string) ($field['key'] ?? ''), $sellableFields)) {
+                $fields[$index]['translatable'] = false;
+            }
+        }
+
+        $existingKeys = array_column($fields, 'key');
+
+        foreach ($sellableFields as $key => $definition) {
+            if (! in_array($key, $existingKeys, true)) {
+                $fields[] = $definition;
+            }
+        }
+
+        return array_values($fields);
+    }
+
+    /**
      * @return array<int, string>
      */
     public static function keys(): array
@@ -56,13 +89,14 @@ final class RecordTypePresets
             'slug_prefix' => 'products',
             'icon' => 'shopping-bag',
             'name' => 'Products',
-            'fields' => [
+            'sellable' => true,
+            'fields' => self::withSellableFields([
                 ...self::contentFields(),
-                self::field('current_price', FieldType::MONEY, 'Current price', ['column' => true, 'sortable' => true]),
+                self::field(self::PRICE_FIELD, FieldType::MONEY, 'Current price', ['column' => true, 'sortable' => true]),
                 self::field('regular_price', FieldType::MONEY, 'Regular price'),
                 self::field('sku', FieldType::TEXT, 'SKU', ['translatable' => false, 'searchable' => true, 'column' => true]),
                 self::field('gallery', FieldType::MEDIA_GALLERY, 'Gallery'),
-            ],
+            ]),
         ];
     }
 
@@ -183,6 +217,18 @@ final class RecordTypePresets
         return [
             self::field('heading', FieldType::TEXT, 'Title', ['prefills' => 'title']),
             self::field('overview', FieldType::RICH_TEXT, 'Description', ['prefills' => 'description']),
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private static function sellableFields(): array
+    {
+        return [
+            self::PRICE_FIELD => self::field(self::PRICE_FIELD, FieldType::MONEY, 'Current price', ['column' => true, 'sortable' => true, 'translatable' => false]),
+            self::BILLING_FIELD => self::field(self::BILLING_FIELD, FieldType::SELECT, 'Billing', ['translatable' => false, 'options' => self::BILLING_OPTIONS]),
+            self::SHIPPABLE_FIELD => self::field(self::SHIPPABLE_FIELD, FieldType::BOOLEAN, 'Needs shipping', ['translatable' => false]),
         ];
     }
 

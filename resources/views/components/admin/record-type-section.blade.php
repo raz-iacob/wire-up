@@ -102,6 +102,13 @@
                 align="left"
             />
 
+            <flux:switch
+                wire:model.live="types.{{ $index }}.sellable"
+                label="{{ __('Sell these records') }}"
+                description="{{ __('Adds price, billing and shipping fields, and a buy button once Stripe is connected.') }}"
+                align="left"
+            />
+
             <div class="space-y-3">
                 <div class="flex items-center justify-between gap-3">
                     <flux:label>{{ __('Fields') }}</flux:label>

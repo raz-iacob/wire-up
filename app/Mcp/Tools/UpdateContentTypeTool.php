@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Actions\UpdateRecordTypeAction;
 use App\Mcp\Support\Records;
 use App\Models\RecordType;
+use App\Services\RecordTypePresets;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Validation\Rule;
@@ -31,6 +32,7 @@ final class UpdateContentTypeTool extends Tool
                 'breadcrumbs' => ['nullable', 'boolean'],
                 'has_detail_page' => ['nullable', 'boolean'],
                 'has_index_page' => ['nullable', 'boolean'],
+                'sellable' => ['nullable', 'boolean'],
                 ...Records::fieldRules(),
             ],
             [
@@ -62,7 +64,7 @@ final class UpdateContentTypeTool extends Tool
             $attributes['breadcrumbs'] = (bool) $validated['breadcrumbs'];
         }
 
-        foreach (['has_detail_page', 'has_index_page'] as $flag) {
+        foreach (['has_detail_page', 'has_index_page', 'sellable'] as $flag) {
             if (($validated[$flag] ?? null) !== null) {
                 $attributes[$flag] = (bool) $validated[$flag];
             }
@@ -78,6 +80,10 @@ final class UpdateContentTypeTool extends Tool
 
         if (array_key_exists('fields', $validated)) {
             $attributes['fields'] = Records::serializeFields($validated['fields'], resolve('localization')->getDefaultLocale());
+        }
+
+        if (($attributes['sellable'] ?? $type->sellable) && (isset($attributes['fields']) || ($attributes['sellable'] ?? false))) {
+            $attributes['fields'] = RecordTypePresets::withSellableFields($attributes['fields'] ?? $type->fields);
         }
 
         if ($attributes !== []) {
@@ -114,6 +120,9 @@ final class UpdateContentTypeTool extends Tool
 
             'has_index_page' => $schema->boolean()
                 ->description('Whether a listing of this type publishes at /{prefix}. A page with the same web address takes precedence.'),
+
+            'sellable' => $schema->boolean()
+                ->description('Sell the records of this type: adds current_price (money), billing (select: One-time, Monthly, Yearly) and shippable (boolean) fields if missing, and shows a buy button on each record once Stripe is connected.'),
 
             'fields' => $schema->array()
                 ->items($schema->object())

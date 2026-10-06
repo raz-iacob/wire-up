@@ -433,3 +433,75 @@ it('duplicates a record block directly below the one it copied', function (): vo
         ->and($blocks[2]['content']['items'][0]['id'])->not->toBe($blocks[1]['content']['items'][0]['id'])
         ->and($blocks[2]['content']['items'][0]['title'])->toBe(['en' => 'Q']);
 });
+
+it('saves the stock of a sellable record', function (): void {
+    $type = RecordType::factory()->sellable()->create();
+    $record = makeRecord($type);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->assertSee(__('Not tracked'))
+        ->set('stock', '12')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect($record->refresh()->stock)->toBe(12);
+});
+
+it('stops tracking stock when the field is emptied', function (): void {
+    $type = RecordType::factory()->sellable()->create();
+    $record = makeRecord($type);
+    Record::query()->whereKey($record->id)->update(['stock' => 4]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record->refresh()])
+        ->assertSet('stock', '4')
+        ->set('stock', '')
+        ->call('update');
+
+    expect($record->refresh()->stock)->toBeNull();
+});
+
+it('does not overwrite stock that changed while the record was open', function (): void {
+    $type = RecordType::factory()->sellable()->create();
+    $record = makeRecord($type);
+    Record::query()->whereKey($record->id)->update(['stock' => 5]);
+
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record->refresh()]);
+
+    Record::query()->whereKey($record->id)->update(['stock' => 4]);
+
+    $component->set('title.en', 'Renamed')->call('update')->assertHasNoErrors();
+
+    expect($record->refresh()->stock)->toBe(4);
+});
+
+it('rejects a negative stock', function (): void {
+    $type = RecordType::factory()->sellable()->create();
+    $record = makeRecord($type);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->set('stock', '-1')
+        ->call('update')
+        ->assertHasErrors(['stock' => 'min']);
+});
+
+it('ignores stock on a type that is not sellable', function (): void {
+    $type = typeWithFields();
+    $record = makeRecord($type);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->assertDontSee(__('Not tracked'))
+        ->set('stock', '9')
+        ->call('update');
+
+    expect($record->refresh()->stock)->toBeNull();
+});

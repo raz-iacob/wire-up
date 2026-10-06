@@ -25,6 +25,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 return new class extends Component
@@ -83,6 +84,11 @@ return new class extends Component
      */
     public array $menuOptions = [];
 
+    public string $stock = '';
+
+    #[Locked]
+    public ?int $loadedStock = null;
+
     public bool $showPreview = false;
 
     public ?string $previewToken = null;
@@ -126,6 +132,8 @@ return new class extends Component
             array_column($this->menuOptions, 'key'),
         ));
         $this->data = is_array($record->data) ? $record->data : [];
+        $this->loadedStock = $record->stock;
+        $this->stock = $record->stock === null ? '' : (string) $record->stock;
 
         $this->media['og_image'] = $this->mediaForRole('og_image');
 
@@ -210,6 +218,10 @@ return new class extends Component
             ],
         ]);
 
+        if ($this->recordType->sellable) {
+            $this->saveStock();
+        }
+
         $this->record->refresh()->load('translations', 'media', 'blocks', 'slugs');
 
         Flux::toast(__('Changes saved.'), variant: 'success');
@@ -273,6 +285,19 @@ return new class extends Component
         return $this->record->media;
     }
 
+    private function saveStock(): void
+    {
+        $stock = $this->stock === '' ? null : (int) $this->stock;
+
+        if ($stock === $this->loadedStock) {
+            return;
+        }
+
+        Record::query()->whereKey($this->record->id)->update(['stock' => $stock]);
+
+        $this->loadedStock = $stock;
+    }
+
     private function previewCacheKey(string $token): string
     {
         return "record-preview:{$this->record->id}:".auth()->id().":{$token}";
@@ -297,6 +322,7 @@ return new class extends Component
             'categories.*' => ['integer', Rule::exists('categories', 'id')],
             'noindex' => ['boolean'],
             'members_only' => ['boolean'],
+            'stock' => ['nullable', 'integer', 'min:0', 'max:1000000'],
             'layout' => ['array'],
             'layout.hideHeader' => ['boolean'],
             'layout.hideFooter' => ['boolean'],
@@ -841,6 +867,30 @@ return new class extends Component
                             </div>
                         </flux:accordion.content>
                     </flux:accordion.item>
+
+                    @if ($recordType->sellable)
+                        <flux:accordion.item>
+                            <flux:accordion.heading>
+                                <div class="flex items-center justify-between">
+                                    {{ __('Stock') }}
+                                    <flux:text>
+                                        <span x-text="$wire.stock === '' ? @js(__('Not tracked')) : $wire.stock">{{ $stock === '' ? __('Not tracked') : $stock }}</span>
+                                    </flux:text>
+                                </div>
+                            </flux:accordion.heading>
+
+                            <flux:accordion.content class="mt-3">
+                                <flux:input
+                                    wire:model="stock"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    :label="__('Items in stock')"
+                                    :description="__('Leave empty to sell without counting.')"
+                                />
+                            </flux:accordion.content>
+                        </flux:accordion.item>
+                    @endif
 
                     @if (config('site.allow_registration'))
                         <flux:accordion.item>

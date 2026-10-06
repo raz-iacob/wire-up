@@ -27,6 +27,7 @@ use Illuminate\Support\Once;
  * @property-read bool $breadcrumbs
  * @property-read bool $has_detail_page
  * @property-read bool $has_index_page
+ * @property-read bool $sellable
  * @property-read int $position
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
@@ -104,6 +105,7 @@ final class RecordType extends Model
             'breadcrumbs' => 'boolean',
             'has_detail_page' => 'boolean',
             'has_index_page' => 'boolean',
+            'sellable' => 'boolean',
             'position' => 'integer',
         ];
     }

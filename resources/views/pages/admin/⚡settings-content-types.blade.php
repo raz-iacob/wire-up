@@ -91,6 +91,7 @@ return new class extends Component
             'breadcrumbs' => false,
             'has_detail_page' => true,
             'has_index_page' => false,
+            'sellable' => (bool) ($preset['sellable'] ?? false),
             'fields' => array_map(fn (array $field): array => $this->hydrateField($field, $locale), $preset['fields']),
             'open' => true,
         ];
@@ -109,9 +110,33 @@ return new class extends Component
             'breadcrumbs' => false,
             'has_detail_page' => true,
             'has_index_page' => false,
+            'sellable' => false,
             'fields' => [],
             'open' => true,
         ];
+    }
+
+    public function updatedTypes(mixed $value, string $key): void
+    {
+        $index = (int) Str::before($key, '.');
+
+        if ($value !== true || ! str_ends_with($key, '.sellable') || ! isset($this->types[$index])) {
+            return;
+        }
+
+        $locale = resolve('localization')->getDefaultLocale();
+        $serialized = $this->serializeFields($this->types[$index]['fields'], $locale);
+        $sellableKeys = [RecordTypePresets::PRICE_FIELD, RecordTypePresets::BILLING_FIELD, RecordTypePresets::SHIPPABLE_FIELD];
+
+        foreach ($this->types[$index]['fields'] as $position => $field) {
+            if (in_array($field['key'], $sellableKeys, true)) {
+                $this->types[$index]['fields'][$position]['translatable'] = false;
+            }
+        }
+
+        foreach (array_slice(RecordTypePresets::withSellableFields($serialized), count($serialized)) as $added) {
+            $this->types[$index]['fields'][] = $this->hydrateField($added, $locale);
+        }
     }
 
     public function addField(string $typeKey, string $fieldType): void
@@ -213,7 +238,10 @@ return new class extends Component
                     'breadcrumbs' => (bool) $row['breadcrumbs'],
                     'has_detail_page' => (bool) ($row['has_detail_page'] ?? true),
                     'has_index_page' => (bool) ($row['has_index_page'] ?? false),
-                    'fields' => $this->serializeFields($row['fields'], $locale),
+                    'sellable' => (bool) ($row['sellable'] ?? false),
+                    'fields' => (bool) ($row['sellable'] ?? false)
+                        ? RecordTypePresets::withSellableFields($this->serializeFields($row['fields'], $locale))
+                        : $this->serializeFields($row['fields'], $locale),
                     'position' => $position,
                 ];
 
@@ -348,6 +376,7 @@ return new class extends Component
             'breadcrumbs' => $type->breadcrumbs,
             'has_detail_page' => $type->has_detail_page,
             'has_index_page' => $type->has_index_page,
+            'sellable' => $type->sellable,
             'fields' => array_map(fn (array $field): array => $this->hydrateField($field, $locale), $type->fields),
             'open' => false,
         ];
@@ -445,6 +474,7 @@ return new class extends Component
             $rules["types.$index.breadcrumbs"] = ['boolean'];
             $rules["types.$index.has_detail_page"] = ['boolean'];
             $rules["types.$index.has_index_page"] = ['boolean'];
+            $rules["types.$index.sellable"] = ['boolean'];
             $rules["types.$index.fields"] = ['array'];
             $rules["types.$index.fields.*.key"] = [
                 'required', 'string', 'distinct', 'regex:/^[a-z][a-z0-9_]*$/',

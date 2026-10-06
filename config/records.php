@@ -22,6 +22,9 @@ return [
         'llms.txt',
         'llms-full.txt',
         'category',
+        'cart',
+        'checkout',
+        'stripe',
     ],
 
     /*

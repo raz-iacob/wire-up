@@ -72,7 +72,9 @@ final readonly class RecordSchema
                 '@type' => 'Offer',
                 'price' => $price,
                 'priceCurrency' => SettingsService::current()->currency(),
-                'availability' => 'https://schema.org/InStock',
+                'availability' => $record->stock === 0 || (bool) $this->value($record, 'sold')
+                    ? 'https://schema.org/OutOfStock'
+                    : 'https://schema.org/InStock',
                 'url' => $url,
             ];
         }
