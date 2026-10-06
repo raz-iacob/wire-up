@@ -82,6 +82,17 @@ it('fails with invalid token', function (): void {
     $response->assertHasErrors(['email' => __('This link has expired or is no longer valid. Request a new one.')]);
 });
 
+it('says the invitation has expired for an invited user who has not signed in', function (): void {
+    $user = User::factory()->create(['invited_at' => now(), 'last_seen_at' => null]);
+
+    Livewire::test('pages::auth.reset-password', ['token' => 'expired-token'])
+        ->set('email', $user->email)
+        ->set('password', 'pass123WORD!@£')
+        ->set('password_confirmation', 'pass123WORD!@£')
+        ->call('resetPassword')
+        ->assertHasErrors(['email' => __('This invitation has expired. Ask the person who invited you to send a new one.')]);
+});
+
 it('fails with non-existent email', function (): void {
     $response = Livewire::test('pages::auth.reset-password', ['token' => 'some-token'])
         ->set('email', 'nonexistent@example.com')

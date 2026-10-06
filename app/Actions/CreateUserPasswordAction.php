@@ -31,6 +31,15 @@ final readonly class CreateUserPasswordAction
         );
     }
 
+    public function isPendingInvitee(string $email): bool
+    {
+        return User::query()
+            ->where('email', $email)
+            ->whereNotNull('invited_at')
+            ->whereNull('last_seen_at')
+            ->exists();
+    }
+
     /**
      * @param  array<string, mixed>  $credentials
      */
@@ -38,12 +47,6 @@ final readonly class CreateUserPasswordAction
     {
         $email = $credentials['email'] ?? null;
 
-        $isPendingInvitee = is_string($email) && User::query()
-            ->where('email', $email)
-            ->whereNotNull('invited_at')
-            ->whereNull('last_seen_at')
-            ->exists();
-
-        return $isPendingInvitee ? 'invitations' : 'users';
+        return is_string($email) && $this->isPendingInvitee($email) ? 'invitations' : 'users';
     }
 }

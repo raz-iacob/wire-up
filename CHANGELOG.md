@@ -4,7 +4,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
-- An invitation link now stays valid for seven days instead of an hour, so a new admin who opens their invitation the next day can still set a password. It used to fail with "This password reset token is invalid" with no hint that the link had simply expired. That message now says the link has expired or is no longer valid and to request a new one. Ordinary password-reset links keep their one-hour limit.
+- An invitation link now stays valid for seven days instead of an hour, so a new admin who opens their invitation the next day can still set a password. It used to fail with "This password reset token is invalid" with no hint that the link had simply expired. That message now says the invitation has expired and to ask for a new one, or that the link has expired for an ordinary reset. Ordinary password-reset links keep their one-hour limit.
 
 ## v0.3.0 — 2026-10-05
 

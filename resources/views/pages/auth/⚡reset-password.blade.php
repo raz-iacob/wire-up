@@ -47,9 +47,11 @@ return new class extends Component
         $status = $action->handle($credentials, $this->password);
 
         throw_if($status !== Password::PASSWORD_RESET, ValidationException::withMessages([
-            'email' => [$status === Password::INVALID_TOKEN
-                ? __('This link has expired or is no longer valid. Request a new one.')
-                : __(is_string($status) ? $status : '')],
+            'email' => [match (true) {
+                $status === Password::INVALID_TOKEN && $action->isPendingInvitee($this->email) => __('This invitation has expired. Ask the person who invited you to send a new one.'),
+                $status === Password::INVALID_TOKEN => __('This link has expired or is no longer valid. Request a new one.'),
+                default => __(is_string($status) ? $status : ''),
+            }],
         ]));
 
         RateLimiter::clear($this->throttleKey());
