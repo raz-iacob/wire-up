@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Actions\CreateCheckoutAction;
 use App\Models\Record;
+use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Stripe\Exception\ApiErrorException;
 
 return new class extends Component
 {
@@ -31,6 +34,23 @@ return new class extends Component
         $cart->remove($recordId);
 
         $this->refreshCart();
+    }
+
+    public function checkout(CreateCheckoutAction $checkout): void
+    {
+        $user = auth()->user();
+
+        try {
+            $url = $checkout->handle($user instanceof User ? $user : null);
+        } catch (ApiErrorException $exception) {
+            report($exception);
+
+            $this->addError('checkout', __('Checkout is not available right now. Please try again later.'));
+
+            return;
+        }
+
+        $this->redirect($url);
     }
 
     public function render(): View
@@ -117,6 +137,25 @@ return new class extends Component
                 <span class="font-semibold tabular-nums">{{ $shop->formatMinor(array_sum(array_column($this->lines, 'lineAmount'))) }}</span>
             </div>
             <p class="mt-1 text-sm opacity-70">{{ __('Shipping and taxes are worked out at checkout.') }}</p>
+
+            @error('checkout')
+                <div class="mt-6 rounded-(--wire-radius) bg-red-100 px-3 py-2 text-sm font-medium text-red-700">
+                    {{ $message }}
+                </div>
+            @enderror
+
+            <div class="mt-8 flex justify-end">
+                <button
+                    type="button"
+                    wire:click="checkout"
+                    wire:loading.attr="disabled"
+                    wire:target="checkout"
+                    class="wire-btn inline-flex items-center justify-center rounded-(--wire-btn-radius) bg-(--wire-primary-bg) px-6 py-3 text-base font-medium text-(--wire-primary-text) transition [--wire-btn-border:var(--wire-primary-border)] hover:opacity-90 disabled:opacity-50"
+                >
+                    <span wire:loading.remove wire:target="checkout">{{ __('Checkout') }}</span>
+                    <span wire:loading wire:target="checkout">{{ __('Opening checkout…') }}</span>
+                </button>
+            </div>
         @endif
     </div>
 </section>

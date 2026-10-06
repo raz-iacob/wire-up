@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Models\Record;
 use App\Models\RecordType;
+use Illuminate\Support\Number;
+use ResourceBundle;
 
 final readonly class ShopService
 {
@@ -14,6 +16,16 @@ final readonly class ShopService
     public const string MONTHLY = 'monthly';
 
     public const string YEARLY = 'yearly';
+
+    public const int MAX_SHIPPING_RATES = 5;
+
+    /**
+     * @var array<int, string>
+     */
+    private const array UNSHIPPABLE_REGIONS = [
+        'AS', 'CC', 'CP', 'CQ', 'CU', 'CX', 'DG', 'EA', 'EU', 'EZ', 'FM', 'HM', 'IC', 'IR', 'KP',
+        'MH', 'MP', 'NF', 'PW', 'QO', 'SD', 'SY', 'UM', 'UN', 'VI', 'XA', 'XB', 'ZZ',
+    ];
 
     public function __construct(private StripeService $stripe) {}
 
@@ -32,9 +44,71 @@ final readonly class ShopService
         return (int) round((float) $amount * 10 ** SettingsService::current()->currencyDecimals());
     }
 
-    public function formatMinor(int $amount): string
+    public function formatMinor(int $amount, ?string $currency = null): string
     {
-        return SettingsService::current()->formatMoney($amount / 10 ** SettingsService::current()->currencyDecimals());
+        $code = $currency ?? SettingsService::current()->currency();
+        $decimals = config()->integer('currencies.'.$code.'.decimals', 2);
+
+        return config()->string('currencies.'.$code.'.symbol', $code).Number::format($amount / 10 ** $decimals, precision: $decimals);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function countryOptions(): array
+    {
+        $bundle = ResourceBundle::create(app()->getLocale(), 'ICUDATA-region');
+        $countries = [];
+
+        foreach ($bundle?->get('Countries') ?? [] as $code => $name) {
+            if (is_string($code) && is_string($name) && preg_match('/^[A-Z]{2}$/', $code) === 1 && ! in_array($code, self::UNSHIPPABLE_REGIONS, true)) {
+                $countries[$code] = $name;
+            }
+        }
+
+        asort($countries, SORT_LOCALE_STRING);
+
+        return $countries;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function shippingCountries(): array
+    {
+        $saved = config('site.shop_shipping_countries');
+        $options = $this->countryOptions();
+
+        return is_array($saved)
+            ? array_values(array_filter($saved, fn (mixed $code): bool => is_string($code) && array_key_exists($code, $options)))
+            : [];
+    }
+
+    /**
+     * @return array<int, array{name: string, amount: string}>
+     */
+    public function shippingRates(): array
+    {
+        $saved = config('site.shop_shipping_rates');
+        $rates = [];
+
+        foreach (is_array($saved) ? $saved : [] as $rate) {
+            if (is_array($rate) && is_string($rate['name'] ?? null) && $rate['name'] !== '' && is_numeric($rate['amount'] ?? null)) {
+                $rates[] = ['name' => $rate['name'], 'amount' => (string) $rate['amount']];
+            }
+        }
+
+        return array_slice($rates, 0, self::MAX_SHIPPING_RATES);
+    }
+
+    public function calculatesTax(): bool
+    {
+        return (bool) config('site.shop_automatic_tax', false);
+    }
+
+    public function pricesIncludeTax(): bool
+    {
+        return (bool) config('site.shop_prices_include_tax', false);
     }
 
     public function isSellable(Record $record): bool

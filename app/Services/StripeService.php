@@ -75,6 +75,32 @@ final class StripeService
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array{id: string, url: string}
+     */
+    public function createCheckoutSession(array $params): array
+    {
+        $session = $this->client(config()->string('cashier.secret'))->request('post', '/v1/checkout/sessions', $params, []);
+
+        return ['id' => (string) data_get($session->toArray(), 'id'), 'url' => (string) data_get($session->toArray(), 'url')];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function retrieveCheckoutSession(string $sessionId): array
+    {
+        return $this->client(config()->string('cashier.secret'))->checkout->sessions
+            ->retrieve($sessionId, ['expand' => ['shipping_cost.shipping_rate']])
+            ->toArray();
+    }
+
+    public function expireCheckoutSession(string $sessionId): void
+    {
+        $this->client(config()->string('cashier.secret'))->checkout->sessions->expire($sessionId);
+    }
+
     private function client(string $secretKey): StripeClient
     {
         return Cashier::stripe(['api_key' => $secretKey]);

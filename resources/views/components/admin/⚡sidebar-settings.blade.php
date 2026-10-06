@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Services\SettingsService;
+use App\Services\StripeService;
 use App\Services\UpdateService;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -26,6 +27,12 @@ return new class extends Component
     public function showTranslations(): bool
     {
         return SettingsService::current()->showsInterfaceTranslations();
+    }
+
+    #[Computed]
+    public function showShop(): bool
+    {
+        return resolve(StripeService::class)->configured();
     }
 };
 ?>
@@ -90,6 +97,14 @@ return new class extends Component
             wire:navigate.hover
         >
             {{ __('App Integrations') }}</flux:sidebar.item>
+        @if ($this->showShop)
+            <flux:sidebar.item
+                :href="route('admin.settings-shop')"
+                :current="request()->routeIs('admin.settings-shop')"
+                wire:navigate.hover
+            >
+                {{ __('Shop') }}</flux:sidebar.item>
+        @endif
         @can('roles.view')
             <flux:sidebar.item
                 :href="route('admin.settings-roles')"

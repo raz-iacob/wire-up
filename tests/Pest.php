@@ -90,6 +90,28 @@ function sellableRecord(array $data = ['current_price' => '19.99'], array $attri
     return $record;
 }
 
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function stripeSession(string $id, array $overrides = []): array
+{
+    return [
+        'id' => $id,
+        'object' => 'checkout.session',
+        'status' => 'complete',
+        'payment_status' => 'paid',
+        'amount_subtotal' => 2000,
+        'amount_total' => 2650,
+        'total_details' => ['amount_shipping' => 500, 'amount_tax' => 150, 'amount_discount' => 0],
+        'customer_details' => ['email' => 'buyer@example.com', 'name' => 'Sam Buyer'],
+        'collected_information' => ['shipping_details' => ['name' => 'Sam Buyer', 'address' => ['line1' => '1 Main St', 'city' => 'Toronto', 'country' => 'CA']]],
+        'shipping_cost' => ['shipping_rate' => ['id' => 'shr_1', 'object' => 'shipping_rate', 'display_name' => 'Standard delivery']],
+        'payment_intent' => 'pi_123',
+        ...$overrides,
+    ];
+}
+
 expect()->extend('toBeOne', fn () => $this->toBe(1));
 
 function assertScriptEventually(PendingAwaitablePage $browser, string $expression, mixed $expected, float $seconds = 15.0): void
