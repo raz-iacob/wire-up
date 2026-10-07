@@ -32,9 +32,7 @@ final class MarkdownForAgents
 
         abort_if($content === null, 404);
 
-        return response(ContentMarkdown::current()->render($content), 200, [
-            'Content-Type' => 'text/markdown; charset=UTF-8',
-        ])->setVary('Accept');
+        return response()->markdown(ContentMarkdown::current()->render($content))->setVary('Accept');
     }
 
     private function prefersMarkdown(Request $request): bool
