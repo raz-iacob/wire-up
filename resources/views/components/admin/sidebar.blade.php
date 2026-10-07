@@ -30,6 +30,18 @@
             >
                 {{ __('Inbox') }}</flux:sidebar.item>
         @endcan
+        @can('orders.view')
+            @if (resolve(\App\Services\StripeService::class)->configured() || \App\Models\Order::query()->exists())
+                <flux:sidebar.item
+                    icon="shopping-bag"
+                    :href="route('admin.orders-index')"
+                    :current="request()->routeIs('admin.orders-*')"
+                    :badge="\App\Models\Order::awaitingFulfilmentCount() ?: null"
+                    wire:navigate.hover
+                >
+                    {{ __('Orders') }}</flux:sidebar.item>
+            @endif
+        @endcan
         @can('users.view')
             <flux:sidebar.item
                 icon="users"

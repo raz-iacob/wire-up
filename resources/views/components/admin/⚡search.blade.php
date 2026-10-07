@@ -203,6 +203,7 @@ return new class extends Component
             ['label' => __('Pages'), 'description' => __('Content'), 'icon' => 'document', 'keywords' => 'content blocks', 'url' => route('admin.pages-index'), 'can' => 'pages.view'],
             ...$recordTypes,
             ['label' => __('Categories'), 'description' => __('Content'), 'icon' => 'tag', 'keywords' => 'taxonomy grouping tags', 'url' => route('admin.categories-index'), 'can' => 'categories.view'],
+            ['label' => __('Orders'), 'description' => '', 'icon' => 'shopping-bag', 'keywords' => 'shop sales purchases checkout stripe customers', 'url' => route('admin.orders-index'), 'can' => 'orders.view'],
             ['label' => __('Inbox'), 'description' => '', 'icon' => 'inbox', 'keywords' => 'messages contact form submissions enquiries', 'url' => route('admin.inbox-index'), 'can' => 'inbox.view'],
             ['label' => __('Users'), 'description' => '', 'icon' => 'user', 'keywords' => 'accounts members staff people', 'url' => route('admin.users-index'), 'can' => 'users.view'],
             ['label' => __('Roles'), 'description' => __('Settings'), 'icon' => 'shield-check', 'keywords' => 'permissions abilities access', 'url' => route('admin.settings-roles'), 'can' => 'roles.view'],

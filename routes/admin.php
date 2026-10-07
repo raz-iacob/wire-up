@@ -34,6 +34,11 @@ Route::middleware('can:inbox.view')->group(function (): void {
     Route::livewire('inbox/{submission}', 'pages::admin.inbox-show')->name('inbox-show');
 });
 
+Route::middleware('can:orders.view')->group(function (): void {
+    Route::livewire('orders', 'pages::admin.orders-index')->name('orders-index');
+    Route::livewire('orders/{order}', 'pages::admin.orders-show')->name('orders-show');
+});
+
 Route::middleware('can:users.view')->group(function (): void {
     Route::livewire('users', 'pages::admin.users-index')->name('users-index');
     Route::livewire('users/{user}/edit', 'pages::admin.users-edit')->name('users-edit');

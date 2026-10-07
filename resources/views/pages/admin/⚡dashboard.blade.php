@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\OrderStatus;
 use App\Models\Media;
+use App\Models\Order;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
@@ -10,6 +12,7 @@ use App\Models\Role;
 use App\Models\Submission;
 use App\Models\User;
 use App\Services\SettingsService;
+use App\Services\StripeService;
 use App\Services\VisitorCounter;
 use Carbon\CarbonInterface;
 use Flux\DateRange;
@@ -83,6 +86,32 @@ return new class extends Component
     public function unreadMessages(): int
     {
         return Submission::unreadCount();
+    }
+
+    #[Computed]
+    public function showsOrders(): bool
+    {
+        return resolve(StripeService::class)->configured() || Order::query()->exists();
+    }
+
+    /**
+     * @return Collection<int, Order>
+     */
+    #[Computed]
+    public function latestOrders(): Collection
+    {
+        return Order::query()->whereIn('status', [OrderStatus::PAID, OrderStatus::FULFILLED, OrderStatus::REFUNDED])->latest('paid_at')->limit(5)->get();
+    }
+
+    #[Computed]
+    public function revenueThisMonth(): int
+    {
+        return (int) Order::query()
+            ->whereIn('status', [OrderStatus::PAID, OrderStatus::FULFILLED, OrderStatus::REFUNDED])
+            ->where('currency', SettingsService::current()->currency())
+            ->where('paid_at', '>=', now()->startOfMonth())
+            ->selectRaw('COALESCE(SUM(total_amount - refunded_amount), 0) as revenue')
+            ->value('revenue');
     }
 
     /**
@@ -449,6 +478,55 @@ return new class extends Component
                             </div>
                         @endif
                     </flux:card>
+                @endcan
+
+                @can('orders.view')
+                    @if ($this->showsOrders)
+                        @php
+                            $shop = resolve(\App\Services\ShopService::class);
+                        @endphp
+                        <flux:card class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <flux:heading size="lg">{{ __('Latest orders') }}</flux:heading>
+                                    <flux:text size="sm">{{ __(':amount this month', ['amount' => $shop->formatMinor($this->revenueThisMonth)]) }}</flux:text>
+                                </div>
+                                <flux:button
+                                    size="sm"
+                                    variant="ghost"
+                                    inset
+                                    :href="route('admin.orders-index')"
+                                    wire:navigate
+                                >{{ __('View all') }}</flux:button>
+                            </div>
+                            @if ($this->latestOrders->isEmpty())
+                                <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No orders yet.') }}</flux:text>
+                            @else
+                                <div class="divide-y divide-zinc-100 dark:divide-white/5">
+                                    @foreach ($this->latestOrders as $order)
+                                        <a
+                                            href="{{ route('admin.orders-show', $order) }}"
+                                            wire:navigate
+                                            wire:key="order-{{ $order->id }}"
+                                            class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+                                        >
+                                            <div class="min-w-0 flex-1">
+                                                <flux:heading
+                                                    size="sm"
+                                                    class="truncate"
+                                                >{{ $order->name ?: ($order->email ?: $order->reference) }}</flux:heading>
+                                                <flux:text size="sm">{{ $order->status->label() }}</flux:text>
+                                            </div>
+                                            <flux:text
+                                                size="sm"
+                                                class="shrink-0 tabular-nums"
+                                            >{{ $shop->formatMinor($order->total_amount, $order->currency) }}</flux:text>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </flux:card>
+                    @endif
                 @endcan
 
                 @can('users.view')

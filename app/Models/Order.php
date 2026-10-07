@@ -47,6 +47,23 @@ final class Order extends Model
     /** @use HasFactory<OrderFactory> */
     use HasFactory;
 
+    public static function awaitingFulfilmentCount(): int
+    {
+        return once(fn (): int => self::query()->where('status', OrderStatus::PAID)->count());
+    }
+
+    public function stripeDashboardUrl(): ?string
+    {
+        if ($this->stripe_payment_intent === null) {
+            return null;
+        }
+
+        $secret = config('cashier.secret');
+        $mode = is_string($secret) && str_contains($secret, '_test_') ? 'test/' : '';
+
+        return 'https://dashboard.stripe.com/'.$mode.'payments/'.$this->stripe_payment_intent;
+    }
+
     /**
      * @return array<string, string>
      */

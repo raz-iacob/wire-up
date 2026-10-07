@@ -7,8 +7,13 @@ namespace App\Actions;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\Record;
+use App\Notifications\OrderConfirmation;
+use App\Notifications\OrderReceived;
+use App\Services\SettingsService;
+use App\Services\SlackWebhookChannel;
 use App\Services\StripeService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Stripe\Exception\ApiErrorException;
 
 final readonly class FulfillCheckoutAction
@@ -47,12 +52,34 @@ final readonly class FulfillCheckoutAction
                     'cancelled_at' => null,
                     'oversold' => $oversold,
                 ]);
+
+                $this->notify($locked);
             } elseif (! $paid && $locked->status === OrderStatus::PENDING) {
                 $locked->update([...$this->details($session), 'status' => OrderStatus::PROCESSING]);
             }
 
             return $locked;
         });
+    }
+
+    private function notify(Order $order): void
+    {
+        $settings = SettingsService::current();
+        $ownerEmail = $settings->contactEmail() ?: config('mail.from.address');
+
+        if (is_string($ownerEmail) && $ownerEmail !== '') {
+            Notification::route('mail', $ownerEmail)->notify(new OrderReceived($order));
+        }
+
+        $webhookUrl = config('services.slack.webhook_url');
+
+        if (is_string($webhookUrl) && $webhookUrl !== '') {
+            Notification::route(SlackWebhookChannel::class, $webhookUrl)->notify(new OrderReceived($order));
+        }
+
+        if ($settings->mailConfigured() && is_string($order->email) && $order->email !== '') {
+            Notification::route('mail', $order->email)->notify(new OrderConfirmation($order)->locale($order->locale));
+        }
     }
 
     private function reserveAgain(Order $order): bool
