@@ -9,6 +9,7 @@ use App\Models\Media;
 use App\Models\Record;
 use App\Models\RecordType;
 use App\Models\User;
+use App\Services\RecordTypePresets;
 use Livewire\Livewire;
 
 function typeWithFields(): RecordType
@@ -504,4 +505,16 @@ it('ignores stock on a type that is not sellable', function (): void {
         ->call('update');
 
     expect($record->refresh()->stock)->toBeNull();
+});
+
+it('puts the stock box beside the sku', function (): void {
+    $type = RecordType::factory()->sellable()->create([
+        'fields' => RecordTypePresets::find('product')['fields'],
+    ]);
+    $record = makeRecord($type);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->assertSeeInOrder([__('Regular price'), __('Stock'), 'SKU', __('Billing'), __('Needs shipping')]);
 });

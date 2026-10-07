@@ -123,22 +123,24 @@ return new class extends Component
                     <flux:label>{{ __('Shipping rates') }}</flux:label>
 
                     @foreach ($rates as $index => $rate)
-                        <div wire:key="rate-{{ $index }}" class="flex items-start gap-3">
+                        <div wire:key="rate-{{ $index }}" class="grid grid-cols-[1fr_9rem_auto] items-start gap-3">
                             <flux:input
                                 wire:model="rates.{{ $index }}.name"
                                 :placeholder="__('e.g. Standard delivery')"
                                 :aria-label="__('Rate name')"
-                                class="flex-1"
                             />
-                            <flux:input
-                                wire:model="rates.{{ $index }}.amount"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                :placeholder="__('Price')"
-                                :aria-label="__('Rate price')"
-                                class="w-32"
-                            />
+                            <flux:input.group>
+                                <flux:input.group.prefix>
+                                    {{ \App\Services\SettingsService::current()->currencySymbol() }}</flux:input.group.prefix>
+                                <flux:input
+                                    wire:model="rates.{{ $index }}.amount"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    :placeholder="__('Price')"
+                                    :aria-label="__('Rate price')"
+                                />
+                            </flux:input.group>
                             <flux:button
                                 variant="subtle"
                                 icon="x-mark"

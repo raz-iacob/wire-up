@@ -92,10 +92,10 @@ final class RecordTypePresets
             'sellable' => true,
             'fields' => self::withSellableFields([
                 ...self::contentFields(),
+                self::field('gallery', FieldType::MEDIA_GALLERY, 'Gallery'),
                 self::field(self::PRICE_FIELD, FieldType::MONEY, 'Current price', ['column' => true, 'sortable' => true]),
                 self::field('regular_price', FieldType::MONEY, 'Regular price'),
-                self::field('sku', FieldType::TEXT, 'SKU', ['translatable' => false, 'searchable' => true, 'column' => true]),
-                self::field('gallery', FieldType::MEDIA_GALLERY, 'Gallery'),
+                self::field('sku', FieldType::TEXT, 'SKU', ['translatable' => false, 'searchable' => true, 'column' => true, 'help' => 'Your own product code, for your records.']),
             ]),
         ];
     }

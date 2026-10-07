@@ -132,7 +132,7 @@ final readonly class CreateCheckoutAction
                 ]),
             ], $lines),
             'success_url' => route('checkout.success').'?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('cart'),
+            'cancel_url' => route('cart', ['cancelled' => $order->reference]),
             'client_reference_id' => (string) $order->id,
             'metadata' => ['order_id' => (string) $order->id, 'order_reference' => $order->reference],
             'expires_at' => $order->expires_at?->getTimestamp(),

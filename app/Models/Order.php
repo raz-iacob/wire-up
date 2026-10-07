@@ -37,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read CarbonInterface|null $paid_at
  * @property-read CarbonInterface|null $fulfilled_at
  * @property-read CarbonInterface|null $cancelled_at
+ * @property-read CarbonInterface|null $restocked_at
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read User|null $user
@@ -85,6 +86,7 @@ final class Order extends Model
             'paid_at' => 'datetime',
             'fulfilled_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'restocked_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

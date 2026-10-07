@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Actions\CreateCheckoutAction;
 use App\Enums\ContentStatus;
+use App\Enums\OrderStatus;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Record;
 use App\Services\CartService;
 use App\Services\SettingsService;
@@ -259,4 +263,52 @@ it('lists the cart wording among the editable interface strings', function (): v
     cache()->forget('ui-strings-catalog');
 
     expect(collect(UiStrings::catalog())->firstWhere('group', 'Cart')['strings'] ?? [])->toContain('Your cart is empty.');
+});
+
+it('shows how many are already in the cart with a link to it', function (): void {
+    $record = sellableRecord();
+
+    Livewire::test('site.buy-box', ['record' => $record])
+        ->assertDontSee(__('View cart'))
+        ->set('quantity', 3)
+        ->call('add')
+        ->dispatch('cart-updated')
+        ->assertSee(__(':count in your cart', ['count' => 3]))
+        ->assertSee(route('cart'));
+});
+
+it('releases the stock when the shopper comes back from stripe without paying', function (): void {
+    $record = sellableRecord(attributes: ['stock' => 3]);
+    $order = Order::factory()->create(['reference' => 'BACK0001', 'stripe_session_id' => 'cs_back']);
+    OrderItem::factory()->for($order)->create(['record_id' => $record->id, 'quantity' => 2, 'reserved_stock' => 2]);
+    Record::query()->whereKey($record->id)->update(['stock' => 1]);
+    stripe()->respond('POST', '/v1/checkout/sessions/cs_back/expire', stripeSession('cs_back', ['status' => 'expired']));
+
+    $this->withSession([CreateCheckoutAction::LAST_ORDER_KEY => $order->id])
+        ->get(route('cart', ['cancelled' => 'BACK0001']))
+        ->assertOk();
+
+    expect($order->refresh()->status)->toBe(OrderStatus::CANCELLED)
+        ->and($record->refresh()->stock)->toBe(3);
+});
+
+it('leaves someone else’s order alone when its reference is in the cart address', function (): void {
+    $order = Order::factory()->create(['reference' => 'THEIRS01']);
+
+    $this->get(route('cart', ['cancelled' => 'THEIRS01']))->assertOk();
+
+    expect($order->refresh()->status)->toBe(OrderStatus::PENDING);
+    stripe()->assertNothingSent();
+});
+
+it('still shows the cart when stripe cannot be reached to cancel', function (): void {
+    $order = Order::factory()->create(['reference' => 'DOWN0001', 'stripe_session_id' => 'cs_down']);
+    stripe()->fail('POST', '/v1/checkout/sessions/cs_down/expire', 'Stripe is down', 500);
+    stripe()->fail('GET', '/v1/checkout/sessions/cs_down', 'Stripe is down', 500);
+
+    $this->withSession([CreateCheckoutAction::LAST_ORDER_KEY => $order->id])
+        ->get(route('cart', ['cancelled' => 'DOWN0001']))
+        ->assertOk();
+
+    expect($order->refresh()->status)->toBe(OrderStatus::PENDING);
 });

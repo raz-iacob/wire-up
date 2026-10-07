@@ -102,6 +102,14 @@ final class StripeService
         $this->client(config()->string('cashier.secret'))->checkout->sessions->expire($sessionId);
     }
 
+    public function refund(string $paymentIntent, int $amount): void
+    {
+        $this->client(config()->string('cashier.secret'))->refunds->create([
+            'payment_intent' => $paymentIntent,
+            'amount' => $amount,
+        ]);
+    }
+
     private function client(string $secretKey): StripeClient
     {
         return Cashier::stripe(['api_key' => $secretKey]);

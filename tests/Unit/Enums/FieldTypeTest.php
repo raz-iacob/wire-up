@@ -63,16 +63,16 @@ it('knows which types are media and galleries', function (): void {
         ->and(FieldType::PHOTO->isGallery())->toBeFalse();
 });
 
-it('marks single-line input types as compact', function (): void {
+it('marks single-line inputs and toggles as compact', function (): void {
     expect(FieldType::TEXT->isCompact())->toBeTrue()
         ->and(FieldType::NUMBER->isCompact())->toBeTrue()
         ->and(FieldType::MONEY->isCompact())->toBeTrue()
         ->and(FieldType::DATE->isCompact())->toBeTrue()
         ->and(FieldType::DATETIME->isCompact())->toBeTrue()
         ->and(FieldType::SELECT->isCompact())->toBeTrue()
+        ->and(FieldType::BOOLEAN->isCompact())->toBeTrue()
         ->and(FieldType::TEXTAREA->isCompact())->toBeFalse()
         ->and(FieldType::RICH_TEXT->isCompact())->toBeFalse()
-        ->and(FieldType::BOOLEAN->isCompact())->toBeFalse()
         ->and(FieldType::URL->isCompact())->toBeFalse()
         ->and(FieldType::PHOTO->isCompact())->toBeFalse()
         ->and(FieldType::MEDIA_GALLERY->isCompact())->toBeFalse();

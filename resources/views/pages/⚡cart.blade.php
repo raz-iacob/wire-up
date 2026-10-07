@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Actions\CancelOrderAction;
 use App\Actions\CreateCheckoutAction;
+use App\Models\Order;
 use App\Models\Record;
 use App\Models\User;
 use App\Services\CartService;
@@ -13,6 +15,22 @@ use Stripe\Exception\ApiErrorException;
 
 return new class extends Component
 {
+    public function mount(CancelOrderAction $cancel): void
+    {
+        $reference = request()->string('cancelled')->value();
+        $order = $reference === '' ? null : Order::query()->where('reference', $reference)->first();
+
+        if (! $order instanceof Order || session(CreateCheckoutAction::LAST_ORDER_KEY) !== $order->id) {
+            return;
+        }
+
+        try {
+            $cancel->handle($order);
+        } catch (ApiErrorException $exception) {
+            report($exception);
+        }
+    }
+
     /**
      * @return array<int, array{record: Record, quantity: int, unitAmount: int, lineAmount: int}>
      */

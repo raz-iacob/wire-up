@@ -9,6 +9,7 @@ use App\Services\CartService;
 use App\Services\ShopService;
 use Flux\Flux;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Stripe\Exception\ApiErrorException;
 
@@ -22,6 +23,18 @@ return new class extends Component
     public function billing(): string
     {
         return resolve(ShopService::class)->billing($this->record);
+    }
+
+    #[Computed]
+    public function inCart(): int
+    {
+        return resolve(CartService::class)->quantityOf($this->record);
+    }
+
+    #[On('cart-updated')]
+    public function refreshCart(): void
+    {
+        unset($this->inCart);
     }
 
     #[Computed]
@@ -103,28 +116,62 @@ return new class extends Component
             @enderror
         </div>
     @else
-        <form wire:submit="add" class="mt-2 flex flex-col gap-2">
-            <div class="flex flex-wrap items-center gap-3">
-                <label class="sr-only" for="buy-quantity-{{ $record->id }}">{{ __('Quantity') }}</label>
-                <input
-                    id="buy-quantity-{{ $record->id }}"
-                    type="number"
-                    min="1"
-                    max="{{ $this->maxQuantity }}"
-                    step="1"
-                    wire:model="quantity"
-                    class="wire-field w-20 rounded-(--wire-btn-radius) bg-(--wire-input-bg) px-3 py-3 text-base text-(--wire-input-text) focus:outline-none"
-                />
+        <form wire:submit="add" class="mt-2 flex flex-col gap-3">
+            <div class="flex flex-wrap items-stretch gap-3">
                 <button
                     type="submit"
-                    class="wire-btn inline-flex items-center justify-center gap-2 rounded-(--wire-btn-radius) bg-(--wire-primary-bg) px-6 py-3 text-base font-medium text-(--wire-primary-text) transition [--wire-btn-border:var(--wire-primary-border)] hover:opacity-90 disabled:opacity-50"
+                    class="wire-btn inline-flex min-w-48 items-center justify-center gap-2 rounded-(--wire-btn-radius) bg-(--wire-primary-bg) px-8 py-4 text-lg font-semibold text-(--wire-primary-text) transition [--wire-btn-border:var(--wire-primary-border)] hover:opacity-90 disabled:opacity-50"
                     wire:loading.attr="disabled"
                     wire:target="add"
                 >
-                    <flux:icon.shopping-cart variant="mini" class="size-5" />
                     {{ __('Add to cart') }}
                 </button>
+
+                <div
+                    x-data="{ max: {{ $this->maxQuantity }} }"
+                    class="wire-field inline-flex items-center rounded-(--wire-btn-radius) bg-(--wire-input-bg) text-(--wire-input-text)"
+                >
+                    <button
+                        type="button"
+                        x-on:click="$wire.quantity = Math.max(1, Number($wire.quantity) - 1)"
+                        x-bind:disabled="Number($wire.quantity) <= 1"
+                        aria-label="{{ __('Fewer') }}"
+                        class="flex h-full items-center px-4 opacity-70 transition hover:opacity-100 disabled:opacity-30"
+                    >
+                        <flux:icon.minus variant="mini" class="size-5" />
+                    </button>
+                    <label class="sr-only" for="buy-quantity-{{ $record->id }}">{{ __('Quantity') }}</label>
+                    <input
+                        id="buy-quantity-{{ $record->id }}"
+                        type="number"
+                        min="1"
+                        max="{{ $this->maxQuantity }}"
+                        step="1"
+                        wire:model="quantity"
+                        class="[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none w-12 [appearance:textfield] bg-transparent text-center text-lg tabular-nums focus:outline-none"
+                    />
+                    <button
+                        type="button"
+                        x-on:click="$wire.quantity = Math.min(max, Number($wire.quantity) + 1)"
+                        x-bind:disabled="Number($wire.quantity) >= max"
+                        aria-label="{{ __('More') }}"
+                        class="flex h-full items-center px-4 opacity-70 transition hover:opacity-100 disabled:opacity-30"
+                    >
+                        <flux:icon.plus variant="mini" class="size-5" />
+                    </button>
+                </div>
             </div>
+
+            @if ($this->inCart > 0)
+                <p class="text-sm">
+                    {{ __(':count in your cart', ['count' => $this->inCart]) }} ·
+                    <a
+                        href="{{ route('cart') }}"
+                        wire:navigate
+                        class="text-(--wire-accent) underline"
+                    >{{ __('View cart') }}</a>
+                </p>
+            @endif
 
             @error('quantity')
                 <p class="text-sm font-medium text-red-600">{{ $message }}</p>

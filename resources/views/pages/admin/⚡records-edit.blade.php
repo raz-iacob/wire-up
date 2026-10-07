@@ -567,9 +567,16 @@ return new class extends Component
                         <flux:legend>{{ __('Fields') }}</flux:legend>
                         <flux:description>{{ __('Custom fields for this content type.') }}</flux:description>
 
+                        @php
+                            $fieldKeys = array_column($recordType->fields, 'key');
+                            $stockBefore = in_array('sku', $fieldKeys, true) ? 'sku' : null;
+                        @endphp
                         <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                             @foreach ($recordType->fields as $field)
                                 @php($fieldType = \App\Enums\FieldType::tryFrom($field['type']))
+                                @if ($recordType->sellable && $field['key'] === $stockBefore)
+                                    @include('components.admin.fields.stock')
+                                @endif
                                 @if ($fieldType)
                                     <div
                                         wire:key="field-wrapper-{{ $field['key'] }}"
@@ -579,6 +586,9 @@ return new class extends Component
                                     </div>
                                 @endif
                             @endforeach
+                            @if ($recordType->sellable && $stockBefore === null)
+                                @include('components.admin.fields.stock')
+                            @endif
                         </div>
                     </flux:fieldset>
 
@@ -867,30 +877,6 @@ return new class extends Component
                             </div>
                         </flux:accordion.content>
                     </flux:accordion.item>
-
-                    @if ($recordType->sellable)
-                        <flux:accordion.item>
-                            <flux:accordion.heading>
-                                <div class="flex items-center justify-between">
-                                    {{ __('Stock') }}
-                                    <flux:text>
-                                        <span x-text="$wire.stock === '' ? @js(__('Not tracked')) : $wire.stock">{{ $stock === '' ? __('Not tracked') : $stock }}</span>
-                                    </flux:text>
-                                </div>
-                            </flux:accordion.heading>
-
-                            <flux:accordion.content class="mt-3">
-                                <flux:input
-                                    wire:model="stock"
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    :label="__('Items in stock')"
-                                    :description="__('Leave empty to sell without counting.')"
-                                />
-                            </flux:accordion.content>
-                        </flux:accordion.item>
-                    @endif
 
                     @if (config('site.allow_registration'))
                         <flux:accordion.item>

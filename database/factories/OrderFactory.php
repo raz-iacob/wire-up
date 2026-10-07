@@ -42,6 +42,7 @@ final class OrderFactory extends Factory
             'paid_at' => null,
             'fulfilled_at' => null,
             'cancelled_at' => null,
+            'restocked_at' => null,
         ];
     }
 

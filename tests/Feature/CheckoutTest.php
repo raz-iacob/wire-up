@@ -48,6 +48,7 @@ it('opens stripe checkout for the cart and reserves the stock', function (): voi
         && ! isset($params['line_items'][0]['price_data']['tax_behavior'])
         && str_ends_with($params['success_url'], '?session_id={CHECKOUT_SESSION_ID}')
         && $params['metadata']['order_id'] === (string) $order->id
+        && str_ends_with($params['cancel_url'], '?cancelled='.$order->reference)
         && ! isset($params['shipping_address_collection'], $params['automatic_tax'], $params['customer_email']));
 });
 

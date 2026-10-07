@@ -99,6 +99,11 @@ final readonly class CartService
         return $lines;
     }
 
+    public function quantityOf(Record $record): int
+    {
+        return $this->stored()[$record->id] ?? 0;
+    }
+
     public function count(): int
     {
         return array_sum(array_column($this->lines(), 'quantity'));

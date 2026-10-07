@@ -2,19 +2,75 @@
 
 declare(strict_types=1);
 
+use App\Actions\CancelOrderAction;
+use App\Actions\IssueRefundAction;
 use App\Actions\MarkOrderFulfilledAction;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Record;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Number;
+use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Stripe\Exception\ApiErrorException;
 
 return new class extends Component
 {
     public Order $order;
 
+    public bool $showRefund = false;
+
+    public string $refundAmount = '';
+
+    public bool $restock = false;
+
     public function mount(Order $order): void
     {
         $this->order = $order->load('items', 'user');
+        $this->refundAmount = $this->remainingAmount();
+        $this->showRefund = request()->boolean('refund') && $order->status->canBeRefunded();
+    }
+
+    public function refund(IssueRefundAction $action): void
+    {
+        $this->authorize('orders.edit');
+
+        $this->validate(['refundAmount' => ['required', 'numeric', 'min:0.01']], attributes: ['refundAmount' => __('amount')]);
+
+        try {
+            $action->handle($this->order, (int) round((float) $this->refundAmount * 10 ** $this->decimals()), $this->restock);
+        } catch (ApiErrorException $exception) {
+            $this->addError('refundAmount', __('Stripe said: :reason', ['reason' => Str::limit($exception->getMessage(), 200)]));
+
+            return;
+        }
+
+        $this->order->refresh();
+        $this->showRefund = false;
+        $this->refundAmount = $this->remainingAmount();
+
+        Flux::toast(__('Refund issued.'), variant: 'success');
+    }
+
+    public function cancel(CancelOrderAction $action): void
+    {
+        $this->authorize('orders.edit');
+
+        try {
+            $cancelled = $action->handle($this->order);
+        } catch (ApiErrorException $exception) {
+            report($exception);
+
+            Flux::toast(__('Stripe could not be reached. Try again in a moment.'), variant: 'danger');
+
+            return;
+        }
+
+        $this->order->refresh();
+
+        Flux::toast($cancelled ? __('Order cancelled and its stock released.') : __('This order was paid in the meantime, so it was kept.'), variant: $cancelled ? 'success' : 'warning');
     }
 
     public function markFulfilled(MarkOrderFulfilledAction $action): void
@@ -26,11 +82,27 @@ return new class extends Component
         }
     }
 
+    #[Computed]
+    public function hasTrackedStock(): bool
+    {
+        return $this->order->items->contains(fn (OrderItem $item): bool => $item->record_id !== null && Record::query()->whereKey($item->record_id)->whereNotNull('stock')->exists());
+    }
+
     public function render(): View
     {
         return $this->view()
             ->title(__('Order :reference', ['reference' => $this->order->reference]))
             ->layout('layouts::admin');
+    }
+
+    private function decimals(): int
+    {
+        return config()->integer('currencies.'.$this->order->currency.'.decimals', 2);
+    }
+
+    private function remainingAmount(): string
+    {
+        return Number::format(($this->order->total_amount - $this->order->refunded_amount) / 10 ** $this->decimals(), precision: $this->decimals(), locale: 'en');
     }
 };
 ?>
@@ -156,6 +228,28 @@ return new class extends Component
                 <flux:text size="sm">{{ __('Fulfilled :date', ['date' => $order->fulfilled_at->format('M d, Y H:i')]) }}</flux:text>
             @endif
 
+            @if ($order->status === \App\Enums\OrderStatus::PENDING)
+                <flux:text size="sm">{{ __('The customer has not paid yet. Their items are held until :time, then go back on sale.', ['time' => $order->expires_at?->format('H:i')]) }}</flux:text>
+                @can('orders.edit')
+                    <flux:button
+                        variant="danger"
+                        icon="x-circle"
+                        wire:click="cancel"
+                        class="w-full"
+                    >{{ __('Cancel order') }}</flux:button>
+                @endcan
+            @endif
+
+            @if ($order->status->canBeRefunded())
+                @can('orders.edit')
+                    <flux:button
+                        icon="receipt-refund"
+                        wire:click="$set('showRefund', true)"
+                        class="w-full"
+                    >{{ __('Refund') }}</flux:button>
+                @endcan
+            @endif
+
             <div class="grid grid-cols-2 gap-4">
                 <flux:button
                     :href="route('admin.orders-index')"
@@ -172,6 +266,37 @@ return new class extends Component
             </div>
         </flux:card>
     </div>
+
+    <flux:modal wire:model.self="showRefund" class="w-full md:max-w-md">
+        <form wire:submit="refund" class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Refund order :reference', ['reference' => $order->reference]) }}</flux:heading>
+                <flux:text class="mt-2">{{ __('The money goes back to the card the customer paid with.') }}</flux:text>
+            </div>
+
+            <flux:field>
+                <flux:label>{{ __('Amount') }}</flux:label>
+                <flux:input.group>
+                    <flux:input.group.prefix>
+                        {{ config()->string('currencies.'.$order->currency.'.symbol', $order->currency) }}</flux:input.group.prefix>
+                    <flux:input wire:model="refundAmount" type="number" min="0.01" step="0.01" />
+                </flux:input.group>
+                <flux:error name="refundAmount" />
+            </flux:field>
+
+            @if ($order->restocked_at === null && $this->hasTrackedStock)
+                <flux:checkbox wire:model="restock" :label="__('Put the items back in stock')" />
+            @endif
+
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="danger">{{ __('Refund') }}</flux:button>
+            </div>
+        </form>
+    </flux:modal>
 </div>
 
 @section('header-content')

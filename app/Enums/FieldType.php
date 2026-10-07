@@ -142,7 +142,7 @@ enum FieldType: string
     public function isCompact(): bool
     {
         return match ($this) {
-            self::TEXT, self::NUMBER, self::MONEY, self::DATE, self::DATETIME, self::SELECT => true,
+            self::TEXT, self::NUMBER, self::MONEY, self::DATE, self::DATETIME, self::SELECT, self::BOOLEAN => true,
             default => false,
         };
     }
