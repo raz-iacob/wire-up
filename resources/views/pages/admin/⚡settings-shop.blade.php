@@ -109,13 +109,15 @@ return new class extends Component
 
                 <flux:pillbox
                     wire:model="countries"
+                    multiple
                     searchable
                     :label="__('Ship to')"
                     :description="__('Items that need shipping can only be bought from these countries.')"
                     :placeholder="__('Choose countries…')"
                 >
                     @foreach ($this->countryOptions as $code => $country)
-                        <flux:pillbox.option :value="$code">{{ $country }}</flux:pillbox.option>
+                        <flux:pillbox.option :value="$code" wire:key="country-{{ $code }}">
+                            {{ $country }}</flux:pillbox.option>
                     @endforeach
                 </flux:pillbox>
 

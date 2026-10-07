@@ -17,6 +17,8 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - A shopper who leaves Stripe's checkout and comes back to the cart releases the items they had reserved straight away, instead of holding them until the checkout times out. An unpaid order's page says until when its items are held.
 - The Add to cart button on a product page now sits beside a quantity stepper with − and + buttons, and once the item is in the cart a View cart link appears under it.
 - In the product editor the stock box sits beside the SKU, and toggles such as Needs shipping take half a row, so Billing and Needs shipping share a line. The Products preset lists the gallery before the prices.
+- Settings → Shop saves the countries you pick to ship to. Choosing a country there used to fail with a server error.
+- An order whose checkout has been opened but not paid is now labelled Started rather than Awaiting payment, and checkouts that were never paid are deleted once they are a week old, so abandoned carts do not pile up in the orders list. Any order that was ever paid is kept.
 
 ## v0.3.0 — 2026-10-05
 
