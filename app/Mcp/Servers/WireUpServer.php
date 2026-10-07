@@ -17,6 +17,7 @@ use App\Mcp\Tools\DeleteRecordTool;
 use App\Mcp\Tools\GetContentStringsTool;
 use App\Mcp\Tools\GetInterfaceTranslationsTool;
 use App\Mcp\Tools\GetMenusTool;
+use App\Mcp\Tools\GetOrderTool;
 use App\Mcp\Tools\GetPageTool;
 use App\Mcp\Tools\GetRecordTool;
 use App\Mcp\Tools\GetSettingsTool;
@@ -26,6 +27,7 @@ use App\Mcp\Tools\ListCategoriesTool;
 use App\Mcp\Tools\ListContentTypesTool;
 use App\Mcp\Tools\ListImportFilesTool;
 use App\Mcp\Tools\ListMediaTool;
+use App\Mcp\Tools\ListOrdersTool;
 use App\Mcp\Tools\ListPagesTool;
 use App\Mcp\Tools\ListRecordsTool;
 use App\Mcp\Tools\PublishPageTool;
@@ -103,6 +105,9 @@ Typical workflow for building or replicating a site:
    publish it with status `draft` instead. Deleting a block just means leaving
    it out of the next `update-page-blocks` call. The homepage cannot be deleted,
    and media still referenced anywhere is refused with a list of what uses it.
+10. When the shop is in use, `list-orders` and `get-order` read the orders
+    customers placed. They are read-only: fulfilment and refunds happen in the
+    admin and in Stripe.
 MD)]
 final class WireUpServer extends Server
 {
@@ -149,6 +154,8 @@ final class WireUpServer extends Server
         UpdateInterfaceTranslationsTool::class,
         GetContentStringsTool::class,
         UpdateContentStringsTool::class,
+        ListOrdersTool::class,
+        GetOrderTool::class,
     ];
 
     /**
