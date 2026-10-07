@@ -71,7 +71,7 @@ return new class extends Component
     @php
         $shop = resolve(\App\Services\ShopService::class);
     @endphp
-    @if ($record->recordType->key !== 'product' && $shop->isPurchasable($record) && ! $shop->isSubscription($record))
+    @if ($record->recordType->key !== 'product' && $shop->isPurchasable($record))
         <div class="mx-auto w-full max-w-(--wire-container) px-(--wire-gutter) pb-10">
             <livewire:site.buy-box :record="$record" :key="'buy-box-'.$record->id" />
         </div>

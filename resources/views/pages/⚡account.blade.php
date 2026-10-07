@@ -3,17 +3,24 @@
 declare(strict_types=1);
 
 use App\Actions\DeleteUserAction;
+use App\Actions\SyncSubscriptionFromCheckoutAction;
 use App\Actions\UpdateUserAction;
 use App\Actions\UpdateUserPasswordAction;
+use App\Models\Record;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use Laravel\Cashier\Exceptions\InvalidCustomer;
+use Laravel\Cashier\Subscription;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Stripe\Exception\ApiErrorException;
 
 return new class extends Component
 {
@@ -33,9 +40,24 @@ return new class extends Component
 
     public string $delete_password = '';
 
-    public function mount(#[CurrentUser] User $user): void
+    public bool $justSubscribed = false;
+
+    public function mount(#[CurrentUser] User $user, SyncSubscriptionFromCheckoutAction $sync): void
     {
         $this->user = $user;
+
+        $subscriptionSession = request()->string('subscription_session')->value();
+
+        if ($subscriptionSession !== '') {
+            $this->justSubscribed = true;
+
+            try {
+                $sync->handle($user, $subscriptionSession);
+            } catch (ApiErrorException $exception) {
+                report($exception);
+            }
+        }
+
         $this->name = $user->name;
         $this->email = $user->email;
         $this->emailVerified = $user->hasVerifiedEmail();
@@ -88,6 +110,35 @@ return new class extends Component
         Flux::toast(__('A new verification link has been sent to your email address.'), variant: 'success');
     }
 
+    /**
+     * @return array<int, array{name: string, status: string}>
+     */
+    #[Computed]
+    public function subscriptions(): array
+    {
+        return Subscription::query()->where('user_id', $this->user->id)->latest()->get()
+            ->map(fn (Subscription $subscription): array => [
+                'name' => $this->subscriptionName($subscription),
+                'status' => $this->subscriptionStatus($subscription),
+            ])
+            ->all();
+    }
+
+    public function manageBilling(): void
+    {
+        try {
+            $url = $this->user->billingPortalUrl(route('account'));
+        } catch (ApiErrorException|InvalidCustomer $exception) {
+            report($exception);
+
+            $this->addError('billing', __('Billing cannot be managed right now. Please try again later.'));
+
+            return;
+        }
+
+        $this->redirect($url);
+    }
+
     public function logout(): void
     {
         Auth::logout();
@@ -106,9 +157,9 @@ return new class extends Component
             'delete_password' => __('password'),
         ]);
 
-        Auth::logout();
+        $action->handle($this->user, 'delete_password');
 
-        $action->handle($this->user);
+        Auth::logout();
 
         Session::invalidate();
         Session::regenerateToken();
@@ -121,6 +172,24 @@ return new class extends Component
         return $this->view()
             ->title(__('My account'))
             ->layoutData(['description' => __('Manage your account details and password.')]);
+    }
+
+    private function subscriptionName(Subscription $subscription): string
+    {
+        $record = Record::query()->find((int) Str::after($subscription->type, 'record-'));
+
+        return $record instanceof Record ? $record->displayHeading() : __('Subscription');
+    }
+
+    private function subscriptionStatus(Subscription $subscription): string
+    {
+        return match (true) {
+            $subscription->onGracePeriod() => __('Ends :date', ['date' => $subscription->ends_at?->isoFormat('LL')]),
+            $subscription->ended() => __('Ended'),
+            $subscription->pastDue() => __('Payment failed. Update your card under Manage billing.'),
+            $subscription->hasIncompletePayment() => __('Waiting for payment'),
+            default => __('Renews automatically'),
+        };
     }
 };
 ?>
@@ -198,6 +267,31 @@ return new class extends Component
     <livewire:shared.two-factor />
 
     <flux:separator />
+
+    @if ($justSubscribed || $this->subscriptions !== [])
+        <section class="space-y-4">
+            <flux:heading size="lg">{{ __('Subscriptions') }}</flux:heading>
+
+            @if ($justSubscribed && $this->subscriptions === [])
+                <flux:text>{{ __('Thank you for subscribing. Your subscription will appear here in a moment.') }}</flux:text>
+            @endif
+
+            @foreach ($this->subscriptions as $index => $subscription)
+                <div wire:key="subscription-{{ $index }}" class="flex items-center justify-between gap-4">
+                    <flux:text variant="strong">{{ $subscription['name'] }}</flux:text>
+                    <flux:text>{{ $subscription['status'] }}</flux:text>
+                </div>
+            @endforeach
+
+            @if ($this->subscriptions !== [])
+                <flux:button wire:click="manageBilling" icon="credit-card">{{ __('Manage billing') }}</flux:button>
+            @endif
+
+            <flux:error name="billing" />
+        </section>
+
+        <flux:separator />
+    @endif
 
     <section class="space-y-4">
         <div>

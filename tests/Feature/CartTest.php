@@ -247,8 +247,12 @@ it('leaves the buy box off when the record cannot be bought online', function (C
         ->assertOk()
         ->assertDontSeeLivewire('site.buy-box');
 })->with([
-    'subscription' => [fn (): Record => sellableRecord(['current_price' => '9', 'billing' => 'Monthly'])],
     'sold out' => [fn (): Record => sellableRecord(attributes: ['stock' => 0])],
+    'stripe not connected' => [function (): Record {
+        config(['cashier.secret' => null]);
+
+        return sellableRecord();
+    }],
 ]);
 
 it('lists the cart wording among the editable interface strings', function (): void {

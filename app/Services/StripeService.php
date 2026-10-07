@@ -87,12 +87,13 @@ final class StripeService
     }
 
     /**
+     * @param  array<int, string>  $expand
      * @return array<string, mixed>
      */
-    public function retrieveCheckoutSession(string $sessionId): array
+    public function retrieveCheckoutSession(string $sessionId, array $expand = ['shipping_cost.shipping_rate']): array
     {
         return $this->client(config()->string('cashier.secret'))->checkout->sessions
-            ->retrieve($sessionId, ['expand' => ['shipping_cost.shipping_rate']])
+            ->retrieve($sessionId, ['expand' => $expand])
             ->toArray();
     }
 

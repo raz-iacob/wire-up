@@ -206,7 +206,7 @@
                     </div>
                 @endif
 
-                @if ($shop->isPurchasable($record) && ! $shop->isSubscription($record))
+                @if ($shop->isPurchasable($record))
                     <livewire:site.buy-box :record="$record" :key="'buy-box-'.$record->id" />
                 @endif
             </div>

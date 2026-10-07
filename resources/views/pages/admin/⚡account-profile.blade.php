@@ -114,9 +114,9 @@ return new class extends Component
             'password' => ['required', 'current_password'],
         ]);
 
-        Auth::logout();
-
         $action->handle($this->user);
+
+        Auth::logout();
 
         Session::invalidate();
         Session::regenerateToken();
