@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Models\Settings;
 use App\Models\User;
+use App\Services\AiModelCatalog;
 use App\Services\DatabaseTranslationLoader;
 use App\Services\LocalizationService;
 use App\Services\SettingsService;
@@ -105,7 +106,7 @@ final class AppServiceProvider extends ServiceProvider
         $aiProvider = config('site.ai_provider');
         $aiApiKey = config('site.ai_api_key');
 
-        if (is_string($aiProvider) && in_array($aiProvider, ['anthropic', 'openai', 'gemini'], true) && is_string($aiApiKey) && $aiApiKey !== '') {
+        if (is_string($aiProvider) && array_key_exists($aiProvider, AiModelCatalog::PROVIDERS) && is_string($aiApiKey) && $aiApiKey !== '') {
             config()->set('ai.default', $aiProvider);
             config()->set('ai.providers.'.$aiProvider.'.key', $aiApiKey);
         }

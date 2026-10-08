@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Forms;
 
+use App\Services\AiModelCatalog;
 use Livewire\Form;
 
 final class AssistantIntegrationForm extends Form
@@ -12,7 +13,7 @@ final class AssistantIntegrationForm extends Form
 
     public string $ai_api_key = '';
 
-    public string $ai_model = 'claude-opus-4-8';
+    public string $ai_model = '';
 
     /**
      * @return array<string, array<int, string>>
@@ -20,7 +21,7 @@ final class AssistantIntegrationForm extends Form
     public function rules(): array
     {
         return [
-            'ai_provider' => ['required', 'string', 'in:anthropic,openai,gemini'],
+            'ai_provider' => ['required', 'string', 'in:'.implode(',', array_keys(AiModelCatalog::PROVIDERS))],
             'ai_api_key' => ['required', 'string', 'max:255'],
             'ai_model' => ['required', 'string', 'max:100'],
         ];

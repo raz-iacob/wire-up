@@ -11,6 +11,7 @@ use App\Livewire\Forms\MailIntegrationForm;
 use App\Livewire\Forms\PexelsIntegrationForm;
 use App\Livewire\Forms\SlackIntegrationForm;
 use App\Livewire\Forms\StripeIntegrationForm;
+use App\Services\AiModelCatalog;
 use App\Services\IntegrationTester;
 use App\Services\IntegrationTestResult;
 use App\Services\PublicUrlGuard;
@@ -42,18 +43,31 @@ return new class extends Component
 
     public CustomCodeForm $customCodeForm;
 
+    public string $modelSearch = '';
+
     /**
-     * @return array<string, array<string, string>>
+     * @return array<string, string>
      */
     public function aiModels(): array
     {
-        return [
-            'anthropic' => [
-                'claude-opus-4-8' => 'Claude Opus 4.8 — '.__('most capable'),
-                'claude-sonnet-5' => 'Claude Sonnet 5 — '.__('balanced'),
-                'claude-haiku-4-5' => 'Claude Haiku 4.5 — '.__('fastest'),
-            ],
-        ];
+        return resolve(AiModelCatalog::class)->options(
+            $this->assistantForm->ai_provider,
+            mb_trim($this->assistantForm->ai_api_key),
+            $this->assistantForm->ai_model,
+        );
+    }
+
+    public function updatedAssistantFormAiProvider(string $provider): void
+    {
+        if (array_key_exists($provider, AiModelCatalog::PROVIDERS)) {
+            $this->assistantForm->ai_model = resolve(AiModelCatalog::class)->defaultFor($provider);
+        }
+    }
+
+    public function useTypedModel(): void
+    {
+        $this->assistantForm->ai_model = mb_trim($this->modelSearch);
+        $this->modelSearch = '';
     }
 
     public function mount(): void
@@ -64,9 +78,9 @@ return new class extends Component
         $this->googleAnalyticsForm->google_analytics_credentials = is_string(config('site.google_analytics_credentials')) ? config()->string('site.google_analytics_credentials') : '';
         $this->googleMapsForm->google_maps_api_key = is_string(config('site.google_maps_api_key')) ? config()->string('site.google_maps_api_key') : '';
         $this->slackForm->slack_webhook_url = is_string(config('site.slack_webhook_url')) ? config()->string('site.slack_webhook_url') : '';
-        $this->assistantForm->ai_provider = in_array(config('site.ai_provider'), ['anthropic', 'openai', 'gemini'], true) ? config()->string('site.ai_provider') : 'anthropic';
+        $this->assistantForm->ai_provider = array_key_exists((string) config('site.ai_provider'), AiModelCatalog::PROVIDERS) ? config()->string('site.ai_provider') : 'anthropic';
         $this->assistantForm->ai_api_key = is_string(config('site.ai_api_key')) ? config()->string('site.ai_api_key') : '';
-        $this->assistantForm->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : 'claude-opus-4-8';
+        $this->assistantForm->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : resolve(AiModelCatalog::class)->defaultFor($this->assistantForm->ai_provider);
         $this->stripeForm->stripe_publishable_key = $this->savedSetting('stripe_publishable_key');
         $this->customCodeForm->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
         $this->customCodeForm->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
@@ -934,35 +948,39 @@ return new class extends Component
                 </div>
 
                 <flux:select wire:model.live="assistantForm.ai_provider" :label="__('Provider')">
-                    <flux:select.option value="anthropic">Claude (Anthropic)</flux:select.option>
-                    <flux:select.option value="openai">OpenAI</flux:select.option>
-                    <flux:select.option value="gemini">Gemini (Google)</flux:select.option>
+                    @foreach (\App\Services\AiModelCatalog::PROVIDERS as $value => $label)
+                        <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                    @endforeach
                 </flux:select>
 
                 <flux:input
-                    wire:model="assistantForm.ai_api_key"
+                    wire:model.blur="assistantForm.ai_api_key"
                     type="password"
                     viewable
                     :label="__('API key')"
                     :placeholder="__('Paste your API key…')"
                 />
 
-                <div x-show="$wire.assistantForm.ai_provider === 'anthropic'">
-                    <flux:select wire:model="assistantForm.ai_model" :label="__('Model')">
-                        @foreach ($this->aiModels()['anthropic'] as $value => $label)
-                            <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
-                </div>
-
-                <div x-show="$wire.assistantForm.ai_provider !== 'anthropic'" x-cloak>
-                    <flux:input
-                        wire:model="assistantForm.ai_model"
-                        :label="__('Model')"
-                        :placeholder="__('e.g. the model name from your provider account')"
-                        :description="__('Enter the exact model identifier your provider gives you.')"
-                    />
-                </div>
+                <flux:select
+                    wire:model="assistantForm.ai_model"
+                    variant="combobox"
+                    :label="__('Model')"
+                    :description="__('Paste your key to see the newest models, or type any model name.')"
+                >
+                    <x-slot name="input">
+                        <flux:select.input wire:model="modelSearch" />
+                    </x-slot>
+                    @foreach ($this->aiModels() as $value => $label)
+                        <flux:select.option
+                            value="{{ $value }}"
+                            wire:key="model-{{ $value }}"
+                        >
+                            {{ $label }}</flux:select.option>
+                    @endforeach
+                    <flux:select.option.create wire:click="useTypedModel" min-length="3">
+                        {{ __('Use') }} "<span wire:text="modelSearch"></span>"
+                    </flux:select.option.create>
+                </flux:select>
 
                 <div class="flex items-center justify-between gap-4">
                     @if ($this->assistantForm->ai_api_key !== '')

@@ -350,7 +350,58 @@ it('defaults the AI Assistant to anthropic and opus when unset', function (): vo
 
     Livewire::test('pages::admin.settings-integrations')
         ->assertSet('assistantForm.ai_provider', 'anthropic')
-        ->assertSet('assistantForm.ai_model', 'claude-opus-4-8');
+        ->assertSet('assistantForm.ai_model', 'claude-opus-5-5');
+});
+
+it('offers the newest claude models once an anthropic key is entered', function (): void {
+    Http::fake(['api.anthropic.com/v1/models*' => Http::response(['data' => [['id' => 'claude-next-6', 'display_name' => 'Claude Next 6']]])]);
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->assertSee('claude-opus-5-5 — most capable')
+        ->set('assistantForm.ai_api_key', 'sk-ant-typed')
+        ->assertSee('Claude Next 6');
+});
+
+it('switches to the new provider\'s most capable model when the provider changes', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('assistantForm.ai_provider', 'openrouter')
+        ->assertSet('assistantForm.ai_model', 'anthropic/claude-fable-5.1')
+        ->set('assistantForm.ai_provider', 'nonsense')
+        ->assertSet('assistantForm.ai_model', 'anthropic/claude-fable-5.1')
+        ->set('assistantForm.ai_provider', 'anthropic')
+        ->assertSet('assistantForm.ai_model', 'claude-opus-5-5');
+});
+
+it('uses a model name typed into the model box', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('modelSearch', '  claude-custom-1  ')
+        ->call('useTypedModel')
+        ->assertSet('assistantForm.ai_model', 'claude-custom-1')
+        ->assertSet('modelSearch', '')
+        ->assertSee('claude-custom-1');
+});
+
+it('connects the AI Assistant through openrouter', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('assistantForm.ai_provider', 'openrouter')
+        ->set('assistantForm.ai_api_key', 'sk-or-key')
+        ->call('connectAssistant')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('ai_provider'))->toBe('openrouter')
+        ->and(Settings::get('ai_model'))->toBe('anthropic/claude-fable-5.1');
+
+    new AppServiceProvider(app())->boot();
+
+    expect(config('ai.default'))->toBe('openrouter')
+        ->and(config('ai.providers.openrouter.key'))->toBe('sk-or-key');
 });
 
 it('connects the AI Assistant by persisting provider, key and model', function (): void {
