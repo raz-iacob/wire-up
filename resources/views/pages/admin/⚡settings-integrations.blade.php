@@ -971,10 +971,7 @@ return new class extends Component
                         <flux:select.input wire:model="modelSearch" />
                     </x-slot>
                     @foreach ($this->aiModels() as $value => $label)
-                        <flux:select.option
-                            value="{{ $value }}"
-                            wire:key="model-{{ $value }}"
-                        >
+                        <flux:select.option value="{{ $value }}" wire:key="model-{{ $value }}">
                             {{ $label }}</flux:select.option>
                     @endforeach
                     <flux:select.option.create wire:click="useTypedModel" min-length="3">

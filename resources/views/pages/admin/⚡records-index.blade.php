@@ -283,10 +283,7 @@ return new class extends Component
                     @endforeach
                     @if ($status !== '' || array_filter($filters) !== [])
                         <flux:menu.separator />
-                        <flux:menu.item
-                            icon="x-mark"
-                            wire:click="clearFilters"
-                        >
+                        <flux:menu.item icon="x-mark" wire:click="clearFilters">
                             {{ __('Clear filters') }}</flux:menu.item>
                     @endif
                 </flux:menu>

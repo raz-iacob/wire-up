@@ -112,10 +112,7 @@ return new class extends Component
                     </flux:menu.radio.group>
                     @if ($status !== '')
                         <flux:menu.separator />
-                        <flux:menu.item
-                            icon="x-mark"
-                            wire:click="$set('status', '')"
-                        >
+                        <flux:menu.item icon="x-mark" wire:click="$set('status', '')">
                             {{ __('Clear filters') }}</flux:menu.item>
                     @endif
                 </flux:menu>
