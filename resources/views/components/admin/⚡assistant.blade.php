@@ -37,6 +37,7 @@ return new class extends Component
         'search-pexels' => ['Searching photos', 'Searched photos'],
         'import-pexels-media' => ['Importing photo', 'Imported photo'],
         'block-types' => ['Reading block types', 'Read block types'],
+        'LoadSkill' => ['Reading a guide', 'Read a guide'],
     ];
 
     #[Locked]

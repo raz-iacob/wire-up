@@ -30,6 +30,12 @@ return new class extends Component
     }
 
     #[Computed]
+    public function showAssistant(): bool
+    {
+        return filled(config('site.ai_api_key'));
+    }
+
+    #[Computed]
     public function showShop(): bool
     {
         return resolve(StripeService::class)->configured();
@@ -97,6 +103,14 @@ return new class extends Component
             wire:navigate.hover
         >
             {{ __('App Integrations') }}</flux:sidebar.item>
+        @if ($this->showAssistant)
+            <flux:sidebar.item
+                :href="route('admin.settings-assistant')"
+                :current="request()->routeIs('admin.settings-assistant')"
+                wire:navigate.hover
+            >
+                {{ __('AI Assistant') }}</flux:sidebar.item>
+        @endif
         @if ($this->showShop)
             <flux:sidebar.item
                 :href="route('admin.settings-shop')"

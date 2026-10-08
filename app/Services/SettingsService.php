@@ -197,6 +197,28 @@ final class SettingsService
         return true;
     }
 
+    /**
+     * @return array<int, array{name: string, title: string, description: string, instructions: string}>
+     */
+    public function assistantGuides(): array
+    {
+        $saved = config('site.assistant_guides');
+        $guides = [];
+
+        foreach (is_array($saved) ? $saved : [] as $guide) {
+            if (is_array($guide) && is_string($guide['name'] ?? null) && is_string($guide['description'] ?? null) && is_string($guide['instructions'] ?? null) && $guide['name'] !== '' && $guide['description'] !== '') {
+                $guides[] = [
+                    'name' => $guide['name'],
+                    'title' => is_string($guide['title'] ?? null) && $guide['title'] !== '' ? $guide['title'] : $guide['name'],
+                    'description' => $guide['description'],
+                    'instructions' => $guide['instructions'],
+                ];
+            }
+        }
+
+        return $guides;
+    }
+
     public function contactEmail(): string
     {
         $email = config('site.contact_email');

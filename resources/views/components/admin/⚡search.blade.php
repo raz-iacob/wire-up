@@ -215,6 +215,7 @@ return new class extends Component
             $settings(__('Translations'), 'settings-translations', 'languages locales interface strings'),
             $settings(__('Social'), 'settings-social', 'facebook instagram youtube linkedin x links'),
             $settings(__('Integrations'), 'settings-integrations', 'slack email smtp pexels analytics maps assistant api keys'),
+            $settings(__('AI Assistant'), 'settings-assistant', 'guides skills house style instructions ai'),
             $settings(__('Shop'), 'settings-shop', 'shipping countries rates tax stripe checkout'),
             $settings(__('Updates'), 'settings-updates', 'version upgrade release changelog'),
             $settings(__('Export and import'), 'settings-export-import', 'bundle backup migrate transfer'),
