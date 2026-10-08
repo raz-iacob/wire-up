@@ -65,6 +65,13 @@ return new class extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->status = '';
+        $this->filters = [];
+        $this->resetPage();
+    }
+
     public function mount(RecordType $recordType): void
     {
         $this->authorize('records.'.$recordType->key.'.view');
@@ -222,7 +229,7 @@ return new class extends Component
 ?>
 <div>
     <div class="space-y-6">
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
             @can('records.'.$recordType->key.'.create')
                 <flux:modal.trigger name="add-new">
                     <flux:button
@@ -274,10 +281,31 @@ return new class extends Component
                             </flux:menu.radio.group>
                         </flux:menu.submenu>
                     @endforeach
+                    @if ($status !== '' || array_filter($filters) !== [])
+                        <flux:menu.separator />
+                        <flux:menu.item
+                            icon="x-mark"
+                            wire:click="clearFilters"
+                        >
+                            {{ __('Clear filters') }}</flux:menu.item>
+                    @endif
                 </flux:menu>
             </flux:dropdown>
+            @if (ContentStatus::tryFrom($status))
+                <x-admin.filter-chip :label="ContentStatus::from($status)->label()" wire:click="$set('status', '')" />
+            @endif
 
-            <div class="w-full sm:shrink-0 md:w-52">
+            @foreach ($this->fieldFilters as $filterField)
+                @if (($filters[$filterField['key']] ?? '') !== '')
+                    <x-admin.filter-chip
+                        wire:key="chip-{{ $filterField['key'] }}"
+                        :label="$recordType->fieldLabel($filterField).': '.($filterField['type'] === \App\Enums\FieldType::BOOLEAN->value ? ($filters[$filterField['key']] === '1' ? __('Yes') : __('No')) : $filters[$filterField['key']])"
+                        wire:click="$set('filters.{{ $filterField['key'] }}', '')"
+                    />
+                @endif
+            @endforeach
+
+            <div class="ms-auto min-w-40 flex-1 sm:w-52 sm:flex-none">
                 <flux:input
                     icon="magnifying-glass"
                     wire:model.live="search"

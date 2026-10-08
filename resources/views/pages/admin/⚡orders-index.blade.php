@@ -114,7 +114,7 @@ return new class extends Component
 @endphp
 
 <div class="space-y-6">
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-center gap-3">
         <flux:dropdown position="bottom" align="start">
             <flux:button class="shrink-0" size="sm" icon="funnel" iconVariant="outline">{{ __('Filter') }}</flux:button>
 
@@ -126,10 +126,24 @@ return new class extends Component
                             {{ $statusOption->label() }}</flux:menu.radio>
                     @endforeach
                 </flux:menu.radio.group>
+                @if ($status !== '')
+                    <flux:menu.separator />
+                    <flux:menu.item
+                        icon="x-mark"
+                        wire:click="$set('status', '')"
+                    >
+                        {{ __('Clear filters') }}</flux:menu.item>
+                @endif
             </flux:menu>
         </flux:dropdown>
+        @if (\App\Enums\OrderStatus::tryFrom($status))
+            <x-admin.filter-chip
+                :label="\App\Enums\OrderStatus::from($status)->label()"
+                wire:click="$set('status', '')"
+            />
+        @endif
 
-        <div class="w-full sm:shrink-0 md:w-52">
+        <div class="ms-auto min-w-40 flex-1 sm:w-52 sm:flex-none">
             <flux:input
                 icon="magnifying-glass"
                 wire:model.live="search"

@@ -186,3 +186,13 @@ it('labels and colours every order status', function (OrderStatus $status): void
     expect($status->label())->not->toBe('')
         ->and($status->color())->not->toBe('');
 })->with(OrderStatus::cases());
+
+it('shows the chosen status as a removable filter chip', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.orders-index')
+        ->assertDontSeeHtml('aria-label="Remove filter"')
+        ->set('status', 'fulfilled')
+        ->assertSeeHtml('aria-label="Remove filter"')
+        ->assertSee('Clear filters');
+});

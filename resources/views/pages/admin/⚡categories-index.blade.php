@@ -103,7 +103,7 @@ return new class extends Component
                 </flux:modal.trigger>
             @endcan
 
-            <div class="w-full sm:shrink-0 md:w-52">
+            <div class="ms-auto min-w-40 flex-1 sm:w-52 sm:flex-none">
                 <flux:input
                     icon="magnifying-glass"
                     wire:model.live="search"

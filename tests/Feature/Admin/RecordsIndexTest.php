@@ -350,3 +350,24 @@ it('returns to the first page when a filter or search changes', function (): voi
         ->set('status', 'draft')
         ->assertSet('paginators.page', 1);
 });
+
+it('shows each active filter as a removable chip and clears them all at once', function (): void {
+    $type = filterableProductType();
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->assertDontSee('Clear filters')
+        ->set('status', 'published')
+        ->set('filters.sold', '1')
+        ->set('filters.condition', 'Refurbished')
+        ->assertSee('Sold: Yes')
+        ->assertSee('Condition: Refurbished')
+        ->assertSee('Clear filters')
+        ->set('filters.sold', '0')
+        ->assertSee('Sold: No')
+        ->call('clearFilters')
+        ->assertSet('status', '')
+        ->assertSet('filters', [])
+        ->assertDontSee('Sold: No')
+        ->assertDontSee('Clear filters');
+});

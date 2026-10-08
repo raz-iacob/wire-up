@@ -95,7 +95,7 @@ return new class extends Component
 ?>
 <div>
     <div class="space-y-6">
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
             <flux:dropdown position="bottom" align="start">
                 <flux:button
                     class="shrink-0"
@@ -110,10 +110,24 @@ return new class extends Component
                         <flux:menu.radio value="unread">{{ __('Unread') }}</flux:menu.radio>
                         <flux:menu.radio value="read">{{ __('Read') }}</flux:menu.radio>
                     </flux:menu.radio.group>
+                    @if ($status !== '')
+                        <flux:menu.separator />
+                        <flux:menu.item
+                            icon="x-mark"
+                            wire:click="$set('status', '')"
+                        >
+                            {{ __('Clear filters') }}</flux:menu.item>
+                    @endif
                 </flux:menu>
             </flux:dropdown>
+            @if (in_array($status, ['unread', 'read'], true))
+                <x-admin.filter-chip
+                    :label="$status === 'unread' ? __('Unread') : __('Read')"
+                    wire:click="$set('status', '')"
+                />
+            @endif
 
-            <div class="w-full sm:shrink-0 md:w-52">
+            <div class="ms-auto min-w-40 flex-1 sm:w-52 sm:flex-none">
                 <flux:input
                     icon="magnifying-glass"
                     wire:model.live="search"

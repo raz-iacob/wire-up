@@ -131,7 +131,7 @@ return new class extends Component
 ?>
 <div>
     <div class="space-y-6">
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
             @can('users.create')
                 <flux:modal.trigger name="add-new">
                     <flux:button
@@ -160,10 +160,24 @@ return new class extends Component
                             <flux:menu.radio value="disabled">{{ __('Disabled') }}</flux:menu.radio>
                         </flux:menu.radio.group>
                     </flux:menu.submenu>
+                    @if ($status !== '')
+                        <flux:menu.separator />
+                        <flux:menu.item
+                            icon="x-mark"
+                            wire:click="$set('status', '')"
+                        >
+                            {{ __('Clear filters') }}</flux:menu.item>
+                    @endif
                 </flux:menu>
             </flux:dropdown>
+            @if (in_array($status, ['active', 'disabled'], true))
+                <x-admin.filter-chip
+                    :label="$status === 'active' ? __('Active') : __('Disabled')"
+                    wire:click="$set('status', '')"
+                />
+            @endif
 
-            <div class="w-full sm:shrink-0 md:w-52">
+            <div class="ms-auto min-w-40 flex-1 sm:w-52 sm:flex-none">
                 <flux:input
                     icon="magnifying-glass"
                     wire:model.live="search"
