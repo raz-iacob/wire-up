@@ -106,7 +106,8 @@
         ],
         "test:type-coverage": "@php -d memory_limit=-1 vendor/bin/pest --type-coverage --min=100",
         "test:lint": [
-            "pint --parallel --test --blade",
+            "@php -r \"@unlink('storage/framework/cache/pint-lint.cache');\"",
+            "pint --parallel --test --blade --cache-file=storage/framework/cache/pint-lint.cache",
             "rector --dry-run",
             "npm run test:lint"
         ],
