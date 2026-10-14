@@ -26,9 +26,8 @@ it('creates a media record with valid attributes', function (): void {
         ->and($media->filename)->toBe('test.jpg')
         ->and($media->alt_text)->toBe('Test Image')
         ->and($media->mime_type)->toBe('image/jpeg')
-        ->and($media->size)->toBe(102400);
-
-    expect(Media::query()->where('etag', 'abc123def456')->exists())->toBeTrue();
+        ->and($media->size)->toBe(102400)
+        ->and(Media::query()->where('etag', 'abc123def456')->exists())->toBeTrue();
 });
 
 it('creates media with optional attributes', function (): void {

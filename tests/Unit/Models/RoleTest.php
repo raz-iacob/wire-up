@@ -15,8 +15,8 @@ it('seeds the preset roles on a freshly migrated database', function (): void {
 it('resolves abilities and honours the bypass flag', function (): void {
     $editor = Role::factory()->create(['abilities' => ['pages.view', 'pages.edit'], 'bypass' => false]);
 
-    expect($editor->hasAbility('pages.view'))->toBeTrue();
-    expect($editor->hasAbility('pages.delete'))->toBeFalse();
+    expect($editor->hasAbility('pages.view'))->toBeTrue()
+        ->and($editor->hasAbility('pages.delete'))->toBeFalse();
 
     $owner = Role::factory()->create(['abilities' => [], 'bypass' => true]);
 
@@ -24,9 +24,9 @@ it('resolves abilities and honours the bypass flag', function (): void {
 });
 
 it('grants admin access to bypass or ability-holding roles only', function (): void {
-    expect(Role::factory()->create(['abilities' => [], 'bypass' => true])->canAccessAdmin())->toBeTrue();
-    expect(Role::factory()->create(['abilities' => ['pages.view'], 'bypass' => false])->canAccessAdmin())->toBeTrue();
-    expect(Role::factory()->create(['abilities' => [], 'bypass' => false])->canAccessAdmin())->toBeFalse();
+    expect(Role::factory()->create(['abilities' => [], 'bypass' => true])->canAccessAdmin())->toBeTrue()
+        ->and(Role::factory()->create(['abilities' => ['pages.view'], 'bypass' => false])->canAccessAdmin())->toBeTrue()
+        ->and(Role::factory()->create(['abilities' => [], 'bypass' => false])->canAccessAdmin())->toBeFalse();
 });
 
 it('reports whether it is assigned to any user', function (): void {

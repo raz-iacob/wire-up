@@ -58,9 +58,9 @@ it('deletes old files and displays summary', function (): void {
         ->expectsOutput("Deleted 3 files, freed {$freed} of disk space.")
         ->assertExitCode(0);
 
-    expect(File::exists($oldFile1))->toBeFalse();
-    expect(File::exists($oldFile2))->toBeFalse();
-    expect(File::exists($recentFile))->toBeFalse();
+    expect(File::exists($oldFile1))->toBeFalse()
+        ->and(File::exists($oldFile2))->toBeFalse()
+        ->and(File::exists($recentFile))->toBeFalse();
 });
 
 it('respects the older-than option', function (): void {
@@ -71,8 +71,8 @@ it('respects the older-than option', function (): void {
         ->expectsOutput('No temporary files older than 1000 hours found.')
         ->assertExitCode(0);
 
-    expect(File::exists($file))->toBeTrue();
-    expect(File::exists($file))->toBeTrue();
+    expect(File::exists($file))->toBeTrue()
+        ->and(File::exists($file))->toBeTrue();
 });
 
 it('handles custom older-than values correctly', function (): void {
@@ -86,10 +86,10 @@ it('handles custom older-than values correctly', function (): void {
         ->expectsOutput('No temporary files older than 1 hours found.')
         ->assertExitCode(0);
 
-    expect(File::exists($file1))->toBeTrue();
-    expect(File::exists($file2))->toBeTrue();
-    expect(File::exists($file1))->toBeTrue();
-    expect(File::exists($file2))->toBeTrue();
+    expect(File::exists($file1))->toBeTrue()
+        ->and(File::exists($file2))->toBeTrue()
+        ->and(File::exists($file1))->toBeTrue()
+        ->and(File::exists($file2))->toBeTrue();
 });
 
 it('calculates file size correctly', function (): void {
@@ -175,6 +175,6 @@ it('works with subdirectories', function (): void {
     $this->artisan(CleanTempUploadsCommand::class, ['--older-than' => 0])
         ->assertExitCode(0);
 
-    expect(File::exists($file1))->toBeFalse();
-    expect(File::exists($file2))->toBeFalse();
+    expect(File::exists($file1))->toBeFalse()
+        ->and(File::exists($file2))->toBeFalse();
 });

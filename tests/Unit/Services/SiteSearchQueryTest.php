@@ -50,8 +50,8 @@ it('returns nothing for an empty query or no sources', function (): void {
     $type = searchType('post');
     searchRecord($type, 'Hormone Therapy');
 
-    expect((new SiteSearchQuery)->search('', [(string) $type->id], 4))->toBe([])
-        ->and((new SiteSearchQuery)->search('hormone', [], 4))->toBe([]);
+    expect((new SiteSearchQuery)->search('', [(string) $type->id], 4))->toBeEmpty()
+        ->and((new SiteSearchQuery)->search('hormone', [], 4))->toBeEmpty();
 });
 
 it('groups record matches with a normalized result shape', function (): void {
@@ -153,5 +153,5 @@ it('falls back to page body text for the excerpt when there is no description', 
 
     $groups = (new SiteSearchQuery)->search('hormone', ['pages'], 4);
 
-    expect($groups[0]['results'][0]['excerpt'])->toBe('');
+    expect($groups[0]['results'][0]['excerpt'])->toBeEmpty();
 });

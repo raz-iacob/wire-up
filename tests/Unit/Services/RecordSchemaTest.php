@@ -118,7 +118,7 @@ it('returns no nodes for a record type without a schema mapping', function (): v
         'title' => ['en' => 'Widget'],
     ])->load('recordType', 'media');
 
-    expect(schemaNodes($record))->toBe([]);
+    expect(schemaNodes($record))->toBeEmpty();
 });
 
 it('omits an Offer and sku when the product fields are absent', function (): void {

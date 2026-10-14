@@ -30,7 +30,7 @@ it('sends an invite notification', function (): void {
         $invitee,
         AdminInvite::class,
         function (AdminInvite $notification, array $channels) use ($invitee, $inviter, $token): true {
-            $this->assertEquals(['mail'], $channels);
+            expect($channels)->toEqual(['mail']);
 
             $mailMessage = $notification->toMail($invitee);
             $setPassewordUrl = url(route('password.reset', [
@@ -38,10 +38,10 @@ it('sends an invite notification', function (): void {
                 'email' => $invitee->email,
             ], false));
 
-            $this->assertEquals(__('You have been invited to join :app_name', ['app_name' => config()->string('app.name')]), $mailMessage->subject);
-            $this->assertStringContainsString($inviter->name.' '.__('has invited you to join the :app_name team', ['app_name' => config()->string('app.name')]), $mailMessage->introLines[0]);
-            $this->assertEquals($setPassewordUrl, $mailMessage->actionUrl);
-            $this->assertStringContainsString('If you did not request an account, no further action is required.', $mailMessage->outroLines[0]);
+            expect($mailMessage->subject)->toEqual(__('You have been invited to join :app_name', ['app_name' => config()->string('app.name')]))
+                ->and($mailMessage->introLines[0])->toContain($inviter->name.' '.__('has invited you to join the :app_name team', ['app_name' => config()->string('app.name')]))
+                ->and($mailMessage->actionUrl)->toEqual($setPassewordUrl)
+                ->and($mailMessage->outroLines[0])->toContain('If you did not request an account, no further action is required.');
 
             return true;
         }

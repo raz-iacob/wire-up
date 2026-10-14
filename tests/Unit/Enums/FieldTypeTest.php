@@ -25,9 +25,9 @@ it('exposes all field type values in order', function (): void {
 });
 
 it('provides a label, icon and description for every case', function (FieldType $type): void {
-    expect($type->label())->toBeString()->not->toBe('')
-        ->and($type->icon())->toBeString()->not->toBe('')
-        ->and($type->description())->toBeString()->not->toBe('');
+    expect($type->label())->toBeString()->not->toBeEmpty()
+        ->and($type->icon())->toBeString()->not->toBeEmpty()
+        ->and($type->description())->toBeString()->not->toBeEmpty();
 })->with(FieldType::cases());
 
 it('marks text-like types translatable by default', function (): void {
@@ -52,7 +52,7 @@ it('maps media field types to the kinds they accept', function (): void {
         ->and(FieldType::AUDIO->acceptsMedia())->toBe(['audio'])
         ->and(FieldType::DOCUMENT->acceptsMedia())->toBe(['document'])
         ->and(FieldType::MEDIA_GALLERY->acceptsMedia())->toBe(['image', 'video'])
-        ->and(FieldType::TEXT->acceptsMedia())->toBe([]);
+        ->and(FieldType::TEXT->acceptsMedia())->toBeEmpty();
 });
 
 it('knows which types are media and galleries', function (): void {

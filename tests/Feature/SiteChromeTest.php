@@ -123,9 +123,8 @@ it('never underlines a button menu item on hover, whatever the nav hover style',
 
     expect($button[0])->toContain('bg-(--wire-primary-bg)')
         ->toContain('hover:opacity-90')
-        ->not->toContain('hover:underline');
-
-    expect($html)->toContain('hover:underline');
+        ->not->toContain('hover:underline')
+        ->and($html)->toContain('hover:underline');
 });
 
 it('shows the language switcher in the header when more than one locale is active', function (): void {

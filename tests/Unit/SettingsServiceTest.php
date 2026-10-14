@@ -45,7 +45,7 @@ it('returns the configured contact email', function (): void {
 it('returns an empty string when no contact email is configured', function (): void {
     config()->set('site.contact_email');
 
-    expect((new SettingsService)->contactEmail())->toBe('');
+    expect((new SettingsService)->contactEmail())->toBeEmpty();
 });
 
 it('reports the discourage-search-engines flag', function (): void {
@@ -69,7 +69,7 @@ it('returns the configured google analytics id', function (): void {
 it('returns an empty string when no google analytics id is configured', function (): void {
     config()->set('site.google_analytics_id');
 
-    expect((new SettingsService)->googleAnalyticsId())->toBe('');
+    expect((new SettingsService)->googleAnalyticsId())->toBeEmpty();
 });
 
 it('returns the trimmed head and body scripts', function (): void {
@@ -86,8 +86,8 @@ it('returns an empty string when no custom scripts are configured', function ():
     config()->set('site.head_scripts');
     config()->set('site.body_scripts');
 
-    expect((new SettingsService)->headScripts())->toBe('')
-        ->and((new SettingsService)->bodyScripts())->toBe('');
+    expect((new SettingsService)->headScripts())->toBeEmpty()
+        ->and((new SettingsService)->bodyScripts())->toBeEmpty();
 });
 
 it('resolves a page item to its localized url', function (): void {
@@ -298,7 +298,7 @@ it('returns the trimmed site-wide custom css', function (): void {
 
     config()->set('site.custom_css');
 
-    expect((new SettingsService)->customCss())->toBe('');
+    expect((new SettingsService)->customCss())->toBeEmpty();
 });
 
 it('always exposes header and footer as built-in menus, even with none saved', function (): void {
@@ -427,14 +427,14 @@ it('falls back to any non-empty title when neither the current nor fallback loca
 });
 
 it('returns an empty string for the title and tagline when none are saved', function (): void {
-    expect((new SettingsService)->title())->toBe('')
-        ->and((new SettingsService)->description())->toBe('');
+    expect((new SettingsService)->title())->toBeEmpty()
+        ->and((new SettingsService)->description())->toBeEmpty();
 });
 
 it('returns an empty title when every saved locale value is blank', function (): void {
     Settings::set(['title' => ['en' => '']]);
 
-    expect((new SettingsService)->title())->toBe('');
+    expect((new SettingsService)->title())->toBeEmpty();
 });
 
 it('builds a logo url that caps height without constraining width', function (): void {
@@ -705,8 +705,8 @@ it('groups menu items by heading', function (): void {
 });
 
 it('returns no groups for an empty menu and tolerates a headless heading', function (): void {
-    expect(SettingsService::groupMenuItems([]))->toBe([])
-        ->and(SettingsService::groupMenuItems([['type' => 'heading']]))->toBe([]);
+    expect(SettingsService::groupMenuItems([]))->toBeEmpty()
+        ->and(SettingsService::groupMenuItems([['type' => 'heading']]))->toBeEmpty();
 });
 
 it('treats an item with no type as a link when grouping', function (): void {

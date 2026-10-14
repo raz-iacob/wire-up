@@ -55,7 +55,7 @@ it('keeps only the tail of a long failure', function (): void {
 
     $output = (string) $transfers->state()['output'];
 
-    expect(mb_strlen($output))->toBe(2000)
+    expect($output)->toHaveLength(2000)
         ->and($output)->toEndWith('THE-END');
 });
 

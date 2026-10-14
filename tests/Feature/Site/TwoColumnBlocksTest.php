@@ -144,13 +144,12 @@ it('gives the hero an exact height, and ignores one outside the range', function
         'heading' => ['en' => '<p>Welcome</p>'],
         'height' => 'custom',
         'customHeight' => 640,
-    ]))->toContain('min-height:640px');
-
-    expect(twoColumnHtml('hero-silly', BlockType::HERO, [
-        'heading' => ['en' => '<p>Welcome</p>'],
-        'height' => 'custom',
-        'customHeight' => 99999,
-    ]))->not->toContain('min-height:99999px');
+    ]))->toContain('min-height:640px')
+        ->and(twoColumnHtml('hero-silly', BlockType::HERO, [
+            'heading' => ['en' => '<p>Welcome</p>'],
+            'height' => 'custom',
+            'customHeight' => 99999,
+        ]))->not->toContain('min-height:99999px');
 });
 
 it('keeps a hero colour alongside an exact size', function (): void {

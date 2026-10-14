@@ -25,8 +25,8 @@ it('formats money with the currency symbol and grouping', function (): void {
 
     expect(SettingsService::current()->formatMoney(1234.5))->toBe('$1,234.50')
         ->and(SettingsService::current()->formatMoney('99'))->toBe('$99.00')
-        ->and(SettingsService::current()->formatMoney(null))->toBe('')
-        ->and(SettingsService::current()->formatMoney('nope'))->toBe('');
+        ->and(SettingsService::current()->formatMoney(null))->toBeEmpty()
+        ->and(SettingsService::current()->formatMoney('nope'))->toBeEmpty();
 });
 
 it('formats zero-decimal currencies without decimals', function (): void {

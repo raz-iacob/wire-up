@@ -23,7 +23,6 @@ it('grants assistant.use to admin but not to editor or author', function (): voi
     expect($abilities('admin'))->toContain('assistant.use')
         ->and($abilities('editor'))->not->toContain('assistant.use')
         ->and($abilities('author'))->not->toContain('assistant.use')
-        ->and($abilities('member'))->not->toContain('assistant.use');
-
-    expect(RolePresets::find('owner')['bypass'])->toBeTrue();
+        ->and($abilities('member'))->not->toContain('assistant.use')
+        ->and(RolePresets::find('owner')['bypass'])->toBeTrue();
 });

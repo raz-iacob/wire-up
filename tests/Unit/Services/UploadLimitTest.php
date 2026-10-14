@@ -39,8 +39,8 @@ it('enforces the app cap when no override is configured', function (): void {
 it('tightens the enforced limit to a configured override', function (): void {
     config()->set('media.max_upload_kilobytes', 12000);
 
-    expect(UploadLimit::enforcedKilobytes(UploadLimit::VIDEO_MAX_KILOBYTES))->toBe(12000);
-    expect(UploadLimit::cappedKilobytes(UploadLimit::VIDEO_MAX_KILOBYTES))->toBeLessThanOrEqual(12000);
+    expect(UploadLimit::enforcedKilobytes(UploadLimit::VIDEO_MAX_KILOBYTES))->toBe(12000)
+        ->and(UploadLimit::cappedKilobytes(UploadLimit::VIDEO_MAX_KILOBYTES))->toBeLessThanOrEqual(12000);
 });
 
 it('ignores a zero or non-numeric override', function (): void {

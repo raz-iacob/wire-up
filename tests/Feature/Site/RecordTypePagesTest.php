@@ -77,7 +77,7 @@ it('leaves unreachable records out of site search', function (): void {
     $type = serviceType(detail: false);
     serviceRecord($type);
 
-    expect(resolve(SiteSearchQuery::class)->search('coaching', [$type->id], 10))->toBe([]);
+    expect(resolve(SiteSearchQuery::class)->search('coaching', [$type->id], 10))->toBeEmpty();
 });
 
 it('renders collection cards unlinked when there is no detail page', function (): void {

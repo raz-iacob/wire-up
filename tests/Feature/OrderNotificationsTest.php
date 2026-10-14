@@ -84,7 +84,7 @@ it('writes the owner email with the items, address and a link to the order', fun
     expect($mail->subject)->toBe(__('New order :reference', ['reference' => 'MAIL0001']))
         ->and($mail->replyTo)->toBe([['buyer@example.com', null]])
         ->and($html)->toContain('Walnut lamp', '1 Main St', route('admin.orders-show', $order))
-        ->and(new OrderReceived($order)->via(new AnonymousNotifiable))->toBe([])
+        ->and(new OrderReceived($order)->via(new AnonymousNotifiable))->toBeEmpty()
         ->and(new OrderReceived($order)->via($order))->toBe(['mail']);
 });
 
@@ -121,6 +121,6 @@ it('writes the customer receipt with the totals and replies to the site contact'
 it('writes a guest owner email without a reply-to address', function (): void {
     $order = Order::factory()->create(['email' => null]);
 
-    expect(new OrderReceived($order)->toMail(new AnonymousNotifiable)->replyTo)->toBe([])
-        ->and(new OrderConfirmation($order)->toMail(new AnonymousNotifiable)->replyTo)->toBe([]);
+    expect(new OrderReceived($order)->toMail(new AnonymousNotifiable)->replyTo)->toBeEmpty()
+        ->and(new OrderConfirmation($order)->toMail(new AnonymousNotifiable)->replyTo)->toBeEmpty();
 });

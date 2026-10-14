@@ -9,10 +9,10 @@ it('returns localized text with fallback to the default locale', function (): vo
         'content' => ['heading' => ['en' => 'Hello', 'fr' => 'Bonjour']],
     ]);
 
-    expect($block->text('heading'))->toBe('Hello');
-    expect($block->text('heading', 'fr'))->toBe('Bonjour');
-    expect($block->text('heading', 'de'))->toBe('Hello');
-    expect($block->text('missing'))->toBe('');
+    expect($block->text('heading'))->toBe('Hello')
+        ->and($block->text('heading', 'fr'))->toBe('Bonjour')
+        ->and($block->text('heading', 'de'))->toBe('Hello')
+        ->and($block->text('missing'))->toBeEmpty();
 });
 
 it('resolves a cta linked to an auth page', function (): void {
@@ -42,8 +42,8 @@ it('builds an image url from the stored source', function (): void {
 
     $url = $block->imageUrl('image');
 
-    expect($url)->toContain('uploads/pic.jpg');
-    expect($url)->toContain('w=1200');
+    expect($url)->toContain('uploads/pic.jpg')
+        ->toContain('w=1200');
 });
 
 it('includes a height option when one is given', function (): void {
@@ -81,15 +81,15 @@ it('resolves the image alt text, preferring caption then metadata then filename'
         'content' => ['image' => ['source' => 'a.jpg', 'alt_text' => 'Fallback alt']],
     ]);
 
-    expect($withCaption->imageAlt('image'))->toBe('A caption');
-    expect($withMeta->imageAlt('image'))->toBe('Preferred');
-    expect($withAltText->imageAlt('image'))->toBe('Fallback alt');
+    expect($withCaption->imageAlt('image'))->toBe('A caption')
+        ->and($withMeta->imageAlt('image'))->toBe('Preferred')
+        ->and($withAltText->imageAlt('image'))->toBe('Fallback alt');
 });
 
 it('returns an empty alt when there is no image', function (): void {
     $block = Block::factory()->create(['content' => []]);
 
-    expect($block->imageAlt('image'))->toBe('');
+    expect($block->imageAlt('image'))->toBeEmpty();
 });
 
 it('detects video items by mime type', function (): void {
@@ -100,8 +100,8 @@ it('detects video items by mime type', function (): void {
         ]],
     ]);
 
-    expect($block->isVideo('media.0'))->toBeTrue();
-    expect($block->isVideo('media.1'))->toBeFalse();
+    expect($block->isVideo('media.0'))->toBeTrue()
+        ->and($block->isVideo('media.1'))->toBeFalse();
 });
 
 it('builds a poster url for images and video thumbnails, and null otherwise', function (): void {
@@ -113,9 +113,9 @@ it('builds a poster url for images and video thumbnails, and null otherwise', fu
         ]],
     ]);
 
-    expect($block->posterUrl('media.0'))->toContain('media/pic.jpg');
-    expect($block->posterUrl('media.1'))->toContain('media/clip-thumb.jpg');
-    expect($block->posterUrl('media.2'))->toBeNull();
+    expect($block->posterUrl('media.0'))->toContain('media/pic.jpg')
+        ->and($block->posterUrl('media.1'))->toContain('media/clip-thumb.jpg')
+        ->and($block->posterUrl('media.2'))->toBeNull();
 });
 
 it('resolves the public file url, or null when there is no source', function (): void {
@@ -126,8 +126,8 @@ it('resolves the public file url, or null when there is no source', function ():
         ]],
     ]);
 
-    expect($block->fileUrl('media.0'))->toContain('media/clip.mp4');
-    expect($block->fileUrl('media.1'))->toBeNull();
+    expect($block->fileUrl('media.0'))->toContain('media/clip.mp4')
+        ->and($block->fileUrl('media.1'))->toBeNull();
 });
 
 it('parses youtube and vimeo urls into provider and id', function (string $url, ?array $expected): void {
@@ -150,8 +150,8 @@ it('resolves an uploaded video as a native source', function (): void {
 
     $embed = $block->videoEmbed();
 
-    expect($embed['kind'])->toBe('native');
-    expect($embed['src'])->toContain('media/clip.mp4');
+    expect($embed['kind'])->toBe('native')
+        ->and($embed['src'])->toContain('media/clip.mp4');
 });
 
 it('resolves a youtube url as an iframe embed', function (): void {
@@ -171,8 +171,8 @@ it('resolves a direct video url as a native source', function (): void {
 });
 
 it('returns null when the video block has no source', function (): void {
-    expect(Block::factory()->create(['content' => ['source' => 'upload', 'video' => null]])->videoEmbed())->toBeNull();
-    expect(Block::factory()->create(['content' => ['source' => 'url', 'url' => '']])->videoEmbed())->toBeNull();
+    expect(Block::factory()->create(['content' => ['source' => 'upload', 'video' => null]])->videoEmbed())->toBeNull()
+        ->and(Block::factory()->create(['content' => ['source' => 'url', 'url' => '']])->videoEmbed())->toBeNull();
 });
 
 it('reduces a single rich text field to plain text', function (): void {
@@ -189,7 +189,7 @@ it('falls back to the default locale and to an empty string for plain text field
     ]);
 
     expect($block->plainTextField('address', 'fr'))->toBe('123 Main St')
-        ->and($block->plainTextField('missing'))->toBe('');
+        ->and($block->plainTextField('missing'))->toBeEmpty();
 });
 
 it('harvests the address into the block plain text', function (): void {

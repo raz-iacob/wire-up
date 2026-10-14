@@ -18,7 +18,7 @@ it('returns no active locales in console before the locales table is migrated', 
     Schema::drop('locales');
     Schema::enableForeignKeyConstraints();
 
-    expect(resolve(LocalizationService::class)->getActiveLocales())->toBe([]);
+    expect(resolve(LocalizationService::class)->getActiveLocales())->toBeEmpty();
 });
 
 it('returns no active locales when the database is unreachable', function (): void {
@@ -26,7 +26,7 @@ it('returns no active locales when the database is unreachable', function (): vo
 
     Schema::shouldReceive('hasTable')->andThrow(unreachableDatabase());
 
-    expect(resolve(LocalizationService::class)->getActiveLocales())->toBe([]);
+    expect(resolve(LocalizationService::class)->getActiveLocales())->toBeEmpty();
 });
 
 it('returns active locales from cache', function (): void {

@@ -187,7 +187,7 @@ it('deletes a saved type immediately on confirm and drops unsaved rows', functio
 
     $component->call('confirmRemove', $savedKey)->call('removeType')
         ->assertDispatched('content-types-updated');
-    expect($component->get('types'))->toHaveCount(0);
+    expect($component->get('types'))->toBeEmpty();
     $this->assertModelMissing($type);
 
     $component->call('update')->assertHasNoErrors();

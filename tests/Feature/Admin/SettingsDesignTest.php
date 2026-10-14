@@ -437,13 +437,13 @@ it('resolves the palette for a custom theme', function (): void {
 });
 
 it('resolves an empty palette when no theme is set', function (): void {
-    expect((new SettingsService)->themeColors())->toBe([]);
+    expect((new SettingsService)->themeColors())->toBeEmpty();
 });
 
 it('resolves an empty palette when custom colours are malformed', function (): void {
     Settings::set(['theme' => 'custom', 'colors' => 'not-an-array']);
 
-    expect((new SettingsService)->themeColors())->toBe([]);
+    expect((new SettingsService)->themeColors())->toBeEmpty();
 });
 
 it('emits palette and accent css vars for a preset', function (): void {
@@ -488,9 +488,8 @@ it('persists the content width and emits the container token', function (): void
         ->call('update')
         ->assertHasNoErrors();
 
-    expect(Settings::get('container'))->toBe('small');
-
-    expect((new SettingsService)->themeCss())->toContain('--wire-container:64rem');
+    expect(Settings::get('container'))->toBe('small')
+        ->and((new SettingsService)->themeCss())->toContain('--wire-container:64rem');
 });
 
 it('supports a full content width with no max-width', function (): void {

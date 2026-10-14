@@ -83,7 +83,7 @@ it('reports what a bundle holds without writing anything', function (): void {
     $report = SiteImporter::current()->inspect($bundle);
 
     expect($report['imported'])->toBeFalse()
-        ->and($report['problems'])->toBe([])
+        ->and($report['problems'])->toBeEmpty()
         ->and($report['tables']['pages'])->toBe(1)
         ->and(DB::table('pages')->count())->toBe($before)
         ->and(DB::table('pages')->where('id', 500)->exists())->toBeFalse();

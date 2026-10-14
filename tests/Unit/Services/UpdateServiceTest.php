@@ -221,7 +221,7 @@ it('stores no release notes when the changelog fetch fails', function (): void {
     $service->writeCurrentVersion('v0.9.0');
     $service->check();
 
-    expect($service->changelog())->toBe([]);
+    expect($service->changelog())->toBeEmpty();
 });
 
 it('stores no release notes when the tag has no changelog', function (): void {
@@ -235,7 +235,7 @@ it('stores no release notes when the tag has no changelog', function (): void {
     $service->writeCurrentVersion('v0.9.0');
     $service->check();
 
-    expect($service->changelog())->toBe([]);
+    expect($service->changelog())->toBeEmpty();
 });
 
 it('stores no release notes when the changelog has no newer sections', function (): void {
@@ -249,21 +249,21 @@ it('stores no release notes when the changelog has no newer sections', function 
     $service->writeCurrentVersion('v0.9.0');
     $service->check();
 
-    expect($service->changelog())->toBe([]);
+    expect($service->changelog())->toBeEmpty();
 });
 
 it('returns an empty changelog when the cached notes are malformed', function (): void {
     Cache::forever('wireup:update:latest', ['version' => 'v1.0.0', 'notes' => 'nope']);
 
-    expect(new UpdateService()->changelog())->toBe([]);
+    expect(new UpdateService()->changelog())->toBeEmpty();
 
     Cache::forever('wireup:update:latest', ['version' => 'v1.0.0', 'notes' => [['version' => 1, 'notes' => 'x'], 'junk']]);
 
-    expect(new UpdateService()->changelog())->toBe([]);
+    expect(new UpdateService()->changelog())->toBeEmpty();
 
     Cache::forever('wireup:update:latest', ['version' => 'v1.0.0', 'notes' => [['version' => 'v1.0.0', 'notes' => 'not-a-list']]]);
 
-    expect(new UpdateService()->changelog())->toBe([]);
+    expect(new UpdateService()->changelog())->toBeEmpty();
 });
 
 it('drops non-string note lines from the cached changelog', function (): void {
@@ -314,7 +314,7 @@ it('truncates failure output in the state', function (): void {
 
     expect($service->state()['status'])->toBe('failed')
         ->and($output)->toEndWith('END')
-        ->and(mb_strlen((string) $output))->toBe(2000);
+        ->and((string) $output)->toHaveLength(2000);
 });
 
 it('marks a silent pending update as stalled', function (): void {

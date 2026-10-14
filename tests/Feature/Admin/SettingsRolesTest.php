@@ -67,9 +67,9 @@ it('updates an editable role but leaves protected roles untouched', function ():
         ->call('save')
         ->assertHasNoErrors();
 
-    expect(Role::query()->where('key', 'editor')->value('abilities'))->toContain('users.view');
-    expect(Role::query()->where('key', 'owner')->first()->bypass)->toBeTrue();
-    expect(Role::query()->where('key', 'member')->value('abilities'))->toBe([]);
+    expect(Role::query()->where('key', 'editor')->value('abilities'))->toContain('users.view')
+        ->and(Role::query()->where('key', 'owner')->first()->bypass)->toBeTrue()
+        ->and(Role::query()->where('key', 'member')->value('abilities'))->toBe([]);
 });
 
 it('blocks deleting a role that still has members', function (): void {

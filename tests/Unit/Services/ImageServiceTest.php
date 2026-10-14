@@ -71,7 +71,7 @@ it('returns the encoded image bytes with their mime type', function (): void {
         ->encoded();
 
     expect($mime)->toBe('image/png')
-        ->and($contents)->not->toBe('');
+        ->and($contents)->not->toBeEmpty();
 });
 
 it('handles invalid option string in applyOptionsString', function (): void {
@@ -111,7 +111,7 @@ it('clamps an oversized crop to the image bounds without distortion', function (
 
     [$contents] = $service->encoded();
 
-    expect($contents)->not->toBe('');
+    expect($contents)->not->toBeEmpty();
 });
 
 it('encodes as jpeg for an unknown format', function (): void {

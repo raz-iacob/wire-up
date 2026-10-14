@@ -183,8 +183,8 @@ it('shows the latest orders and this month’s takings on the dashboard', functi
 });
 
 it('labels and colours every order status', function (OrderStatus $status): void {
-    expect($status->label())->not->toBe('')
-        ->and($status->color())->not->toBe('');
+    expect($status->label())->not->toBeEmpty()
+        ->and($status->color())->not->toBeEmpty();
 })->with(OrderStatus::cases());
 
 it('shows the chosen status as a removable filter chip', function (): void {

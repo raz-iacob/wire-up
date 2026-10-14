@@ -45,7 +45,7 @@ it('builds a manifest describing the bundle', function (): void {
 it('accepts a manifest from the same install', function (): void {
     $bundle = SiteBundle::current();
 
-    expect($bundle->incompatibilities($bundle->manifest([], false, 0, 0, [])))->toBe([]);
+    expect($bundle->incompatibilities($bundle->manifest([], false, 0, 0, [])))->toBeEmpty();
 });
 
 it('refuses a bundle written in another format', function (mixed $format): void {
@@ -78,11 +78,11 @@ it('accepts a bundle from an older install', function (): void {
     expect($bundle->incompatibilities([
         'format' => SiteBundle::FORMAT,
         'migrations' => $bundle->appliedMigrations() - 1,
-    ]))->toBe([]);
+    ]))->toBeEmpty();
 });
 
 it('ignores a manifest without a migration count', function (): void {
-    expect(SiteBundle::current()->incompatibilities(['format' => SiteBundle::FORMAT]))->toBe([]);
+    expect(SiteBundle::current()->incompatibilities(['format' => SiteBundle::FORMAT]))->toBeEmpty();
 });
 
 it('excludes users and other per-install tables from the transfer', function (): void {

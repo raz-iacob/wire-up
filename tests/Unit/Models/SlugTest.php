@@ -128,9 +128,8 @@ it('belongs to locale through foreign key', function (): void {
         'locale' => $locale->code,
     ]);
 
-    expect($slug->locale)->toBe($locale->code);
-
-    expect(fn () => Slug::factory()->create([
-        'locale' => 'xx-nonexistent',
-    ]))->toThrow(QueryException::class);
+    expect($slug->locale)->toBe($locale->code)
+        ->and(fn () => Slug::factory()->create([
+            'locale' => 'xx-nonexistent',
+        ]))->toThrow(QueryException::class);
 });

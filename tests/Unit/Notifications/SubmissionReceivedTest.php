@@ -84,23 +84,22 @@ it('builds a tabular mail with the named form, fields and message', function ():
 
     $mail = new SubmissionReceived($submission)->toMail(new AnonymousNotifiable);
 
-    expect($mail->subject)->toBe('New submission from Massage enquiry');
-    expect($mail->markdown)->toBe('mail.submission-received');
-    expect($mail->replyTo)->not->toBeEmpty();
-    expect($mail->viewData['formName'])->toBe('Massage enquiry');
-    expect($mail->viewData['message'])->toBe("Line one\nLine two");
+    expect($mail->subject)->toBe('New submission from Massage enquiry')
+        ->and($mail->markdown)->toBe('mail.submission-received')
+        ->and($mail->replyTo)->not->toBeEmpty()
+        ->and($mail->viewData)->toMatchArray(['formName' => 'Massage enquiry', 'message' => "Line one\nLine two"]);
 
     $rows = collect($mail->viewData['rows'])->pluck('value', 'label');
 
-    expect($rows['Name'])->toBe('Ada Lovelace');
-    expect($rows['Email'])->toBe('ada@example.com');
-    expect($rows['Phone'])->toBe('555-0100');
-    expect($rows['Subject'])->toBe('Saying hello');
-    expect($rows['Budget'])->toBe('1000');
-    expect($rows['Subscribe'])->toBe('Yes');
-    expect($rows['Declined'])->toBe('No');
-    expect($rows->has('Empty'))->toBeFalse();
-    expect($rows->has('Missing'))->toBeFalse();
+    expect($rows['Name'])->toBe('Ada Lovelace')
+        ->and($rows['Email'])->toBe('ada@example.com')
+        ->and($rows['Phone'])->toBe('555-0100')
+        ->and($rows['Subject'])->toBe('Saying hello')
+        ->and($rows['Budget'])->toBe('1000')
+        ->and($rows['Subscribe'])->toBe('Yes')
+        ->and($rows['Declined'])->toBe('No')
+        ->and($rows->has('Empty'))->toBeFalse()
+        ->and($rows->has('Missing'))->toBeFalse();
 });
 
 it('falls back to a generic subject and omits reply-to without a form name or email', function (): void {
@@ -116,9 +115,9 @@ it('falls back to a generic subject and omits reply-to without a form name or em
 
     $mail = new SubmissionReceived($submission)->toMail(new AnonymousNotifiable);
 
-    expect($mail->subject)->toBe('New contact form submission');
-    expect($mail->replyTo)->toBeEmpty();
-    expect($mail->viewData['rows'])->toBe([['label' => 'Name', 'value' => 'No Email']]);
+    expect($mail->subject)->toBe('New contact form submission')
+        ->and($mail->replyTo)->toBeEmpty()
+        ->and($mail->viewData['rows'])->toBe([['label' => 'Name', 'value' => 'No Email']]);
 });
 
 it('renders the markdown mail to html without errors', function (): void {

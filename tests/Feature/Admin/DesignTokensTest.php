@@ -37,8 +37,8 @@ it('gives buttons and inputs their own radius when asked', function (): void {
 });
 
 it('keeps the gutter in rem until a pixel value is set', function (): void {
-    expect(tokenCss())->toContain('--wire-gutter:1.5rem');
-    expect(tokenCss(['gutter' => 40]))->toContain('--wire-gutter:40px');
+    expect(tokenCss())->toContain('--wire-gutter:1.5rem')
+        ->and(tokenCss(['gutter' => 40]))->toContain('--wire-gutter:40px');
 });
 
 it('ignores a gutter outside the allowed range', function (): void {
@@ -46,8 +46,8 @@ it('ignores a gutter outside the allowed range', function (): void {
 });
 
 it('takes a numeric container width only for the custom preset', function (): void {
-    expect(tokenCss(['container' => 'custom', 'container_width' => 1380]))->toContain('--wire-container:1380px');
-    expect(tokenCss(['container' => 'medium', 'container_width' => 1380]))->toContain('--wire-container:72rem');
+    expect(tokenCss(['container' => 'custom', 'container_width' => 1380]))->toContain('--wire-container:1380px')
+        ->and(tokenCss(['container' => 'medium', 'container_width' => 1380]))->toContain('--wire-container:72rem');
 });
 
 it('falls back to the default width when a custom container has no number', function (): void {
@@ -56,9 +56,8 @@ it('falls back to the default width when a custom container has no number', func
 });
 
 it('emits the body line height and list indent', function (): void {
-    expect(tokenCss())->toContain('--wire-body-leading:1.625')->toContain('--wire-list-indent:1.5rem');
-    expect(tokenCss(['body_leading' => 'tight', 'list_indent' => 'large']))
-        ->toContain('--wire-body-leading:1.4')
+    expect(tokenCss())->toContain('--wire-body-leading:1.625')->toContain('--wire-list-indent:1.5rem')
+        ->and(tokenCss(['body_leading' => 'tight', 'list_indent' => 'large']))->toContain('--wire-body-leading:1.4')
         ->toContain('--wire-list-indent:2rem');
 });
 

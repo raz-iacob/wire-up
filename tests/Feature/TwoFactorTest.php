@@ -78,9 +78,8 @@ it('rejects a bad confirmation code with a readable message', function (): void 
     $user->refresh();
 
     expect(fn (): mixed => resolve(ConfirmTwoFactorAction::class)->handle($user, '000000'))
-        ->toThrow(ValidationException::class);
-
-    expect($user->refresh()->hasEnabledTwoFactorAuthentication())->toBeFalse();
+        ->toThrow(ValidationException::class)
+        ->and($user->refresh()->hasEnabledTwoFactorAuthentication())->toBeFalse();
 });
 
 it('turns two-factor authentication off', function (): void {

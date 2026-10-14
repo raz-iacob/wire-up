@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Schema;
 it('exposes the static resources with their applicable actions', function (): void {
     $resources = collect(PermissionRegistry::resources())->keyBy('key');
 
-    expect($resources->get('pages')['actions'])->toBe(['view', 'create', 'edit', 'delete']);
-    expect($resources->get('settings')['actions'])->toBe(['view', 'edit']);
-    expect($resources->get('inbox')['actions'])->toBe(['view', 'delete']);
+    expect($resources->get('pages')['actions'])->toBe(['view', 'create', 'edit', 'delete'])
+        ->and($resources->get('settings')['actions'])->toBe(['view', 'edit'])
+        ->and($resources->get('inbox')['actions'])->toBe(['view', 'delete']);
 });
 
 it('adds a resource per record type', function (): void {
@@ -19,9 +19,9 @@ it('adds a resource per record type', function (): void {
 
     $resources = collect(PermissionRegistry::resources())->keyBy('key');
 
-    expect($resources->has('records.product'))->toBeTrue();
-    expect($resources->get('records.product')['label'])->toBe('Products');
-    expect($resources->get('records.product')['group'])->toBe(PermissionRegistry::GROUP_RECORDS);
+    expect($resources->has('records.product'))->toBeTrue()
+        ->and($resources->get('records.product')['label'])->toBe('Products')
+        ->and($resources->get('records.product')['group'])->toBe(PermissionRegistry::GROUP_RECORDS);
 });
 
 it('omits record resources when the record types table is missing', function (): void {
@@ -44,10 +44,9 @@ it('builds dotted ability keys for every resource action', function (): void {
     $keys = PermissionRegistry::abilityKeys();
 
     expect($keys)->toContain('pages.view', 'pages.delete', 'settings.edit', 'roles.create')
-        ->not->toContain('settings.delete', 'inbox.create');
-
-    expect(PermissionRegistry::isValidAbility('pages.view'))->toBeTrue();
-    expect(PermissionRegistry::isValidAbility('pages.publish'))->toBeFalse();
+        ->not->toContain('settings.delete', 'inbox.create')
+        ->and(PermissionRegistry::isValidAbility('pages.view'))->toBeTrue()
+        ->and(PermissionRegistry::isValidAbility('pages.publish'))->toBeFalse();
 });
 
 it('registers the assistant.use ability under administration', function (): void {

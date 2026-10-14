@@ -130,8 +130,8 @@ it('keeps serving html when the request does not prefer markdown', function (): 
 
     $response->assertOk()->assertSee('Hello there');
 
-    expect($response->headers->get('Vary'))->toContain('Accept');
-    expect((string) $response->headers->get('Content-Type'))->toContain('text/html');
+    expect($response->headers->get('Vary'))->toContain('Accept')
+        ->and((string) $response->headers->get('Content-Type'))->toContain('text/html');
 });
 
 it('returns 404 markdown-side for unpublished pages', function (): void {

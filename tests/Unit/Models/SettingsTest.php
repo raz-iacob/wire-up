@@ -17,17 +17,17 @@ it('boots without the cache table so artisan runs before the first migration', f
     app()->forgetInstance('cache.store');
     Schema::dropIfExists('cache');
 
-    expect(Settings::cached())->toBe([]);
+    expect(Settings::cached())->toBeEmpty();
 });
 
 it('returns an empty array when the database is unreachable', function (): void {
     Schema::shouldReceive('hasTable')->andThrow(unreachableDatabase());
 
-    expect(Settings::cached())->toBe([]);
+    expect(Settings::cached())->toBeEmpty();
 });
 
 it('returns an empty array when the settings table is absent', function (): void {
     Schema::shouldReceive('hasTable')->with('settings')->andReturnFalse();
 
-    expect(Settings::cached())->toBe([]);
+    expect(Settings::cached())->toBeEmpty();
 });

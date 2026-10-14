@@ -118,8 +118,8 @@ it('gives user messages and unexpected roles an empty step list', function (): v
 
     upgradeMigration()->up();
 
-    expect(stepsOf($user))->toBe([])
-        ->and(stepsOf($system))->toBe([]);
+    expect(stepsOf($user))->toBeEmpty()
+        ->and(stepsOf($system))->toBeEmpty();
 });
 
 it('marks every migrated message completed and removes the old columns', function (): void {

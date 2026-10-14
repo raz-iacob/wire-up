@@ -73,7 +73,7 @@ it('clears the description when passed an empty string', function (): void {
         ->assertOk()
         ->assertSee('"description":""');
 
-    expect($page->refresh()->description)->toBe('');
+    expect($page->refresh()->description)->toBeEmpty();
 });
 
 it('keeps the other languages when renaming a page', function (): void {

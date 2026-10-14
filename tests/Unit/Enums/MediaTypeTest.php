@@ -55,9 +55,8 @@ it('allows common office document mime types for downloads', function (): void {
         ->toContain('application/vnd.rar')
         ->toContain('application/x-7z-compressed')
         ->toContain('application/gzip')
-        ->toContain('application/epub+zip');
-
-    expect(MediaType::IMAGE->allowedMimeTypes())->toContain('image/jpeg')->not->toContain('application/pdf');
+        ->toContain('application/epub+zip')
+        ->and(MediaType::IMAGE->allowedMimeTypes())->toContain('image/jpeg')->not->toContain('application/pdf');
 });
 
 it('returns correct icon for each case', function (): void {

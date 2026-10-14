@@ -62,16 +62,13 @@ it('keeps the attributes of the paragraph it promotes', function (): void {
 
 it('keeps inline markup inside the heading', function (): void {
     expect(BlockHeading::html('<p>Read the <a href="/docs">docs</a></p>'))
-        ->toBe('<h2>Read the <a href="/docs">docs</a></h2>');
-
-    expect(BlockHeading::html('Hello <strong>world</strong>'))
-        ->toBe('<h2>Hello <strong>world</strong></h2>');
+        ->toBe('<h2>Read the <a href="/docs">docs</a></h2>')
+        ->and(BlockHeading::html('Hello <strong>world</strong>'))->toBe('<h2>Hello <strong>world</strong></h2>');
 });
 
 it('leaves a level the author chose in the editor alone', function (): void {
-    expect(BlockHeading::html('<h3>Authored</h3>'))->toBe('<h3>Authored</h3>');
-    expect(BlockHeading::html('<h3>Authored</h3><p>Second line</p>'))
-        ->toBe('<h3>Authored</h3><p>Second line</p>');
+    expect(BlockHeading::html('<h3>Authored</h3>'))->toBe('<h3>Authored</h3>')
+        ->and(BlockHeading::html('<h3>Authored</h3><p>Second line</p>'))->toBe('<h3>Authored</h3><p>Second line</p>');
 });
 
 it('promotes only the first line so a two-line heading stays one heading', function (): void {
@@ -80,7 +77,7 @@ it('promotes only the first line so a two-line heading stays one heading', funct
 });
 
 it('renders nothing for an empty heading field', function (string $heading): void {
-    expect(BlockHeading::html($heading))->toBe('');
+    expect(BlockHeading::html($heading))->toBeEmpty();
 })->with(['empty' => '', 'whitespace' => '   ']);
 
 it('leaves loose text that trails the heading outside it', function (): void {
@@ -94,8 +91,8 @@ it('does not spend the heading on an empty first line', function (): void {
 });
 
 it('falls back to the given level when the stored one is not a level', function (mixed $stored): void {
-    expect(BlockHeading::level($stored))->toBe('h2');
-    expect(BlockHeading::level($stored, 'h1'))->toBe('h1');
+    expect(BlockHeading::level($stored))->toBe('h2')
+        ->and(BlockHeading::level($stored, 'h1'))->toBe('h1');
 })->with(['unset' => null, 'empty' => '', 'unknown' => 'h9', 'not a string' => 7]);
 
 it('falls back to h2 when the given level is not a level either', function (): void {
@@ -103,8 +100,8 @@ it('falls back to h2 when the given level is not a level either', function (): v
 });
 
 it('honours a stored level over the default', function (): void {
-    expect(BlockHeading::level('h4', 'h1'))->toBe('h4');
-    expect(BlockHeading::html('<p>Small</p>', 'h4'))->toBe('<h4>Small</h4>');
+    expect(BlockHeading::level('h4', 'h1'))->toBe('h4')
+        ->and(BlockHeading::html('<p>Small</p>', 'h4'))->toBe('<h4>Small</h4>');
 });
 
 it('gives a page one h1 from the hero and h2 for every other block', function (): void {

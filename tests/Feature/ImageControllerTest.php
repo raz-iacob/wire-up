@@ -23,7 +23,7 @@ it('can grab an image from storage and apply optional formatting', function (): 
 
     $response->assertOk();
 
-    $this->assertSame('image/webp', $response->headers->get('Content-Type'));
+    expect($response->headers->get('Content-Type'))->toBe('image/webp');
 
     $image = Image::fromBytes($response->getFile()->getContent());
 
@@ -147,9 +147,8 @@ it('serves animated gifs verbatim instead of flattening them to jpeg', function 
 
     expect($response->headers->get('Content-Type'))->toBe('image/gif')
         ->and($response->getContent())->toBe($gif)
-        ->and($response->headers->get('X-Content-Type-Options'))->toBe('nosniff');
-
-    expect(File::exists(config('media.cache_path')))->toBeFalse();
+        ->and($response->headers->get('X-Content-Type-Options'))->toBe('nosniff')
+        ->and(File::exists(config('media.cache_path')))->toBeFalse();
 });
 
 it('returns 404 for a gif that is not on the media disk', function (): void {

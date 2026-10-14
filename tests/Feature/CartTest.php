@@ -62,7 +62,7 @@ it('changes, caps and removes quantities', function (): void {
     expect(cart()->count())->toBe(5);
 
     cart()->update($record->id, 0);
-    expect(cart()->lines())->toBe([]);
+    expect(cart()->lines())->toBeEmpty();
 });
 
 it('ignores changes to items that are not in the cart', function (): void {
@@ -114,7 +114,7 @@ it('removes and clears items', function (): void {
 it('tolerates a tampered session', function (mixed $stored): void {
     session([CartService::SESSION_KEY => $stored]);
 
-    expect(cart()->lines())->toBe([]);
+    expect(cart()->lines())->toBeEmpty();
 })->with([
     'not a list' => ['nonsense'],
     'bad entries' => [['x' => 1, 5 => 'two', 6 => -1]],

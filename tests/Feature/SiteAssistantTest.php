@@ -119,7 +119,7 @@ it('forces the assistant create-page tool to drafts', function (): void {
 it('bridges the block-types resource so the assistant can read the catalog', function (): void {
     $tool = new McpResourceTool(new BlockTypesResource);
 
-    expect($tool->schema(new JsonSchemaTypeFactory))->toBe([]);
+    expect($tool->schema(new JsonSchemaTypeFactory))->toBeEmpty();
 
     $output = $tool->handle(new ToolRequest([]));
 
@@ -186,5 +186,5 @@ it('keeps accounts, roles and integration credentials away from the assistant', 
         })
         ->all();
 
-    expect($exposed)->toBe([]);
+    expect($exposed)->toBeEmpty();
 });

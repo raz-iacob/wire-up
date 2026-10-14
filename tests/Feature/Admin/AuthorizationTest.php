@@ -107,8 +107,8 @@ it('stops an author from deleting a record', function (): void {
 it('resolves gates from the assigned role abilities', function (): void {
     $editor = User::factory()->editor()->create();
 
-    expect(Gate::forUser($editor)->allows('pages.view'))->toBeTrue();
-    expect(Gate::forUser($editor)->allows('users.edit'))->toBeFalse();
+    expect(Gate::forUser($editor)->allows('pages.view'))->toBeTrue()
+        ->and(Gate::forUser($editor)->allows('users.edit'))->toBeFalse();
 });
 
 it('does not resolve non-permission abilities for a non-bypass role', function (): void {

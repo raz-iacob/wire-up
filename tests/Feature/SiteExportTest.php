@@ -96,10 +96,9 @@ it('writes a bundle holding a manifest, the site rows and the media files', func
 
     expect($entries)->toContain(SiteBundle::MANIFEST_ENTRY)
         ->and($entries)->toContain(SiteBundle::SITE_ENTRY)
-        ->and($entries)->toContain('media/photo.jpg');
-
-    expect($manifest['media']['count'])->toBe(1)
-        ->and($manifest['media']['missing'])->toBe([])
+        ->and($entries)->toContain('media/photo.jpg')
+        ->and($manifest['media']['count'])->toBe(1)
+        ->and($manifest['media']['missing'])->toBeEmpty()
         ->and($manifest['tables']['pages'])->toBe(Page::query()->count());
 
     $site = bundleEntry($path, SiteBundle::SITE_ENTRY);
@@ -223,5 +222,5 @@ it('leaves text that only looks like json alone', function (): void {
 
     $site = bundleEntry($path, SiteBundle::SITE_ENTRY);
 
-    expect(bundleRow($site['translations'], 'body', '{not actually json'))->not->toBe([]);
+    expect(bundleRow($site['translations'], 'body', '{not actually json'))->not->toBeEmpty();
 });

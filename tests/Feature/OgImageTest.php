@@ -169,7 +169,7 @@ it('leaves no temporary html behind', function (): void {
 
     resolve(OgImageService::class)->generate(sharedPage(), 'en');
 
-    expect(File::glob(config()->string('wireup.og_path').'/*.html'))->toBe([]);
+    expect(File::glob(config()->string('wireup.og_path').'/*.html'))->toBeEmpty();
 });
 
 it('skips content with no usable title', function (): void {

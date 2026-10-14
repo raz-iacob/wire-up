@@ -35,9 +35,9 @@ it('removes markup that can execute', function (string $value, string $expected)
 ]);
 
 it('blanks a bare url that would execute when clicked', function (): void {
-    expect(BlockHtmlSanitizer::value('javascript:alert(1)'))->toBe('')
-        ->and(BlockHtmlSanitizer::value('  JavaScript:alert(1)'))->toBe('')
-        ->and(BlockHtmlSanitizer::value('data:text/html,<script>bad()</script>'))->toBe('');
+    expect(BlockHtmlSanitizer::value('javascript:alert(1)'))->toBeEmpty()
+        ->and(BlockHtmlSanitizer::value('  JavaScript:alert(1)'))->toBeEmpty()
+        ->and(BlockHtmlSanitizer::value('data:text/html,<script>bad()</script>'))->toBeEmpty();
 });
 
 it('keeps an inline image data uri, which cannot execute', function (): void {

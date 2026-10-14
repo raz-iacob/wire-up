@@ -8,7 +8,7 @@ it('only offers icons that ship with a Flux view', function (): void {
         fn (string $icon): bool => ! file_exists(base_path("vendor/livewire/flux/stubs/resources/views/flux/icon/{$icon}.blade.php")),
     ));
 
-    expect($missing)->toBe([]);
+    expect($missing)->toBeEmpty();
 });
 
 it('offers each icon once', function (): void {

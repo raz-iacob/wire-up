@@ -14,8 +14,8 @@ it('resolves the parent through the blockable relation', function (): void {
         'blockable_type' => 'page',
     ]);
 
-    expect($block->blockable)->toBeInstanceOf(Page::class);
-    expect($block->blockable->id)->toBe($page->id);
+    expect($block->blockable)->toBeInstanceOf(Page::class)
+        ->and($block->blockable->id)->toBe($page->id);
 });
 
 it('creates blocks and assigns positions from array order', function (): void {
@@ -28,12 +28,12 @@ it('creates blocks and assigns positions from array order', function (): void {
 
     $blocks = $page->blocks()->get();
 
-    expect($blocks)->toHaveCount(2);
-    expect($blocks[0]->type)->toBe(BlockType::HERO);
-    expect($blocks[0]->position)->toBe(0);
-    expect($blocks[0]->content)->toBe(['heading' => ['en' => 'Hi']]);
-    expect($blocks[1]->type)->toBe(BlockType::SPACER);
-    expect($blocks[1]->position)->toBe(1);
+    expect($blocks)->toHaveCount(2)
+        ->and($blocks[0]->type)->toBe(BlockType::HERO)
+        ->and($blocks[0]->position)->toBe(0)
+        ->and($blocks[0]->content)->toBe(['heading' => ['en' => 'Hi']])
+        ->and($blocks[1]->type)->toBe(BlockType::SPACER)
+        ->and($blocks[1]->position)->toBe(1);
 });
 
 it('updates existing blocks, deletes missing ones, and reindexes positions', function (): void {
@@ -52,10 +52,10 @@ it('updates existing blocks, deletes missing ones, and reindexes positions', fun
 
     $blocks = $page->blocks()->get();
 
-    expect($blocks)->toHaveCount(1);
-    expect($blocks[0]->id)->toBe($hero->id);
-    expect($blocks[0]->position)->toBe(0);
-    expect($blocks[0]->content['heading']['en'])->toBe('Updated');
+    expect($blocks)->toHaveCount(1)
+        ->and($blocks[0]->id)->toBe($hero->id)
+        ->and($blocks[0]->position)->toBe(0)
+        ->and($blocks[0]->content['heading']['en'])->toBe('Updated');
 });
 
 it('returns an ordered blocks array with string ids', function (): void {
@@ -70,11 +70,11 @@ it('returns an ordered blocks array with string ids', function (): void {
     $array = $page->getBlocksArray();
     $block = Arr::first($array);
 
-    expect($array)->toHaveCount(1);
-    expect((string) array_key_first($array))->toBe($block['id']);
-    expect($block['id'])->toBeString();
-    expect($block['type'])->toBe('spacer');
-    expect($block['content'])->toBe(['size' => 'medium']);
+    expect($array)->toHaveCount(1)
+        ->and((string) array_key_first($array))->toBe($block['id'])
+        ->and($block['id'])->toBeString()
+        ->and($block['type'])->toBe('spacer')
+        ->and($block['content'])->toBe(['size' => 'medium']);
 });
 
 it('deletes blocks when the page is deleted', function (): void {

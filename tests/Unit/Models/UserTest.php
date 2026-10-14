@@ -7,15 +7,15 @@ use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 
 it('reports admin access from the role', function (): void {
-    expect(User::factory()->owner()->create()->canAccessAdmin())->toBeTrue();
-    expect(User::factory()->member()->create()->canAccessAdmin())->toBeFalse();
+    expect(User::factory()->owner()->create()->canAccessAdmin())->toBeTrue()
+        ->and(User::factory()->member()->create()->canAccessAdmin())->toBeFalse();
 });
 
 it('resolves abilities through the role and owner bypass', function (): void {
-    expect(User::factory()->editor()->create()->hasAbility('pages.view'))->toBeTrue();
-    expect(User::factory()->editor()->create()->hasAbility('users.edit'))->toBeFalse();
-    expect(User::factory()->owner()->create()->hasAbility('settings.edit'))->toBeTrue();
-    expect(User::factory()->member()->create()->hasAbility('pages.view'))->toBeFalse();
+    expect(User::factory()->editor()->create()->hasAbility('pages.view'))->toBeTrue()
+        ->and(User::factory()->editor()->create()->hasAbility('users.edit'))->toBeFalse()
+        ->and(User::factory()->owner()->create()->hasAbility('settings.edit'))->toBeTrue()
+        ->and(User::factory()->member()->create()->hasAbility('pages.view'))->toBeFalse();
 });
 
 test('to array', function (): void {

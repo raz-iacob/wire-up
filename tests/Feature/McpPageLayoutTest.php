@@ -26,7 +26,7 @@ it('creates a custom menu with a slug key derived from its name', function (): v
     expect($menu['name'])->toBe('Docs Sidebar')
         ->and($menu['builtin'])->toBeFalse()
         ->and($menu['display']['position'])->toBe('left')
-        ->and($menu['items'])->toBe([]);
+        ->and($menu['items'])->toBeEmpty();
 });
 
 it('accepts an explicit key and display options', function (): void {

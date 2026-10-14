@@ -168,7 +168,7 @@ it('falls back to any available translation if current locale translation is mis
 
 it('returns empty string if no translations are available', function (): void {
     $page = Page::factory()->create();
-    expect($page->title)->toBe('');
+    expect($page->title)->toBeEmpty();
 });
 
 it('gets translations array for a specific field', function (): void {
@@ -187,12 +187,11 @@ it('gets translations array for a specific field', function (): void {
     expect($title)->toBe([
         'en' => 'English Title',
         'fr' => 'Titre Français',
-    ]);
-
-    expect($description)->toBe([
-        'en' => '',
-        'fr' => '',
-    ]);
+    ])
+        ->and($description)->toBe([
+            'en' => '',
+            'fr' => '',
+        ]);
 });
 
 it('orders pages by translated title for the current locale', function (): void {

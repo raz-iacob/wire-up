@@ -19,7 +19,7 @@ it('gives every preset a light and a dark palette covering every required slot',
         }
     }
 
-    expect($incomplete)->toBe([]);
+    expect($incomplete)->toBeEmpty();
 });
 
 it('only uses six-digit hex colours', function (): void {
@@ -35,7 +35,7 @@ it('only uses six-digit hex colours', function (): void {
         }
     }
 
-    expect($bad)->toBe([]);
+    expect($bad)->toBeEmpty();
 });
 
 it('keeps a dark palette darker than its light counterpart', function (): void {
@@ -53,7 +53,7 @@ it('keeps a dark palette darker than its light counterpart', function (): void {
         }
     }
 
-    expect($wrongWayRound)->toBe([]);
+    expect($wrongWayRound)->toBeEmpty();
 });
 
 it('ships the blueprint preset in place of midnight', function (): void {
@@ -91,7 +91,7 @@ it('keeps hero text readable on the hero band', function (): void {
         }
     }
 
-    expect($unreadable)->toBe([]);
+    expect($unreadable)->toBeEmpty();
 });
 
 it('keeps the primary button visible against the hero band', function (): void {
@@ -121,7 +121,7 @@ it('keeps the primary button visible against the hero band', function (): void {
         }
     }
 
-    expect($lost)->toBe([]);
+    expect($lost)->toBeEmpty();
 });
 
 it('leaves optional slots out of the presets so they fall back instead of restyling a site', function (): void {
@@ -130,7 +130,7 @@ it('leaves optional slots out of the presets so they fall back instead of restyl
         fn (array $definition): bool => (bool) ($definition['optional'] ?? false),
     ));
 
-    expect($optional)->not->toBe([]);
+    expect($optional)->not->toBeEmpty();
 
     foreach (config()->array('theme.presets') as $key => $preset) {
         foreach (['colors', 'colors_dark'] as $palette) {

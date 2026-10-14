@@ -58,7 +58,7 @@ it('creates tmp directory if it does not exist', function (): void {
         rmdir($tmpDir);
     }
 
-    expect(is_dir($tmpDir))->toBeFalse();
+    expect($tmpDir)->not->toBeDirectory();
 
     $medias = Media::factory(2)->create();
     foreach ($medias as $media) {
@@ -73,7 +73,7 @@ it('creates tmp directory if it does not exist', function (): void {
         $response->sendContent();
         ob_get_clean();
 
-        expect(is_dir($tmpDir))->toBeTrue();
+        expect($tmpDir)->toBeDirectory();
     } catch (Throwable $e) {
         ob_end_clean();
         throw $e;

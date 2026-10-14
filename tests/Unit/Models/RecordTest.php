@@ -136,7 +136,7 @@ it('limits the excerpt to the requested length', function (): void {
 it('returns an empty string when a record has no textual content', function (): void {
     $record = Record::factory()->create(['data' => []]);
 
-    expect($record->plainText())->toBe('');
+    expect($record->plainText())->toBeEmpty();
 });
 
 it('builds a primary image url from the first image-bearing field', function (): void {

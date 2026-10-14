@@ -85,7 +85,7 @@ it('builds a two-step trail for a page', function (): void {
 });
 
 it('builds no trail for the home page', function (): void {
-    expect(BreadcrumbService::current()->trail(crumbHomePage()))->toBe([]);
+    expect(BreadcrumbService::current()->trail(crumbHomePage()))->toBeEmpty();
 });
 
 it('links the record type landing page in the middle of a record trail', function (): void {
@@ -115,12 +115,11 @@ it('drops the home crumb and relabels it on request', function (): void {
 
     expect($service->trail($page, withHome: false))->toBe([
         ['label' => 'Store', 'url' => null],
-    ]);
-
-    expect($service->trail($page, homeLabel: 'Start'))->toBe([
-        ['label' => 'Start', 'url' => route('home')],
-        ['label' => 'Store', 'url' => null],
-    ]);
+    ])
+        ->and($service->trail($page, homeLabel: 'Start'))->toBe([
+            ['label' => 'Start', 'url' => route('home')],
+            ['label' => 'Store', 'url' => null],
+        ]);
 });
 
 it('renders the breadcrumb block on a page', function (): void {

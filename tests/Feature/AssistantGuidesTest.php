@@ -68,7 +68,7 @@ it('lets the owner write, save and remove guides', function (): void {
         ->call('removeGuide', 0)
         ->call('update');
 
-    expect(SettingsService::current()->assistantGuides())->toBe([]);
+    expect(SettingsService::current()->assistantGuides())->toBeEmpty();
 });
 
 it('requires every part of a guide', function (): void {

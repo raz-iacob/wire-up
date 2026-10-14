@@ -54,7 +54,7 @@ it('renders every block type an agent left empty', function (): void {
         }
     }
 
-    expect($failed)->toBe([]);
+    expect($failed)->toBeEmpty();
 });
 
 it('renders every repeatable item an agent left without keys', function (): void {
@@ -69,7 +69,7 @@ it('renders every repeatable item an agent left without keys', function (): void
         }
     }
 
-    expect($failed)->toBe([]);
+    expect($failed)->toBeEmpty();
 });
 
 it('renders when an agent puts an array where an item field expects a string', function (): void {
@@ -84,7 +84,7 @@ it('renders when an agent puts an array where an item field expects a string', f
         }
     }
 
-    expect($failed)->toBe([]);
+    expect($failed)->toBeEmpty();
 });
 
 it('renders when an agent puts an array where a top-level field expects a string', function (): void {
@@ -104,7 +104,7 @@ it('renders when an agent puts an array where a top-level field expects a string
         }
     }
 
-    expect($failed)->toBe([]);
+    expect($failed)->toBeEmpty();
 });
 
 it('renders when an agent shapes a repeatable list as a map instead of a list', function (): void {
@@ -126,7 +126,7 @@ it('renders when an agent shapes a repeatable list as a map instead of a list', 
         }
     }
 
-    expect($failed)->toBe([]);
+    expect($failed)->toBeEmpty();
 });
 
 it('renders when an agent nests an array inside a translatable field', function (array $heading): void {
@@ -152,12 +152,12 @@ it('reads a scalar block field and falls back for anything else', function (): v
         ->and($block->plain('items.1.variant', 'primary'))->toBe('primary')
         ->and($block->plain('items.2.variant', 'primary'))->toBe('7')
         ->and($block->plain('items.9.variant', 'primary'))->toBe('primary')
-        ->and($block->plain('items.0.missing'))->toBe('');
+        ->and($block->plain('items.0.missing'))->toBeEmpty();
 });
 
 it('returns an empty string when a translatable field holds an array', function (): void {
     $block = new Block(['content' => ['heading' => ['en' => ['nested' => 'value']], 'intro' => ['en' => 'Fine']]]);
 
-    expect($block->text('heading'))->toBe('')
+    expect($block->text('heading'))->toBeEmpty()
         ->and($block->text('intro'))->toBe('Fine');
 });

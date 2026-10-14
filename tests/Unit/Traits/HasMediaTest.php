@@ -48,7 +48,7 @@ it('can retrieve all media by type and role in current locale', function (): voi
     $documents = $page->allMedia(MediaType::DOCUMENT, 'contract');
 
     expect($documents)->toBeArray()
-        ->and(count($documents))->toBe(2)
+        ->and($documents)->toHaveCount(2)
         ->and($documents[0]->id)->toBe($document1Media->id)
         ->and($documents[1]->id)->toBe($document2Media->id);
 });
@@ -101,7 +101,7 @@ it('can return all images for a role', function (): void {
     $images = $page->images('gallery');
 
     expect($images)->toBeArray()
-        ->and(count($images))->toBe(2);
+        ->and($images)->toHaveCount(2);
 });
 
 it('can find an image by role and crop', function (): void {

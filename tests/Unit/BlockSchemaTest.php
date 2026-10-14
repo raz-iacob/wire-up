@@ -51,7 +51,7 @@ it('builds a LocalBusiness node from a location block', function (): void {
 it('skips a location block with no contact details', function (): void {
     $block = schemaBlock(BlockType::LOCATION->value, ['name' => ['en' => 'Acme']]);
 
-    expect(schemaBuilder()->nodes($block, 'en'))->toBe([]);
+    expect(schemaBuilder()->nodes($block, 'en'))->toBeEmpty();
 });
 
 it('builds Person nodes from a team block and skips nameless members', function (): void {
@@ -114,7 +114,7 @@ it('parses prices best-effort', function (string $raw, ?string $price, ?string $
 it('returns no nodes when a block items field is not an array', function (): void {
     $block = schemaBlock(BlockType::PRICING->value, ['items' => 'nope']);
 
-    expect(schemaBuilder()->nodes($block, 'en'))->toBe([]);
+    expect(schemaBuilder()->nodes($block, 'en'))->toBeEmpty();
 });
 
 it('builds a VideoObject for an external video, falling back to the default share image', function (): void {
@@ -164,13 +164,13 @@ it('builds a VideoObject with a Vimeo embed url', function (): void {
 it('skips a video with no resolvable thumbnail', function (): void {
     $block = schemaBlock(BlockType::VIDEO->value, ['source' => 'url', 'url' => 'https://youtu.be/abcDEFghij1']);
 
-    expect(schemaBuilder(null)->nodes($block, 'en'))->toBe([]);
+    expect(schemaBuilder(null)->nodes($block, 'en'))->toBeEmpty();
 });
 
 it('skips a video block with no video source', function (): void {
     $block = schemaBlock(BlockType::VIDEO->value, ['source' => 'upload', 'heading' => ['en' => 'Empty']]);
 
-    expect(schemaBuilder()->nodes($block, 'en'))->toBe([]);
+    expect(schemaBuilder()->nodes($block, 'en'))->toBeEmpty();
 });
 
 it('builds an AudioObject from an audio block', function (): void {
@@ -187,7 +187,7 @@ it('builds an AudioObject from an audio block', function (): void {
 it('skips an audio block with no file', function (): void {
     $block = schemaBlock(BlockType::AUDIO->value, ['heading' => ['en' => 'Listen']]);
 
-    expect(schemaBuilder()->nodes($block, 'en'))->toBe([]);
+    expect(schemaBuilder()->nodes($block, 'en'))->toBeEmpty();
 });
 
 it('builds ImageObject nodes from a gallery block and skips video items', function (): void {
@@ -209,6 +209,6 @@ it('emits nothing for excluded block types', function (): void {
     foreach ([BlockType::ACCORDION, BlockType::RICH_TEXT, BlockType::TESTIMONIALS, BlockType::FEATURE_CARDS] as $type) {
         $block = schemaBlock($type->value, ['heading' => ['en' => 'Heading'], 'body' => ['en' => 'Body']]);
 
-        expect(schemaBuilder()->nodes($block, 'en'))->toBe([]);
+        expect(schemaBuilder()->nodes($block, 'en'))->toBeEmpty();
     }
 });

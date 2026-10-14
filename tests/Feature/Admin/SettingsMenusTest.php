@@ -228,7 +228,7 @@ it('keeps menus separate per language', function (): void {
         ->get('menus');
 
     expect($menus[0]['items']['en'])->toHaveCount(1)
-        ->and($menus[0]['items']['nl'])->toHaveCount(0);
+        ->and($menus[0]['items']['nl'])->toBeEmpty();
 });
 
 it('adds a custom menu with its own items for each active locale', function (): void {

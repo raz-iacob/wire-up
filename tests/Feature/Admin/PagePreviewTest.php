@@ -27,9 +27,9 @@ it('caches a snapshot and opens the preview', function (): void {
 
     $snapshot = Cache::get("page-preview:{$this->page->id}:".auth()->id().":{$token}");
 
-    expect($snapshot)->toBeArray();
-    expect($snapshot['page_id'])->toBe($this->page->id);
-    expect($snapshot['blocks'][0]['content']['heading']['en'])->toBe('Preview heading');
+    expect($snapshot)->toBeArray()
+        ->and($snapshot['page_id'])->toBe($this->page->id)
+        ->and($snapshot['blocks'][0]['content']['heading']['en'])->toBe('Preview heading');
 });
 
 it('renders unsaved blocks through the front-end on the preview route', function (): void {

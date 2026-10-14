@@ -15,7 +15,7 @@ it('reports no usage for a fresh media', function (): void {
     $service = resolve(MediaUsageService::class);
 
     expect($service->isInUse($media))->toBeFalse()
-        ->and($service->labels($media))->toBe([]);
+        ->and($service->labels($media))->toBeEmpty();
 });
 
 it('detects pivot usage when attached to a page', function (): void {

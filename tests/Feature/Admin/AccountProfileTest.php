@@ -229,9 +229,8 @@ it('can delete current profile photo', function (): void {
 
     $user->refresh();
 
-    expect($user->photo)->toBeNull();
-
-    expect(Storage::disk(config('filesystems.media'))->exists($photoPath))->toBeFalse();
+    expect($user->photo)->toBeNull()
+        ->and(Storage::disk(config('filesystems.media'))->exists($photoPath))->toBeFalse();
 });
 
 it('validates photo file size', function (): void {

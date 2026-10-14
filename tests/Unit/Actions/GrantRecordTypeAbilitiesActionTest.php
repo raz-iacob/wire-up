@@ -19,7 +19,7 @@ it('grants each preset role its actions on a new content type', function (): voi
         ->and(roleAbilities('editor'))->toContain('records.product.view', 'records.product.create', 'records.product.edit', 'records.product.delete')
         ->and(roleAbilities('author'))->toContain('records.product.view', 'records.product.create', 'records.product.edit')
         ->and(roleAbilities('author'))->not->toContain('records.product.delete')
-        ->and(roleAbilities('member'))->toBe([])
+        ->and(roleAbilities('member'))->toBeEmpty()
         ->and($custom->refresh()->abilities)->toBe(['pages.view']);
 });
 

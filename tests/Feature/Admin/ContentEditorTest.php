@@ -46,9 +46,8 @@ it('puts the photo link type and its value on one row', function (): void {
     $label = mb_strpos($html, 'Link (optional)');
     $openingTags = mb_substr($html, 0, (int) $label);
 
-    expect($label)->not->toBeFalse();
-    expect(mb_substr($openingTags, mb_strrpos($openingTags, '<div class="') ?: 0))
-        ->toContain('md:grid-cols-2');
+    expect($label)->not->toBeFalse()
+        ->and(mb_substr($openingTags, mb_strrpos($openingTags, '<div class="') ?: 0))->toContain('md:grid-cols-2');
 });
 
 it('renders each block type partial', function (): void {
@@ -139,8 +138,8 @@ it('adds a custom field to both the list and the field order, then removes it', 
     $component->call('removeContactField', 'cf', $fieldId);
 
     $content = $component->get('blocks')['cf']['content'];
-    expect($content['customFields'])->toBeEmpty();
-    expect($content['fieldOrder'])->not->toContain($fieldId);
+    expect($content['customFields'])->toBeEmpty()
+        ->and($content['fieldOrder'])->not->toContain($fieldId);
 });
 
 it('interleaves custom fields with built-in fields in a single order', function (): void {
@@ -240,12 +239,12 @@ it('inserts a block at the chosen position and renumbers', function (): void {
 
     $blocks = array_values($component->get('blocks'));
 
-    expect($blocks)->toHaveCount(3);
-    expect($blocks[0]['id'])->toBe('new-a');
-    expect($blocks[1]['type'])->toBe('hero');
-    expect($blocks[1]['position'])->toBe(1);
-    expect($blocks[2]['id'])->toBe('new-b');
-    expect($blocks[2]['position'])->toBe(2);
+    expect($blocks)->toHaveCount(3)
+        ->and($blocks[0]['id'])->toBe('new-a')
+        ->and($blocks[1]['type'])->toBe('hero')
+        ->and($blocks[1]['position'])->toBe(1)
+        ->and($blocks[2]['id'])->toBe('new-b')
+        ->and($blocks[2]['position'])->toBe(2);
 });
 
 it('shows the block picker options with descriptions and a search input', function (): void {
@@ -306,10 +305,10 @@ it('persists reordered blocks when saving', function (): void {
 
     $ordered = $page->blocks()->get();
 
-    expect($ordered)->toHaveCount(2);
-    expect($ordered[0]->type->value)->toBe('hero');
-    expect($ordered[0]->position)->toBe(0);
-    expect($ordered[1]->type->value)->toBe('spacer');
+    expect($ordered)->toHaveCount(2)
+        ->and($ordered[0]->type->value)->toBe('hero')
+        ->and($ordered[0]->position)->toBe(0)
+        ->and($ordered[1]->type->value)->toBe('spacer');
 });
 
 it('updates existing blocks and deletes removed ones when saving', function (): void {
@@ -340,8 +339,8 @@ it('updates existing blocks and deletes removed ones when saving', function (): 
         ->call('update')
         ->assertHasNoErrors();
 
-    expect($page->blocks()->count())->toBe(1);
-    expect($keep->fresh()->content['heading']['en'])->toBe('New');
+    expect($page->blocks()->count())->toBe(1)
+        ->and($keep->fresh()->content['heading']['en'])->toBe('New');
 
     $this->assertDatabaseMissing('blocks', ['id' => $drop->id]);
 });
@@ -1179,7 +1178,7 @@ it('gives the duplicated block and its items their own ids', function (): void {
     $original = array_column($blocks[0]['content']['items'], 'id');
     $copy = array_column($blocks[1]['content']['items'], 'id');
 
-    expect(array_intersect($original, $copy))->toBe([])
+    expect(array_intersect($original, $copy))->toBeEmpty()
         ->and(array_column($blocks[1]['content']['items'], 'title'))->toBe([['en' => 'One'], ['en' => 'Two']]);
 });
 
