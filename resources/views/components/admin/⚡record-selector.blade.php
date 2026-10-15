@@ -28,6 +28,8 @@ return new class extends Component
 
     public string $name = 'records';
 
+    public ?int $excludeId = null;
+
     public function mount(): void
     {
         $this->recordIds = $this->normalizeIds($this->recordIds);
@@ -70,6 +72,7 @@ return new class extends Component
             recordTypeId: $this->recordTypeId,
             max: $this->max,
             selectedIds: $this->recordIds,
+            excludeId: $this->excludeId,
         );
     }
 
@@ -195,7 +198,11 @@ return new class extends Component
             @endif
 
             <div class="flex items-center justify-between gap-4">
-                @if (count($this->recordIds) < $this->max)
+                @if ($selected->isNotEmpty() && $this->max === 1)
+                    <flux:button variant="filled" size="sm" icon="arrows-right-left" wire:click="openLibrary">
+                        {{ __('Change') }}
+                    </flux:button>
+                @elseif (count($this->recordIds) < $this->max)
                     <flux:button variant="filled" size="sm" icon="plus" wire:click="openLibrary">
                         {{ $selected->isEmpty() ? __('Select :name', ['name' => $recordType->name]) : __('Add more') }}
                     </flux:button>

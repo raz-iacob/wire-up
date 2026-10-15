@@ -10,6 +10,7 @@ use App\Models\Block;
 use App\Models\Category;
 use App\Models\Record;
 use App\Models\RecordType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Mcp\Response;
@@ -59,6 +60,8 @@ final readonly class Records
             'translatable' => (bool) ($field['translatable'] ?? false),
             'options' => is_array($field['options'] ?? null) ? array_values($field['options']) : [],
             'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
+            'record_type' => $field['record_type'] ?? null,
+            'multiple' => isset($field['record_type']) ? (bool) ($field['multiple'] ?? false) : null,
         ], fn (mixed $value): bool => $value !== [] && $value !== null);
     }
 
@@ -185,6 +188,7 @@ final readonly class Records
                 FieldType::NUMBER, FieldType::MONEY => is_numeric($value) ? $value + 0 : null,
                 FieldType::TAGS => Record::normalizeList($value),
                 FieldType::MULTI_SELECT => Record::normalizeList($value, is_array($field['options'] ?? null) ? $field['options'] : []),
+                FieldType::RELATIONSHIP => self::linkedIds($field, $value),
                 default => $value === '' ? null : $value,
             };
         }
@@ -217,8 +221,27 @@ final readonly class Records
                     fn (mixed $option): bool => is_string($option) && $option !== '',
                 )),
                 'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
+                ...($type === FieldType::RELATIONSHIP
+                    ? ['record_type' => (string) ($field['record_type'] ?? ''), 'multiple' => (bool) ($field['multiple'] ?? false)]
+                    : []),
             ];
         }, $fields);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $fields
+     */
+    public static function unknownLinkTarget(array $fields, string $ownKey): ?string
+    {
+        $keys = [...RecordType::query()->pluck('key')->all(), $ownKey];
+
+        foreach ($fields as $field) {
+            if (($field['type'] ?? null) === FieldType::RELATIONSHIP->value && ! in_array($field['record_type'] ?? '', $keys, true)) {
+                return 'The "'.($field['key'] ?? '').'" field links records, so give it a "record_type": the key of an existing content type ('.implode(', ', array_filter($keys)).').';
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -241,6 +264,8 @@ final readonly class Records
             'fields.*.options' => ['array'],
             'fields.*.options.*' => ['string'],
             'fields.*.prefills' => ['nullable', 'string', 'in:title,description'],
+            'fields.*.record_type' => ['nullable', 'string'],
+            'fields.*.multiple' => ['boolean'],
         ];
     }
 
@@ -309,5 +334,24 @@ final readonly class Records
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
+     * @return array<int, int>|null
+     */
+    private static function linkedIds(array $field, mixed $value): ?array
+    {
+        $wanted = Record::normalizeIds($value) ?? [];
+
+        $existing = Record::query()
+            ->whereKey($wanted)
+            ->whereHas('recordType', fn (Builder $query): Builder => $query->where('key', (string) ($field['record_type'] ?? '')))
+            ->pluck('id')
+            ->all();
+
+        $ids = array_values(array_filter($wanted, fn (int $id): bool => in_array($id, $existing, true)));
+
+        return Record::normalizeIds(($field['multiple'] ?? false) ? $ids : array_slice($ids, 0, 1));
     }
 }

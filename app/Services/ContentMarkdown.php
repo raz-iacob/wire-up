@@ -93,7 +93,9 @@ final readonly class ContentMarkdown
      */
     private function fieldLine(Record $record, array $field): string
     {
-        $value = $record->fieldValue((string) ($field['key'] ?? ''), (bool) ($field['translatable'] ?? false));
+        $value = FieldType::tryFrom((string) ($field['type'] ?? '')) === FieldType::RELATIONSHIP
+            ? $record->linkedRecords($field)->map(fn (Record $linked): string => $linked->title)->all()
+            : $record->fieldValue((string) ($field['key'] ?? ''), (bool) ($field['translatable'] ?? false));
 
         if (is_array($value)) {
             $value = implode(', ', array_filter($value, is_scalar(...)));

@@ -19,6 +19,8 @@ return new class extends Component
 
     public int $max = 30;
 
+    public ?int $excludeId = null;
+
     /**
      * @var array<int, int>
      */
@@ -52,9 +54,10 @@ return new class extends Component
      * @param  array<int, int|string>  $selectedIds
      */
     #[On('select-records')]
-    public function handleSelectRecords(string $target, ?int $recordTypeId = null, int $max = 30, array $selectedIds = []): void
+    public function handleSelectRecords(string $target, ?int $recordTypeId = null, int $max = 30, array $selectedIds = [], ?int $excludeId = null): void
     {
         $this->target = $target;
+        $this->excludeId = $excludeId;
         $this->recordTypeId = $recordTypeId;
         $this->max = max(1, $max);
         $this->selectedIds = array_values(array_map(intval(...), $selectedIds));
@@ -78,6 +81,12 @@ return new class extends Component
                 $this->selectedIds,
                 fn (int $id): bool => $id !== $recordId,
             ));
+
+            return;
+        }
+
+        if ($this->max === 1) {
+            $this->selectedIds = [$recordId];
 
             return;
         }
@@ -115,6 +124,7 @@ return new class extends Component
 
         $base = Record::query()
             ->where('record_type_id', $recordType->id)
+            ->when($this->excludeId !== null, fn ($query) => $query->whereKeyNot($this->excludeId))
             ->matchingSearch($this->search, $recordType);
 
         $offset = $loadMore ? $this->records->count() : 0;

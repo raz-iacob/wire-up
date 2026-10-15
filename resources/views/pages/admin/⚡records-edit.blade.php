@@ -126,7 +126,7 @@ return new class extends Component
             ->values()
             ->all();
         $this->fillMetadata($record->metadata ?? []);
-        $this->data = is_array($record->data) ? $record->data : [];
+        $this->data = $this->withLinkDefaults(is_array($record->data) ? $record->data : []);
         $this->loadedStock = $record->stock;
         $this->stock = $record->stock === null ? '' : (string) $record->stock;
 
@@ -327,7 +327,7 @@ return new class extends Component
         $this->slugs = $this->revisionTexts($content, 'slugs');
         $this->blocks = $this->withBlockDefaults($this->revisionBlocks($content));
         $this->categories = $this->revisionCategories($content);
-        $this->data = array_intersect_key(is_array($content['data'] ?? null) ? $content['data'] : [], array_flip($fieldKeys));
+        $this->data = $this->withLinkDefaults(array_intersect_key(is_array($content['data'] ?? null) ? $content['data'] : [], array_flip($fieldKeys)));
         $this->fillMetadata($this->revisionMetadata($content));
 
         foreach (array_keys($this->media) as $role) {
@@ -346,6 +346,21 @@ return new class extends Component
         Record::query()->whereKey($this->record->id)->update(['stock' => $stock]);
 
         $this->loadedStock = $stock;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function withLinkDefaults(array $data): array
+    {
+        foreach ($this->recordType->fields as $field) {
+            if ($field['type'] === FieldType::RELATIONSHIP->value) {
+                $data[$field['key']] = array_map(strval(...), Record::normalizeIds($data[$field['key']] ?? null) ?? []);
+            }
+        }
+
+        return $data;
     }
 
     /**
@@ -493,6 +508,15 @@ return new class extends Component
             return;
         }
 
+        if ($type === FieldType::RELATIONSHIP) {
+            $rules["data.$key"] = [...($required ? ['required'] : ['nullable']), 'array', 'max:'.(($field['multiple'] ?? false) ? 30 : 1)];
+            $rules["data.$key.*"] = ['integer', Rule::exists('records', 'id')->where('record_type_id', RecordType::query()->where('key', (string) ($field['record_type'] ?? ''))->value('id'))];
+            $attributes["data.$key"] = $label;
+            $attributes["data.$key.*"] = $label;
+
+            return;
+        }
+
         if ($type->isList()) {
             $rules["data.$key"] = [...($required ? ['required'] : ['nullable']), 'array'];
             $rules["data.$key.*"] = $type === FieldType::MULTI_SELECT
@@ -621,6 +645,7 @@ return new class extends Component
             $value = $this->data[$key] ?? null;
 
             $clean[$key] = match (true) {
+                $type === FieldType::RELATIONSHIP => Record::normalizeIds($value),
                 $type->isList() => Record::normalizeList(is_array($value) ? $value : []),
                 $type === FieldType::BOOLEAN => (bool) $value,
                 in_array($type, [FieldType::NUMBER, FieldType::MONEY], true) => is_numeric($value) ? $value + 0 : null,

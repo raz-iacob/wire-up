@@ -25,6 +25,7 @@ it('exposes all field type values in order', function (): void {
         'color',
         'tags',
         'multi-select',
+        'relationship',
     ]);
 });
 
@@ -93,6 +94,8 @@ it('treats tags and multiple choice as lists, keeps the new types untranslatable
         ->and(FieldType::SELECT->isList())->toBeFalse()
         ->and(FieldType::TAGS->canBeTranslated())->toBeFalse()
         ->and(FieldType::EMAIL->canBeTranslated())->toBeFalse()
+        ->and(FieldType::RELATIONSHIP->isList())->toBeTrue()
+        ->and(FieldType::RELATIONSHIP->canBeTranslated())->toBeFalse()
         ->and(FieldType::TEXT->canBeTranslated())->toBeTrue()
         ->and(FieldType::MULTI_SELECT->supportsOptions())->toBeTrue()
         ->and(FieldType::MULTI_SELECT->isFilterable())->toBeTrue()

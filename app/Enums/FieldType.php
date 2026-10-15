@@ -25,6 +25,7 @@ enum FieldType: string
     case COLOR = 'color';
     case TAGS = 'tags';
     case MULTI_SELECT = 'multi-select';
+    case RELATIONSHIP = 'relationship';
 
     /**
      * @return array<int, string>
@@ -56,6 +57,7 @@ enum FieldType: string
             self::COLOR => __('Color'),
             self::TAGS => __('Tags'),
             self::MULTI_SELECT => __('Multiple choice'),
+            self::RELATIONSHIP => __('Linked records'),
         };
     }
 
@@ -81,6 +83,7 @@ enum FieldType: string
             self::COLOR => 'swatch',
             self::TAGS => 'tag',
             self::MULTI_SELECT => 'list-bullet',
+            self::RELATIONSHIP => 'arrows-right-left',
         };
     }
 
@@ -106,6 +109,7 @@ enum FieldType: string
             self::COLOR => __('A color picked from a palette.'),
             self::TAGS => __('Free-form tags, as many as you need.'),
             self::MULTI_SELECT => __('Several choices from predefined options.'),
+            self::RELATIONSHIP => __('Links to records of a content type, such as related products.'),
         };
     }
 
@@ -132,12 +136,12 @@ enum FieldType: string
 
     public function isList(): bool
     {
-        return in_array($this, [self::TAGS, self::MULTI_SELECT], true);
+        return in_array($this, [self::TAGS, self::MULTI_SELECT, self::RELATIONSHIP], true);
     }
 
     public function canBeTranslated(): bool
     {
-        return ! in_array($this, [self::EMAIL, self::COLOR, self::TAGS, self::MULTI_SELECT], true);
+        return ! in_array($this, [self::EMAIL, self::COLOR, self::TAGS, self::MULTI_SELECT, self::RELATIONSHIP], true);
     }
 
     /**

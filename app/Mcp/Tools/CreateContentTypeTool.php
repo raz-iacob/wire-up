@@ -72,6 +72,13 @@ final class CreateContentTypeTool extends Tool
             $fields = RecordTypePresets::withSellableFields($fields);
         }
 
+        $key = $this->uniqueKey($preset['key'] ?? Str::slug($name, '_'));
+        $linkError = Records::unknownLinkTarget($fields, $key);
+
+        if ($linkError !== null) {
+            return Response::error($linkError);
+        }
+
         $slugPrefix = (string) ($validated['slug_prefix'] ?? $preset['slug_prefix'] ?? Records::suggestSlugPrefix($name));
 
         if ($this->prefixTaken($slugPrefix)) {
@@ -79,7 +86,7 @@ final class CreateContentTypeTool extends Tool
         }
 
         $type = new CreateRecordTypeAction()->handle([
-            'key' => $this->uniqueKey($preset['key'] ?? Str::slug($name, '_')),
+            'key' => $key,
             'name' => $name,
             'slug_prefix' => $slugPrefix,
             'icon' => (string) ($validated['icon'] ?? $preset['icon'] ?? 'rectangle-stack'),
@@ -128,7 +135,7 @@ final class CreateContentTypeTool extends Tool
 
             'fields' => $schema->array()
                 ->items($schema->object())
-                ->description('The custom field blueprint: [{"key": "sku", "type": "text", "label": "SKU", "required": false, "translatable": false, "column": false, "sortable": false, "searchable": false, "help": "", "options": [], "prefills": null}]. "type" is one of: text, textarea, rich-text, number, money, date, datetime, boolean, select, photo, video, audio, document, media-gallery, url, email, color, tags, multi-select. "translatable" defaults to the type default; email, color, tags and multi-select are never translatable. "column"/"sortable"/"searchable" control the admin list. "options" is for select and multi-select. Pass tags and multi-select values as arrays of strings. "prefills" ("title" or "description") copies the field into the SEO title/description. Omit to use the preset fields.'),
+                ->description('The custom field blueprint: [{"key": "sku", "type": "text", "label": "SKU", "required": false, "translatable": false, "column": false, "sortable": false, "searchable": false, "help": "", "options": [], "prefills": null}]. "type" is one of: text, textarea, rich-text, number, money, date, datetime, boolean, select, photo, video, audio, document, media-gallery, url, email, color, tags, multi-select, relationship. "translatable" defaults to the type default; email, color, tags, multi-select and relationship are never translatable. A relationship field links to records of another type: give it "record_type" (the key of that type) and "multiple" (true to allow several). "column"/"sortable"/"searchable" control the admin list. "options" is for select and multi-select. Pass tags and multi-select values as arrays of strings, and relationship values as arrays of record ids. "prefills" ("title" or "description") copies the field into the SEO title/description. Omit to use the preset fields.'),
         ];
     }
 

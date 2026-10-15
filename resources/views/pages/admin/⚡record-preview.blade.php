@@ -133,5 +133,7 @@ return new class extends Component
         'components.site.records.default',
     ], ['record' => $record])
 
+    <x-site.records.linked-records :record="$record" />
+
     <x-site.page-content :page="$record" />
 </div>

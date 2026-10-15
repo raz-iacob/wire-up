@@ -66,14 +66,33 @@ it('toggles selection and respects the maximum', function (): void {
     $type = libraryType();
     $one = libraryRecord($type, 'One');
     $two = libraryRecord($type, 'Two');
+    $three = libraryRecord($type, 'Three');
 
     Livewire::test('admin.record-library')
-        ->call('handleSelectRecords', 'target-a', $type->id, 1, [])
+        ->call('handleSelectRecords', 'target-a', $type->id, 2, [])
+        ->call('toggle', $one->id)
+        ->call('toggle', $two->id)
+        ->assertSet('selectedIds', [$one->id, $two->id])
+        ->call('toggle', $three->id)
+        ->assertSet('selectedIds', [$one->id, $two->id])
+        ->call('toggle', $one->id)
+        ->assertSet('selectedIds', [$two->id]);
+});
+
+it('swaps the pick when only one record may be chosen, and leaves out the excluded record', function (): void {
+    $type = libraryType();
+    $one = libraryRecord($type, 'One');
+    $two = libraryRecord($type, 'Two');
+
+    Livewire::test('admin.record-library')
+        ->call('handleSelectRecords', 'target-a', $type->id, 1, [], $two->id)
+        ->assertSee('One')
+        ->assertDontSee('Two')
         ->call('toggle', $one->id)
         ->assertSet('selectedIds', [$one->id])
         ->call('toggle', $two->id)
-        ->assertSet('selectedIds', [$one->id])
-        ->call('toggle', $one->id)
+        ->assertSet('selectedIds', [$two->id])
+        ->call('toggle', $two->id)
         ->assertSet('selectedIds', []);
 });
 

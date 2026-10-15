@@ -31,6 +31,11 @@ return new class extends Component
 
     public int $removeRecordCount = 0;
 
+    /**
+     * @var array<int, string>
+     */
+    public array $removeLinkedFrom = [];
+
     public function mount(): void
     {
         $locale = resolve('localization')->getDefaultLocale();
@@ -162,6 +167,8 @@ return new class extends Component
             'help' => '',
             'options' => '',
             'prefills' => null,
+            'record_type' => '',
+            'multiple' => false,
             'open' => true,
         ];
     }
@@ -270,9 +277,10 @@ return new class extends Component
         $index = $this->typeIndex($typeKey);
         $id = $index !== null ? $this->types[$index]['id'] : null;
 
-        $this->removeRecordCount = $id !== null
-            ? RecordType::query()->findOrFail($id)->records()->count()
-            : 0;
+        $existing = $id !== null ? RecordType::query()->findOrFail($id) : null;
+
+        $this->removeRecordCount = $existing?->records()->count() ?? 0;
+        $this->removeLinkedFrom = $existing?->linkedFromOtherTypes() ?? [];
 
         Flux::modal('confirm-delete-type')->show();
     }
@@ -281,7 +289,7 @@ return new class extends Component
     {
         $this->authorize('settings.edit');
 
-        if ($this->removeRecordCount > 0) {
+        if ($this->removeRecordCount > 0 || $this->removeLinkedFrom !== []) {
             return;
         }
 
@@ -302,6 +310,7 @@ return new class extends Component
 
         $this->removeKey = null;
         $this->removeRecordCount = 0;
+        $this->removeLinkedFrom = [];
         Flux::modal('confirm-delete-type')->close();
     }
 
@@ -310,6 +319,17 @@ return new class extends Component
         return $this->view()
             ->title(__('Content Types'))
             ->layout('layouts::admin');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function linkTargets(): array
+    {
+        return collect($this->types)
+            ->filter(fn (array $type): bool => $type['key'] !== '')
+            ->mapWithKeys(fn (array $type): array => [$type['key'] => $type['name']])
+            ->all();
     }
 
     private function assertUniquePrefixes(): void
@@ -404,6 +424,8 @@ return new class extends Component
             'help' => $field['help'] ?? '',
             'options' => implode("\n", $field['options'] ?? []),
             'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
+            'record_type' => (string) ($field['record_type'] ?? ''),
+            'multiple' => (bool) ($field['multiple'] ?? false),
             'open' => false,
         ];
     }
@@ -427,6 +449,9 @@ return new class extends Component
             'help' => (string) ($field['help'] ?? ''),
             'options' => $this->parseOptions((string) ($field['options'] ?? '')),
             'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
+            ...($field['type'] === FieldType::RELATIONSHIP->value
+                ? ['record_type' => (string) ($field['record_type'] ?? ''), 'multiple' => (bool) ($field['multiple'] ?? false)]
+                : []),
         ], $fields);
     }
 
@@ -447,6 +472,14 @@ return new class extends Component
         $index = array_search($typeKey, array_column($this->types, '_key'), true);
 
         return $index === false ? null : $index;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function linkTargetKeys(): array
+    {
+        return array_keys($this->linkTargets());
     }
 
     /**
@@ -485,6 +518,12 @@ return new class extends Component
             $rules["types.$index.fields.*.help"] = ['nullable', 'string', 'max:500'];
             $rules["types.$index.fields.*.options"] = ['nullable', 'string'];
             $rules["types.$index.fields.*.prefills"] = ['nullable', Rule::in(['title', 'description'])];
+            $rules["types.$index.fields.*.record_type"] = [
+                "required_if:types.$index.fields.*.type,".FieldType::RELATIONSHIP->value,
+                'nullable',
+                Rule::in($this->linkTargetKeys()),
+            ];
+            $rules["types.$index.fields.*.multiple"] = ['boolean'];
         }
 
         return $rules;
@@ -502,6 +541,8 @@ return new class extends Component
             'types.*.fields.*.key.regex' => __('Field keys must start with a letter and use lowercase letters, numbers and underscores.'),
             'types.*.fields.*.key.distinct' => __('Each field needs a unique key.'),
             'types.*.fields.*.key.not_in' => __('That field key is reserved. Choose another.'),
+            'types.*.fields.*.record_type.required_if' => __('Choose which content type this field links to.'),
+            'types.*.fields.*.record_type.in' => __('Choose a saved content type to link to.'),
         ];
     }
 
@@ -582,6 +623,7 @@ return new class extends Component
                                     :type="$type"
                                     :index="$index"
                                     :extra-locales="$this->extraLocales()"
+                                    :link-targets="$this->linkTargets()"
                                 />
                             @endforeach
                         </div>
@@ -620,9 +662,14 @@ return new class extends Component
 
     <flux:modal name="confirm-delete-type" class="md:w-96">
         <div class="space-y-6">
-            @if ($removeRecordCount > 0)
+            @if ($removeRecordCount > 0 || $removeLinkedFrom !== [])
                 <flux:heading size="lg">{{ __('Type in use') }}</flux:heading>
-                <flux:text>{{ trans_choice('Delete its :count record before removing this type.|Delete its :count records before removing this type.', $removeRecordCount, ['count' => $removeRecordCount]) }}</flux:text>
+                @if ($removeRecordCount > 0)
+                    <flux:text>{{ trans_choice('Delete its :count record before removing this type.|Delete its :count records before removing this type.', $removeRecordCount, ['count' => $removeRecordCount]) }}</flux:text>
+                @endif
+                @if ($removeLinkedFrom !== [])
+                    <flux:text>{{ __('Other content types link to it. Remove these fields first: :fields.', ['fields' => implode(', ', $removeLinkedFrom)]) }}</flux:text>
+                @endif
                 <div class="flex justify-end">
                     <flux:modal.close>
                         <flux:button variant="ghost">{{ __('Close') }}</flux:button>

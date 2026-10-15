@@ -53,6 +53,24 @@ final class RecordType extends Model
     }
 
     /**
+     * @return array<int, array{type: self, field: array<string, mixed>}>
+     */
+    public static function relationshipsTo(string $key): array
+    {
+        $links = [];
+
+        foreach (self::query()->get() as $type) {
+            foreach ($type->fields as $field) {
+                if (($field['type'] ?? null) === FieldType::RELATIONSHIP->value && ($field['record_type'] ?? null) === $key) {
+                    $links[] = ['type' => $type, 'field' => $field];
+                }
+            }
+        }
+
+        return $links;
+    }
+
+    /**
      * @return MorphMany<Translation, $this>
      */
     public function translations(): MorphMany
@@ -116,6 +134,18 @@ final class RecordType extends Model
     public function records(): HasMany
     {
         return $this->hasMany(Record::class);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function linkedFromOtherTypes(): array
+    {
+        return collect(self::relationshipsTo($this->key))
+            ->reject(fn (array $link): bool => $link['type']->id === $this->id)
+            ->map(fn (array $link): string => $link['type']->name.' → '.$link['type']->fieldLabel($link['field']))
+            ->values()
+            ->all();
     }
 
     public function isInUse(): bool

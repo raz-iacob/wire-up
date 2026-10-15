@@ -13,6 +13,7 @@ final readonly class DeleteRecordTypeAction
     public function handle(RecordType $recordType): void
     {
         throw_if($recordType->isInUse(), RuntimeException::class, 'Cannot delete a content type that still has records.');
+        throw_if($recordType->linkedFromOtherTypes() !== [], RuntimeException::class, 'Cannot delete a content type that other content types link to.');
 
         $recordType->delete();
 

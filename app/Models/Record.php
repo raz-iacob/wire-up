@@ -58,6 +58,19 @@ final class Record extends Model
     use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasRevisions, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
 
     /**
+     * @return array<int, int>|null
+     */
+    public static function normalizeIds(mixed $value): ?array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, is_array($value) ? $value : [$value]),
+            fn (int $id): bool => $id > 0,
+        )));
+
+        return $ids === [] ? null : $ids;
+    }
+
+    /**
      * @param  array<int, string>|null  $allowed
      * @return array<int, string>|null
      */
@@ -166,11 +179,17 @@ final class Record extends Model
     /**
      * @param  array<string, mixed>  $field
      */
-    public function columnValue(array $field): string
+    public function columnValue(array $field, bool $publishedOnly = false): string
     {
         $type = FieldType::tryFrom($field['type']);
         $key = $field['key'];
         $locale = app()->getLocale();
+
+        if ($type === FieldType::RELATIONSHIP) {
+            $titles = $this->linkedRecords($field, $publishedOnly)->map(fn (self $record): string => $record->title)->implode(', ');
+
+            return $titles !== '' ? str($titles)->limit(60)->value() : '—';
+        }
 
         if ($type?->isMedia()) {
             return (string) $this->media
@@ -198,6 +217,29 @@ final class Record extends Model
             FieldType::RICH_TEXT => str(strip_tags((string) $value))->squish()->limit(60)->value(),
             default => str((string) $value)->limit(60)->value(),
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
+     * @return Collection<int, self>
+     */
+    public function linkedRecords(array $field, bool $publishedOnly = true): Collection
+    {
+        $stored = $this->data[(string) $field['key']] ?? null;
+        $ids = array_values(array_filter(array_map(intval(...), is_array($stored) ? $stored : [])));
+
+        if ($ids === []) {
+            return new Collection;
+        }
+
+        return self::query()
+            ->whereKey($ids)
+            ->whereHas('recordType', fn (Builder $query): Builder => $query->where('key', (string) ($field['record_type'] ?? '')))
+            ->when($publishedOnly, fn (Builder $query): Builder => $query->publishedInLocale())
+            ->with(['translations', 'slugs', 'recordType'])
+            ->get()
+            ->sortBy(fn (self $record): int => (int) array_search($record->id, $ids, true))
+            ->values();
     }
 
     public function fieldValue(string $key, bool $translatable): mixed

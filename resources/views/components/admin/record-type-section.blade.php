@@ -2,6 +2,7 @@
     'type',
     'index',
     'extraLocales' => [],
+    'linkTargets' => [],
 ])
 
 <div
@@ -216,6 +217,25 @@
                                             <flux:label>{{ __('Help text') }}</flux:label>
                                             <flux:input wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.help" />
                                         </flux:field>
+                                        @if ($field['type'] === \App\Enums\FieldType::RELATIONSHIP->value)
+                                            <flux:select
+                                                wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.record_type"
+                                                :label="__('Links to')"
+                                                :placeholder="__('Choose a content type')"
+                                            >
+                                                @foreach ($linkTargets as $targetKey => $targetName)
+                                                    <flux:select.option :value="$targetKey">
+                                                        {{ $targetName }}</flux:select.option>
+                                                @endforeach
+                                            </flux:select>
+                                            <div class="flex items-end pb-2">
+                                                <flux:switch
+                                                    wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.multiple"
+                                                    :label="__('Allow several')"
+                                                    align="left"
+                                                />
+                                            </div>
+                                        @endif
                                         @if (\App\Enums\FieldType::tryFrom($field['type'])?->supportsOptions())
                                             <flux:textarea
                                                 wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.options"

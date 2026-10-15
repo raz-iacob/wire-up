@@ -80,6 +80,11 @@ final class UpdateContentTypeTool extends Tool
 
         if (array_key_exists('fields', $validated)) {
             $attributes['fields'] = Records::serializeFields($validated['fields'], resolve('localization')->getDefaultLocale());
+            $linkError = Records::unknownLinkTarget($attributes['fields'], $type->key);
+
+            if ($linkError !== null) {
+                return Response::error($linkError);
+            }
         }
 
         if (($attributes['sellable'] ?? $type->sellable) && (isset($attributes['fields']) || ($attributes['sellable'] ?? false))) {

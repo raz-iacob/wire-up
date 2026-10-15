@@ -27,7 +27,7 @@
             continue;
         }
 
-        $value = $record->columnValue($field);
+        $value = $record->columnValue($field, publishedOnly: true);
 
         if ($value !== '' && $value !== '—') {
             $meta[] = $value;
