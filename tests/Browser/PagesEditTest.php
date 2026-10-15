@@ -548,6 +548,27 @@ it('opens a rich-text block without a javascript error', function (): void {
     visit(route('admin.pages-edit', $page))->assertNoJavascriptErrors();
 });
 
+it('shows the rich-text alignment choice only for a narrow block', function (): void {
+    $page = Page::factory()->create([
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'rich-text-alignment']);
+    $page->updateBlocks([
+        ['id' => 'new-1', 'type' => 'rich-text', 'content' => ['width' => 'normal']],
+    ]);
+
+    $this->actingAsAdmin();
+
+    visit(route('admin.pages-edit', $page))
+        ->click('Rich Text')
+        ->assertSee('Width')
+        ->assertDontSee('Alignment')
+        ->click('Narrow')
+        ->assertSee('Alignment')
+        ->assertNoJavascriptErrors();
+});
+
 it('keeps a theme-token text colour through an editor round-trip', function (): void {
     $page = Page::factory()->create([
         'status' => ContentStatus::PUBLISHED,

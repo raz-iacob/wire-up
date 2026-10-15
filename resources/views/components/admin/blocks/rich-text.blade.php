@@ -26,17 +26,13 @@
             <flux:radio value="narrow" label="{{ __('Narrow') }}" />
         </flux:radio.group>
 
-        <flux:radio.group
-            wire:model.lazy="{{ $c }}.align"
-            variant="segmented"
-            label="{{ __('Alignment') }}"
-            x-show="{{ $b }}?.width === 'narrow'"
-            x-cloak
-        >
-            <flux:radio value="left" icon="bars-3-bottom-left" label="{{ __('Left') }}" />
-            <flux:radio value="center" icon="bars-3" label="{{ __('Center') }}" />
-            <flux:radio value="right" icon="bars-3-bottom-right" label="{{ __('Right') }}" />
-        </flux:radio.group>
+        <div x-show="{{ $b }}?.width === 'narrow'" x-cloak>
+            <flux:radio.group wire:model.lazy="{{ $c }}.align" variant="segmented" label="{{ __('Alignment') }}">
+                <flux:radio value="left" icon="bars-3-bottom-left" label="{{ __('Left') }}" />
+                <flux:radio value="center" icon="bars-3" label="{{ __('Center') }}" />
+                <flux:radio value="right" icon="bars-3-bottom-right" label="{{ __('Right') }}" />
+            </flux:radio.group>
+        </div>
     </div>
 
     <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />

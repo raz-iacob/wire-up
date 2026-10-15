@@ -2,6 +2,10 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
+## Unreleased
+
+- A rich-text block no longer shows an empty Alignment label at normal width. The alignment choice only applies to a narrow block, so it now appears, label and all, once you pick Narrow.
+
 ## v0.4.0 — 2026-10-15
 
 - An invitation link now stays valid for seven days instead of an hour, so a new admin who opens their invitation the next day can still set a password. It used to fail with "This password reset token is invalid" with no hint that the link had simply expired. That message now says the invitation has expired and to ask for a new one, or that the link has expired for an ordinary reset. Ordinary password-reset links keep their one-hour limit.
