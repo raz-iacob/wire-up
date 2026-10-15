@@ -43,18 +43,6 @@ return new class extends AiMigration
         });
     }
 
-    public function down(): void
-    {
-        Schema::connection($this->getConnection())->table($this->messagesTable(), function (Blueprint $blueprint): void {
-            $blueprint->dropIndex('participant_index');
-            $blueprint->text('tool_calls')->nullable();
-            $blueprint->text('tool_results')->nullable();
-            $blueprint->text('approval_state')->nullable();
-            $blueprint->dropColumn(['steps', 'status']);
-            $blueprint->index(['participant_type', 'participant_id'], 'participant_index');
-        });
-    }
-
     private function backfill(string $table, string $conversationId): void
     {
         $rows = $this->query($table)

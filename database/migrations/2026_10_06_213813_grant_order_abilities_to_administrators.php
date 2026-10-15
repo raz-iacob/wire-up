@@ -24,6 +24,4 @@ return new class extends Migration
 
         DB::table('roles')->where('id', $role->id)->update(['abilities' => json_encode([...$abilities, 'orders.view', 'orders.edit'])]);
     }
-
-    public function down(): void {}
 };

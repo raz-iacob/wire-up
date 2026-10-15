@@ -18,15 +18,4 @@ return new class extends Migration
             $table->unsignedInteger('stock')->nullable()->after('data');
         });
     }
-
-    public function down(): void
-    {
-        Schema::table('records', function (Blueprint $table): void {
-            $table->dropColumn('stock');
-        });
-
-        Schema::table('record_types', function (Blueprint $table): void {
-            $table->dropColumn('sellable');
-        });
-    }
 };

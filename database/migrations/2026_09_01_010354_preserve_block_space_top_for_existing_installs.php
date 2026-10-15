@@ -22,9 +22,4 @@ return new class extends Migration
             'updated_at' => now(),
         ]);
     }
-
-    public function down(): void
-    {
-        DB::table('settings')->where('key', 'block_space_top')->delete();
-    }
 };

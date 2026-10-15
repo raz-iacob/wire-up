@@ -15,11 +15,4 @@ return new class extends Migration
             $table->boolean('has_index_page')->default(false)->after('has_detail_page');
         });
     }
-
-    public function down(): void
-    {
-        Schema::table('record_types', function (Blueprint $table): void {
-            $table->dropColumn(['has_detail_page', 'has_index_page']);
-        });
-    }
 };

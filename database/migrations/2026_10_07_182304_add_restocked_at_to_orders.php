@@ -14,11 +14,4 @@ return new class extends Migration
             $table->timestamp('restocked_at')->nullable()->after('cancelled_at');
         });
     }
-
-    public function down(): void
-    {
-        Schema::table('orders', function (Blueprint $table): void {
-            $table->dropColumn('restocked_at');
-        });
-    }
 };

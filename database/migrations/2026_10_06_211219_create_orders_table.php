@@ -50,10 +50,4 @@ return new class extends Migration
             $table->timestamps();
         });
     }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('order_items');
-        Schema::dropIfExists('orders');
-    }
 };

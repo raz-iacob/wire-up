@@ -43,10 +43,4 @@ return new class extends AiMigration
             $table->index(['participant_type', 'participant_id'], 'participant_index');
         });
     }
-
-    public function down(): void
-    {
-        Schema::dropIfExists(config('ai.conversations.tables.messages', 'agent_conversation_messages'));
-        Schema::dropIfExists(config('ai.conversations.tables.conversations', 'agent_conversations'));
-    }
 };

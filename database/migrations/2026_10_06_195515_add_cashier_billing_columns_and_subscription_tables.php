@@ -46,15 +46,4 @@ return new class extends Migration
             $table->index(['subscription_id', 'stripe_price']);
         });
     }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('subscription_items');
-        Schema::dropIfExists('subscriptions');
-
-        Schema::table('users', function (Blueprint $table): void {
-            $table->dropIndex(['stripe_id']);
-            $table->dropColumn(['pm_type', 'pm_last_four', 'trial_ends_at']);
-        });
-    }
 };

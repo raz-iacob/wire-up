@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Ai\Agents\SiteAssistant;
 use App\Models\User;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -51,7 +52,14 @@ function stepsOf(string $id): array
 }
 
 beforeEach(function (): void {
-    upgradeMigration()->down();
+    Schema::table('agent_conversation_messages', function (Blueprint $table): void {
+        $table->dropIndex('participant_index');
+        $table->text('tool_calls')->nullable();
+        $table->text('tool_results')->nullable();
+        $table->text('approval_state')->nullable();
+        $table->dropColumn(['steps', 'status']);
+        $table->index(['participant_type', 'participant_id'], 'participant_index');
+    });
 });
 
 it('folds a completed tool call and its result into one step', function (): void {

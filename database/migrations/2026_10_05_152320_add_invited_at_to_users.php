@@ -14,11 +14,4 @@ return new class extends Migration
             $table->timestamp('invited_at')->nullable()->after('last_seen_at');
         });
     }
-
-    public function down(): void
-    {
-        Schema::table('users', function (Blueprint $table): void {
-            $table->dropColumn('invited_at');
-        });
-    }
 };
