@@ -95,6 +95,10 @@ final readonly class ContentMarkdown
     {
         $value = $record->fieldValue((string) ($field['key'] ?? ''), (bool) ($field['translatable'] ?? false));
 
+        if (is_array($value)) {
+            $value = implode(', ', array_filter($value, is_scalar(...)));
+        }
+
         if (! is_scalar($value) || $value === '') {
             return '';
         }

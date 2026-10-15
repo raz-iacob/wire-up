@@ -58,6 +58,22 @@ final class Record extends Model
     use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasRevisions, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
 
     /**
+     * @param  array<int, string>|null  $allowed
+     * @return array<int, string>|null
+     */
+    public static function normalizeList(mixed $value, ?array $allowed = null): ?array
+    {
+        $items = is_array($value) ? $value : explode(',', is_scalar($value) ? (string) $value : '');
+
+        $clean = array_values(array_unique(array_filter(
+            array_map(fn (mixed $item): string => is_scalar($item) ? mb_trim((string) $item) : '', $items),
+            fn (string $item): bool => $item !== '' && ($allowed === null || in_array($item, $allowed, true)),
+        )));
+
+        return $clean === [] ? null : $clean;
+    }
+
+    /**
      * @return array<string, string>
      */
     public function casts(): array
@@ -165,6 +181,10 @@ final class Record extends Model
         $value = ($field['translatable'] ?? false)
             ? data_get($this->data, "{$key}.{$locale}")
             : data_get($this->data, $key);
+
+        if (is_array($value)) {
+            $value = implode(', ', array_filter($value, is_scalar(...)));
+        }
 
         if ($value === null || $value === '') {
             return '—';

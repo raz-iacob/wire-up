@@ -173,10 +173,11 @@ return new class extends Component
                 ? "data->{$field['key']}->{$locale}"
                 : "data->{$field['key']}";
 
-            $paginator->where(
-                $path,
-                $field['type'] === FieldType::BOOLEAN->value ? $value === '1' : $value,
-            );
+            match ($field['type']) {
+                FieldType::BOOLEAN->value => $paginator->where($path, $value === '1'),
+                FieldType::MULTI_SELECT->value => $paginator->whereJsonContains($path, $value),
+                default => $paginator->where($path, $value),
+            };
         }
 
         if ($this->sortBy === 'title') {

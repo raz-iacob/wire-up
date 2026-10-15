@@ -11,7 +11,7 @@ Use a content type whenever there is more than one item of the same shape. Each 
 
 1. Call `list-content-types` first; the type may exist already, and the list shows the available presets.
 2. Prefer a preset with `create-content-type`: product, service, post, event, team-member, project or job. Each comes with sensible fields and a URL prefix.
-3. For anything else, pass custom `fields`. Field types are text, textarea, rich-text, number, money, date, datetime, boolean, select, photo, video, audio, document, media-gallery and url. Mark short fields that should appear in the admin list as `column`.
+3. For anything else, pass custom `fields`. Field types are text, textarea, rich-text, number, money, date, datetime, boolean, select, photo, video, audio, document, media-gallery, url, email, color, tags and multi-select. Tags and multi-select hold lists of strings; multi-select takes its choices from `options`. Mark short fields that should appear in the admin list as `column`.
 4. Set `has_detail_page: false` when the records only feed cards, such as logos or testimonials, so they get no page of their own. Set `has_index_page: true` to publish an automatic listing at the prefix.
 
 ## Add the records

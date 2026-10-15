@@ -21,6 +21,10 @@ enum FieldType: string
     case DOCUMENT = 'document';
     case MEDIA_GALLERY = 'media-gallery';
     case URL = 'url';
+    case EMAIL = 'email';
+    case COLOR = 'color';
+    case TAGS = 'tags';
+    case MULTI_SELECT = 'multi-select';
 
     /**
      * @return array<int, string>
@@ -48,6 +52,10 @@ enum FieldType: string
             self::DOCUMENT => __('Document'),
             self::MEDIA_GALLERY => __('Media gallery'),
             self::URL => __('Link'),
+            self::EMAIL => __('Email'),
+            self::COLOR => __('Color'),
+            self::TAGS => __('Tags'),
+            self::MULTI_SELECT => __('Multiple choice'),
         };
     }
 
@@ -69,6 +77,10 @@ enum FieldType: string
             self::DOCUMENT => 'document',
             self::MEDIA_GALLERY => 'squares-2x2',
             self::URL => 'link',
+            self::EMAIL => 'envelope',
+            self::COLOR => 'swatch',
+            self::TAGS => 'tag',
+            self::MULTI_SELECT => 'list-bullet',
         };
     }
 
@@ -90,6 +102,10 @@ enum FieldType: string
             self::DOCUMENT => __('A single document or file.'),
             self::MEDIA_GALLERY => __('A gallery of images and videos.'),
             self::URL => __('A web address.'),
+            self::EMAIL => __('An email address.'),
+            self::COLOR => __('A color picked from a palette.'),
+            self::TAGS => __('Free-form tags, as many as you need.'),
+            self::MULTI_SELECT => __('Several choices from predefined options.'),
         };
     }
 
@@ -103,15 +119,25 @@ enum FieldType: string
 
     public function supportsOptions(): bool
     {
-        return $this === self::SELECT;
+        return in_array($this, [self::SELECT, self::MULTI_SELECT], true);
     }
 
     public function isFilterable(): bool
     {
         return match ($this) {
-            self::BOOLEAN, self::SELECT => true,
+            self::BOOLEAN, self::SELECT, self::MULTI_SELECT => true,
             default => false,
         };
+    }
+
+    public function isList(): bool
+    {
+        return in_array($this, [self::TAGS, self::MULTI_SELECT], true);
+    }
+
+    public function canBeTranslated(): bool
+    {
+        return ! in_array($this, [self::EMAIL, self::COLOR, self::TAGS, self::MULTI_SELECT], true);
     }
 
     /**
@@ -142,7 +168,7 @@ enum FieldType: string
     public function isCompact(): bool
     {
         return match ($this) {
-            self::TEXT, self::NUMBER, self::MONEY, self::DATE, self::DATETIME, self::SELECT, self::BOOLEAN => true,
+            self::TEXT, self::NUMBER, self::MONEY, self::DATE, self::DATETIME, self::SELECT, self::BOOLEAN, self::EMAIL, self::COLOR => true,
             default => false,
         };
     }

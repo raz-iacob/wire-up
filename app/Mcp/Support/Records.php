@@ -173,7 +173,7 @@ final readonly class Records
 
             $value = $input[$key];
 
-            if ((bool) ($field['translatable'] ?? false)) {
+            if ((bool) ($field['translatable'] ?? false) && $fieldType->canBeTranslated()) {
                 $current = is_array($existing[$key] ?? null) ? $existing[$key] : [];
                 $clean[$key] = is_array($value) ? [...$current, ...$value] : [...$current, $locale => $value];
 
@@ -183,6 +183,8 @@ final readonly class Records
             $clean[$key] = match ($fieldType) {
                 FieldType::BOOLEAN => (bool) $value,
                 FieldType::NUMBER, FieldType::MONEY => is_numeric($value) ? $value + 0 : null,
+                FieldType::TAGS => Record::normalizeList($value),
+                FieldType::MULTI_SELECT => Record::normalizeList($value, is_array($field['options'] ?? null) ? $field['options'] : []),
                 default => $value === '' ? null : $value,
             };
         }
@@ -204,9 +206,9 @@ final readonly class Records
                 'type' => $type->value,
                 'label' => [$locale => (string) ($field['label'] ?? '')],
                 'required' => (bool) ($field['required'] ?? false),
-                'translatable' => (bool) ($field['translatable'] ?? $type->isTranslatableByDefault()),
+                'translatable' => (bool) ($field['translatable'] ?? $type->isTranslatableByDefault()) && $type->canBeTranslated(),
                 'column' => (bool) ($field['column'] ?? false),
-                'sortable' => (bool) ($field['sortable'] ?? false),
+                'sortable' => (bool) ($field['sortable'] ?? false) && ! $type->isList(),
                 'searchable' => (bool) ($field['searchable'] ?? false),
                 'filterable' => (bool) ($field['filterable'] ?? false) && $type->isFilterable(),
                 'help' => (string) ($field['help'] ?? ''),

@@ -128,7 +128,7 @@ final class CreateContentTypeTool extends Tool
 
             'fields' => $schema->array()
                 ->items($schema->object())
-                ->description('The custom field blueprint: [{"key": "sku", "type": "text", "label": "SKU", "required": false, "translatable": false, "column": false, "sortable": false, "searchable": false, "help": "", "options": [], "prefills": null}]. "type" is one of: text, textarea, rich-text, number, money, date, datetime, boolean, select, photo, video, audio, document, media-gallery, url. "translatable" defaults to the type default. "column"/"sortable"/"searchable" control the admin list. "options" is for select. "prefills" ("title" or "description") copies the field into the SEO title/description. Omit to use the preset fields.'),
+                ->description('The custom field blueprint: [{"key": "sku", "type": "text", "label": "SKU", "required": false, "translatable": false, "column": false, "sortable": false, "searchable": false, "help": "", "options": [], "prefills": null}]. "type" is one of: text, textarea, rich-text, number, money, date, datetime, boolean, select, photo, video, audio, document, media-gallery, url, email, color, tags, multi-select. "translatable" defaults to the type default; email, color, tags and multi-select are never translatable. "column"/"sortable"/"searchable" control the admin list. "options" is for select and multi-select. Pass tags and multi-select values as arrays of strings. "prefills" ("title" or "description") copies the field into the SEO title/description. Omit to use the preset fields.'),
         ];
     }
 

@@ -71,6 +71,11 @@ return new class extends Component
 
     public string $categorySearch = '';
 
+    /**
+     * @var array<string, string>
+     */
+    public array $tagSearch = [];
+
     public bool $noindex = false;
 
     public bool $members_only = false;
@@ -169,6 +174,19 @@ return new class extends Component
             ->get()
             ->sortBy(fn (Category $category): string => $category->name)
             ->values();
+    }
+
+    public function addTag(string $key): void
+    {
+        $field = $this->recordType->fieldByKey($key);
+        $tag = mb_trim((string) ($this->tagSearch[$key] ?? ''));
+
+        if ($field === null || $field['type'] !== FieldType::TAGS->value || $tag === '') {
+            return;
+        }
+
+        $this->data[$key] = Record::normalizeList([...(is_array($this->data[$key] ?? null) ? $this->data[$key] : []), $tag]);
+        $this->tagSearch[$key] = '';
     }
 
     public function update(UpdateRecordAction $action): void
@@ -453,7 +471,7 @@ return new class extends Component
 
         $key = $field['key'];
         $required = (bool) ($field['required'] ?? false);
-        $translatable = (bool) ($field['translatable'] ?? false);
+        $translatable = (bool) ($field['translatable'] ?? false) && $type->canBeTranslated();
         $labelMap = is_array($field['label'] ?? null) ? $field['label'] : [];
         $label = (string) ($labelMap[$this->defaultLocale] ?? (array_first($labelMap) ?? $key));
 
@@ -475,9 +493,22 @@ return new class extends Component
             return;
         }
 
+        if ($type->isList()) {
+            $rules["data.$key"] = [...($required ? ['required'] : ['nullable']), 'array'];
+            $rules["data.$key.*"] = $type === FieldType::MULTI_SELECT
+                ? ['string', Rule::in(is_array($field['options'] ?? null) ? $field['options'] : [])]
+                : ['string', 'max:100'];
+            $attributes["data.$key"] = $label;
+            $attributes["data.$key.*"] = $label;
+
+            return;
+        }
+
         $typeRules = match ($type) {
             FieldType::NUMBER, FieldType::MONEY => ['numeric'],
             FieldType::URL => ['url'],
+            FieldType::EMAIL => ['string', 'email'],
+            FieldType::COLOR => ['string', 'regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/'],
             FieldType::BOOLEAN => ['boolean'],
             FieldType::DATE, FieldType::DATETIME => ['date'],
             FieldType::SELECT => [Rule::in(is_array($field['options'] ?? null) ? $field['options'] : [])],
@@ -581,7 +612,7 @@ return new class extends Component
 
             $key = $field['key'];
 
-            if ((bool) ($field['translatable'] ?? false)) {
+            if ((bool) ($field['translatable'] ?? false) && $type->canBeTranslated()) {
                 $clean[$key] = is_array($this->data[$key] ?? null) ? $this->data[$key] : [];
 
                 continue;
@@ -589,9 +620,10 @@ return new class extends Component
 
             $value = $this->data[$key] ?? null;
 
-            $clean[$key] = match ($type) {
-                FieldType::BOOLEAN => (bool) $value,
-                FieldType::NUMBER, FieldType::MONEY => is_numeric($value) ? $value + 0 : null,
+            $clean[$key] = match (true) {
+                $type->isList() => Record::normalizeList(is_array($value) ? $value : []),
+                $type === FieldType::BOOLEAN => (bool) $value,
+                in_array($type, [FieldType::NUMBER, FieldType::MONEY], true) => is_numeric($value) ? $value + 0 : null,
                 default => $value === '' ? null : $value,
             };
         }

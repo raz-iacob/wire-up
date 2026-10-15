@@ -231,21 +231,25 @@
                                                 :label="__('Required')"
                                                 align="left"
                                             />
-                                            <flux:switch
-                                                wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.translatable"
-                                                :label="__('Translatable')"
-                                                align="left"
-                                            />
+                                            @if (\App\Enums\FieldType::tryFrom($field['type'])?->canBeTranslated() ?? true)
+                                                <flux:switch
+                                                    wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.translatable"
+                                                    :label="__('Translatable')"
+                                                    align="left"
+                                                />
+                                            @endif
                                             <flux:switch
                                                 wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.column"
                                                 :label="__('Show in list')"
                                                 align="left"
                                             />
-                                            <flux:switch
-                                                wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.sortable"
-                                                :label="__('Sortable')"
-                                                align="left"
-                                            />
+                                            @unless (\App\Enums\FieldType::tryFrom($field['type'])?->isList())
+                                                <flux:switch
+                                                    wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.sortable"
+                                                    :label="__('Sortable')"
+                                                    align="left"
+                                                />
+                                            @endunless
                                             <flux:switch
                                                 wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.searchable"
                                                 :label="__('Searchable')"

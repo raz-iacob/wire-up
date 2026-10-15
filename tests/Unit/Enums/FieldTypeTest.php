@@ -21,6 +21,10 @@ it('exposes all field type values in order', function (): void {
         'document',
         'media-gallery',
         'url',
+        'email',
+        'color',
+        'tags',
+        'multi-select',
     ]);
 });
 
@@ -81,4 +85,18 @@ it('marks single-line inputs and toggles as compact', function (): void {
 it('resolves an admin view path per type', function (): void {
     expect(FieldType::TEXT->adminView())->toBe('components.admin.fields.text')
         ->and(FieldType::MEDIA_GALLERY->adminView())->toBe('components.admin.fields.media-gallery');
+});
+
+it('treats tags and multiple choice as lists, keeps the new types untranslatable, and lets multiple choice carry options and filter', function (): void {
+    expect(FieldType::TAGS->isList())->toBeTrue()
+        ->and(FieldType::MULTI_SELECT->isList())->toBeTrue()
+        ->and(FieldType::SELECT->isList())->toBeFalse()
+        ->and(FieldType::TAGS->canBeTranslated())->toBeFalse()
+        ->and(FieldType::EMAIL->canBeTranslated())->toBeFalse()
+        ->and(FieldType::TEXT->canBeTranslated())->toBeTrue()
+        ->and(FieldType::MULTI_SELECT->supportsOptions())->toBeTrue()
+        ->and(FieldType::MULTI_SELECT->isFilterable())->toBeTrue()
+        ->and(FieldType::TAGS->isFilterable())->toBeFalse()
+        ->and(FieldType::EMAIL->isCompact())->toBeTrue()
+        ->and(FieldType::COLOR->isCompact())->toBeTrue();
 });

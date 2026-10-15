@@ -419,7 +419,7 @@ return new class extends Component
             'type' => $field['type'],
             'label' => [$locale => $field['label']],
             'required' => (bool) ($field['required'] ?? false),
-            'translatable' => (bool) ($field['translatable'] ?? false),
+            'translatable' => (bool) ($field['translatable'] ?? false) && (FieldType::tryFrom($field['type'])?->canBeTranslated() ?? true),
             'column' => (bool) ($field['column'] ?? false),
             'sortable' => (bool) ($field['sortable'] ?? false),
             'searchable' => (bool) ($field['searchable'] ?? false),

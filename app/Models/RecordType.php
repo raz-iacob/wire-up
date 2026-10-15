@@ -156,7 +156,8 @@ final class RecordType extends Model
             array_filter(
                 $this->fields,
                 fn (array $field): bool => (bool) ($field['sortable'] ?? false)
-                    && ! (FieldType::tryFrom($field['type'])?->isMedia() ?? false),
+                    && ! (FieldType::tryFrom($field['type'])?->isMedia() ?? false)
+                    && ! (FieldType::tryFrom($field['type'])?->isList() ?? false),
             ),
         ));
     }
