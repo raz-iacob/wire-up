@@ -17,6 +17,7 @@ final readonly class UpdatePageAction
     public function handle(Page $page, array $attributes): void
     {
         DB::transaction(function () use ($page, $attributes): void {
+            $page->recordBaselineRevision();
 
             $page->update([
                 ...Arr::except($attributes, ['slugs', 'status', 'og_image', 'blocks', 'categories']),
@@ -40,6 +41,7 @@ final readonly class UpdatePageAction
                 $page->categories()->sync($attributes['categories']);
             }
 
+            $page->recordRevision();
         });
     }
 

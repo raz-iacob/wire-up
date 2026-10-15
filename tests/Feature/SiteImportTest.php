@@ -6,6 +6,7 @@ use App\Enums\ContentStatus;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Revision;
 use App\Models\Role;
 use App\Models\Settings;
 use App\Models\User;
@@ -91,6 +92,7 @@ it('reports what a bundle holds without writing anything', function (): void {
 
 it('replaces the whole site from the bundle', function (): void {
     $keep = Page::factory()->create(['title' => 'Doomed Page', 'status' => ContentStatus::PUBLISHED]);
+    Revision::factory()->for($keep, 'revisionable')->create();
 
     $bundle = makeBundle([
         'pages' => [['id' => 500, 'metadata' => '{}', 'status' => 'published', 'published_at' => null, 'created_by' => null, 'updated_by' => null, 'created_at' => null, 'updated_at' => null]],
@@ -102,7 +104,8 @@ it('replaces the whole site from the bundle', function (): void {
     expect($report['imported'])->toBeTrue()
         ->and(DB::table('pages')->where('id', $keep->id)->exists())->toBeFalse()
         ->and(DB::table('pages')->where('id', 500)->exists())->toBeTrue()
-        ->and(Page::query()->find(500)?->title)->toBe('Imported Page');
+        ->and(Page::query()->find(500)?->title)->toBe('Imported Page')
+        ->and(Revision::query()->count())->toBe(0);
 });
 
 it('credits imported content to the importing owner', function (): void {

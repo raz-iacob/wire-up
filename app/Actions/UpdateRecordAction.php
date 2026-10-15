@@ -17,6 +17,8 @@ final readonly class UpdateRecordAction
     public function handle(Record $record, array $attributes): void
     {
         DB::transaction(function () use ($record, $attributes): void {
+            $record->recordBaselineRevision();
+
             $record->update([
                 ...Arr::except($attributes, ['slugs', 'status', 'blocks', 'media', 'categories']),
                 ...$this->handlePublication($record, $attributes),
@@ -38,6 +40,8 @@ final readonly class UpdateRecordAction
             if (is_array($attributes['media'] ?? null)) {
                 $this->syncMedia($record, $attributes['media']);
             }
+
+            $record->recordRevision();
         });
     }
 

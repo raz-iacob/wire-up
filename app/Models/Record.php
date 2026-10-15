@@ -13,6 +13,7 @@ use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
 use App\Traits\HasMedia;
 use App\Traits\HasPublishing;
+use App\Traits\HasRevisions;
 use App\Traits\HasSeo;
 use App\Traits\HasSlugs;
 use App\Traits\HasTranslations;
@@ -41,6 +42,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read CarbonInterface $updated_at
  * @property-read RecordType $recordType
  * @property-read Collection<int, Category> $categories
+ * @property-read Collection<int, Revision> $revisions
  * @property-read Collection<int, Translation> $translations
  * @property-read string $title
  * @property-read string $description
@@ -53,7 +55,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class Record extends Model
 {
     /** @use HasFactory<RecordFactory> */
-    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
+    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasRevisions, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
 
     /**
      * @return array<string, string>

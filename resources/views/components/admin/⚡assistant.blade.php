@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Ai\Agents\SiteAssistant;
+use App\Enums\RevisionSource;
 use App\Models\Page;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -100,6 +102,8 @@ return new class extends Component
         /** @var array<int, array{name: string, args: array<string, mixed>, status: string}> $pending */
         $pending = [];
 
+        Context::add(RevisionSource::CONTEXT_KEY, RevisionSource::ASSISTANT->value);
+
         try {
             $response = $model !== ''
                 ? $agent->stream($prompt, model: $model)
@@ -134,6 +138,8 @@ return new class extends Component
             ];
 
             return;
+        } finally {
+            Context::forget(RevisionSource::CONTEXT_KEY);
         }
 
         $this->conversationId = $conversationId;

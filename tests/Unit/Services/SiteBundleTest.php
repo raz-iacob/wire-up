@@ -91,7 +91,8 @@ it('excludes users and other per-install tables from the transfer', function ():
         ->and(SiteBundle::TABLES)->not->toContain('sessions')
         ->and(SiteBundle::TABLES)->not->toContain('submissions')
         ->and(SiteBundle::TABLES)->not->toContain('migrations')
-        ->and(SiteBundle::TABLES)->not->toContain('agent_conversations');
+        ->and(SiteBundle::TABLES)->not->toContain('agent_conversations')
+        ->and(SiteBundle::TABLES)->not->toContain('revisions');
 });
 
 it('orders tables so parents are inserted before their dependants', function (): void {

@@ -128,6 +128,8 @@ final class SiteImporter
     private function replace(array $site, ?int $ownerId): void
     {
         DB::transaction(function () use ($site, $ownerId): void {
+            DB::table('revisions')->delete();
+
             foreach (array_reverse(SiteBundle::TABLES) as $table) {
                 DB::table($table)->delete();
             }

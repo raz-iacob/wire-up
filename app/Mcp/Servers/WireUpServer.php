@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Servers;
 
+use App\Enums\RevisionSource;
 use App\Mcp\Prompts\ReplicateSitePrompt;
 use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Tools\CreateCategoryTool;
@@ -47,6 +48,7 @@ use App\Mcp\Tools\UpdatePageTool;
 use App\Mcp\Tools\UpdateRecordTool;
 use App\Mcp\Tools\UpdateSocialTool;
 use App\Mcp\Tools\UploadMediaTool;
+use Illuminate\Support\Facades\Context;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -201,5 +203,10 @@ final class WireUpServer extends Server
     public static function resourceClasses(): array
     {
         return self::RESOURCES;
+    }
+
+    protected function boot(): void
+    {
+        Context::add(RevisionSource::CONTEXT_KEY, RevisionSource::AGENT->value);
     }
 }

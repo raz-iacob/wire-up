@@ -11,6 +11,7 @@ use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
 use App\Traits\HasMedia;
 use App\Traits\HasPublishing;
+use App\Traits\HasRevisions;
 use App\Traits\HasSeo;
 use App\Traits\HasSlugs;
 use App\Traits\HasTranslations;
@@ -37,13 +38,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read string $slug
  * @property-read Collection<int, Block> $blocks
  * @property-read Collection<int, Category> $categories
+ * @property-read Collection<int, Revision> $revisions
  * @property-read User|null $creator
  * @property-read User|null $editor
  */
 final class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
-    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
+    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasRevisions, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
 
     /**
      * @param  array<string, mixed>  $layout
