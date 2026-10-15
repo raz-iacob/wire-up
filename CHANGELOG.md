@@ -2,7 +2,7 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
-## Unreleased
+## v0.4.0 — 2026-10-15
 
 - An invitation link now stays valid for seven days instead of an hour, so a new admin who opens their invitation the next day can still set a password. It used to fail with "This password reset token is invalid" with no hint that the link had simply expired. That message now says the invitation has expired and to ask for a new one, or that the link has expired for an ordinary reset. Ordinary password-reset links keep their one-hour limit.
 - A new content type is now open to the Administrator, Editor and Author roles straight away. Until now nobody but the Owner could see or edit a content type added after the roles were created, so Products or Events stayed hidden from administrators until someone ticked every box under Settings → Roles. Administrators and Editors get full access, Authors can view, add and edit. Content types you already have are granted the same way when you update, except where you had already chosen permissions for them, and a deleted content type is removed from every role.
