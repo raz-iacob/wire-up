@@ -57,12 +57,14 @@ final class CreatePageTool extends Tool
             'description' => $validated['description'] ?? '',
         ]);
 
-        if (($validated['blocks'] ?? []) !== []) {
-            $page->updateBlocks(Pages::orderedBlocks($validated['blocks']));
-        }
+        $publish = (bool) ($validated['publish'] ?? false);
+        $blocks = $validated['blocks'] ?? [];
 
-        if ($validated['publish'] ?? false) {
-            new UpdatePageAction()->handle($page, ['status' => ContentStatus::PUBLISHED]);
+        if ($blocks !== [] || $publish) {
+            new UpdatePageAction()->handle($page, [
+                ...($blocks !== [] ? ['blocks' => Pages::orderedBlocks($blocks)] : []),
+                'status' => $publish ? ContentStatus::PUBLISHED : ContentStatus::DRAFT,
+            ]);
         }
 
         return Pages::json([

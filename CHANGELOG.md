@@ -5,6 +5,11 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 ## Unreleased
 
 - A rich-text block no longer shows an empty Alignment label at normal width. The alignment choice only applies to a narrow block, so it now appears, label and all, once you pick Narrow.
+- An AI agent that renames a record or changes its description no longer blanks the title and description in your other languages.
+- The record editor now checks your permissions every time you save, as the page editor already did, so someone whose access was removed while an editor was open can no longer save from it.
+- Block changes made by AI agents now count as edits to the page, so its Last edited time moves with them.
+- A contact form still sends when the visitor opened the page before you removed that form block, instead of failing.
+- Saving a page or record that is already published keeps its original publish date. Every save used to reset it to now, so fixing a typo in an old post moved it to the top of collections sorted by latest. A scheduled page that goes live early still takes the moment it is published.
 
 ## v0.4.0 — 2026-10-15
 

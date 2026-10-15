@@ -77,11 +77,11 @@ final class UpdateRecordTool extends Tool
         }
 
         if (($validated['title'] ?? null) !== null) {
-            $attributes['title'] = $validated['title'];
+            $attributes['title'] = [...$record->translationsFor('title'), $locale => $validated['title']];
         }
 
         if (($validated['description'] ?? null) !== null) {
-            $attributes['description'] = $validated['description'];
+            $attributes['description'] = [...$record->translationsFor('description'), $locale => (string) $validated['description']];
         }
 
         if (array_key_exists('data', $validated)) {

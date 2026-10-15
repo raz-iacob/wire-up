@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Models\Block;
 use App\Models\Submission;
 use App\Notifications\SubmissionReceived;
 use App\Services\SlackWebhookChannel;
@@ -19,6 +20,10 @@ final readonly class CreateSubmissionAction
     public function handle(array $attributes, array $recipients = []): Submission
     {
         return DB::transaction(function () use ($attributes, $recipients): Submission {
+            if (isset($attributes['block_id']) && ! Block::query()->whereKey($attributes['block_id'])->exists()) {
+                $attributes['block_id'] = null;
+            }
+
             $submission = Submission::query()->create($attributes);
 
             if ($recipients !== []) {

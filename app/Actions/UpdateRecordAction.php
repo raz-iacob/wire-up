@@ -19,7 +19,8 @@ final readonly class UpdateRecordAction
         DB::transaction(function () use ($record, $attributes): void {
             $record->update([
                 ...Arr::except($attributes, ['slugs', 'status', 'blocks', 'media', 'categories']),
-                ...$this->handlePublication($attributes),
+                ...$this->handlePublication($record, $attributes),
+                'updated_at' => now(),
             ]);
 
             if (isset($attributes['slugs'])) {
@@ -56,10 +57,10 @@ final readonly class UpdateRecordAction
      * @param  array<string, mixed>  $attributes
      * @return array<string, mixed>
      */
-    private function handlePublication(array $attributes): array
+    private function handlePublication(Record $record, array $attributes): array
     {
         return match ($attributes['status'] ?? 'draft') {
-            ContentStatus::PUBLISHED => ['status' => ContentStatus::PUBLISHED->value, 'published_at' => now()],
+            ContentStatus::PUBLISHED => ['status' => ContentStatus::PUBLISHED->value, 'published_at' => $record->status === ContentStatus::PUBLISHED && $record->published_at?->isPast() ? $record->published_at : now()],
             ContentStatus::SCHEDULED => ['status' => ContentStatus::PUBLISHED->value, 'published_at' => $attributes['published_at']],
             ContentStatus::PRIVATE => ['status' => ContentStatus::PRIVATE->value, 'published_at' => null],
             default => ['status' => ContentStatus::DRAFT->value, 'published_at' => null],

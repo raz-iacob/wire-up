@@ -40,7 +40,7 @@ final class UpdatePageBlocksTool extends Tool
             return Response::error("No page with id {$validated['page']}. Use list-pages to see the available pages.");
         }
 
-        $page->updateBlocks(Pages::orderedBlocks($validated['blocks']));
+        Pages::update($page, ['blocks' => Pages::orderedBlocks($validated['blocks'])]);
 
         return Pages::json([
             'page' => Pages::summary($page),

@@ -13,10 +13,12 @@ use App\Mcp\Tools\PublishRecordTool;
 use App\Mcp\Tools\UpdateContentTypeTool;
 use App\Mcp\Tools\UpdateRecordTool;
 use App\Models\Category;
+use App\Models\Locale;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @param  array<string, mixed>  $overrides
@@ -505,4 +507,22 @@ it('switches an existing content type to sellable and keeps its shop fields on l
     WireUpServer::tool(UpdateContentTypeTool::class, ['type' => 'kit', 'name' => 'Kits'])->assertOk();
 
     expect(array_column($type->refresh()->fields, 'key'))->toBe(['colour', 'current_price', 'billing', 'shippable']);
+});
+
+it('keeps the other languages when an agent renames a record', function (): void {
+    Locale::query()->whereIn('code', ['en', 'nl'])->update(['active' => true]);
+    Cache::forget('site-locales');
+
+    $record = Record::factory()->for(mcpProductType())->create([
+        'title' => ['en' => 'English Title', 'nl' => 'Nederlandse Titel'],
+        'description' => ['en' => 'English text', 'nl' => 'Nederlandse tekst'],
+    ]);
+
+    WireUpServer::tool(UpdateRecordTool::class, ['record' => $record->id, 'title' => 'Renamed', 'description' => 'New text'])
+        ->assertOk();
+
+    $record->refresh()->load('translations');
+
+    expect($record->translationsFor('title'))->toMatchArray(['en' => 'Renamed', 'nl' => 'Nederlandse Titel'])
+        ->and($record->translationsFor('description'))->toMatchArray(['en' => 'New text', 'nl' => 'Nederlandse tekst']);
 });

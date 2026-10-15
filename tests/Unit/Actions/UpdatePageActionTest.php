@@ -137,3 +137,15 @@ it('handles private status', function (): void {
     expect($page->status)->toBe(ContentStatus::PRIVATE)
         ->and($page->published_at)->toBeNull();
 });
+
+it('keeps the original publish date when a live page is saved again, and stamps now when a scheduled one goes live', function (): void {
+    $published = now()->subMonth()->startOfSecond();
+    $live = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => $published]);
+    $scheduled = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->addWeek()]);
+
+    resolve(UpdatePageAction::class)->handle($live, ['title' => 'Typo fixed', 'status' => ContentStatus::PUBLISHED]);
+    resolve(UpdatePageAction::class)->handle($scheduled, ['status' => ContentStatus::PUBLISHED]);
+
+    expect($live->refresh()->published_at->timestamp)->toBe($published->timestamp)
+        ->and($scheduled->refresh()->published_at->isFuture())->toBeFalse();
+});

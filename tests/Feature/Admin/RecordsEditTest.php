@@ -8,6 +8,7 @@ use App\Enums\ContentStatus;
 use App\Models\Media;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\RecordTypePresets;
 use Livewire\Livewire;
@@ -517,4 +518,25 @@ it('puts the stock box beside the sku', function (): void {
 
     Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
         ->assertSeeInOrder([__('Regular price'), __('Stock'), 'SKU', __('Billing'), __('Needs shipping')]);
+});
+
+it('checks the edit and category abilities again on every save', function (): void {
+    $type = typeWithFields();
+    $record = makeRecord($type);
+    $role = Role::factory()->create(['abilities' => ['pages.view', 'records.'.$type->key.'.view', 'records.'.$type->key.'.edit']]);
+
+    $editor = User::factory()->role($role)->create(['active' => true]);
+    $this->actingAs($editor);
+
+    Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->set('categorySearch', 'Sneaky')
+        ->call('createCategory')
+        ->assertForbidden();
+
+    $component = Livewire::test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record]);
+
+    $role->update(['abilities' => ['pages.view', 'records.'.$type->key.'.view']]);
+    $this->actingAs($editor->fresh());
+
+    $component->call('update')->assertForbidden();
 });

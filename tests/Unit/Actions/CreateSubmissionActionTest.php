@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\CreateSubmissionAction;
+use App\Models\Page;
 use App\Models\Submission;
 use App\Notifications\SubmissionReceived;
 use App\Services\SlackWebhookChannel;
@@ -72,4 +73,21 @@ it('notifies both mail recipients and slack together', function (): void {
     );
 
     Notification::assertSentOnDemandTimes(SubmissionReceived::class, 2);
+});
+
+it('keeps the link to a contact form block that still exists and drops one that was removed', function (): void {
+    Notification::fake();
+
+    $page = Page::factory()->create();
+    $page->updateBlocks([['id' => 'new-1', 'type' => 'contact-form', 'content' => []]]);
+    $block = $page->blocks()->firstOrFail();
+
+    $linked = (new CreateSubmissionAction)->handle(['type' => 'contact', 'name' => 'Ada', 'email' => 'ada@example.com', 'block_id' => $block->id]);
+
+    $page->updateBlocks([]);
+
+    $orphan = (new CreateSubmissionAction)->handle(['type' => 'contact', 'name' => 'Ada', 'email' => 'ada@example.com', 'block_id' => $block->id]);
+
+    expect($linked->block_id)->toBe($block->id)
+        ->and($orphan->block_id)->toBeNull();
 });

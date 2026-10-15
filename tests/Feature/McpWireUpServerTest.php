@@ -217,6 +217,27 @@ it('keeps a new block in place when it is inserted between blocks that have ids'
     expect($page->refresh()->blocks->pluck('type.value')->all())->toBe(['hero', 'divider', 'stats']);
 });
 
+it('saves new blocks through the page so it stays published and records the edit', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Live page',
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+        'updated_at' => now()->subWeek(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'live-page']);
+
+    WireUpServer::tool(UpdatePageBlocksTool::class, [
+        'page' => $page->id,
+        'blocks' => [['type' => 'divider', 'content' => ['size' => 'medium']]],
+    ])->assertOk();
+
+    $page->refresh();
+
+    expect($page->computed_status)->toBe(ContentStatus::PUBLISHED)
+        ->and($page->updated_at->isToday())->toBeTrue()
+        ->and($page->blocks)->toHaveCount(1);
+});
+
 it('returns a friendly error when updating blocks on an unknown page', function (): void {
     WireUpServer::tool(UpdatePageBlocksTool::class, ['page' => 999999, 'blocks' => []])
         ->assertHasErrors(['No page with id 999999. Use list-pages to see the available pages.']);

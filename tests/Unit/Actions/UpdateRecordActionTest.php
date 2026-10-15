@@ -73,3 +73,14 @@ it('applies the publication status on update', function (ContentStatus $input, s
     'scheduled' => [ContentStatus::SCHEDULED, 'published', true],
     'private' => [ContentStatus::PRIVATE, 'private', false],
 ]);
+
+it('keeps the original publish date but marks the edit when a live record is saved again', function (): void {
+    $published = now()->subMonth()->startOfSecond();
+    $record = resolve(CreateRecordAction::class)->handle(RecordType::factory()->create(), ['title' => 'Old post']);
+    $record->update(['status' => ContentStatus::PUBLISHED, 'published_at' => $published, 'updated_at' => now()->subWeek()]);
+
+    resolve(UpdateRecordAction::class)->handle($record->refresh(), ['title' => 'Old post, typo fixed', 'status' => ContentStatus::PUBLISHED]);
+
+    expect($record->refresh()->published_at->timestamp)->toBe($published->timestamp)
+        ->and($record->updated_at->isToday())->toBeTrue();
+});

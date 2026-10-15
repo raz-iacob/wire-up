@@ -150,6 +150,8 @@ return new class extends Component
 
     public function createCategory(CreateCategoryAction $action): void
     {
+        $this->authorize('categories.create');
+
         $name = mb_trim($this->categorySearch);
 
         if ($name === '') {
@@ -179,6 +181,8 @@ return new class extends Component
 
     public function update(UpdateRecordAction $action): void
     {
+        $this->authorize('records.'.$this->recordType->key.'.edit');
+
         foreach ($this->media as $role => $localized) {
             $this->media[$role] = $this->normalizeMediaInput($localized);
         }
