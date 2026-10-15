@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\PageCache;
 use Carbon\CarbonInterface;
 use Database\Factories\SettingsFactory;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -76,6 +77,7 @@ final class Settings extends Model
     {
         cache()->forget(self::CACHE_KEY);
         config()->set('site', self::cached());
+        resolve(PageCache::class)->flush();
     }
 
     /**

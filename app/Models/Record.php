@@ -9,6 +9,7 @@ use App\Enums\FieldType;
 use App\Enums\MediaType;
 use App\Services\ImageService;
 use App\Services\SettingsService;
+use App\Traits\ClearsPageCache;
 use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
 use App\Traits\HasMedia;
@@ -55,7 +56,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class Record extends Model
 {
     /** @use HasFactory<RecordFactory> */
-    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasRevisions, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
+    use ClearsPageCache, HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasRevisions, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
 
     /**
      * @return array<int, int>|null

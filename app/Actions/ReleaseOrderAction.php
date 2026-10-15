@@ -7,6 +7,7 @@ namespace App\Actions;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\Record;
+use App\Services\PageCache;
 use Illuminate\Support\Facades\DB;
 
 final readonly class ReleaseOrderAction
@@ -20,9 +21,13 @@ final readonly class ReleaseOrderAction
                 return;
             }
 
-            foreach ($locked->items()->where('reserved_stock', '>', 0)->whereNotNull('record_id')->get() as $item) {
-                Record::query()->whereKey($item->record_id)->whereNotNull('stock')->increment('stock', $item->reserved_stock);
-            }
+            $items = $locked->items()->where('reserved_stock', '>', 0)->whereNotNull('record_id')->get();
+
+            resolve(PageCache::class)->afterStockChange($items->pluck('record_id')->all(), function () use ($items): void {
+                foreach ($items as $item) {
+                    Record::query()->whereKey($item->record_id)->whereNotNull('stock')->increment('stock', $item->reserved_stock);
+                }
+            });
 
             $locked->items()->update(['reserved_stock' => 0]);
             $locked->update(['status' => OrderStatus::CANCELLED, 'cancelled_at' => now()]);

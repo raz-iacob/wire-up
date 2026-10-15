@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\FieldType;
 use App\Enums\MediaType;
+use App\Traits\ClearsPageCache;
 use Carbon\CarbonInterface;
 use Database\Factories\RecordTypeFactory;
 use Illuminate\Database\Eloquent\Attributes\RouteKey;
@@ -37,7 +38,7 @@ use Illuminate\Support\Once;
 final class RecordType extends Model
 {
     /** @use HasFactory<RecordTypeFactory> */
-    use HasFactory;
+    use ClearsPageCache, HasFactory;
 
     /**
      * @var list<string>

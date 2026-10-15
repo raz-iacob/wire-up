@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\ClearsPageCache;
 use Carbon\CarbonInterface;
 use Database\Factories\LocaleFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -27,7 +28,7 @@ use Illuminate\Database\Eloquent\Model;
 final class Locale extends Model
 {
     /** @use HasFactory<LocaleFactory> */
-    use HasFactory;
+    use ClearsPageCache, HasFactory;
 
     /**
      * @return array<string, string>

@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\Page;
 use App\Models\Record;
 use App\Services\OgImageService;
+use App\Services\PageCache;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Attributes\Timeout;
@@ -45,5 +46,7 @@ final class GenerateOgImage implements ShouldQueue
         foreach ($content->published_locales as $locale) {
             $images->generate($content, (string) $locale);
         }
+
+        resolve(PageCache::class)->flush();
     }
 }

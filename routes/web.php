@@ -6,6 +6,7 @@ use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\OgImageController;
 use App\Http\Controllers\SessionController;
+use App\Http\Middleware\CachePublicPages;
 use App\Http\Middleware\MarkdownForAgents;
 use App\Http\Middleware\RedirectHomepageSlug;
 use App\Services\SeoService;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
 
-    Route::livewire('/', 'pages::home')->middleware(MarkdownForAgents::class)->name('home');
+    Route::livewire('/', 'pages::home')->middleware([CachePublicPages::class, MarkdownForAgents::class])->name('home');
 
     Route::livewire('cart', 'pages::cart')->name('cart');
     Route::livewire('checkout/success', 'pages::checkout-success')->name('checkout.success');
@@ -77,11 +78,11 @@ Route::get('llms-full.txt', fn (): Response => response(
 Route::group(['prefix' => resolve('localization')->setLocale()], function (): void {
     Route::livewire('{recordType}/{slug}', 'pages::record')
         ->where('recordType', '(?!admin/)[^/]+')
-        ->middleware(MarkdownForAgents::class)
+        ->middleware([CachePublicPages::class, MarkdownForAgents::class])
         ->name('record');
 
     Route::livewire('{slug}', 'pages::page')
         ->where('slug', '^(?!admin).*')
-        ->middleware([RedirectHomepageSlug::class, MarkdownForAgents::class])
+        ->middleware([CachePublicPages::class, RedirectHomepageSlug::class, MarkdownForAgents::class])
         ->name('page');
 });

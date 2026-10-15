@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\ContentStatus;
 use App\Services\ImageService;
 use App\Services\SettingsService;
+use App\Traits\ClearsPageCache;
 use App\Traits\HasBlocks;
 use App\Traits\HasCategories;
 use App\Traits\HasMedia;
@@ -45,7 +46,7 @@ use Illuminate\Database\Eloquent\Model;
 final class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
-    use HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasRevisions, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
+    use ClearsPageCache, HasBlocks, HasCategories, HasFactory, HasMedia, HasPublishing, HasRevisions, HasSeo, HasSlugs, HasTranslations, HasUserstamps;
 
     /**
      * @param  array<string, mixed>  $layout

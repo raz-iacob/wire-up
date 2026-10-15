@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Record;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderReceived;
+use App\Services\PageCache;
 use App\Services\SettingsService;
 use App\Services\SlackWebhookChannel;
 use App\Services\StripeService;
@@ -93,12 +94,15 @@ final readonly class FulfillCheckoutAction
                 continue;
             }
 
-            $taken = Record::query()->whereKey($record->id)->where('stock', '>=', $item->quantity)->decrement('stock', $item->quantity);
+            $oversold = resolve(PageCache::class)->afterStockChange([$record->id], function () use ($record, $item): bool {
+                $taken = Record::query()->whereKey($record->id)->where('stock', '>=', $item->quantity)->decrement('stock', $item->quantity);
 
-            if ($taken === 0) {
-                Record::query()->whereKey($record->id)->update(['stock' => 0]);
-                $oversold = true;
-            }
+                if ($taken === 0) {
+                    Record::query()->whereKey($record->id)->update(['stock' => 0]);
+                }
+
+                return $taken === 0;
+            }) || $oversold;
         }
 
         return $oversold;

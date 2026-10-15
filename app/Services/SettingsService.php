@@ -236,6 +236,11 @@ final class SettingsService
         return (bool) config('site.allow_registration', false);
     }
 
+    public function cachesPages(): bool
+    {
+        return (bool) config('site.page_cache', true);
+    }
+
     public function requiresTwoFactor(): bool
     {
         return (bool) config('site.require_two_factor', false);

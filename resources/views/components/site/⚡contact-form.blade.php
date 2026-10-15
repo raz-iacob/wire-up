@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\CreateSubmissionAction;
 use App\Models\Block;
+use App\Services\PageCache;
 use App\Services\SettingsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\RateLimiter;
@@ -56,6 +57,8 @@ return new class extends Component
 
     public function mount(): void
     {
+        resolve(PageCache::class)->skip();
+
         $this->startedAt = now()->timestamp;
         $this->initCustomDefaults();
     }

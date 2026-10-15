@@ -7,6 +7,7 @@ namespace App\Actions;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\Record;
+use App\Services\PageCache;
 use App\Services\StripeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -38,9 +39,13 @@ final readonly class IssueRefundAction
 
         DB::transaction(function () use ($order, $amount, $refundable, $restock): void {
             if ($restock && $order->restocked_at === null) {
-                foreach ($order->items()->whereNotNull('record_id')->get() as $item) {
-                    Record::query()->whereKey($item->record_id)->whereNotNull('stock')->increment('stock', $item->quantity);
-                }
+                $items = $order->items()->whereNotNull('record_id')->get();
+
+                resolve(PageCache::class)->afterStockChange($items->pluck('record_id')->all(), function () use ($items): void {
+                    foreach ($items as $item) {
+                        Record::query()->whereKey($item->record_id)->whereNotNull('stock')->increment('stock', $item->quantity);
+                    }
+                });
             }
 
             $order->update([

@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\MediaType;
 use App\Services\ImageService;
 use App\Services\MediaUsageService;
+use App\Traits\ClearsPageCache;
 use Carbon\CarbonImmutable;
 use Database\Factories\MediaFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -42,7 +43,7 @@ use Illuminate\Support\Facades\Storage;
 final class Media extends Model
 {
     /** @use HasFactory<MediaFactory> */
-    use HasFactory;
+    use ClearsPageCache, HasFactory;
 
     /**
      * @return HasMany<Mediable, $this>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\UpdateSettingsAction;
 use App\Models\Locale;
 use App\Models\Page;
+use App\Services\PageCache;
 use App\Services\SettingsService;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
@@ -31,6 +32,8 @@ return new class extends Component
 
     public bool $require_two_factor = false;
 
+    public bool $page_cache = true;
+
     public function mount(): void
     {
         $this->languages = Locale::query()->active()->orderBy('name')->pluck('code')->all();
@@ -39,6 +42,7 @@ return new class extends Component
         $this->currency = SettingsService::current()->currency();
         $this->allow_registration = SettingsService::current()->allowsRegistration();
         $this->require_two_factor = SettingsService::current()->requiresTwoFactor();
+        $this->page_cache = SettingsService::current()->cachesPages();
     }
 
     /**
@@ -86,6 +90,7 @@ return new class extends Component
             'currency' => ['required', 'string', Rule::in(array_keys($this->currencies()))],
             'allow_registration' => ['boolean'],
             'require_two_factor' => ['boolean'],
+            'page_cache' => ['boolean'],
         ], [
             'contact_email.email' => __('Enter a valid communication email address.'),
         ], [
@@ -114,9 +119,19 @@ return new class extends Component
             'currency' => $validated['currency'],
             'allow_registration' => $validated['allow_registration'] ?? false,
             'require_two_factor' => $validated['require_two_factor'] ?? false,
+            'page_cache' => $validated['page_cache'] ?? false,
         ]);
 
         Flux::toast(__('Settings have been updated.'), variant: 'success');
+    }
+
+    public function clearPageCache(PageCache $cache): void
+    {
+        $this->authorize('settings.edit');
+
+        $cache->flush();
+
+        Flux::toast(__('Saved copies of your pages were cleared.'), variant: 'success');
     }
 
     public function render(): View
@@ -203,6 +218,22 @@ return new class extends Component
                 :label="__('Require two-factor authentication for staff')"
                 :description="__('Anyone with admin access must set up an authenticator app before they can use the admin panel.')"
             />
+
+            <flux:separator />
+
+            <div class="space-y-3">
+                <flux:switch
+                    wire:model="page_cache"
+                    align="left"
+                    :label="__('Speed up pages for visitors')"
+                    :description="__('Keeps a ready-made copy of each page for visitors who are not signed in. Copies refresh by themselves whenever you change content or settings.')"
+                />
+                <flux:button
+                    size="sm"
+                    icon="arrow-path"
+                    wire:click="clearPageCache"
+                >{{ __('Clear saved copies') }}</flux:button>
+            </div>
 
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>

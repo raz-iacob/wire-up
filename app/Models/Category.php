@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\ClearsPageCache;
 use App\Traits\HasTranslations;
 use Carbon\CarbonInterface;
 use Database\Factories\CategoryFactory;
@@ -24,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 final class Category extends Model
 {
     /** @use HasFactory<CategoryFactory> */
-    use HasFactory, HasTranslations;
+    use ClearsPageCache, HasFactory, HasTranslations;
 
     /**
      * @return array<string, string>

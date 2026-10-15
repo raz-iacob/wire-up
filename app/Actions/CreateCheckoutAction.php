@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Record;
 use App\Models\User;
 use App\Services\CartService;
+use App\Services\PageCache;
 use App\Services\SettingsService;
 use App\Services\ShopService;
 use App\Services\StripeService;
@@ -87,7 +88,10 @@ final readonly class CreateCheckoutAction
             $reserved = $record->stock === null ? 0 : $line['quantity'];
 
             if ($reserved > 0) {
-                $taken = Record::query()->whereKey($record->id)->whereNotNull('stock')->where('stock', '>=', $reserved)->decrement('stock', $reserved);
+                $taken = resolve(PageCache::class)->afterStockChange(
+                    [$record->id],
+                    fn (): int => Record::query()->whereKey($record->id)->whereNotNull('stock')->where('stock', '>=', $reserved)->decrement('stock', $reserved),
+                );
 
                 throw_if($taken === 0, ValidationException::withMessages([
                     'checkout' => __(':item just sold out, so your cart has been updated.', ['item' => $record->displayHeading()]),

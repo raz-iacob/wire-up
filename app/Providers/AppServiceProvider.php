@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\AiModelCatalog;
 use App\Services\DatabaseTranslationLoader;
 use App\Services\LocalizationService;
+use App\Services\PageCache;
 use App\Services\SettingsService;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Config\Repository;
@@ -34,6 +35,7 @@ final class AppServiceProvider extends ServiceProvider
         Cashier::ignoreRoutes();
 
         $this->app->singleton('localization', LocalizationService::class);
+        $this->app->scoped(PageCache::class);
 
         $this->app->make(Repository::class)->set('app.default_locale', $this->app->make(Repository::class)->string('app.locale', 'en'));
 
