@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\UpdatePageAction;
 use App\Enums\ContentStatus;
 use App\Models\Media;
 use App\Models\Page;
@@ -591,4 +592,28 @@ it('keeps a theme-token text colour through an editor round-trip', function (): 
 
     expect($html)->toContain('data-color-token="accent"')
         ->toContain('color:var(--wire-accent)');
+});
+
+it('restores an older version from the history panel and keeps it on update', function (): void {
+    $page = Page::factory()->create([
+        'title' => 'Before',
+        'status' => ContentStatus::PUBLISHED,
+        'published_at' => now()->subDay(),
+    ]);
+    $page->slugs()->create(['locale' => 'en', 'slug' => 'history-browser']);
+    resolve(UpdatePageAction::class)->handle(Page::query()->findOrFail($page->id), ['title' => ['en' => 'After'], 'status' => ContentStatus::PUBLISHED]);
+
+    $this->actingAsAdmin();
+
+    visit(route('admin.pages-edit', $page))
+        ->click('History')
+        ->assertSee('Current')
+        ->click('Restore')
+        ->assertSee('Showing the version from')
+        ->click('button[type="submit"]:visible:has-text("Update")')
+        ->assertSee('Page content has been updated.')
+        ->assertDontSee('Showing the version from')
+        ->assertNoJavascriptErrors();
+
+    expect($page->refresh()->title)->toBe('Before');
 });

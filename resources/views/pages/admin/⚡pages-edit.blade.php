@@ -12,6 +12,7 @@ use App\Models\Page;
 use App\Services\SettingsService;
 use App\Traits\HasBlockBuilder;
 use App\Traits\HasContentEditor;
+use App\Traits\HasRevisionHistory;
 use Flux\Flux;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
@@ -27,7 +28,7 @@ use Livewire\Component;
 
 return new class extends Component
 {
-    use HasBlockBuilder, HasContentEditor;
+    use HasBlockBuilder, HasContentEditor, HasRevisionHistory;
 
     public Page $page;
 
@@ -93,33 +94,18 @@ return new class extends Component
         $this->activeLocales = resolve('localization')->getActiveLocales();
         $this->publishedLocales = array_values(array_intersect($page->published_locales, array_keys($this->activeLocales)));
         $this->og_image = $this->mediaForRole('og_image');
-        $this->noindex = (bool) ($page->metadata['noindex'] ?? false);
-        $this->members_only = (bool) ($page->metadata['members_only'] ?? false);
-        $this->layout = [
-            'hideHeader' => false,
-            'hideFooter' => false,
-            'backgroundColor' => null,
-            'backgroundImage' => null,
-            'backgroundFixed' => false,
-            'customCss' => '',
-            ...(is_array($page->metadata['layout'] ?? null) ? $page->metadata['layout'] : []),
-            'sidebar' => Page::normalizeSidebar(($page->metadata['layout'] ?? [])['sidebar'] ?? null),
-        ];
-
         $this->menuOptions = collect(SettingsService::current()->allMenus())
             ->reject(fn (array $menu): bool => $menu['builtin'])
             ->map(fn (array $menu): array => ['key' => $menu['key'], 'label' => $menu['name']])
             ->values()
             ->all();
-
-        $this->layout['sidebar']['menus'] = array_values(array_intersect(
-            $this->layout['sidebar']['menus'],
-            array_column($this->menuOptions, 'key'),
-        ));
+        $this->fillMetadata($page->metadata ?? []);
 
         foreach (array_keys($this->activeLocales) as $locale) {
             $this->og_image[$locale] ??= [];
         }
+
+        $this->loadRequestedRevision();
     }
 
     public function createCategory(CreateCategoryAction $action): void
@@ -257,6 +243,8 @@ return new class extends Component
             ],
         ]);
 
+        $this->forgetRestoredRevision();
+
         Flux::toast(__('Page content has been updated.'), variant: 'success');
     }
 
@@ -313,6 +301,59 @@ return new class extends Component
         return $this->page->media;
     }
 
+    protected function revisionable(): Page
+    {
+        return $this->page;
+    }
+
+    protected function revisionAbility(): string
+    {
+        return 'pages.edit';
+    }
+
+    protected function revisionUrl(?int $revision): string
+    {
+        return route('admin.pages-edit', array_filter(['page' => $this->page->id, 'restore' => $revision]));
+    }
+
+    /**
+     * @param  array<string, mixed>  $content
+     */
+    protected function fillFromRevision(array $content): void
+    {
+        $this->title = $this->revisionTexts($content, 'title');
+        $this->description = $this->revisionTexts($content, 'description');
+        $this->slugs = $this->revisionTexts($content, 'slugs');
+        $this->blocks = $this->withBlockDefaults($this->revisionBlocks($content));
+        $this->og_image = $this->revisionMedia($content, 'og_image');
+        $this->categories = $this->revisionCategories($content);
+        $this->fillMetadata($this->revisionMetadata($content));
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    private function fillMetadata(array $metadata): void
+    {
+        $this->noindex = (bool) ($metadata['noindex'] ?? false);
+        $this->members_only = (bool) ($metadata['members_only'] ?? false);
+        $this->layout = [
+            'hideHeader' => false,
+            'hideFooter' => false,
+            'backgroundColor' => null,
+            'backgroundImage' => null,
+            'backgroundFixed' => false,
+            'customCss' => '',
+            ...(is_array($metadata['layout'] ?? null) ? $metadata['layout'] : []),
+            'sidebar' => Page::normalizeSidebar(($metadata['layout'] ?? [])['sidebar'] ?? null),
+        ];
+
+        $this->layout['sidebar']['menus'] = array_values(array_intersect(
+            $this->layout['sidebar']['menus'],
+            array_column($this->menuOptions, 'key'),
+        ));
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -348,6 +389,12 @@ return new class extends Component
         class="grid grid-cols-1 items-stretch gap-10 md:grid-cols-5"
     >
         <div class="min-w-0 md:col-span-3">
+            @if ($restoredFrom)
+                <div class="mb-6">
+                    <x-admin.restored-revision :from="$restoredFrom" :discard-url="route('admin.pages-edit', $page)" />
+                </div>
+            @endif
+
             <div class="mb-10 space-y-6 md:col-span-2">
                 <flux:fieldset class="pb-6">
                     <div class="flex items-center justify-between">
@@ -726,12 +773,19 @@ return new class extends Component
                     </flux:button>
                 </div>
 
-                <flux:text size="sm">
-                    {{ __('Last edited') }} {{ $page->updated_at?->diffForHumans() ?? __('Never') }}
-                </flux:text>
+                <div class="flex items-center justify-between gap-2">
+                    <flux:text size="sm">
+                        {{ __('Last edited') }} {{ $page->updated_at?->diffForHumans() ?? __('Never') }}
+                    </flux:text>
+                    <flux:button size="xs" variant="ghost" icon="clock" wire:click="openHistory">
+                        {{ __('History') }}
+                    </flux:button>
+                </div>
             </flux:card>
         </div>
     </form>
+
+    <x-admin.revision-history :show="$showHistory" :revisions="$showHistory ? $this->revisionHistory : []" />
 
     @if ($showPreview)
         <div

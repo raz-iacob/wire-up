@@ -10,6 +10,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Block changes made by AI agents now count as edits to the page, so its Last edited time moves with them.
 - A contact form still sends when the visitor opened the page before you removed that form block, instead of failing.
 - Saving a page or record that is already published keeps its original publish date. Every save used to reset it to now, so fixing a typo in an old post moved it to the top of collections sorted by latest. A scheduled page that goes live early still takes the moment it is published.
+- Pages and records keep a history. Every time you click Update, or the AI assistant or an AI agent changes something, a copy is kept, up to the last 50. History, beside Last edited in the editor, lists them with who made each change. Restore loads an older version into the editor for you to check: Update keeps it, Discard goes back to what is saved. Images, categories and fields deleted since are left out of a restored version.
 
 ## v0.4.0 — 2026-10-15
 

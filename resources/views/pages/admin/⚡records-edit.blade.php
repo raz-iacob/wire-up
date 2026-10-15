@@ -15,6 +15,7 @@ use App\Models\RecordType;
 use App\Services\SettingsService;
 use App\Traits\HasBlockBuilder;
 use App\Traits\HasContentEditor;
+use App\Traits\HasRevisionHistory;
 use Flux\Flux;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
@@ -30,7 +31,7 @@ use Livewire\Component;
 
 return new class extends Component
 {
-    use HasBlockBuilder, HasContentEditor;
+    use HasBlockBuilder, HasContentEditor, HasRevisionHistory;
 
     public RecordType $recordType;
 
@@ -114,23 +115,12 @@ return new class extends Component
         $this->locale = app()->getLocale();
         $this->activeLocales = resolve('localization')->getActiveLocales();
         $this->publishedLocales = array_values(array_intersect($record->published_locales, array_keys($this->activeLocales)));
-        $this->noindex = (bool) ($record->metadata['noindex'] ?? false);
-        $this->members_only = (bool) ($record->metadata['members_only'] ?? false);
-        $this->layout = [
-            ...(is_array($record->metadata['layout'] ?? null) ? $record->metadata['layout'] : []),
-            'sidebar' => Page::normalizeSidebar(($record->metadata['layout'] ?? [])['sidebar'] ?? null),
-        ];
-
         $this->menuOptions = collect(SettingsService::current()->allMenus())
             ->reject(fn (array $menu): bool => $menu['builtin'])
             ->map(fn (array $menu): array => ['key' => $menu['key'], 'label' => $menu['name']])
             ->values()
             ->all();
-
-        $this->layout['sidebar']['menus'] = array_values(array_intersect(
-            $this->layout['sidebar']['menus'],
-            array_column($this->menuOptions, 'key'),
-        ));
+        $this->fillMetadata($record->metadata ?? []);
         $this->data = is_array($record->data) ? $record->data : [];
         $this->loadedStock = $record->stock;
         $this->stock = $record->stock === null ? '' : (string) $record->stock;
@@ -146,6 +136,8 @@ return new class extends Component
         foreach (array_keys($this->activeLocales) as $locale) {
             $this->media['og_image'][$locale] ??= [];
         }
+
+        $this->loadRequestedRevision();
     }
 
     public function createCategory(CreateCategoryAction $action): void
@@ -227,6 +219,7 @@ return new class extends Component
         }
 
         $this->record->refresh()->load('translations', 'media', 'blocks', 'slugs');
+        $this->forgetRestoredRevision();
 
         Flux::toast(__('Changes saved.'), variant: 'success');
     }
@@ -289,6 +282,41 @@ return new class extends Component
         return $this->record->media;
     }
 
+    protected function revisionable(): Record
+    {
+        return $this->record;
+    }
+
+    protected function revisionAbility(): string
+    {
+        return 'records.'.$this->recordType->key.'.edit';
+    }
+
+    protected function revisionUrl(?int $revision): string
+    {
+        return route('admin.records-edit', array_filter(['recordType' => $this->recordType->id, 'record' => $this->record->id, 'restore' => $revision]));
+    }
+
+    /**
+     * @param  array<string, mixed>  $content
+     */
+    protected function fillFromRevision(array $content): void
+    {
+        $fieldKeys = array_column($this->recordType->fields, 'key');
+
+        $this->title = $this->revisionTexts($content, 'title');
+        $this->description = $this->revisionTexts($content, 'description');
+        $this->slugs = $this->revisionTexts($content, 'slugs');
+        $this->blocks = $this->withBlockDefaults($this->revisionBlocks($content));
+        $this->categories = $this->revisionCategories($content);
+        $this->data = array_intersect_key(is_array($content['data'] ?? null) ? $content['data'] : [], array_flip($fieldKeys));
+        $this->fillMetadata($this->revisionMetadata($content));
+
+        foreach (array_keys($this->media) as $role) {
+            $this->media[$role] = $this->revisionMedia($content, $role);
+        }
+    }
+
     private function saveStock(): void
     {
         $stock = $this->stock === '' ? null : (int) $this->stock;
@@ -300,6 +328,24 @@ return new class extends Component
         Record::query()->whereKey($this->record->id)->update(['stock' => $stock]);
 
         $this->loadedStock = $stock;
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    private function fillMetadata(array $metadata): void
+    {
+        $this->noindex = (bool) ($metadata['noindex'] ?? false);
+        $this->members_only = (bool) ($metadata['members_only'] ?? false);
+        $this->layout = [
+            ...(is_array($metadata['layout'] ?? null) ? $metadata['layout'] : []),
+            'sidebar' => Page::normalizeSidebar(($metadata['layout'] ?? [])['sidebar'] ?? null),
+        ];
+
+        $this->layout['sidebar']['menus'] = array_values(array_intersect(
+            $this->layout['sidebar']['menus'],
+            array_column($this->menuOptions, 'key'),
+        ));
     }
 
     private function previewCacheKey(string $token): string
@@ -565,6 +611,15 @@ return new class extends Component
         class="grid grid-cols-1 items-stretch gap-10 md:grid-cols-5"
     >
         <div class="min-w-0 md:col-span-3">
+            @if ($restoredFrom)
+                <div class="mb-6">
+                    <x-admin.restored-revision
+                        :from="$restoredFrom"
+                        :discard-url="route('admin.records-edit', [$recordType, $record])"
+                    />
+                </div>
+            @endif
+
             <div class="mb-10 space-y-6">
                 @if ($recordType->fields !== [])
                     <flux:fieldset>
@@ -978,12 +1033,19 @@ return new class extends Component
                     </flux:button>
                 </div>
 
-                <flux:text size="sm">
-                    {{ __('Last edited') }} {{ $record->updated_at?->diffForHumans() ?? __('Never') }}
-                </flux:text>
+                <div class="flex items-center justify-between gap-2">
+                    <flux:text size="sm">
+                        {{ __('Last edited') }} {{ $record->updated_at?->diffForHumans() ?? __('Never') }}
+                    </flux:text>
+                    <flux:button size="xs" variant="ghost" icon="clock" wire:click="openHistory">
+                        {{ __('History') }}
+                    </flux:button>
+                </div>
             </flux:card>
         </div>
     </form>
+
+    <x-admin.revision-history :show="$showHistory" :revisions="$showHistory ? $this->revisionHistory : []" />
 
     @if ($showPreview)
         <div
