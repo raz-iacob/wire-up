@@ -2,7 +2,7 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
-## Unreleased
+## v0.5.0 — 2026-10-23
 
 - Pages and records keep a history. Every time you click Update, or the AI assistant or an AI agent changes something, a copy is kept, up to the last 50. History, beside Last edited in the editor, lists them with who made each change. Restore loads an older version into the editor for you to check: Update keeps it, Discard goes back to what is saved. Images, categories and fields deleted since are left out of a restored version. Block changes made by AI agents now count as edits too, so they show in the history and move the page's Last edited time.
 - A new Linked records field connects records to each other, such as the speakers of an event or related products. Choose which content type it links to and whether it allows several, then pick the records in the editor. A record's page lists its linked records under the content, with links to their pages, and they also show on collection cards and to AI agents; drafts never appear on the site. Deleting a record removes it from every field that linked to it, and a content type cannot be deleted while another type links to it. In any record picker that allows only one choice, picking another record now swaps it in.
