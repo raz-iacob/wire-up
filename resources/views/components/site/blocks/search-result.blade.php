@@ -1,13 +1,14 @@
-@props(['title', 'excerpt' => '', 'url', 'image' => null, 'layout' => 'grid'])
+@props(['title', 'excerpt' => '', 'url', 'image' => null, 'layout' => 'grid', 'imageShape' => 'landscape', 'imageFit' => 'cover'])
 
 @if ($layout === 'list')
     <a href="{{ $url }}" class="group flex items-start gap-6 py-6">
         @if ($image)
-            <img
-                src="{{ $image }}"
-                alt="{{ $title }}"
-                loading="lazy"
-                class="size-32 shrink-0 rounded-(--wire-radius) object-cover sm:size-44"
+            <x-site.blocks.card-image
+                :src="$image"
+                :alt="$title"
+                shape="none"
+                :fit="$imageFit"
+                class="size-32 shrink-0 rounded-(--wire-radius) sm:size-44"
             />
         @endif
         <div class="min-w-0">
@@ -23,7 +24,13 @@
         class="group wire-card wire-card--search flex h-full flex-col overflow-hidden rounded-(--wire-radius) shadow-sm transition hover:shadow-md"
     >
         @if ($image)
-            <img src="{{ $image }}" alt="{{ $title }}" loading="lazy" class="aspect-4/3 w-full object-cover" />
+            <x-site.blocks.card-image
+                :src="$image"
+                :alt="$title"
+                :shape="$imageShape"
+                :fit="$imageFit"
+                class="w-full"
+            />
         @endif
         <div class="flex grow flex-col gap-2 p-5">
             <h3 class="text-lg font-semibold tracking-tight group-hover:text-(--wire-accent)">{{ $title }}</h3>

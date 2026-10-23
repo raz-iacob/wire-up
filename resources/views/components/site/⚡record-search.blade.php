@@ -81,6 +81,8 @@ return new class extends Component
         $layout = in_array($content['layout'] ?? 'grid', ['grid', 'list'], true) ? ($content['layout'] ?? 'grid') : 'grid';
         $columns = (int) ($content['columns'] ?? 3);
         $showImage = (bool) ($content['showImage'] ?? true);
+        $imageShape = $content['imageShape'] ?? 'landscape';
+        $imageFit = $content['imageFit'] ?? 'cover';
         $hasHeading = strip_tags($heading) !== '';
         $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
         $term = $this->term();
@@ -158,6 +160,8 @@ return new class extends Component
                                             :url="$result['url']"
                                             :image="$showImage ? $result['image'] : null"
                                             :layout="$layout"
+                                            :image-shape="$imageShape"
+                                            :image-fit="$imageFit"
                                             wire:key="search-result-{{ $blockId }}-{{ $group['key'] }}-{{ $i }}"
                                         />
                                     @endforeach

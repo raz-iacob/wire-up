@@ -1083,6 +1083,119 @@ it('omits the image rounding class when the toggle is off', function (): void {
         ->not->toContain('rounded-(--wire-radius)');
 });
 
+function featureCardImage(string $html, string $file): string
+{
+    preg_match('/<img[^>]*'.preg_quote($file, '/').'[^>]*>/', $html, $matches);
+
+    return $matches[0] ?? '';
+}
+
+it('keeps feature card images at their own proportions unless a shape is chosen', function (mixed $shape): void {
+    publishPageWithBlocks('feat-natural', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            ...($shape === null ? [] : ['imageShape' => $shape]),
+            'items' => [
+                ['id' => 'a', 'image' => ['source' => 'media/logo.png', 'crop' => []], 'title' => ['en' => 'Partner']],
+            ],
+        ]],
+    ]);
+
+    $html = (string) $this->get(route('page', 'feat-natural'))->assertOk()->getContent();
+
+    expect(featureCardImage($html, 'media/logo.png'))
+        ->toContain('object-left')
+        ->toContain('max-h-24')
+        ->not->toContain('aspect-');
+})->with([
+    'no shape set' => [null],
+    'as uploaded' => ['natural'],
+    'an unknown shape' => ['panorama'],
+]);
+
+it('fills the card width with a shaped feature card image that bleeds to the card edges', function (): void {
+    publishPageWithBlocks('feat-shaped', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'imageShape' => 'portrait',
+            'imageFit' => 'contain',
+            'items' => [
+                ['id' => 'a', 'image' => ['source' => 'media/cover.jpg', 'crop' => []], 'title' => ['en' => 'Prairie Schooler']],
+            ],
+        ]],
+    ]);
+
+    $html = (string) $this->get(route('page', 'feat-shaped'))->assertOk()->getContent();
+
+    expect(featureCardImage($html, 'media/cover.jpg'))
+        ->toContain('aspect-4/5')
+        ->toContain('object-contain')
+        ->toContain('-mx-6 -mt-6')
+        ->not->toContain('object-left');
+});
+
+it('keeps a shaped feature card image inside the card when cards have no background', function (): void {
+    publishPageWithBlocks('feat-shaped-plain', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'cardStyle' => false,
+            'imageRounded' => true,
+            'imageShape' => 'square',
+            'items' => [
+                ['id' => 'a', 'image' => ['source' => 'media/cover.jpg', 'crop' => []], 'title' => ['en' => 'Prairie Schooler']],
+            ],
+        ]],
+    ]);
+
+    $html = (string) $this->get(route('page', 'feat-shaped-plain'))->assertOk()->getContent();
+
+    expect(featureCardImage($html, 'media/cover.jpg'))
+        ->toContain('aspect-square')
+        ->toContain('object-cover')
+        ->toContain('rounded-(--wire-radius)')
+        ->not->toContain('-mx-6');
+});
+
+it('stretches the button link over the card only when whole-card links are on and the card has a button', function (bool $linkCards, bool $ctaEnabled, bool $stretched): void {
+    publishPageWithBlocks('feat-linked', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'linkCards' => $linkCards,
+            'items' => [
+                ['id' => 'a', 'title' => ['en' => 'Prairie Schooler'], 'cta' => [
+                    'enabled' => $ctaEnabled,
+                    'text' => ['en' => 'See patterns'],
+                    'link' => ['type' => 'url', 'value' => 'https://example.com/prairie-schooler', 'newTab' => false],
+                ]],
+            ],
+        ]],
+    ]);
+
+    $html = (string) $this->get(route('page', 'feat-linked'))->assertOk()->getContent();
+
+    expect(str_contains($html, 'after:absolute after:inset-0'))->toBe($stretched)
+        ->and(str_contains($html, 'group relative transition hover:shadow-md'))->toBe($stretched);
+})->with([
+    'on, with a button' => [true, true, true],
+    'on, without a button' => [true, false, false],
+    'off, with a button' => [false, true, false],
+]);
+
+it('keeps links inside a clickable feature card body above the card link', function (): void {
+    publishPageWithBlocks('feat-linked-body', [
+        ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [
+            'linkCards' => true,
+            'items' => [
+                ['id' => 'a', 'title' => ['en' => 'Prairie Schooler'], 'body' => ['en' => '<p>See the <a href="https://example.com/chart">chart</a>.</p>'], 'cta' => [
+                    'enabled' => true,
+                    'text' => ['en' => 'See patterns'],
+                    'link' => ['type' => 'url', 'value' => 'https://example.com/prairie-schooler', 'newTab' => false],
+                ]],
+            ],
+        ]],
+    ]);
+
+    $this->get(route('page', 'feat-linked-body'))
+        ->assertOk()
+        ->assertSee('pointer-events-none relative z-10 [&_a]:pointer-events-auto', false);
+});
+
 it('renders an icon instead of the image when a feature card is set to icon', function (): void {
     publishPageWithBlocks('feat-icon', [
         ['id' => 'new-1', 'type' => 'feature-cards', 'content' => [

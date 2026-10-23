@@ -7,6 +7,8 @@
     'cardText' => '',
     'dimText' => true,
     'fieldPosition' => 'footer',
+    'imageShape' => 'landscape',
+    'imageFit' => 'cover',
 ])
 
 @php
@@ -48,11 +50,12 @@
 @if ($layout === 'list')
     <{{ $linked ? 'a' : 'div' }} @if ($linked) href="{{ $url }}" @endif class="group flex items-start gap-6 py-6">
         @if ($image)
-            <img
-                src="{{ $image }}"
-                alt="{{ $heading }}"
-                loading="lazy"
-                class="size-32 shrink-0 rounded-(--wire-radius) object-cover sm:size-44"
+            <x-site.blocks.card-image
+                :src="$image"
+                :alt="$heading"
+                shape="none"
+                :fit="$imageFit"
+                class="size-32 shrink-0 rounded-(--wire-radius) sm:size-44"
             />
         @endif
         <div class="min-w-0">
@@ -82,7 +85,13 @@
         @if ($cardStyle !== '') style="{{ $cardStyle }}" @endif
     >
         @if ($image)
-            <img src="{{ $image }}" alt="{{ $heading }}" loading="lazy" class="aspect-4/3 w-full object-cover" />
+            <x-site.blocks.card-image
+                :src="$image"
+                :alt="$heading"
+                :shape="$imageShape"
+                :fit="$imageFit"
+                class="w-full"
+            />
         @endif
         <div class="flex grow flex-col gap-2 p-5">
             <h3 class="text-lg font-semibold tracking-tight group-hover:text-(--wire-accent)">{{ $heading }}</h3>

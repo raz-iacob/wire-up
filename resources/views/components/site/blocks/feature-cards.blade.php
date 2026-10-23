@@ -11,6 +11,9 @@
     $hasBg = (bool) ($content['hasBackground'] ?? false);
     $cardStyle = (bool) ($content['cardStyle'] ?? true);
     $imageRounded = (bool) ($content['imageRounded'] ?? false);
+    $imageShape = $content['imageShape'] ?? 'natural';
+    $imageFit = $content['imageFit'] ?? 'cover';
+    $linkCards = (bool) ($content['linkCards'] ?? false);
     $imageHeightClass = match ($content['imageHeight'] ?? 'medium') {
         'icon' => 'max-h-12',
         'small' => 'max-h-16',
@@ -147,6 +150,9 @@
                                     :card-style="$cardStyle"
                                     :card-bg="$cardBg"
                                     :card-text="$cardText"
+                                    :image-shape="$imageShape"
+                                    :image-fit="$imageFit"
+                                    :link-card="$linkCards"
                                 />
                             </div>
                         @endforeach
@@ -167,6 +173,9 @@
                             :card-style="$cardStyle"
                             :card-bg="$cardBg"
                             :card-text="$cardText"
+                            :image-shape="$imageShape"
+                            :image-fit="$imageFit"
+                            :link-card="$linkCards"
                             wire:key="feature-card-{{ $loop->index }}"
                         />
                     @endforeach

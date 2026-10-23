@@ -244,10 +244,30 @@
             <flux:select.option value="large">{{ __('Large') }}</flux:select.option>
             <flux:select.option value="xl">{{ __('Extra large') }}</flux:select.option>
         </flux:select>
+
+        <flux:select wire:model.live="{{ $c }}.imageShape" variant="listbox" label="{{ __('Image shape') }}">
+            <flux:select.option value="natural">{{ __('As uploaded') }}</flux:select.option>
+            <flux:select.option value="landscape">{{ __('Landscape') }}</flux:select.option>
+            <flux:select.option value="square">{{ __('Square') }}</flux:select.option>
+            <flux:select.option value="portrait">{{ __('Portrait') }}</flux:select.option>
+        </flux:select>
+
+        <div x-show="({{ $b }}?.imageShape ?? 'natural') !== 'natural'" x-cloak>
+            <flux:radio.group wire:model.live="{{ $c }}.imageFit" variant="segmented" label="{{ __('Image fit') }}">
+                <flux:radio value="cover" label="{{ __('Crop to fill') }}" />
+                <flux:radio value="contain" label="{{ __('Whole image') }}" />
+            </flux:radio.group>
+        </div>
     </div>
 
     <div class="flex flex-col gap-4">
         <flux:switch wire:model.live="{{ $c }}.imageRounded" label="{{ __('Round the image corners') }}" align="left" />
+        <flux:switch
+            wire:model.live="{{ $c }}.linkCards"
+            label="{{ __('Make the whole card clickable') }}"
+            description="{{ __('Uses each card\'s button link.') }}"
+            align="left"
+        />
         <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />
         <flux:switch
             wire:model.live="{{ $c }}.cardStyle"

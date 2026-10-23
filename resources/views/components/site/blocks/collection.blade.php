@@ -13,6 +13,8 @@
     $cardText = is_string($content['cardText'] ?? null) ? $content['cardText'] : '';
     $dimText = (bool) ($content['dimText'] ?? true);
     $fieldPosition = ($content['fieldPosition'] ?? 'footer') === 'under-title' ? 'under-title' : 'footer';
+    $imageShape = $content['imageShape'] ?? 'landscape';
+    $imageFit = $content['imageFit'] ?? 'cover';
     $heading = $block->text('heading');
     $hasHeading = strip_tags($heading) !== '';
 
@@ -139,6 +141,8 @@
                                     :card-text="$cardText"
                                     :dim-text="$dimText"
                                     :field-position="$fieldPosition"
+                                    :image-shape="$imageShape"
+                                    :image-fit="$imageFit"
                                     layout="grid"
                                 />
                             </div>
@@ -163,6 +167,8 @@
                         :card-text="$cardText"
                         :dim-text="$dimText"
                         :field-position="$fieldPosition"
+                        :image-shape="$imageShape"
+                        :image-fit="$imageFit"
                         :block-id="$block->id"
                     />
 

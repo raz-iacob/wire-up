@@ -293,7 +293,10 @@ it('seeds the feature cards default content shape', function (): void {
     expect($content)->toMatchArray([
         'columns' => 3,
         'imageHeight' => 'medium',
+        'imageShape' => 'natural',
+        'imageFit' => 'cover',
         'imageRounded' => false,
+        'linkCards' => false,
         'hasBackground' => false,
         'cardStyle' => true,
         'cardBg' => null,
@@ -314,6 +317,16 @@ it('seeds the feature cards default content shape', function (): void {
         ])
         ->and($content['items'][0]['id'])->toBeString()->not->toBeEmpty();
 });
+
+it('seeds collection and search cards with a cropped landscape image', function (BlockType $type): void {
+    expect($type->defaultContent())->toMatchArray([
+        'imageShape' => 'landscape',
+        'imageFit' => 'cover',
+    ]);
+})->with([
+    'collection' => [BlockType::COLLECTION],
+    'search' => [BlockType::SEARCH],
+]);
 
 it('derives the feature cards title from the heading, falling back to the label', function (): void {
     expect(BlockType::FEATURE_CARDS->editorTitle(['heading' => ['en' => '<p>Why choose us</p>']], 'en'))->toBe('Why choose us')

@@ -190,6 +190,8 @@ it('renders the collection block controls (incl. the image toggle) in the editor
         ->assertOk()
         ->assertSee('Content type')
         ->assertSee("Show each record's image")
+        ->assertSee('Image shape')
+        ->assertSee('Image fit')
         ->assertSee('Maximum records')
         ->assertSee('Carousel');
 });
@@ -516,3 +518,80 @@ it('moves the extra fields under the title', function (): void {
     expect($html)->not->toContain('mt-auto pt-1 font-medium')
         ->and(mb_strpos($html, 'SKU-42'))->toBeLessThan(mb_strpos($html, 'A widget.'));
 });
+
+function imagedCollectionType(): RecordType
+{
+    $type = RecordType::factory()->create(['key' => 'pattern', 'slug_prefix' => 'patterns', 'fields' => [['key' => 'photo', 'type' => 'photo', 'translatable' => false]]]);
+    $record = collectionRecord($type, 'Framed Sampler');
+    $image = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'media/card.jpg']);
+    $record->media()->attach($image->id, ['role' => 'photo', 'locale' => 'en', 'position' => 0]);
+
+    return $type;
+}
+
+function collectionCardImage(string $html): string
+{
+    preg_match('/<img[^>]*media\/card\.jpg[^>]*>/', $html, $matches);
+
+    return $matches[0] ?? '';
+}
+
+it('crops card images to a landscape frame by default', function (): void {
+    $type = imagedCollectionType();
+
+    $html = (string) $this->get(collectionPage($type->id))->assertOk()->getContent();
+
+    expect(collectionCardImage($html))
+        ->toContain('aspect-4/3')
+        ->toContain('object-cover')
+        ->not->toContain('object-contain');
+});
+
+it('frames card images in the chosen shape', function (mixed $shape, string $aspectClass): void {
+    $type = imagedCollectionType();
+
+    $html = (string) $this->get(collectionPage($type->id, ['imageShape' => $shape]))->assertOk()->getContent();
+
+    expect(collectionCardImage($html))->toContain($aspectClass);
+})->with([
+    'square' => ['square', 'aspect-square'],
+    'portrait' => ['portrait', 'aspect-4/5'],
+    'an unknown shape' => ['panorama', 'aspect-4/3'],
+    'an agent-written list' => [['portrait'], 'aspect-4/3'],
+]);
+
+it('shows the whole card image on a backdrop when the fit is contain', function (): void {
+    $type = imagedCollectionType();
+
+    $html = (string) $this->get(collectionPage($type->id, ['imageShape' => 'portrait', 'imageFit' => 'contain']))->assertOk()->getContent();
+
+    expect(collectionCardImage($html))
+        ->toContain('aspect-4/5')
+        ->toContain('object-contain')
+        ->toContain('bg-current/5')
+        ->not->toContain('object-cover');
+});
+
+it('keeps the square list thumbnail and applies only the image fit', function (): void {
+    $type = imagedCollectionType();
+
+    $html = (string) $this->get(collectionPage($type->id, ['layout' => 'list', 'imageShape' => 'portrait', 'imageFit' => 'contain']))->assertOk()->getContent();
+
+    expect(collectionCardImage($html))
+        ->toContain('size-32')
+        ->toContain('object-contain')
+        ->not->toContain('aspect-4/5');
+});
+
+it('applies the image shape and fit to carousel and paginated cards', function (array $layout): void {
+    $type = imagedCollectionType();
+
+    $html = (string) $this->get(collectionPage($type->id, [...$layout, 'imageShape' => 'square', 'imageFit' => 'contain']))->assertOk()->getContent();
+
+    expect(collectionCardImage($html))
+        ->toContain('aspect-square')
+        ->toContain('object-contain');
+})->with([
+    'carousel' => [['layout' => 'carousel']],
+    'paginated grid' => [['pagination' => 'paged', 'perPage' => 6]],
+]);

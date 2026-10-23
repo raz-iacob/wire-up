@@ -77,6 +77,8 @@ return new class extends Component
         $cardText = is_string($content['cardText'] ?? null) ? $content['cardText'] : '';
         $dimText = (bool) ($content['dimText'] ?? true);
         $fieldPosition = ($content['fieldPosition'] ?? 'footer') === 'under-title' ? 'under-title' : 'footer';
+        $imageShape = $content['imageShape'] ?? 'landscape';
+        $imageFit = $content['imageFit'] ?? 'cover';
         $hasHeading = strip_tags($heading) !== '';
         $headingLevel = \App\Services\BlockHeading::level($content['headingLevel'] ?? null);
 
@@ -110,6 +112,8 @@ return new class extends Component
                         :card-text="$cardText"
                         :dim-text="$dimText"
                         :field-position="$fieldPosition"
+                        :image-shape="$imageShape"
+                        :image-fit="$imageFit"
                         :block-id="$blockId"
                     />
                 </div>

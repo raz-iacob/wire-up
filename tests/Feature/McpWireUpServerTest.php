@@ -276,6 +276,16 @@ it('returns a friendly error when publishing an unknown page', function (): void
         ->assertHasErrors(['No page with id 999999. Use list-pages to see the available pages.']);
 });
 
+it('documents the card image shape, fit and whole-card link keys for agents', function (): void {
+    $catalog = json_decode((string) resolve(BlockTypesResource::class)->handle(new Request)->content(), true, 512, JSON_THROW_ON_ERROR);
+
+    expect($catalog['conventions']['cardImages'])
+        ->toContain('"imageShape"')
+        ->toContain('"imageFit"')
+        ->toContain('"natural"')
+        ->toContain('"linkCards"');
+});
+
 it('documents the escaping, collection source and collection fields conventions', function (): void {
     $catalog = json_decode((string) resolve(BlockTypesResource::class)->handle(new Request)->content(), true, 512, JSON_THROW_ON_ERROR);
 

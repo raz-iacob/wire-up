@@ -90,4 +90,18 @@
         <flux:switch wire:model.live="{{ $c }}.showImage" label="{{ __('Show each result\'s image') }}" align="left" />
         <flux:switch wire:model.live="{{ $c }}.hasBackground" label="{{ __('Use background color') }}" align="left" />
     </div>
+
+    <div x-show="{{ $b }}?.showImage" x-cloak class="grid gap-4 md:grid-cols-2">
+        <div x-show="{{ $b }}?.layout !== 'list'" x-cloak>
+            <flux:radio.group wire:model.live="{{ $c }}.imageShape" variant="segmented" label="{{ __('Image shape') }}">
+                <flux:radio value="landscape" label="{{ __('Landscape') }}" />
+                <flux:radio value="square" label="{{ __('Square') }}" />
+                <flux:radio value="portrait" label="{{ __('Portrait') }}" />
+            </flux:radio.group>
+        </div>
+        <flux:radio.group wire:model.live="{{ $c }}.imageFit" variant="segmented" label="{{ __('Image fit') }}">
+            <flux:radio value="cover" label="{{ __('Crop to fill') }}" />
+            <flux:radio value="contain" label="{{ __('Whole image') }}" />
+        </flux:radio.group>
+    </div>
 </div>

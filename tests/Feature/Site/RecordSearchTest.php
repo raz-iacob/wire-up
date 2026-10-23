@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Enums\BlockType;
 use App\Enums\ContentStatus;
+use App\Enums\MediaType;
+use App\Models\Media;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
@@ -193,4 +195,62 @@ it('renders the search block inside a public page', function (): void {
     $this->get(route('page', $page->slug))
         ->assertOk()
         ->assertSeeLivewire('site.record-search');
+});
+
+function imagedSearchableType(): RecordType
+{
+    $type = RecordType::factory()->create(['key' => 'pattern', 'slug_prefix' => 'patterns', 'name' => 'Patterns', 'fields' => [['key' => 'photo', 'type' => 'photo', 'translatable' => false]]]);
+    $record = searchableRecord($type, 'Hormone Sampler');
+    $image = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'media/result.jpg']);
+    $record->media()->attach($image->id, ['role' => 'photo', 'locale' => 'en', 'position' => 0]);
+
+    return $type;
+}
+
+function searchResultImage(string $html): string
+{
+    preg_match('/<img[^>]*media\/result\.jpg[^>]*>/', $html, $matches);
+
+    return $matches[0] ?? '';
+}
+
+it('crops result images to a landscape frame by default', function (): void {
+    $type = imagedSearchableType();
+
+    $html = Livewire::test('site.record-search', [
+        'blockId' => 'b1',
+        'content' => searchBlockContent(['sources' => [(string) $type->id]]),
+    ])->set('search', 'hormone')->html();
+
+    expect(searchResultImage($html))
+        ->toContain('aspect-4/3')
+        ->toContain('object-cover');
+});
+
+it('frames result images in the chosen shape and shows them whole', function (): void {
+    $type = imagedSearchableType();
+
+    $html = Livewire::test('site.record-search', [
+        'blockId' => 'b1',
+        'content' => searchBlockContent(['sources' => [(string) $type->id], 'imageShape' => 'portrait', 'imageFit' => 'contain']),
+    ])->set('search', 'hormone')->html();
+
+    expect(searchResultImage($html))
+        ->toContain('aspect-4/5')
+        ->toContain('object-contain')
+        ->not->toContain('object-cover');
+});
+
+it('keeps the square list thumbnail for results and applies only the image fit', function (): void {
+    $type = imagedSearchableType();
+
+    $html = Livewire::test('site.record-search', [
+        'blockId' => 'b1',
+        'content' => searchBlockContent(['sources' => [(string) $type->id], 'layout' => 'list', 'imageShape' => 'portrait', 'imageFit' => 'contain']),
+    ])->set('search', 'hormone')->html();
+
+    expect(searchResultImage($html))
+        ->toContain('size-32')
+        ->toContain('object-contain')
+        ->not->toContain('aspect-4/5');
 });

@@ -856,9 +856,23 @@ it('renders the feature cards block editor fields', function (): void {
         ->assertSee('Description')
         ->assertSee('Columns')
         ->assertSee('Image height')
+        ->assertSee('Image shape')
+        ->assertSee('Image fit')
         ->assertSee('Round the image corners')
+        ->assertSee('Make the whole card clickable')
         ->assertSee('Show a button')
         ->assertSee('Show cards with a background');
+});
+
+it('renders the search block image shape and fit controls', function (): void {
+    editor($this->page)
+        ->set('blocks', [
+            'new-s' => ['id' => 'new-s', 'type' => 'search', 'position' => 0, 'content' => BlockType::SEARCH->defaultContent()],
+        ])
+        ->assertSee("Show each result's image")
+        ->assertSee('Image shape')
+        ->assertSee('Image fit')
+        ->assertSee('Whole image');
 });
 
 it('adds and removes feature card items', function (): void {

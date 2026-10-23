@@ -9,6 +9,8 @@
     'cardText' => '',
     'dimText' => true,
     'fieldPosition' => 'footer',
+    'imageShape' => 'landscape',
+    'imageFit' => 'cover',
 ])
 
 @php
@@ -30,6 +32,8 @@
                 :card-text="$cardText"
                 :dim-text="$dimText"
                 :field-position="$fieldPosition"
+                :image-shape="$imageShape"
+                :image-fit="$imageFit"
                 layout="list"
                 wire:key="collection-{{ $blockId }}-{{ $record->id }}"
             />
@@ -46,6 +50,8 @@
                 :card-text="$cardText"
                 :dim-text="$dimText"
                 :field-position="$fieldPosition"
+                :image-shape="$imageShape"
+                :image-fit="$imageFit"
                 layout="grid"
                 wire:key="collection-{{ $blockId }}-{{ $record->id }}"
             />
