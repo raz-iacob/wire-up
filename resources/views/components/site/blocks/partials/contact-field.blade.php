@@ -1,6 +1,7 @@
 @props([
     'item',
     'inputClass' => '',
+    'textareaClass' => '',
     'layout' => 'stacked',
     'textareaRows' => 5,
 ])
@@ -27,7 +28,7 @@
                 id="cf-{{ $field['key'] }}"
                 wire:model="{{ $field['key'] }}"
                 rows="{{ $textareaRows }}"
-                class="{{ $inputClass }}"
+                class="{{ $textareaClass }}"
                 @if ($field['placeholder'] !== '') placeholder="{{ $field['placeholder'] }}" @endif
                 @unless ($hasLabel) aria-label="{{ $field['aria'] }}" @endunless
             ></textarea>
@@ -82,7 +83,7 @@
                         id="cf-{{ $field['id'] }}"
                         wire:model="{{ $path }}"
                         rows="{{ $textareaRows }}"
-                        class="{{ $inputClass }}"
+                        class="{{ $textareaClass }}"
                         @unless ($hasLabel) aria-label="{{ $field['aria'] }}" @endunless
                     ></textarea>
                     @break

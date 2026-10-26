@@ -2,6 +2,10 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
+## Unreleased
+
+- Contact forms no longer turn the message box into an oval when buttons are set to fully rounded. Message boxes follow the button corners up to a gentle curve, while single-line fields keep their pill shape.
+
 ## v0.5.0 — 2026-10-23
 
 - Pages and records keep a history. Every time you click Update, or the AI assistant or an AI agent changes something, a copy is kept, up to the last 50. History, beside Last edited in the editor, lists them with who made each change. Restore loads an older version into the editor for you to check: Update keeps it, Discard goes back to what is saved. Images, categories and fields deleted since are left out of a restored version. Block changes made by AI agents now count as edits too, so they show in the history and move the page's Last edited time.

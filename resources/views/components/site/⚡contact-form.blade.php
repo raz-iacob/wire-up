@@ -471,7 +471,9 @@ return new class extends Component
 ?>
 
 @php
-    $inputClass = 'wire-field w-full px-4 py-3 text-base focus:outline-none rounded-(--wire-btn-radius) bg-(--wire-input-bg) text-(--wire-input-text)';
+    $fieldClass = 'wire-field w-full px-4 py-3 text-base focus:outline-none bg-(--wire-input-bg) text-(--wire-input-text)';
+    $inputClass = $fieldClass.' rounded-(--wire-btn-radius)';
+    $textareaClass = $fieldClass.' rounded-[min(var(--wire-btn-radius),1.25rem)]';
     $headingLevel = \App\Services\BlockHeading::level($this->config['headingLevel'] ?? null);
 
     $panelStyle = \App\Services\BlockColor::style([
@@ -520,14 +522,14 @@ return new class extends Component
                     <div class="flex flex-col gap-5">
                         @foreach ($this->orderedFields as $item)
                             @if ($item['field']['column'] !== 'right')
-                                @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'textareaRows' => $textareaRows])
+                                @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'textareaClass' => $textareaClass, 'textareaRows' => $textareaRows])
                             @endif
                         @endforeach
                     </div>
                     <div class="flex flex-col gap-5 max-md:mt-5">
                         @foreach ($this->orderedFields as $item)
                             @if ($item['field']['column'] === 'right')
-                                @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'textareaRows' => $textareaRows])
+                                @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'textareaClass' => $textareaClass, 'textareaRows' => $textareaRows])
                             @endif
                         @endforeach
                     </div>
@@ -535,7 +537,7 @@ return new class extends Component
             @else
                 <div @class(['grid gap-5', 'md:grid-cols-2' => $this->layout === 'full'])>
                     @foreach ($this->orderedFields as $item)
-                        @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'layout' => $this->layout, 'textareaRows' => $textareaRows])
+                        @include('components.site.blocks.partials.contact-field', ['item' => $item, 'inputClass' => $inputClass, 'textareaClass' => $textareaClass, 'layout' => $this->layout, 'textareaRows' => $textareaRows])
                     @endforeach
                 </div>
             @endif
