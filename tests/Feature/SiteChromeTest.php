@@ -6,7 +6,9 @@ use App\Enums\ContentStatus;
 use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Settings;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 
 function setSiteMetadata(array $settings): void
@@ -305,4 +307,18 @@ it('groups the columns footer even when there is a single heading', function ():
 
     expect($footer)->toMatch('/opacity-60">\s*Product\s*<\/p>/')
         ->toContain('>Features<');
+});
+
+it('refuses requests that try to rewrite the header or footer menus', function (string $component): void {
+    expect(fn () => Livewire::test($component)->set('items.0', 5))
+        ->toThrow(CannotUpdateLockedPropertyException::class);
+})->with(['site.header', 'site.footer']);
+
+it('skips anything in a menu that is not a menu item', function (): void {
+    $this->blade('<x-site.nav :items="$items" />', ['items' => [5, 'junk', ['type' => 'link', 'label' => 'Shop', 'url' => '/shop', 'target' => '_self', 'appearance' => 'link']]])
+        ->assertSee('Shop');
+});
+
+it('does not report a refused update to a locked property', function (): void {
+    expect(resolve(ExceptionHandler::class)->shouldReport(new CannotUpdateLockedPropertyException('items')))->toBeFalse();
 });

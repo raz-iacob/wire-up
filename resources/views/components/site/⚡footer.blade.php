@@ -3,30 +3,41 @@
 declare(strict_types=1);
 
 use App\Services\SettingsService;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 return new class extends Component
 {
+    #[Locked]
     public string $layout;
 
     /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}> */
+    #[Locked]
     public array $items = [];
 
     /** @var array<string, string> */
+    #[Locked]
     public array $social = [];
 
+    #[Locked]
     public string $socialVariant;
 
+    #[Locked]
     public string $brand;
 
+    #[Locked]
     public string $tagline;
 
+    #[Locked]
     public ?string $logo = null;
 
+    #[Locked]
     public ?string $logoDark = null;
 
+    #[Locked]
     public bool $transparent;
 
+    #[Locked]
     public int $year;
 
     public function mount(): void

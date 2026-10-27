@@ -1,7 +1,7 @@
 @props(['items' => [], 'size' => 'md', 'hover' => 'opacity'])
 
 @php
-    $items = array_values(array_filter($items, fn (array $item): bool => ($item['type'] ?? 'link') !== 'heading'));
+    $items = array_values(array_filter($items, fn (mixed $item): bool => is_array($item) && ($item['type'] ?? 'link') !== 'heading'));
 @endphp
 
 @if (! empty($items))

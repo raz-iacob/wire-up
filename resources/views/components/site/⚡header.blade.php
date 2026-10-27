@@ -5,41 +5,57 @@ declare(strict_types=1);
 use App\Services\SettingsService;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 return new class extends Component
 {
+    #[Locked]
     public string $layout;
 
     /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}> */
+    #[Locked]
     public array $items = [];
 
     /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}> */
+    #[Locked]
     public array $links = [];
 
     /** @var array<int, array{type: string, label: string, url: string, target: string, appearance: string, icon: ?string, icon_svg: string, badge: string, badgeColor: string}> */
+    #[Locked]
     public array $buttons = [];
 
+    #[Locked]
     public string $brand;
 
+    #[Locked]
     public ?string $logo = null;
 
+    #[Locked]
     public ?string $logoDark = null;
 
+    #[Locked]
     public bool $transparent;
 
+    #[Locked]
     public string $position;
 
+    #[Locked]
     public bool $showMobileMenu;
 
+    #[Locked]
     public string $logoSize;
 
+    #[Locked]
     public ?int $height = null;
 
+    #[Locked]
     public ?int $logoHeight = null;
 
+    #[Locked]
     public string $navSize;
 
+    #[Locked]
     public string $navHover;
 
     public function mount(): void
