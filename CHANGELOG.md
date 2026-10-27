@@ -6,6 +6,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 - Contact forms no longer turn the message box into an oval when buttons are set to fully rounded. Message boxes follow the button corners up to a gentle curve, while single-line fields keep their pill shape.
 - The site header and footer no longer fail with a server error when a bot sends them doctored requests. Those requests are refused, and refused updates of this kind no longer fill the error log.
+- AI agents can connect to Wire-Up's MCP server, and the in-admin AI assistant can use its tools, on every installed site. The package behind them was only installed on development copies, so sites set up or updated with Wire-Up's installer and updater were missing it.
 
 ## v0.5.0 — 2026-10-23
 

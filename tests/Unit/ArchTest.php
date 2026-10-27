@@ -15,3 +15,9 @@ it('keeps every migration forward-only, with no down method', function (string $
 })->with(fn (): array => collect(glob(dirname(__DIR__, 2).'/database/migrations/*.php') ?: [])
     ->mapWithKeys(fn (string $path): array => [basename($path) => $path])
     ->all());
+
+it('installs laravel/mcp on live sites, not only through a development package', function (): void {
+    $composer = json_decode((string) file_get_contents(dirname(__DIR__, 2).'/composer.json'), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($composer['require'])->toHaveKey('laravel/mcp');
+});

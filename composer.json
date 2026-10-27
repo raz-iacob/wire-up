@@ -20,6 +20,7 @@
         "laravel/cashier": "^16.9",
         "laravel/fortify": "^1.41",
         "laravel/framework": "^13.36.0",
+        "laravel/mcp": "^1.1.2",
         "league/html-to-markdown": "^5.1.4",
         "livewire/blaze": "^1.0.19",
         "livewire/flux": "^2.20.1",
@@ -42,7 +43,7 @@
         "pestphp/pest-plugin-agent": "^5.0",
         "pestphp/pest-plugin-browser": "^5.1.2",
         "pestphp/pest-plugin-laravel": "^5.0.1",
-        "pestphp/pest-plugin-rector": "^5.0",
+        "pestphp/pest-plugin-rector": "^5.0.6",
         "pestphp/pest-plugin-type-coverage": "^5.0.3",
         "rector/rector": "^2.7.0"
     },
