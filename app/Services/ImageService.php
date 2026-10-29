@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Media;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Response;
 use Illuminate\Image\Image as ProcessedImage;
@@ -45,6 +46,19 @@ final class ImageService
     public static function url(string $options, string $path): string
     {
         return url(URL::signedRoute('image.show', ['options' => $options, 'path' => $path], absolute: false));
+    }
+
+    public static function mediaUrl(Media $media, int $width): string
+    {
+        $crop = data_get($media->getRelationValue('pivot'), 'crop.default');
+        $crop = is_array($crop) ? $crop : [];
+        $options = ["w={$width}", 'q=80', 'fm='.self::formatFor($media->source)];
+
+        if (($crop['crop_w'] ?? 0) > 0 && ($crop['crop_h'] ?? 0) > 0) {
+            $options[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
+        }
+
+        return self::url(implode(',', $options), $media->source);
     }
 
     public static function formatFor(string $path): string

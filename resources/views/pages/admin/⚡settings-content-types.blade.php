@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\CreateRecordTypeAction;
 use App\Actions\DeleteRecordTypeAction;
 use App\Actions\UpdateRecordTypeAction;
+use App\Enums\FieldPlacement;
 use App\Enums\FieldType;
 use App\Models\RecordType;
 use App\Services\RecordTypePresets;
@@ -169,6 +170,7 @@ return new class extends Component
             'prefills' => null,
             'record_type' => '',
             'multiple' => false,
+            'placement' => $type->defaultPlacement()->value,
             'open' => true,
         ];
     }
@@ -397,7 +399,7 @@ return new class extends Component
             'has_detail_page' => $type->has_detail_page,
             'has_index_page' => $type->has_index_page,
             'sellable' => $type->sellable,
-            'fields' => array_map(fn (array $field): array => $this->hydrateField($field, $locale), $type->fields),
+            'fields' => array_map(fn (array $field): array => $this->hydrateField([...$field, 'placement' => $type->placementFor($field)->value], $locale), $type->fields),
             'open' => false,
         ];
     }
@@ -426,6 +428,7 @@ return new class extends Component
             'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
             'record_type' => (string) ($field['record_type'] ?? ''),
             'multiple' => (bool) ($field['multiple'] ?? false),
+            'placement' => $this->placementValue($field),
             'open' => false,
         ];
     }
@@ -449,10 +452,23 @@ return new class extends Component
             'help' => (string) ($field['help'] ?? ''),
             'options' => $this->parseOptions((string) ($field['options'] ?? '')),
             'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
+            'placement' => $this->placementValue($field),
             ...($field['type'] === FieldType::RELATIONSHIP->value
                 ? ['record_type' => (string) ($field['record_type'] ?? ''), 'multiple' => (bool) ($field['multiple'] ?? false)]
                 : []),
         ], $fields);
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
+     */
+    private function placementValue(array $field): string
+    {
+        $placement = FieldPlacement::tryFrom((string) ($field['placement'] ?? ''))
+            ?? FieldType::tryFrom((string) ($field['type'] ?? ''))?->defaultPlacement()
+            ?? FieldPlacement::SIDEBAR;
+
+        return $placement->value;
     }
 
     /**
@@ -524,6 +540,7 @@ return new class extends Component
                 Rule::in($this->linkTargetKeys()),
             ];
             $rules["types.$index.fields.*.multiple"] = ['boolean'];
+            $rules["types.$index.fields.*.placement"] = ['required', Rule::in(FieldPlacement::values())];
         }
 
         return $rules;

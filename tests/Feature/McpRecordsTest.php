@@ -106,6 +106,45 @@ it('creates a content type with custom fields and derives the slug prefix', func
         ->and($type->fields[1]['options'])->toBe(['Gold', 'Silver']);
 });
 
+it('places custom fields on the record page, defaulting by field type', function (): void {
+    WireUpServer::tool(CreateContentTypeTool::class, [
+        'name' => 'Rig',
+        'fields' => [
+            ['key' => 'specs', 'type' => 'rich-text', 'label' => 'Specs'],
+            ['key' => 'cpu', 'type' => 'text', 'label' => 'CPU'],
+            ['key' => 'cost', 'type' => 'money', 'label' => 'Cost', 'placement' => 'hidden'],
+        ],
+    ])
+        ->assertOk()
+        ->assertSee('"placement":"hidden"');
+
+    $type = RecordType::query()->where('slug_prefix', 'rigs')->firstOrFail();
+
+    expect(array_column($type->fields, 'placement', 'key'))->toBe(['specs' => 'main', 'cpu' => 'sidebar', 'cost' => 'hidden']);
+});
+
+it('keeps a field\'s placement when an update leaves it out, and refuses an unknown one', function (): void {
+    $type = mcpProductType();
+
+    WireUpServer::tool(UpdateContentTypeTool::class, [
+        'type' => 'product',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'label' => 'Title'],
+            ['key' => 'sku', 'type' => 'text', 'label' => 'SKU'],
+            ['key' => 'notes', 'type' => 'textarea', 'label' => 'Notes'],
+            ['key' => 'gallery', 'type' => 'media-gallery', 'label' => 'Gallery', 'placement' => 'sidebar'],
+        ],
+    ])->assertOk();
+
+    expect(array_column($type->refresh()->fields, 'placement', 'key'))
+        ->toBe(['heading' => 'sidebar', 'sku' => 'hidden', 'notes' => 'main', 'gallery' => 'sidebar']);
+
+    WireUpServer::tool(UpdateContentTypeTool::class, [
+        'type' => 'product',
+        'fields' => [['key' => 'sku', 'type' => 'text', 'label' => 'SKU', 'placement' => 'footer']],
+    ])->assertHasErrors(['"placement" must be one of: main, sidebar, hidden']);
+});
+
 it('requires a name when no preset is given', function (): void {
     WireUpServer::tool(CreateContentTypeTool::class, [])
         ->assertHasErrors(['Pass a "name"']);

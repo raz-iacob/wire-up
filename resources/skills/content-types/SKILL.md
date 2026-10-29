@@ -12,7 +12,8 @@ Use a content type whenever there is more than one item of the same shape. Each 
 1. Call `list-content-types` first; the type may exist already, and the list shows the available presets.
 2. Prefer a preset with `create-content-type`: product, service, post, event, team-member, project or job. Each comes with sensible fields and a URL prefix.
 3. For anything else, pass custom `fields`. Field types are text, textarea, rich-text, number, money, date, datetime, boolean, select, photo, video, audio, document, media-gallery, url, email, color, tags, multi-select and relationship. Tags and multi-select hold lists of strings; multi-select takes its choices from `options`. A relationship field links records to records of another type, such as related products or the speakers of an event: set `record_type` to that type's key and `multiple` to allow several, then fill it with record ids. Create the linked type first. Mark short fields that should appear in the admin list as `column`.
-4. Set `has_detail_page: false` when the records only feed cards, such as logos or testimonials, so they get no page of their own. Set `has_index_page: true` to publish an automatic listing at the prefix.
+4. Each field's `placement` decides where it shows on a record's page: `main` (the wide column), `sidebar` (the narrow column beside it) or `hidden`. The field order is the order on the page. Put the photo, price and short facts in the sidebar and long text, galleries and videos in main. Hidden fields stay in the admin only.
+5. Set `has_detail_page: false` when the records only feed cards, such as logos or testimonials, so they get no page of their own. Set `has_index_page: true` to publish an automatic listing at the prefix.
 
 ## Add the records
 

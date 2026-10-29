@@ -9,6 +9,9 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Slack messages for new orders now arrive. Since the shop was added they failed before reaching Slack, so only the email came through.
 - The page and record editors stay on the language you were editing when you refresh, share the link or restore an older version, instead of switching back to the default language.
 - A record's breadcrumb links to its content type's automatic listing page when there is one, and no longer links to a landing page that is not published in the visitor's language. Search engines are no longer given the record's own address for that step.
+- Every field of a content type now has a place on its records' pages: Main, Sidebar or Hidden, chosen beside the field in Settings → Content types. Fields appear in the order you drag them into. Until now a custom content type's page showed only its photo, title and description, so other fields had to be copied into blocks by hand. Each kind of field is shown the way it should be: links, email addresses, colours, tags and choices, dates and event times, prices with the buy button, photos, galleries, videos, audio, documents and linked records. A field you hide also stays out of the version of the page that AI agents read, and AI agents can set where fields go.
+- Content types you already have look the same after updating: the fields their page showed keep their place and any others start hidden, ready for you to place. The product, event, project and team member pages now share one layout, a wide main column beside a narrower sidebar.
+- Rich text in record fields is cleaned of scripts and other unsafe markup before it is shown on the site, as block text already was.
 
 ## v0.5.2 — 2026-10-29
 

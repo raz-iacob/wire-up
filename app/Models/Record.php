@@ -8,6 +8,7 @@ use App\Enums\ContentStatus;
 use App\Enums\FieldType;
 use App\Enums\MediaType;
 use App\Services\ImageService;
+use App\Services\RecordTypePresets;
 use App\Services\SettingsService;
 use App\Traits\ClearsPageCache;
 use App\Traits\HasBlocks;
@@ -241,6 +242,48 @@ final class Record extends Model
             ->get()
             ->sortBy(fn (self $record): int => (int) array_search($record->id, $ids, true))
             ->values();
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
+     */
+    public function hasFieldContent(array $field): bool
+    {
+        $key = (string) ($field['key'] ?? '');
+        $translatable = (bool) ($field['translatable'] ?? false);
+        $type = FieldType::tryFrom((string) ($field['type'] ?? ''));
+
+        if ($key === 'heading') {
+            return true;
+        }
+
+        if ($key === RecordTypePresets::PRICE_FIELD) {
+            return is_numeric($this->fieldValue($key, false))
+                || (bool) $this->fieldValue('sold', false)
+                || $this->stock === 0;
+        }
+
+        if ($type?->isMedia() ?? false) {
+            return $this->fieldMedia($key, $translatable) !== [];
+        }
+
+        if ($type === FieldType::RELATIONSHIP) {
+            return $this->linkedRecords($field)->isNotEmpty();
+        }
+
+        $value = $this->fieldValue($key, $translatable);
+
+        if (is_array($value)) {
+            return array_filter($value, fn (mixed $item): bool => is_string($item) && mb_trim($item) !== '') !== [];
+        }
+
+        if (is_bool($value)) {
+            return true;
+        }
+
+        $hasText = is_scalar($value) && mb_trim(strip_tags((string) $value)) !== '';
+
+        return $hasText || ($key === 'overview' && mb_trim($this->description) !== '');
     }
 
     public function fieldValue(string $key, bool $translatable): mixed

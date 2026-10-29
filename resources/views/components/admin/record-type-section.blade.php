@@ -169,6 +169,19 @@
                                             </flux:heading>
                                         </button>
 
+                                        <div class="w-28 shrink-0">
+                                            <flux:select
+                                                size="sm"
+                                                wire:model="types.{{ $index }}.fields.{{ $fieldIndex }}.placement"
+                                                :aria-label="__('On the record page')"
+                                            >
+                                                @foreach (\App\Enums\FieldPlacement::cases() as $placement)
+                                                    <flux:select.option :value="$placement->value">
+                                                        {{ $placement->label() }}</flux:select.option>
+                                                @endforeach
+                                            </flux:select>
+                                        </div>
+
                                         <flux:button
                                             size="sm"
                                             variant="subtle"

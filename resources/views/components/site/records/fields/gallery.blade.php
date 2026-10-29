@@ -1,0 +1,141 @@
+@props(['record', 'field'])
+
+@php
+    $galleryItems = collect($record->fieldMedia((string) $field['key'], (bool) ($field['translatable'] ?? false)))
+        ->map(function (\App\Models\Media $media): array {
+            $isVideo = $media->type === \App\Enums\MediaType::VIDEO;
+
+            return [
+                'type' => $isVideo ? 'video' : 'image',
+                'poster' => $isVideo
+                    ? ($media->thumbnail ? \App\Services\ImageService::url('w=900', $media->thumbnail) : \App\Services\ImageService::placeholder())
+                    : \App\Services\ImageService::mediaUrl($media, 900),
+                'full' => $isVideo ? $media->url : \App\Services\ImageService::mediaUrl($media, 1600),
+                'thumb' => $isVideo
+                    ? ($media->thumbnail ? \App\Services\ImageService::url('w=200', $media->thumbnail) : \App\Services\ImageService::placeholder())
+                    : \App\Services\ImageService::mediaUrl($media, 200),
+                'alt' => $media->alt_text ?? '',
+                'caption' => (string) data_get($media->getRelationValue('pivot'), 'metadata.caption', ''),
+            ];
+        })
+        ->all();
+@endphp
+
+@if ($galleryItems !== [])
+    <div
+        data-field="{{ $field['key'] }}"
+        x-data="{
+            active: 0,
+            open: false,
+            items: @js($galleryItems),
+            show() { this.open = true; document.body.style.overflow = 'hidden'; },
+            close() { this.open = false; document.body.style.overflow = ''; },
+            prev() { this.active = (this.active - 1 + this.items.length) % this.items.length; },
+            next() { this.active = (this.active + 1) % this.items.length; },
+            get current() { return this.items[this.active] || {}; },
+        }"
+        x-on:keydown.escape.window="close()"
+        x-on:keydown.arrow-left.window="prev()"
+        x-on:keydown.arrow-right.window="next()"
+    >
+        <button
+            type="button"
+            x-on:click="show()"
+            x-swipe
+            x-on:swipe-left="next()"
+            x-on:swipe-right="prev()"
+            class="wire-card wire-card--media group relative block aspect-4/3 w-full cursor-zoom-in overflow-hidden rounded-[calc(var(--wire-radius)*1.5)] bg-(--wire-card-bg)"
+        >
+            <img :src="items[active].poster" :alt="items[active].alt" class="size-full object-contain" />
+            <template x-if="items[active].type === 'video'">
+                <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <span class="flex size-14 items-center justify-center rounded-full bg-black/55 text-white"
+                        ><flux:icon name="play" class="size-7"
+                    /></span>
+                </span>
+            </template>
+        </button>
+
+        @if (count($galleryItems) > 1)
+            <div class="mt-3 grid grid-cols-5 gap-2 sm:grid-cols-7">
+                @foreach ($galleryItems as $i => $item)
+                    <button
+                        type="button"
+                        x-on:click="active = {{ $i }}"
+                        :class="active === {{ $i }} ? 'ring-2 ring-(--wire-accent) ring-offset-2' : 'opacity-70 hover:opacity-100'"
+                        class="wire-card wire-card--media relative overflow-hidden rounded-(--wire-radius) bg-(--wire-card-bg) transition"
+                        wire:key="product-thumb-{{ $i }}"
+                    >
+                        <img src="{{ $item['thumb'] }}" alt="" class="aspect-square size-full object-contain" />
+                        @if ($item['type'] === 'video')
+                            <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                                <flux:icon name="play-circle" class="size-6 text-white drop-shadow" />
+                            </span>
+                        @endif
+                    </button>
+                @endforeach
+            </div>
+        @endif
+
+        <div
+            x-cloak
+            x-show="open"
+            x-transition.opacity
+            x-swipe
+            x-on:swipe-left="next()"
+            x-on:swipe-right="prev()"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+            x-on:click.self="close()"
+        >
+            <button
+                type="button"
+                class="absolute top-4 right-4 text-white/70 hover:text-white"
+                x-on:click="close()"
+                aria-label="{{ __('Close') }}"
+            >
+                <flux:icon name="x-mark" class="size-8" />
+            </button>
+
+            <template x-if="items.length > 1">
+                <button
+                    type="button"
+                    class="absolute left-2 text-white/70 hover:text-white md:left-6"
+                    x-on:click="prev()"
+                    aria-label="{{ __('Previous') }}"
+                >
+                    <flux:icon name="chevron-left" class="size-10" />
+                </button>
+            </template>
+            <template x-if="items.length > 1">
+                <button
+                    type="button"
+                    class="absolute right-2 text-white/70 hover:text-white md:right-6"
+                    x-on:click="next()"
+                    aria-label="{{ __('Next') }}"
+                >
+                    <flux:icon name="chevron-right" class="size-10" />
+                </button>
+            </template>
+
+            <div class="flex max-h-[90vh] w-full max-w-5xl flex-col items-center justify-center gap-3">
+                <template x-if="current.type === 'video'">
+                    <video
+                        class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)]"
+                        controls
+                        autoplay
+                        :src="current.full"
+                        :poster="current.poster"
+                    ></video>
+                </template>
+                <template x-if="current.type !== 'video'">
+                    <img
+                        class="max-h-[80vh] w-auto rounded-[calc(var(--wire-radius)*1.5)] object-contain"
+                        :src="current.full"
+                        :alt="current.alt"
+                    />
+                </template>
+                <p class="text-center text-sm text-white/80" x-show="current.caption" x-text="current.caption"></p>
+            </div>
+        </div>
+    </div>
+@endif

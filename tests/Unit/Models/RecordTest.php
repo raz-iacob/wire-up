@@ -335,3 +335,50 @@ it('counts attached media for a media column value', function (): void {
     expect($fresh->columnValue(['key' => 'gallery', 'type' => 'media-gallery']))->toBe('1')
         ->and($fresh->columnValue(['key' => 'photo', 'type' => 'photo']))->toBe('0');
 });
+
+it('tells whether a field has anything to show on the page', function (): void {
+    $type = RecordType::factory()->create(['key' => 'kit', 'fields' => [
+        ['key' => 'heading', 'type' => 'text'],
+        ['key' => 'overview', 'type' => 'rich-text', 'translatable' => true],
+        ['key' => 'cpu', 'type' => 'text'],
+        ['key' => 'blank', 'type' => 'text'],
+        ['key' => 'labels', 'type' => 'tags'],
+        ['key' => 'no_labels', 'type' => 'tags'],
+        ['key' => 'boxed', 'type' => 'boolean'],
+        ['key' => 'photo', 'type' => 'photo'],
+        ['key' => 'gallery', 'type' => 'media-gallery'],
+        ['key' => 'parts', 'type' => 'relationship', 'record_type' => 'kit'],
+    ]]);
+    $part = Record::factory()->for($type)->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay(), 'metadata' => ['published_locales' => ['en']]]);
+    $record = Record::factory()->for($type)->create([
+        'description' => ['en' => 'Fallback text.'],
+        'data' => ['cpu' => 'Ryzen', 'blank' => '  ', 'labels' => ['quiet', ''], 'no_labels' => ['', ' '], 'boxed' => false, 'parts' => [$part->id]],
+    ]);
+    $record->media()->attach(Media::factory()->create(['type' => MediaType::IMAGE])->id, ['role' => 'photo', 'locale' => 'en', 'position' => 0]);
+
+    $has = fn (string $key): bool => $record->hasFieldContent($type->fieldByKey($key) ?? []);
+
+    expect($has('heading'))->toBeTrue()
+        ->and($has('overview'))->toBeTrue()
+        ->and($has('cpu'))->toBeTrue()
+        ->and($has('blank'))->toBeFalse()
+        ->and($has('labels'))->toBeTrue()
+        ->and($has('no_labels'))->toBeFalse()
+        ->and($has('boxed'))->toBeTrue()
+        ->and($has('photo'))->toBeTrue()
+        ->and($has('gallery'))->toBeFalse()
+        ->and($has('parts'))->toBeTrue();
+
+    $record->update(['description' => ['en' => '']]);
+
+    expect($record->refresh()->hasFieldContent($type->fieldByKey('overview') ?? []))->toBeFalse();
+});
+
+it('counts a price field as content when there is a price, a sold mark or no stock', function (): void {
+    $priceField = ['key' => 'current_price', 'type' => 'money'];
+
+    expect(sellableRecord(['current_price' => '5.00'], sellable: false)->hasFieldContent($priceField))->toBeTrue()
+        ->and(sellableRecord(['sold' => true], sellable: false)->hasFieldContent($priceField))->toBeTrue()
+        ->and(sellableRecord([], ['stock' => 0], sellable: false)->hasFieldContent($priceField))->toBeTrue()
+        ->and(sellableRecord([], sellable: false)->hasFieldContent($priceField))->toBeFalse();
+});

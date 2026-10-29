@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Support;
 
 use App\Enums\ContentStatus;
+use App\Enums\FieldPlacement;
 use App\Enums\FieldType;
 use App\Models\Block;
 use App\Models\Category;
@@ -40,8 +41,19 @@ final readonly class Records
             'has_index_page' => $type->has_index_page,
             'sellable' => $type->sellable,
             'record_count' => $type->records()->count(),
-            'fields' => array_map(self::fieldSummary(...), $type->fields),
+            'fields' => self::fieldSummaries($type),
         ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public static function fieldSummaries(RecordType $type): array
+    {
+        return array_map(
+            fn (array $field): array => self::fieldSummary([...$field, 'placement' => $type->placementFor($field)->value]),
+            $type->fields,
+        );
     }
 
     /**
@@ -62,6 +74,7 @@ final readonly class Records
             'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
             'record_type' => $field['record_type'] ?? null,
             'multiple' => isset($field['record_type']) ? (bool) ($field['multiple'] ?? false) : null,
+            'placement' => $field['placement'] ?? null,
         ], fn (mixed $value): bool => $value !== [] && $value !== null);
     }
 
@@ -96,7 +109,7 @@ final readonly class Records
             ...self::recordSummary($record),
             'description' => $record->description,
             'slugs' => $record->getSlugsArray(),
-            'fields' => array_map(self::fieldSummary(...), $record->recordType->fields),
+            'fields' => self::fieldSummaries($record->recordType),
             'data' => is_array($record->data) ? $record->data : [],
             'media' => self::media($record),
             'categories' => $record->categories
@@ -200,10 +213,13 @@ final readonly class Records
      * @param  array<int, array<string, mixed>>  $fields
      * @return array<int, array<string, mixed>>
      */
-    public static function serializeFields(array $fields, string $locale): array
+    public static function serializeFields(array $fields, string $locale, ?RecordType $existing = null): array
     {
-        return array_map(function (array $field) use ($locale): array {
+        return array_map(function (array $field) use ($locale, $existing): array {
             $type = FieldType::tryFrom((string) ($field['type'] ?? '')) ?? FieldType::TEXT;
+            $current = $existing?->fieldByKey((string) ($field['key'] ?? ''));
+            $placement = FieldPlacement::tryFrom((string) ($field['placement'] ?? ''))
+                ?? ($current !== null ? $existing->placementFor($current) : $type->defaultPlacement());
 
             return [
                 'key' => (string) ($field['key'] ?? ''),
@@ -221,6 +237,7 @@ final readonly class Records
                     fn (mixed $option): bool => is_string($option) && $option !== '',
                 )),
                 'prefills' => in_array($field['prefills'] ?? null, ['title', 'description'], true) ? $field['prefills'] : null,
+                'placement' => $placement->value,
                 ...($type === FieldType::RELATIONSHIP
                     ? ['record_type' => (string) ($field['record_type'] ?? ''), 'multiple' => (bool) ($field['multiple'] ?? false)]
                     : []),
@@ -266,6 +283,7 @@ final readonly class Records
             'fields.*.prefills' => ['nullable', 'string', 'in:title,description'],
             'fields.*.record_type' => ['nullable', 'string'],
             'fields.*.multiple' => ['boolean'],
+            'fields.*.placement' => ['nullable', 'string', 'in:'.implode(',', FieldPlacement::values())],
         ];
     }
 
@@ -282,6 +300,7 @@ final readonly class Records
             'fields.*.label.required' => 'Every field needs a "label".',
             'fields.*.type.required' => 'Every field needs a "type".',
             'fields.*.type.in' => 'Unknown field type. Valid types are: '.implode(', ', FieldType::values()).'.',
+            'fields.*.placement.in' => 'A field\'s "placement" must be one of: '.implode(', ', FieldPlacement::values()).'.',
         ];
     }
 

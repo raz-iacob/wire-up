@@ -273,3 +273,47 @@ it('starts the product preset as sellable and a custom type as not', function ()
         ->assertSet('types.0.sellable', true)
         ->assertSet('types.1.sellable', false);
 });
+
+it('shows where each field sits on the record page and saves a new placement', function (): void {
+    $this->actingAsAdmin();
+    $type = RecordType::factory()->create(['key' => 'pc_builds', 'fields' => [
+        ['key' => 'heading', 'type' => 'text', 'label' => ['en' => 'Title']],
+        ['key' => 'cpu', 'type' => 'text', 'label' => ['en' => 'CPU']],
+    ]]);
+
+    $component = Livewire::test('pages::admin.settings-content-types')
+        ->assertSet('types.0.fields.0.placement', 'main')
+        ->assertSet('types.0.fields.1.placement', 'hidden')
+        ->set('types.0.fields.1.placement', 'sidebar');
+
+    $key = $component->get('types.0._key');
+    $component->call('addField', $key, 'rich-text')
+        ->set('types.0.fields.2.label', 'Specs')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(array_column($type->fresh()->fields, 'placement', 'key'))->toBe(['heading' => 'main', 'cpu' => 'sidebar', 'field_3' => 'main']);
+});
+
+it('rejects a placement that is not main, sidebar or hidden', function (): void {
+    $this->actingAsAdmin();
+    RecordType::factory()->create(['fields' => [['key' => 'cpu', 'type' => 'text', 'label' => ['en' => 'CPU']]]]);
+
+    Livewire::test('pages::admin.settings-content-types')
+        ->set('types.0.fields.0.placement', 'footer')
+        ->call('update')
+        ->assertHasErrors(['types.0.fields.0.placement']);
+});
+
+it('starts preset fields where the preset puts them', function (): void {
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.settings-content-types')->call('addPreset', 'product');
+
+    expect(array_column($component->get('types.0.fields'), 'placement', 'key'))->toMatchArray([
+        'heading' => 'sidebar',
+        'gallery' => 'main',
+        'current_price' => 'sidebar',
+        'sku' => 'hidden',
+    ]);
+});

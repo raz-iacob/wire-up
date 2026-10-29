@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\FieldPlacement;
 use App\Services\RecordTypePresets;
 
 it('adds the missing shop fields and keeps the existing ones in place', function (): void {
@@ -24,4 +25,15 @@ it('makes the product preset sellable with its shop fields', function (): void {
 
     expect($preset['sellable'])->toBeTrue()
         ->and(array_column($preset['fields'], 'key'))->toContain('current_price', 'billing', 'shippable');
+});
+
+it('places every preset field on the record page', function (): void {
+    foreach (RecordTypePresets::all() as $preset) {
+        foreach ($preset['fields'] as $field) {
+            expect(FieldPlacement::tryFrom($field['placement']))->not->toBeNull();
+        }
+    }
+
+    expect(array_column(RecordTypePresets::find('event')['fields'], 'placement', 'key'))
+        ->toMatchArray(['heading' => 'main', 'starts_at' => 'sidebar', 'ends_at' => 'hidden', 'photo' => 'sidebar']);
 });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\FieldPlacement;
 use App\Enums\FieldType;
 use App\Enums\MediaType;
 use App\Traits\ClearsPageCache;
@@ -39,6 +40,15 @@ final class RecordType extends Model
 {
     /** @use HasFactory<RecordTypeFactory> */
     use ClearsPageCache, HasFactory;
+
+    private const array TEMPLATE_PLACEMENTS = [
+        'product' => ['gallery' => 'main', 'heading' => 'sidebar', 'overview' => 'sidebar', 'current_price' => 'sidebar'],
+        'event' => ['heading' => 'main', 'overview' => 'main', 'starts_at' => 'main', 'location' => 'main', 'photo' => 'sidebar'],
+        'project' => ['heading' => 'main', 'overview' => 'main', 'client' => 'main', 'link' => 'main'],
+        'team-member' => ['heading' => 'main', 'overview' => 'main', 'role' => 'main', 'photo' => 'sidebar'],
+    ];
+
+    private const array DEFAULT_TEMPLATE_PLACEMENTS = ['heading' => 'main', 'overview' => 'main', 'photo' => 'sidebar'];
 
     /**
      * @var list<string>
@@ -289,6 +299,45 @@ final class RecordType extends Model
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
+     */
+    public function placementFor(array $field): FieldPlacement
+    {
+        $stored = FieldPlacement::tryFrom((string) ($field['placement'] ?? ''));
+
+        if ($stored instanceof FieldPlacement) {
+            return $stored;
+        }
+
+        if (($field['type'] ?? null) === FieldType::RELATIONSHIP->value) {
+            return FieldPlacement::MAIN;
+        }
+
+        $templatePlacements = self::TEMPLATE_PLACEMENTS[$this->key] ?? self::DEFAULT_TEMPLATE_PLACEMENTS;
+
+        return FieldPlacement::tryFrom($templatePlacements[(string) ($field['key'] ?? '')] ?? '') ?? FieldPlacement::HIDDEN;
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
+     */
+    public function isHiddenByOwner(array $field): bool
+    {
+        return ($field['placement'] ?? null) === FieldPlacement::HIDDEN->value;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function fieldsPlacedIn(FieldPlacement $placement): array
+    {
+        return array_values(array_filter(
+            $this->fields,
+            fn (array $field): bool => $this->placementFor($field) === $placement,
+        ));
     }
 
     protected static function booted(): void

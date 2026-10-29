@@ -79,7 +79,7 @@ final class UpdateContentTypeTool extends Tool
         }
 
         if (array_key_exists('fields', $validated)) {
-            $attributes['fields'] = Records::serializeFields($validated['fields'], resolve('localization')->getDefaultLocale());
+            $attributes['fields'] = Records::serializeFields($validated['fields'], resolve('localization')->getDefaultLocale(), $type);
             $linkError = Records::unknownLinkTarget($attributes['fields'], $type->key);
 
             if ($linkError !== null) {
@@ -131,7 +131,7 @@ final class UpdateContentTypeTool extends Tool
 
             'fields' => $schema->array()
                 ->items($schema->object())
-                ->description('The complete replacement field blueprint (same shape as create-content-type). Include every field to keep — any field left out is removed from the blueprint. Omit this key entirely to leave the fields unchanged.'),
+                ->description('The complete replacement field blueprint (same shape as create-content-type). Include every field to keep — any field left out is removed from the blueprint. A field sent without "placement" keeps its current placement. Omit this key entirely to leave the fields unchanged.'),
         ];
     }
 

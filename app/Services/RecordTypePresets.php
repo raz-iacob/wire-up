@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\FieldPlacement;
 use App\Enums\FieldType;
 
 final class RecordTypePresets
@@ -91,11 +92,11 @@ final class RecordTypePresets
             'name' => 'Products',
             'sellable' => true,
             'fields' => self::withSellableFields([
-                ...self::contentFields(),
+                ...self::contentFields(FieldPlacement::SIDEBAR),
                 self::field('gallery', FieldType::MEDIA_GALLERY, 'Gallery'),
                 self::field(self::PRICE_FIELD, FieldType::MONEY, 'Current price', ['column' => true, 'sortable' => true]),
-                self::field('regular_price', FieldType::MONEY, 'Regular price'),
-                self::field('sku', FieldType::TEXT, 'SKU', ['translatable' => false, 'searchable' => true, 'column' => true, 'help' => 'Your own product code, for your records.']),
+                self::field('regular_price', FieldType::MONEY, 'Regular price', ['placement' => FieldPlacement::HIDDEN->value]),
+                self::field('sku', FieldType::TEXT, 'SKU', ['translatable' => false, 'searchable' => true, 'column' => true, 'help' => 'Your own product code, for your records.', 'placement' => FieldPlacement::HIDDEN->value]),
             ]),
         ];
     }
@@ -147,7 +148,7 @@ final class RecordTypePresets
             'fields' => [
                 ...self::contentFields(),
                 self::field('starts_at', FieldType::DATETIME, 'Starts', ['column' => true, 'sortable' => true]),
-                self::field('ends_at', FieldType::DATETIME, 'Ends'),
+                self::field('ends_at', FieldType::DATETIME, 'Ends', ['placement' => FieldPlacement::HIDDEN->value]),
                 self::field('location', FieldType::TEXT, 'Location', ['translatable' => false]),
                 self::field('photo', FieldType::PHOTO, 'Photo'),
             ],
@@ -166,7 +167,7 @@ final class RecordTypePresets
             'name' => 'Team members',
             'fields' => [
                 ...self::contentFields(),
-                self::field('role', FieldType::TEXT, 'Role', ['column' => true]),
+                self::field('role', FieldType::TEXT, 'Role', ['column' => true, 'placement' => FieldPlacement::MAIN->value]),
                 self::field('photo', FieldType::PHOTO, 'Photo'),
             ],
         ];
@@ -212,11 +213,11 @@ final class RecordTypePresets
     /**
      * @return array<int, array<string, mixed>>
      */
-    private static function contentFields(): array
+    private static function contentFields(FieldPlacement $placement = FieldPlacement::MAIN): array
     {
         return [
-            self::field('heading', FieldType::TEXT, 'Title', ['prefills' => 'title']),
-            self::field('overview', FieldType::RICH_TEXT, 'Description', ['prefills' => 'description']),
+            self::field('heading', FieldType::TEXT, 'Title', ['prefills' => 'title', 'placement' => $placement->value]),
+            self::field('overview', FieldType::RICH_TEXT, 'Description', ['prefills' => 'description', 'placement' => $placement->value]),
         ];
     }
 
@@ -227,8 +228,8 @@ final class RecordTypePresets
     {
         return [
             self::PRICE_FIELD => self::field(self::PRICE_FIELD, FieldType::MONEY, 'Current price', ['column' => true, 'sortable' => true, 'translatable' => false]),
-            self::BILLING_FIELD => self::field(self::BILLING_FIELD, FieldType::SELECT, 'Billing', ['translatable' => false, 'options' => self::BILLING_OPTIONS]),
-            self::SHIPPABLE_FIELD => self::field(self::SHIPPABLE_FIELD, FieldType::BOOLEAN, 'Needs shipping', ['translatable' => false]),
+            self::BILLING_FIELD => self::field(self::BILLING_FIELD, FieldType::SELECT, 'Billing', ['translatable' => false, 'options' => self::BILLING_OPTIONS, 'placement' => FieldPlacement::HIDDEN->value]),
+            self::SHIPPABLE_FIELD => self::field(self::SHIPPABLE_FIELD, FieldType::BOOLEAN, 'Needs shipping', ['translatable' => false, 'placement' => FieldPlacement::HIDDEN->value]),
         ];
     }
 
@@ -259,6 +260,7 @@ final class RecordTypePresets
             'help' => '',
             'options' => [],
             'prefills' => null,
+            'placement' => $type->defaultPlacement()->value,
         ], $overrides);
     }
 }

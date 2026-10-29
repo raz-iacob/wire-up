@@ -128,12 +128,7 @@ return new class extends Component
         </div>
     @endif
 
-    @includeFirst([
-        'components.site.records.'.$record->recordType->key,
-        'components.site.records.default',
-    ], ['record' => $record])
-
-    <x-site.records.linked-records :record="$record" />
+    <x-site.records.layout :record="$record" />
 
     <x-site.page-content :page="$record" />
 </div>

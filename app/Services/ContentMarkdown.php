@@ -62,8 +62,11 @@ final readonly class ContentMarkdown
         $record->loadMissing('recordType', 'media', 'translations');
 
         $sections = ['# '.$record->displayHeading()];
+        $recordType = $record->recordType;
+        $overviewField = $recordType->fieldByKey('overview');
+        $overviewHidden = $overviewField !== null && $recordType->isHiddenByOwner($overviewField);
 
-        $overview = $this->blocks->fromHtml((string) ($record->fieldValue('overview', true) ?? ''));
+        $overview = $overviewHidden ? '' : $this->blocks->fromHtml((string) ($record->fieldValue('overview', true) ?? ''));
 
         if ($overview !== '') {
             $sections[] = $overview;
@@ -73,7 +76,11 @@ final readonly class ContentMarkdown
 
         $fields = [];
 
-        foreach ($record->recordType->displayableFields() as $field) {
+        foreach ($recordType->displayableFields() as $field) {
+            if ($recordType->isHiddenByOwner($field)) {
+                continue;
+            }
+
             $line = $this->fieldLine($record, $field);
 
             if ($line !== '') {

@@ -121,6 +121,14 @@ enum FieldType: string
         };
     }
 
+    public function defaultPlacement(): FieldPlacement
+    {
+        return match ($this) {
+            self::TEXTAREA, self::RICH_TEXT, self::VIDEO, self::AUDIO, self::MEDIA_GALLERY, self::RELATIONSHIP => FieldPlacement::MAIN,
+            default => FieldPlacement::SIDEBAR,
+        };
+    }
+
     public function supportsOptions(): bool
     {
         return in_array($this, [self::SELECT, self::MULTI_SELECT], true);
