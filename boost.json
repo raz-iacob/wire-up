@@ -19,6 +19,7 @@
         "fortify-development",
         "laravel-best-practices",
         "testing-best-practices",
+        "mcp-development",
         "fluxui-development",
         "livewire-development",
         "tailwindcss-development",

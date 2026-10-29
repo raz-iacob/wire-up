@@ -6,47 +6,47 @@ metadata:
   author: laravel
 ---
 
-# Flux UI Development
+# Flux UI development
 
 ## Documentation
 
 Use `search-docs` for detailed Flux UI patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-This project uses the Pro version of Flux UI, which includes all free and Pro components and variants.
+This project uses the Pro edition of Flux UI, which includes all free and Pro components and variants.
 
-Flux UI is a component library for Livewire built with Tailwind CSS. It provides components that are easy to use and customize.
+Flux UI is a component library for Livewire built with Tailwind CSS.
 
-Use Flux UI components when available. Fall back to standard Blade components when no Flux component exists for your needs.
+Use a Flux UI component when one exists. If no Flux component fits your needs, fall back to a standard Blade component.
 
 <!-- Basic Button -->
 ```blade
 <flux:button variant="primary">Click me</flux:button>
 ```
 
-## Available Components (Pro Edition)
+## Available components (Pro edition)
 
 Available: accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, color-picker, command, composer, context, date-picker, dropdown, editor, field, file-upload, heading, icon, input, kanban, modal, navbar, otp-input, pagination, pillbox, popover, profile, progress, radio, select, separator, skeleton, slider, switch, table, tabs, text, textarea, time-picker, timeline, toast, tooltip
 
 ## Icons
 
-Flux includes [Heroicons](https://heroicons.com/) as its default icon set. Search for exact icon names on the Heroicons site - do not guess or invent icon names.
+Flux includes [Heroicons](https://heroicons.com/) as its default icon set. Look up exact icon names on the Heroicons site. Do not guess or invent icon names.
 
 <!-- Icon Button -->
 ```blade
 <flux:button icon="arrow-down-tray">Export</flux:button>
 ```
 
-For icons not available in Heroicons, use [Lucide](https://lucide.dev/). Import the icons you need with the Artisan command:
+For an icon that Heroicons lacks, use [Lucide](https://lucide.dev/). Import the icons you need with the Artisan command:
 
 ```bash
 php artisan flux:icon crown grip-vertical github
 ```
 
-## Common Patterns
+## Common patterns
 
-### Form Fields
+### Form fields
 
 <!-- Form Field -->
 ```blade
@@ -73,12 +73,12 @@ php artisan flux:icon crown grip-vertical github
 
 ## Verification
 
-1. Check component renders correctly
+1. Check that the component renders correctly
 2. Test interactive states
 3. Verify mobile responsiveness
 
-## Common Pitfalls
+## Common pitfalls
 
-- Not checking if a Flux component exists before creating custom implementations
+- Not checking whether a Flux component exists before building a custom one
 - Forgetting to use the `search-docs` tool for component-specific documentation
-- Not following existing project patterns for Flux usage
+- Not following the project's existing Flux patterns
