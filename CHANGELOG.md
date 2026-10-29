@@ -2,7 +2,7 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
-## Unreleased
+## v0.5.2 — 2026-10-29
 
 - Transparent PNG and WebP images keep their transparency on the site. Logos, cut-out photos and product shots used to be turned into JPEGs on a solid background wherever they appeared: in blocks, on record pages and collection cards, and as page backgrounds. They are now served as WebP, which keeps the see-through parts, while JPEG photos stay JPEG at the same addresses as before.
 - Security updates for two of the libraries Wire-Up is built on: Livewire 4.4.8 fixes an authorization issue in its #[Authorize] attribute, and the Symfony email library fixes a way to inject extra email headers. Wire-Up's own code does not use the affected Livewire feature, but custom components added to a site might.
