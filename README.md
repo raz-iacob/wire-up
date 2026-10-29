@@ -268,6 +268,10 @@ Cursor, and other MCP clients) can build and edit the site programmatically:
 - [Flux UI Documentation](https://fluxui.dev/docs)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 
+## Built by Raz Iacob
+
+Wire-Up is built and maintained by [Raz Iacob](https://raziacob.com), a full-stack developer with more than 20 years of experience. If you'd like a Wire-Up site built for you, an existing site moved off WordPress, or hosting and care for a site you already run, see [raziacob.com](https://raziacob.com).
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -281,4 +285,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Built with ❤️ using Laravel + Livewire
+Built with ❤️ using Laravel + Livewire by [Raz Iacob](https://raziacob.com)
