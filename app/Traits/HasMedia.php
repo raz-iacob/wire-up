@@ -18,7 +18,7 @@ trait HasMedia
      */
     public function media(): MorphToMany
     {
-        return $this->morphToMany(Media::class, 'mediable', 'mediables')
+        return $this->morphToMany(Media::class, 'mediable', Mediable::class)
             ->using(Mediable::class)
             ->withPivot(['role', 'crop', 'metadata', 'locale', 'position'])
             ->withTimestamps()

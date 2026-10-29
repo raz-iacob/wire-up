@@ -611,7 +611,7 @@ it('restores an older version from the history panel and keeps it on update', fu
         ->click('Restore')
         ->assertSee('Showing the version from')
         ->click('button[type="submit"]:visible:has-text("Update")')
-        ->assertSee('Page content has been updated.')
+        ->waitForText('Page content has been updated.')
         ->assertDontSee('Showing the version from')
         ->assertNoJavascriptErrors();
 

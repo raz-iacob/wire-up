@@ -255,7 +255,7 @@ return new class extends Component
 
     public function deleteCurrentItem(): void
     {
-        if ($this->selected->count() === 0) {
+        if ($this->selected->isEmpty()) {
             return;
         }
 

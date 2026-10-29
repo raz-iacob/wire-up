@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\DownloadMediaAction;
 use App\Models\Media;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 it('downloads a single media file via handle', function (): void {
@@ -54,7 +55,7 @@ it('creates tmp directory if it does not exist', function (): void {
 
     $tmpDir = storage_path('app/tmp');
     if (is_dir($tmpDir)) {
-        array_map(unlink(...), glob("$tmpDir/*.*"));
+        array_map(File::delete(...), glob("$tmpDir/*.*"));
         rmdir($tmpDir);
     }
 

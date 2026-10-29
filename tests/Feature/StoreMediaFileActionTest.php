@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\StoreMediaFileAction;
 use App\Enums\MediaType;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function (): void {
@@ -13,7 +14,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    array_map(unlink(...), glob($this->scratch.'/*') ?: []);
+    array_map(File::delete(...), glob($this->scratch.'/*') ?: []);
     rmdir($this->scratch);
 });
 

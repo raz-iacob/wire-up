@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Models\Media;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
@@ -64,7 +65,7 @@ final class DownloadMediaAction
             $zip->close();
 
             readfile($zipFilePath);
-            unlink($zipFilePath);
+            File::delete($zipFilePath);
         }, $zipFileName, [
             'Content-Type' => 'application/zip',
             'Content-Disposition' => 'attachment; filename="'.$zipFileName.'"',
