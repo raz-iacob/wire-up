@@ -36,7 +36,7 @@ final class BackupFailed extends Notification
             ->greeting(__('Hello,'))
             ->line(__('The automatic backup of :app did not finish, so no new backup was made.', ['app' => $brand]))
             ->line(__('Reason: :reason', ['reason' => mb_substr($this->reason, -600)]))
-            ->action(__('Open the admin'), route('admin.dashboard'));
+            ->action(__('Open Settings → Backups'), route('admin.settings-backups'));
     }
 
     /**
@@ -51,8 +51,8 @@ final class BackupFailed extends Notification
                 ['type' => 'section', 'text' => ['type' => 'mrkdwn', 'text' => str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], mb_substr($this->reason, -600))]],
                 ['type' => 'actions', 'elements' => [[
                     'type' => 'button',
-                    'text' => ['type' => 'plain_text', 'text' => __('Open the admin'), 'emoji' => true],
-                    'url' => route('admin.dashboard'),
+                    'text' => ['type' => 'plain_text', 'text' => __('Open backups'), 'emoji' => true],
+                    'url' => route('admin.settings-backups'),
                 ]]],
             ],
         ];

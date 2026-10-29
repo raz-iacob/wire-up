@@ -21,7 +21,7 @@ it('builds a branded failure mail with the reason', function (): void {
 
     expect($mail->subject)->toBe('The automatic backup of Acme Studio failed')
         ->and($mail->level)->toBe('error')
-        ->and($mail->actionUrl)->toBe(route('admin.dashboard'))
+        ->and($mail->actionUrl)->toBe(route('admin.settings-backups'))
         ->and(implode(' ', $mail->introLines))->toContain('Reason: disk full');
 });
 
@@ -30,5 +30,5 @@ it('builds a slack message with the reason escaped', function (): void {
 
     expect($payload['text'])->toContain('automatic backup')
         ->and($payload['blocks'][1]['text']['text'])->toBe('mysqldump &lt;error&gt; &amp; more')
-        ->and($payload['blocks'][2]['elements'][0]['url'])->toBe(route('admin.dashboard'));
+        ->and($payload['blocks'][2]['elements'][0]['url'])->toBe(route('admin.settings-backups'));
 });

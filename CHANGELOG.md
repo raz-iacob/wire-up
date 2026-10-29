@@ -14,6 +14,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Rich text in record fields is cleaned of scripts and other unsafe markup before it is shown on the site, as block text already was.
 - The new command php artisan wireup:backup:create backs up the database and every uploaded file into one zip in storage/app/backups, and php artisan wireup:backup:restore puts a site back from one: it switches the site to maintenance mode, loads the database and the files, applies any newer database changes and brings the site back up. It refuses a backup taken by a newer version of Wire-Up, and leaves the site in maintenance mode if the database cannot be loaded.
 - A database backup that fails part-way, such as the one taken before an update, no longer leaves a broken file behind that later counted as one of the five kept backups.
+- Settings → Backups lists every backup with its date, type and size, makes a new one with Back up now, and downloads or deletes them. Automatic backups can be switched on there, daily or weekly at 3am, with how many to keep and whether to include uploaded files; they are off until you switch them on, because backups take disk space, and the screen shows how much they use and how much is free. If an automatic backup fails, you get an email at the communication address and a Slack message if Slack is connected.
 
 ## v0.5.2 — 2026-10-29
 

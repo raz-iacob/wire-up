@@ -6,6 +6,7 @@ namespace App\Services;
 
 use Carbon\CarbonImmutable;
 use Closure;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
@@ -26,6 +27,8 @@ final readonly class BackupService
 
     private const string UPDATE_PATTERN = '/^db-backup-(\d{4}-\d{2}-\d{2}-\d{6})\.(sql|sqlite)$/';
 
+    private const string CACHE_STATE = 'wireup:backup:state';
+
     /**
      * @param  (Closure(string): (float|false))|null  $freeSpace
      */
@@ -34,6 +37,65 @@ final readonly class BackupService
         private SiteBundle $bundle,
         private ?Closure $freeSpace = null,
     ) {}
+
+    /**
+     * @return array{status: string, file: ?string, output: ?string, at: ?CarbonImmutable}
+     */
+    public function state(): array
+    {
+        $raw = Cache::get(self::CACHE_STATE);
+
+        if (! is_array($raw)) {
+            return ['status' => 'idle', 'file' => null, 'output' => null, 'at' => null];
+        }
+
+        $status = is_string($raw['status'] ?? null) ? $raw['status'] : 'idle';
+        $at = is_string($raw['at'] ?? null) ? CarbonImmutable::parse($raw['at']) : null;
+
+        if ($at instanceof CarbonImmutable && (
+            ($status === 'pending' && $at->lt(now()->subMinutes(10)))
+            || ($status === 'running' && $at->lt(now()->subHour()))
+        )) {
+            $status = 'stalled';
+        }
+
+        return [
+            'status' => $status,
+            'file' => is_string($raw['file'] ?? null) ? $raw['file'] : null,
+            'output' => is_string($raw['output'] ?? null) ? $raw['output'] : null,
+            'at' => $at,
+        ];
+    }
+
+    public function running(): bool
+    {
+        return in_array($this->state()['status'], ['pending', 'running'], true);
+    }
+
+    public function markPending(): void
+    {
+        $this->writeState('pending');
+    }
+
+    public function markRunning(): void
+    {
+        $this->writeState('running');
+    }
+
+    public function markFinished(string $file): void
+    {
+        $this->writeState('finished', $file);
+    }
+
+    public function markFailed(string $output): void
+    {
+        $this->writeState('failed', null, mb_substr($output, -2000));
+    }
+
+    public function clearState(): void
+    {
+        Cache::forget(self::CACHE_STATE);
+    }
 
     public function directory(): string
     {
@@ -219,6 +281,16 @@ final readonly class BackupService
                 'size' => Number::fileSize($last['bytes'], precision: 1),
             ]));
         }
+    }
+
+    private function writeState(string $status, ?string $file = null, ?string $output = null): void
+    {
+        Cache::forever(self::CACHE_STATE, [
+            'status' => $status,
+            'file' => $file,
+            'output' => $output,
+            'at' => now()->toIso8601String(),
+        ]);
     }
 
     private function prune(): void

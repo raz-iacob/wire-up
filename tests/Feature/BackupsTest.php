@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Console\Commands\CreateBackupCommand;
 use App\Console\Commands\RestoreBackupCommand;
+use App\Jobs\RunBackup;
 use App\Notifications\BackupFailed;
 use App\Services\BackupService;
 use App\Services\DatabaseDumper;
@@ -469,4 +470,16 @@ it('keeps the site in maintenance mode when the database cannot be unpacked', fu
     expect(app()->isDownForMaintenance())->toBeTrue();
 
     $this->artisan('up');
+});
+
+it('runs a queued backup through to a finished archive', function (): void {
+    backupSourceDatabase();
+    $backups = resolve(BackupService::class);
+    $backups->markPending();
+
+    new RunBackup()->handle($backups);
+
+    expect($backups->state()['status'])->toBe('finished')
+        ->and($backups->state()['file'])->toBe($backups->all()[0]['file'])
+        ->and($backups->all()[0]['kind'])->toBe('manual');
 });

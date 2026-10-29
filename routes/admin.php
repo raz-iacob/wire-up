@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\BackupDownloadController;
 use Illuminate\Support\Facades\Route;
 
 Route::livewire('/', 'pages::admin.dashboard')->name('dashboard');
@@ -62,4 +63,9 @@ Route::middleware('can:settings.view')->group(function (): void {
     Route::livewire('settings/assistant', 'pages::admin.settings-assistant')->name('settings-assistant');
     Route::livewire('settings/updates', 'pages::admin.settings-updates')->name('settings-updates');
     Route::livewire('settings/export-import', 'pages::admin.settings-export-import')->name('settings-export-import');
+    Route::livewire('settings/backups', 'pages::admin.settings-backups')->name('settings-backups');
+    Route::get('settings/backups/{file}', BackupDownloadController::class)
+        ->where('file', '[A-Za-z0-9._-]+')
+        ->middleware('can:settings.edit')
+        ->name('backups-download');
 });

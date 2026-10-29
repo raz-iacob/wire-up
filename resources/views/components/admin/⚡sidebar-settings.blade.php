@@ -140,5 +140,11 @@ return new class extends Component
             wire:navigate.hover
         >
             {{ __('Export / Import') }}</flux:sidebar.item>
+        <flux:sidebar.item
+            :href="route('admin.settings-backups')"
+            :current="request()->routeIs('admin.settings-backups')"
+            wire:navigate.hover
+        >
+            {{ __('Backups') }}</flux:sidebar.item>
     </flux:sidebar.group>
 </div>
