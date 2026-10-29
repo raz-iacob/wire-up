@@ -117,8 +117,12 @@ return new class extends Component
         $this->title = $record->translationsFor('title');
         $this->description = $record->translationsFor('description');
         $this->slugs = $record->getSlugsArray();
-        $this->locale = app()->getLocale();
         $this->activeLocales = resolve('localization')->getActiveLocales();
+
+        if (! isset($this->locale) || ! array_key_exists($this->locale, $this->activeLocales)) {
+            $this->locale = app()->getLocale();
+        }
+
         $this->publishedLocales = array_values(array_intersect($record->published_locales, array_keys($this->activeLocales)));
         $this->menuOptions = collect(SettingsService::current()->allMenus())
             ->reject(fn (array $menu): bool => $menu['builtin'])
@@ -312,7 +316,7 @@ return new class extends Component
 
     protected function revisionUrl(?int $revision): string
     {
-        return route('admin.records-edit', array_filter(['recordType' => $this->recordType->id, 'record' => $this->record->id, 'restore' => $revision]));
+        return route('admin.records-edit', array_filter(['recordType' => $this->recordType->id, 'record' => $this->record->id, 'restore' => $revision, 'locale' => $this->locale === app()->getLocale() ? null : $this->locale]));
     }
 
     /**

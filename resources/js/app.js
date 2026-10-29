@@ -4,6 +4,13 @@ import.meta.glob(["../images/**/*"], {
     import: "default",
 });
 
+document.addEventListener("livewire:navigate", (event) => {
+    if (/^\/admin(\/|$)/.test(event.detail.url.pathname)) {
+        event.preventDefault();
+        window.location.assign(event.detail.url.href);
+    }
+});
+
 document.addEventListener("alpine:init", () => {
     // x-swipe: dispatches a `swipe-left` / `swipe-right` event on the element for
     // horizontal touch swipes. Vertical drags and short taps are ignored so page

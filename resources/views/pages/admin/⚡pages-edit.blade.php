@@ -90,8 +90,12 @@ return new class extends Component
         $this->title = $page->translationsFor('title');
         $this->description = $page->translationsFor('description');
         $this->slugs = $page->getSlugsArray();
-        $this->locale = app()->getLocale();
         $this->activeLocales = resolve('localization')->getActiveLocales();
+
+        if (! isset($this->locale) || ! array_key_exists($this->locale, $this->activeLocales)) {
+            $this->locale = app()->getLocale();
+        }
+
         $this->publishedLocales = array_values(array_intersect($page->published_locales, array_keys($this->activeLocales)));
         $this->og_image = $this->mediaForRole('og_image');
         $this->menuOptions = collect(SettingsService::current()->allMenus())
@@ -313,7 +317,7 @@ return new class extends Component
 
     protected function revisionUrl(?int $revision): string
     {
-        return route('admin.pages-edit', array_filter(['page' => $this->page->id, 'restore' => $revision]));
+        return route('admin.pages-edit', array_filter(['page' => $this->page->id, 'restore' => $revision, 'locale' => $this->locale === app()->getLocale() ? null : $this->locale]));
     }
 
     /**

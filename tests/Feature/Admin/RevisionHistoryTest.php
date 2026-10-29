@@ -8,6 +8,7 @@ use App\Actions\UpdateRecordAction;
 use App\Enums\ContentStatus;
 use App\Enums\RevisionSource;
 use App\Models\Category;
+use App\Models\Locale;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Record;
@@ -62,6 +63,20 @@ it('sends the editor to an older version and refuses one from another page', fun
     Livewire::test('pages::admin.pages-edit', ['page' => $page])
         ->call('restoreRevision', $foreign->id)
         ->assertNotFound();
+});
+
+it('keeps the editing language when sending the editor to an older version', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+    $this->actingAsAdmin();
+    $page = historyPage();
+    resolve(UpdatePageAction::class)->handle($page, ['title' => ['en' => 'Second draft'], 'status' => ContentStatus::PUBLISHED]);
+    $older = $page->revisions()->get()->last();
+
+    Livewire::withQueryParams(['locale' => 'fr'])
+        ->test('pages::admin.pages-edit', ['page' => $page])
+        ->call('restoreRevision', $older->id)
+        ->assertRedirect(route('admin.pages-edit', ['page' => $page->id, 'restore' => $older->id, 'locale' => 'fr']));
 });
 
 it('loads an older version into the page editor without saving it', function (): void {

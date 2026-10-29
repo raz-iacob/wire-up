@@ -157,6 +157,23 @@ it('cycles to the next active locale on change-locale', function (): void {
         ->assertSet('locale', 'en');
 });
 
+it('keeps the editing language from the address and ignores one that is not active', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $page = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::withQueryParams(['locale' => 'fr'])
+        ->test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('locale', 'fr');
+
+    Livewire::withQueryParams(['locale' => 'ro'])
+        ->test('pages::admin.pages-edit', ['page' => $page])
+        ->assertSet('locale', 'en');
+});
+
 it('does not require title or slug for languages that are not live', function (): void {
     Locale::query()->where('code', 'fr')->update(['active' => true]);
     cache()->forget('site-locales');

@@ -9,7 +9,9 @@ use App\Models\Settings;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderReceived;
 use App\Services\SlackWebhookChannel;
+use Illuminate\Http\Client\Request;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function (): void {
@@ -97,6 +99,16 @@ it('posts the order to slack', function (): void {
     expect($payload['text'])->toBe(__('New order :reference', ['reference' => 'SLCK0001']))
         ->and($payload['blocks'][1]['text']['text'])->toContain('Ada &lt;Shopper&gt;', 'Lamp &amp; shade × 2')
         ->and($payload['blocks'][2]['elements'][0]['url'])->toBe(route('admin.orders-show', $order));
+});
+
+it('delivers the order alert through the slack channel', function (): void {
+    Http::fake(['hooks.slack.com/*' => Http::response('ok')]);
+    $order = Order::factory()->paid()->create(['reference' => 'SLCK0002']);
+
+    Notification::route(SlackWebhookChannel::class, 'https://hooks.slack.com/services/T/B/x')->notifyNow(new OrderReceived($order));
+
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://hooks.slack.com/services/T/B/x'
+        && $request['text'] === __('New order :reference', ['reference' => 'SLCK0002']));
 });
 
 it('writes the customer receipt with the totals and replies to the site contact', function (): void {

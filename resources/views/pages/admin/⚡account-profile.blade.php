@@ -121,7 +121,7 @@ return new class extends Component
         Session::invalidate();
         Session::regenerateToken();
 
-        $this->redirect(route('home'), navigate: true);
+        $this->redirect(route('home'));
     }
 
     public function render(): View

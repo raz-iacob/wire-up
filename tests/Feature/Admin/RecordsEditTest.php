@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\CreateCategoryAction;
 use App\Actions\CreateRecordAction;
 use App\Enums\ContentStatus;
+use App\Models\Locale;
 use App\Models\Media;
 use App\Models\Record;
 use App\Models\RecordType;
@@ -43,6 +44,24 @@ it('can render the records edit screen', function (): void {
         ->assertOk()
         ->assertSeeLivewire('pages::admin.records-edit')
         ->assertSeeLivewire('admin.media-selector');
+});
+
+it('keeps the editing language from the address and ignores one that is not active', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+
+    $type = typeWithFields();
+    $record = makeRecord($type);
+
+    $this->actingAsAdmin();
+
+    Livewire::withQueryParams(['locale' => 'fr'])
+        ->test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->assertSet('locale', 'fr');
+
+    Livewire::withQueryParams(['locale' => 'ro'])
+        ->test('pages::admin.records-edit', ['recordType' => $type, 'record' => $record])
+        ->assertSet('locale', 'en');
 });
 
 it('returns 404 when the record does not belong to the type', function (): void {

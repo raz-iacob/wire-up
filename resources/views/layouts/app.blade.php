@@ -28,7 +28,6 @@
     <x-site.head
         :title="isset($title) ? $title : null"
         :description="isset($description) ? $description : null"
-        :custom-css="$siteLayout['customCss']"
         :page="$page ?? null"
     />
     <body
@@ -38,6 +37,12 @@
         ])
         @if ($bodyStyle !== '') style="{{ $bodyStyle }}" @endif
     >
+        @if ($siteLayout['customCss'] !== '')
+            <style>
+                {!! $siteLayout['customCss'] !!}
+            </style>
+        @endif
+
         <div class="flex min-h-screen flex-col">
             @unless ($siteLayout['hideHeader'])
                 <livewire:site.header />

@@ -77,7 +77,7 @@ return new class extends Component
         Session::regenerate();
 
         if ($user->canAccessAdmin()) {
-            $this->redirectIntended(default: route('admin.dashboard', absolute: false), navigate: true);
+            $this->redirectIntended(default: route('admin.dashboard', absolute: false));
 
             return;
         }

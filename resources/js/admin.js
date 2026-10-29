@@ -13,6 +13,13 @@ import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
+document.addEventListener("livewire:navigate", (event) => {
+    if (!/^\/admin(\/|$)/.test(event.detail.url.pathname)) {
+        event.preventDefault();
+        window.location.assign(event.detail.url.href);
+    }
+});
+
 Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
     const action = el.getAttribute("wire:submit");
     const message =

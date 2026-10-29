@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\BlockType;
 use App\Enums\ContentStatus;
+use App\Models\Locale;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
@@ -106,6 +107,34 @@ it('falls back to the record type name when no landing page exists', function ()
         ['label' => 'Home', 'url' => route('home')],
         ['label' => 'Products', 'url' => null],
         ['label' => '3060 (On Sale)', 'url' => null],
+    ]);
+});
+
+it('links the automatic listing when the content type has one and no landing page exists', function (): void {
+    $record = crumbRecord('3060', '3060 (On Sale)');
+    $record->recordType->update(['has_index_page' => true]);
+
+    expect(BreadcrumbService::current()->trail($record->refresh())[1])
+        ->toBe(['label' => 'Products', 'url' => route('page', ['slug' => 'store'])]);
+});
+
+it('skips a landing page that is not published in the current language', function (): void {
+    Locale::query()->where('code', 'fr')->update(['active' => true]);
+    cache()->forget('site-locales');
+    $landing = crumbPage('store', 'Store');
+    $landing->update(['metadata' => ['published_locales' => ['fr']]]);
+    $record = crumbRecord('3060', '3060 (On Sale)');
+
+    expect(BreadcrumbService::current()->trail($record)[1])->toBe(['label' => 'Products', 'url' => null]);
+});
+
+it('gives an unlinked middle crumb no address in the structured data', function (): void {
+    $record = crumbRecord('3060', '3060 (On Sale)');
+
+    expect(BreadcrumbService::current()->schemaItems($record, 'https://example.com/store/3060'))->toBe([
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Products'],
+        ['@type' => 'ListItem', 'position' => 3, 'name' => '3060 (On Sale)', 'item' => 'https://example.com/store/3060'],
     ]);
 });
 

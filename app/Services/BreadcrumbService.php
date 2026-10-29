@@ -47,15 +47,17 @@ final class BreadcrumbService
     public function schemaItems(Page|Record $content, string $currentUrl): array
     {
         $items = [];
+        $trail = $this->trail($content);
+        $lastIndex = array_key_last($trail);
 
-        foreach ($this->trail($content) as $index => $crumb) {
+        foreach ($trail as $index => $crumb) {
             $item = [
                 '@type' => 'ListItem',
                 'position' => $index + 1,
                 'name' => $crumb['label'],
             ];
 
-            $url = $crumb['url'] ?? $currentUrl;
+            $url = $crumb['url'] ?? ($index === $lastIndex ? $currentUrl : '');
 
             if ($url !== '') {
                 $item['item'] = $url;
@@ -72,17 +74,22 @@ final class BreadcrumbService
      */
     private function recordTypeCrumb(Record $record): array
     {
+        $recordType = $record->recordType;
+
         $landing = Page::query()
-            ->published()
+            ->publishedInLocale()
             ->with(['translations', 'slugs'])
-            ->forSlug($record->recordType->slug_prefix)
+            ->forSlug($recordType->slug_prefix)
             ->first();
 
         if ($landing instanceof Page) {
             return ['label' => $landing->title, 'url' => $landing->getUrl()];
         }
 
-        return ['label' => $record->recordType->name, 'url' => null];
+        return [
+            'label' => $recordType->name,
+            'url' => $recordType->has_index_page ? route('page', ['slug' => $recordType->slug_prefix]) : null,
+        ];
     }
 
     private function isHome(Page|Record $content): bool

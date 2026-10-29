@@ -2,6 +2,14 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
+## Unreleased
+
+- The admin no longer picks up the site's fonts and colours right after you sign in. Moving between the site and the admin now always loads a fresh page, so each keeps only its own styles, with no reload needed.
+- A page's own custom CSS now applies only to that page. It used to stay in effect after leaving the page through the logo, a linked record or the cart.
+- Slack messages for new orders now arrive. Since the shop was added they failed before reaching Slack, so only the email came through.
+- The page and record editors stay on the language you were editing when you refresh, share the link or restore an older version, instead of switching back to the default language.
+- A record's breadcrumb links to its content type's automatic listing page when there is one, and no longer links to a landing page that is not published in the visitor's language. Search engines are no longer given the record's own address for that step.
+
 ## v0.5.2 — 2026-10-29
 
 - Transparent PNG and WebP images keep their transparency on the site. Logos, cut-out photos and product shots used to be turned into JPEGs on a solid background wherever they appeared: in blocks, on record pages and collection cards, and as page backgrounds. They are now served as WebP, which keeps the see-through parts, while JPEG photos stay JPEG at the same addresses as before.
