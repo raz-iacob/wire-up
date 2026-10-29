@@ -66,6 +66,28 @@ it('caches the transformed output and serves repeats from the cache', function (
     expect(File::allFiles(config('media.cache_path')))->toHaveCount(1);
 });
 
+it('serves and caches a png source as webp when no format is requested', function (): void {
+    Storage::disk(config('filesystems.media'))->put('transparent.png', file_get_contents(__DIR__.'/../Fixtures/transparent.png'));
+    $url = ImageService::url('w=20', 'transparent.png');
+
+    $this->get($url)->assertOk()->assertHeader('Content-Type', 'image/webp');
+
+    $cached = File::allFiles(config('media.cache_path'));
+    expect($cached)->toHaveCount(1)
+        ->and($cached[0]->getExtension())->toBe('webp');
+    $this->get($url)->assertOk()->assertHeader('Content-Type', 'image/webp');
+});
+
+it('serves a png source as jpeg when jpeg is requested explicitly', function (): void {
+    Storage::disk(config('filesystems.media'))->put('transparent.png', file_get_contents(__DIR__.'/../Fixtures/transparent.png'));
+
+    $this->get(ImageService::url('w=20,fm=jpg', 'transparent.png'))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'image/jpeg');
+
+    expect(File::allFiles(config('media.cache_path'))[0]->getExtension())->toBe('jpg');
+});
+
 it('serves svg files verbatim with a locked-down content security policy', function (): void {
     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>';
     Storage::disk(config('filesystems.media'))->put('logo.svg', $svg);

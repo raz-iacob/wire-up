@@ -46,6 +46,26 @@ it('builds an image url from the stored source', function (): void {
         ->toContain('w=1200');
 });
 
+it('requests webp for a png image so its transparency survives, and jpeg otherwise', function (string $source, string $format): void {
+    $block = Block::factory()->create([
+        'content' => ['image' => ['source' => $source, 'crop' => []]],
+    ]);
+
+    expect($block->imageUrl('image'))->toContain("fm={$format}");
+})->with([
+    'png' => ['media/logo.png', 'webp'],
+    'jpeg' => ['media/photo.jpg', 'jpg'],
+]);
+
+it('uses the requested format over the one picked from the source', function (): void {
+    $block = Block::factory()->create([
+        'content' => ['image' => ['source' => 'media/logo.png', 'crop' => []]],
+    ]);
+
+    expect($block->imageUrl('image', ['fm' => 'png']))->toContain('fm=png')
+        ->not->toContain('fm=webp');
+});
+
 it('includes a height option when one is given', function (): void {
     $block = Block::factory()->create([
         'content' => ['image' => ['source' => 'a.jpg', 'crop' => []]],

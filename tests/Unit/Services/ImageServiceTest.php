@@ -131,3 +131,33 @@ it('encodes as webp for the webp format', function (): void {
 
     expect($mime)->toBe('image/webp');
 });
+
+it('picks webp for sources that can be transparent and jpeg for the rest', function (string $path, string $expected): void {
+    expect(ImageService::formatFor($path))->toBe($expected);
+})->with([
+    'png' => ['media/logo.png', 'webp'],
+    'uppercase png' => ['media/LOGO.PNG', 'webp'],
+    'webp' => ['media/cutout.webp', 'webp'],
+    'jpeg' => ['media/photo.jpg', 'jpg'],
+    'jpeg long extension' => ['media/photo.jpeg', 'jpg'],
+    'no extension' => ['media/photo', 'jpg'],
+]);
+
+it('keeps the transparency of a png source when no format is requested', function (): void {
+    Storage::disk(config('filesystems.media'))->put('transparent.png', file_get_contents(__DIR__.'/../../Fixtures/transparent.png'));
+
+    [$contents, $mime] = ImageService::make('transparent.png')->applyOptions(['w' => 20])->encoded();
+
+    $image = imagecreatefromstring($contents);
+    expect($mime)->toBe('image/webp')
+        ->and(imagecolorsforindex($image, imagecolorat($image, 0, 0))['alpha'])->toBe(127)
+        ->and(imagecolorsforindex($image, imagecolorat($image, 10, 10))['alpha'])->toBe(0);
+});
+
+it('still encodes a png source as jpeg when jpeg is requested', function (): void {
+    Storage::disk(config('filesystems.media'))->put('transparent.png', file_get_contents(__DIR__.'/../../Fixtures/transparent.png'));
+
+    [, $mime] = ImageService::make('transparent.png')->applyOptions(['fm' => 'jpg'])->encoded();
+
+    expect($mime)->toBe('image/jpeg');
+});

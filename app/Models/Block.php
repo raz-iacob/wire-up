@@ -127,7 +127,7 @@ final class Block extends Model
         $options = [
             'w' => $params['w'] ?? 1200,
             'q' => $params['q'] ?? 80,
-            'fm' => $params['fm'] ?? 'jpg',
+            'fm' => $params['fm'] ?? ImageService::formatFor($image['source']),
         ];
 
         if (isset($params['h'])) {

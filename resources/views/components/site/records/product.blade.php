@@ -6,7 +6,7 @@
     $imageUrl = function (\App\Models\Media $media, int $width): string {
         $cropSet = is_array($media->pivot->crop ?? null) ? $media->pivot->crop : [];
         $crop = is_array($cropSet['default'] ?? null) ? $cropSet['default'] : [];
-        $options = ["w={$width}", 'q=80', 'fm=jpg'];
+        $options = ["w={$width}", 'q=80', 'fm='.\App\Services\ImageService::formatFor($media->source)];
 
         if (($crop['crop_w'] ?? 0) > 0 && ($crop['crop_h'] ?? 0) > 0) {
             $options[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);

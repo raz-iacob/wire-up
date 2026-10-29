@@ -163,7 +163,7 @@ final class Page extends Model
         /** @var array<string, int> $crop */
         $crop = is_array($image['crop']['default'] ?? null) ? $image['crop']['default'] : [];
 
-        $optionParts = ['w=1920', 'q=80', 'fm=jpg'];
+        $optionParts = ['w=1920', 'q=80', 'fm='.ImageService::formatFor($image['source'])];
 
         if (($crop['crop_w'] ?? 0) > 0 && ($crop['crop_h'] ?? 0) > 0) {
             $optionParts[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);

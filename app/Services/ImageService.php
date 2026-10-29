@@ -20,6 +20,8 @@ final class ImageService
 {
     private ProcessedImage $image;
 
+    private string $sourceKey = '';
+
     private int $sourceWidth = 0;
 
     private int $sourceHeight = 0;
@@ -45,6 +47,11 @@ final class ImageService
         return url(URL::signedRoute('image.show', ['options' => $options, 'path' => $path], absolute: false));
     }
 
+    public static function formatFor(string $path): string
+    {
+        return in_array(mb_strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['png', 'webp'], true) ? 'webp' : 'jpg';
+    }
+
     public static function cached(string $options, string $path): ?BinaryFileResponse
     {
         $file = self::cacheFile($options, $path);
@@ -55,7 +62,7 @@ final class ImageService
 
         touch($file);
 
-        return self::fileResponse($file, self::formatFromOptions($options));
+        return self::fileResponse($file, self::outputFormat($options, $path));
     }
 
     public static function transform(string $options, string $path): BinaryFileResponse
@@ -67,7 +74,7 @@ final class ImageService
         File::ensureDirectoryExists(dirname($file));
         File::put($file, $contents);
 
-        return self::fileResponse($file, self::formatFromOptions($options));
+        return self::fileResponse($file, self::outputFormat($options, $path));
     }
 
     public static function purgeCache(string $path): void
@@ -149,6 +156,7 @@ final class ImageService
 
         [$this->sourceWidth, $this->sourceHeight] = $dimensions;
 
+        $this->sourceKey = $fileKey;
         $this->image = Image::fromBytes($contents);
 
         return $this;
@@ -233,7 +241,7 @@ final class ImageService
     public function encoded(): array
     {
         $quality = (int) ($this->options['q'] ?? 80);
-        $format = $this->options['fm'] ?? 'jpg';
+        $format = $this->options['fm'] ?? self::formatFor($this->sourceKey);
         [$mime, $encoded] = match (mb_strtolower($format)) {
             'png' => ['image/png', $this->image->toPng()],
             'gif' => ['image/gif', $this->image->toGif()],
@@ -251,12 +259,12 @@ final class ImageService
 
     private static function cacheFile(string $options, string $path): string
     {
-        return self::cacheRoot().'/'.hash('sha256', $path).'/'.hash('sha256', $options).'.'.self::formatFromOptions($options);
+        return self::cacheRoot().'/'.hash('sha256', $path).'/'.hash('sha256', $options).'.'.self::outputFormat($options, $path);
     }
 
-    private static function formatFromOptions(string $options): string
+    private static function outputFormat(string $options, string $path): string
     {
-        return preg_match('/(?:^|,)fm=(png|gif|webp)(?:,|$)/', $options, $matches) === 1 ? $matches[1] : 'jpg';
+        return preg_match('/(?:^|,)fm=(png|gif|webp|jpg)(?:,|$)/', $options, $matches) === 1 ? $matches[1] : self::formatFor($path);
     }
 
     private static function fileResponse(string $file, string $format, int $cacheAgeSeconds = 30 * 86400): BinaryFileResponse

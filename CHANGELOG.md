@@ -2,6 +2,10 @@
 
 Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
+## Unreleased
+
+- Transparent PNG and WebP images keep their transparency on the site. Logos, cut-out photos and product shots used to be turned into JPEGs on a solid background wherever they appeared: in blocks, on record pages and collection cards, and as page backgrounds. They are now served as WebP, which keeps the see-through parts, while JPEG photos stay JPEG at the same addresses as before.
+
 ## v0.5.1 — 2026-10-27
 
 - AI agents can connect to Wire-Up's MCP server, and the in-admin AI assistant can use its tools, on every installed site. The package behind them was only installed on development copies, so sites set up or updated with Wire-Up's installer and updater were missing it.
