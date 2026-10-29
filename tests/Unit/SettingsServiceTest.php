@@ -713,3 +713,28 @@ it('treats an item with no type as a link when grouping', function (): void {
     expect(SettingsService::groupMenuItems([['label' => 'Typeless']]))
         ->toBe([['heading' => '', 'items' => [['label' => 'Typeless']]]]);
 });
+
+it('keeps automatic backups off and daily by default and clamps how many to keep', function (): void {
+    $settings = SettingsService::current();
+
+    expect($settings->backupsEnabled())->toBeFalse()
+        ->and($settings->backupFrequency())->toBe('daily')
+        ->and($settings->backupsToKeep())->toBe(5)
+        ->and($settings->backupIncludesFiles())->toBeTrue();
+
+    config()->set('site.backups_enabled', true);
+    config()->set('site.backup_frequency', 'weekly');
+    config()->set('site.backups_to_keep', '90');
+    config()->set('site.backup_include_files', false);
+
+    expect($settings->backupsEnabled())->toBeTrue()
+        ->and($settings->backupFrequency())->toBe('weekly')
+        ->and($settings->backupsToKeep())->toBe(30)
+        ->and($settings->backupIncludesFiles())->toBeFalse();
+
+    config()->set('site.backup_frequency', 'hourly');
+    config()->set('site.backups_to_keep', 0);
+
+    expect($settings->backupFrequency())->toBe('daily')
+        ->and($settings->backupsToKeep())->toBe(1);
+});

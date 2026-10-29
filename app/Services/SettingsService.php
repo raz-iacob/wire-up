@@ -241,6 +241,28 @@ final class SettingsService
         return (bool) config('site.page_cache', true);
     }
 
+    public function backupsEnabled(): bool
+    {
+        return (bool) config('site.backups_enabled', false);
+    }
+
+    public function backupFrequency(): string
+    {
+        return config('site.backup_frequency') === 'weekly' ? 'weekly' : 'daily';
+    }
+
+    public function backupsToKeep(): int
+    {
+        $keep = config('site.backups_to_keep');
+
+        return is_numeric($keep) ? max(1, min(30, (int) $keep)) : 5;
+    }
+
+    public function backupIncludesFiles(): bool
+    {
+        return (bool) config('site.backup_include_files', true);
+    }
+
     public function requiresTwoFactor(): bool
     {
         return (bool) config('site.require_two_factor', false);

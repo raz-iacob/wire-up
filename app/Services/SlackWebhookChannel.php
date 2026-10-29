@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Notifications\BackupFailed;
 use App\Notifications\OrderReceived;
 use App\Notifications\SubmissionReceived;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 
 final class SlackWebhookChannel
 {
-    public function send(object $notifiable, SubmissionReceived|OrderReceived $notification): void
+    public function send(object $notifiable, SubmissionReceived|OrderReceived|BackupFailed $notification): void
     {
         $url = $notifiable instanceof AnonymousNotifiable ? $notifiable->routeNotificationFor(self::class) : null;
 

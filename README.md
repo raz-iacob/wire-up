@@ -179,6 +179,18 @@ composer install --no-dev
 npm ci && npm run build && php artisan optimize && php artisan up
 ```
 
+### Backups
+
+`php artisan wireup:backup:create` writes `storage/app/backups/backup-<date>-manual.zip`: a dump of the database (`database.sql` or `database.sqlite`), the uploaded files from the media disk (`files/…`, when it is a local disk) and a `manifest.json`. Automatic backups are **off by default**; once switched on, the scheduler runs the same command with `--scheduled` at 03:00 (UTC) daily or weekly, keeps the newest automatic backups only (manual ones stay until deleted), refuses to start when the disk lacks room for another backup, and emails the contact address (and posts to Slack, if connected) when a run fails. Backups stay on the server, so download them to keep a copy elsewhere. They hold everything, including users and saved API keys, but not `.env` — keep your `APP_KEY` safe separately.
+
+Restore one with:
+
+```bash
+php artisan wireup:backup:restore backup-<date>-automatic.zip
+```
+
+It puts the site in maintenance mode, loads the database (MySQL needs the `mysql` client, PostgreSQL needs `psql`), writes the uploaded files back, runs `migrate --force`, clears the cache and brings the site back up. It refuses a backup taken by a newer version of Wire-Up or from a different database driver. If loading the database fails, the site stays in maintenance mode; fix the problem, then run `php artisan up`.
+
 **Release routine:** add a `## vX.Y.Z` section to `CHANGELOG.md`, commit, tag (`git tag vX.Y.Z`), push with tags.
 
 ### Moving a site
