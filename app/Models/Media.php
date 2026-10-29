@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Once;
 
 /**
  * @property int $id
@@ -31,6 +33,7 @@ use Illuminate\Support\Facades\Storage;
  * @property int|null $width
  * @property int|null $height
  * @property array<string, mixed>|null $metadata
+ * @property bool $is_private
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  * @property-read string $url
@@ -44,6 +47,13 @@ final class Media extends Model
 {
     /** @use HasFactory<MediaFactory> */
     use ClearsPageCache, HasFactory;
+
+    public static function isPrivateSource(string $source): bool
+    {
+        $privateSources = once(fn (): array => self::query()->where('is_private', true)->pluck('source')->flip()->all());
+
+        return isset($privateSources[$source]);
+    }
 
     /**
      * @return HasMany<Mediable, $this>
@@ -72,6 +82,7 @@ final class Media extends Model
             'width' => 'integer',
             'height' => 'integer',
             'metadata' => 'array',
+            'is_private' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -82,11 +93,11 @@ final class Media extends Model
         if ($this->canDeleteSafely()) {
             parent::delete();
 
-            Storage::disk(config('filesystems.media'))->delete($this->source);
+            $this->disk()->delete($this->source);
             ImageService::purgeCache($this->source);
 
             if ($this->thumbnail) {
-                Storage::disk(config('filesystems.media'))->delete($this->thumbnail);
+                $this->disk()->delete($this->thumbnail);
                 ImageService::purgeCache($this->thumbnail);
             }
 
@@ -94,6 +105,11 @@ final class Media extends Model
         }
 
         return false;
+    }
+
+    public function disk(): FilesystemAdapter
+    {
+        return Storage::disk(config()->string($this->is_private ? 'filesystems.private_media' : 'filesystems.media'));
     }
 
     public function isInUse(): bool
@@ -107,6 +123,11 @@ final class Media extends Model
     public function usageLabels(): array
     {
         return resolve(MediaUsageService::class)->labels($this);
+    }
+
+    protected static function booted(): void
+    {
+        self::saved(fn () => Once::flush());
     }
 
     /**
@@ -125,7 +146,9 @@ final class Media extends Model
     protected function url(): Attribute
     {
         return Attribute::make(
-            get: fn () => Storage::temporaryUrl($this->source, now()->addMinutes(15))
+            get: fn () => $this->is_private
+                ? route('admin.media-file', $this)
+                : Storage::temporaryUrl($this->source, now()->addMinutes(15))
         );
     }
 
@@ -135,10 +158,14 @@ final class Media extends Model
     protected function downloadUrl(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->type !== MediaType::VIDEO ? Storage::temporaryUrl($this->source, now()->addHours(3), [
-                'ResponseContentDisposition' => 'attachment; filename="'.addslashes($this->filename ?? 'noname').'"',
-                'ResponseContentType' => $this->mime_type,
-            ]) : null
+            get: fn () => match (true) {
+                $this->is_private => route('admin.media-file', ['media' => $this, 'download' => 1]),
+                $this->type === MediaType::VIDEO => null,
+                default => Storage::temporaryUrl($this->source, now()->addHours(3), [
+                    'ResponseContentDisposition' => 'attachment; filename="'.addslashes($this->filename ?? 'noname').'"',
+                    'ResponseContentType' => $this->mime_type,
+                ]),
+            }
         );
     }
 
@@ -148,8 +175,9 @@ final class Media extends Model
     protected function preview(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => match ($this->type) {
-                MediaType::IMAGE => ImageService::url('w=350,h=200', $this->source),
+            get: fn (): string => match (true) {
+                $this->is_private => ImageService::placeholder(),
+                $this->type === MediaType::IMAGE => ImageService::url('w=350,h=200', $this->source),
                 default => $this->thumbnail ? ImageService::url('w=350,h=200', $this->thumbnail) : ImageService::placeholder(),
             }
         );

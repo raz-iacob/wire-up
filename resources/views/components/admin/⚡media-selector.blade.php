@@ -31,6 +31,8 @@ return new class extends Component
 
     public bool $withCaption = false;
 
+    public bool $private = false;
+
     public ?int $replaceIndex = null;
 
     public bool $showRemoveModal = false;
@@ -71,6 +73,7 @@ return new class extends Component
             type: $this->normalizedType(),
             max: $this->selectionLimit($replaceIndex),
             media: $this->selectionForLibrary($replaceIndex),
+            private: $this->private,
         );
     }
 

@@ -7,7 +7,6 @@ namespace App\Actions;
 use App\Models\Media;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
 
@@ -27,7 +26,7 @@ final class DownloadMediaAction
 
     private function downloadSingle(Media $media): StreamedResponse
     {
-        return Storage::disk(config('filesystems.media'))
+        return $media->disk()
             ->download(
                 $media->source,
                 $media->filename,
@@ -55,7 +54,7 @@ final class DownloadMediaAction
             $zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
             foreach ($medias as $media) {
-                $stream = Storage::disk(config('filesystems.media'))->readStream($media->source);
+                $stream = $media->disk()->readStream($media->source);
                 if ($stream) {
                     $zip->addFromString($media->filename, stream_get_contents($stream));
                     fclose($stream);

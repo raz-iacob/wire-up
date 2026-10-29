@@ -180,6 +180,22 @@ it('restores media files onto the disk', function (): void {
     expect(Storage::disk(config()->string('filesystems.media'))->get('media/kept.jpg'))->toBe('JPEGES');
 });
 
+it('restores private documents onto the private disk', function (): void {
+    Storage::fake(config()->string('filesystems.private_media'));
+
+    $bundle = makeBundle(
+        ['media' => [
+            ['id' => 301, 'type' => 'document', 'source' => 'media/contract.pdf', 'etag' => 'e2', 'filename' => 'contract.pdf', 'alt_text' => null, 'mime_type' => 'application/pdf', 'thumbnail' => null, 'size' => 6, 'duration' => null, 'width' => null, 'height' => null, 'metadata' => '[]', 'is_private' => 1, 'created_at' => null, 'updated_at' => null],
+        ]],
+        ['media/contract.pdf' => 'SIGNED'],
+    );
+
+    expect(SiteImporter::current()->import($bundle, null)['imported'])->toBeTrue()
+        ->and(Storage::disk(config()->string('filesystems.private_media'))->get('media/contract.pdf'))->toBe('SIGNED');
+
+    Storage::disk(config()->string('filesystems.media'))->assertMissing('media/contract.pdf');
+});
+
 it('refuses a bundle whose media file is absent and writes nothing', function (): void {
     $page = Page::factory()->create(['title' => 'Untouched', 'status' => ContentStatus::PUBLISHED]);
 

@@ -199,7 +199,7 @@ final class Block extends Model
     {
         $source = data_get($this->content, "{$field}.source");
 
-        if (! is_string($source) || $source === '') {
+        if (! is_string($source) || $source === '' || Media::isPrivateSource($source)) {
             return null;
         }
 

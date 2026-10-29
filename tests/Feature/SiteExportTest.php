@@ -107,6 +107,24 @@ it('writes a bundle holding a manifest, the site rows and the media files', func
         ->and($site['media'])->toHaveCount(1);
 });
 
+it('bundles private documents from the private disk', function (): void {
+    Storage::fake(config()->string('filesystems.media'));
+    Storage::fake(config()->string('filesystems.private_media'));
+    Storage::disk(config()->string('filesystems.private_media'))->put('media/contract.pdf', 'signed');
+    Media::factory()->private()->create(['source' => 'media/contract.pdf']);
+
+    $path = exportPath();
+    $manifest = SiteExporter::current()->export($path);
+
+    $zip = new ZipArchive;
+    $zip->open($path);
+    $contents = $zip->getFromName('media/contract.pdf');
+    $zip->close();
+
+    expect($contents)->toBe('signed')
+        ->and($manifest['media']['missing'])->toBeEmpty();
+});
+
 it('excludes credential settings by default', function (): void {
     Storage::fake(config()->string('filesystems.media'));
 

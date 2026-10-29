@@ -113,22 +113,28 @@ final class RestoreBackupCommand extends Command
 
     private function restoreFiles(ZipArchive $zip): int
     {
-        $disk = Storage::disk(config()->string('filesystems.media'));
+        $disks = [
+            'files/' => Storage::disk(config()->string('filesystems.media')),
+            'private-files/' => Storage::disk(config()->string('filesystems.private_media')),
+        ];
         $restored = 0;
 
         for ($index = 0; $index < $zip->numFiles; $index++) {
             $name = (string) $zip->getNameIndex($index);
-            $relative = mb_substr($name, mb_strlen('files/'));
 
-            if (! str_starts_with($name, 'files/') || str_ends_with($name, '/') || ! SiteBundle::isSafeRelativePath($relative)) {
-                continue;
-            }
+            foreach ($disks as $prefix => $disk) {
+                $relative = mb_substr($name, mb_strlen($prefix));
 
-            $stream = $zip->getStream($name);
+                if (! str_starts_with($name, $prefix) || str_ends_with($name, '/') || ! SiteBundle::isSafeRelativePath($relative)) {
+                    continue;
+                }
 
-            if ($stream !== false) {
-                $disk->writeStream($relative, $stream);
-                $restored++;
+                $stream = $zip->getStream($name);
+
+                if ($stream !== false) {
+                    $disk->writeStream($relative, $stream);
+                    $restored++;
+                }
             }
         }
 

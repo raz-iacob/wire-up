@@ -142,6 +142,32 @@ it('leaves the uploaded files out when that is switched off or they are not on a
         ->and($backups->uploadsRoot())->toBeNull();
 });
 
+it('backs up private documents and restores them to the private disk', function (): void {
+    Storage::fake(config('filesystems.media'));
+    Storage::fake(config('filesystems.private_media'));
+    $private = Storage::disk(config('filesystems.private_media'));
+    $private->put('media/contract.pdf', 'signed');
+    $private->put('livewire-tmp/upload.tmp', 'scratch');
+    backupSourceDatabase();
+
+    $archive = resolve(BackupService::class)->create(automatic: false);
+
+    expect(archiveEntries($archive))->toBe(['database.sqlite', 'manifest.json', 'private-files/media/contract.pdf']);
+
+    $private->put('media/contract.pdf', 'changed');
+
+    $this->artisan(RestoreBackupCommand::class, ['file' => basename($archive), '--force' => true])
+        ->assertExitCode(0);
+
+    expect($private->get('media/contract.pdf'))->toBe('signed');
+});
+
+it('leaves private documents out when the private disk is not local', function (): void {
+    config()->set('filesystems.private_media', 's3');
+
+    expect(resolve(BackupService::class)->privateUploadsRoot())->toBeNull();
+});
+
 it('keeps only the newest automatic backups and leaves manual and pre-update ones alone', function (): void {
     backupSourceDatabase();
     config()->set('site.backups_to_keep', 2);

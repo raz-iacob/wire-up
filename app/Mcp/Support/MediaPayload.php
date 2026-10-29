@@ -23,6 +23,7 @@ final readonly class MediaPayload
             'width' => $media->width,
             'height' => $media->height,
             'size' => $media->size,
+            'private' => (bool) $media->is_private,
         ];
     }
 }

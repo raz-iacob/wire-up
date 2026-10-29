@@ -34,8 +34,18 @@ final class RecordTypeFactory extends Factory
             'has_detail_page' => true,
             'has_index_page' => false,
             'sellable' => false,
+            'admin_only' => false,
             'position' => 0,
         ];
+    }
+
+    public function adminOnly(): self
+    {
+        return $this->state(fn (): array => [
+            'admin_only' => true,
+            'has_detail_page' => false,
+            'has_index_page' => false,
+        ]);
     }
 
     public function sellable(): self

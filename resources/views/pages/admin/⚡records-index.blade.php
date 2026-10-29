@@ -152,7 +152,7 @@ return new class extends Component
             ->with(['translations', 'slugs'])
             ->when($this->recordType->hasMediaColumns() || $this->recordType->hasImageField(), fn (Builder $query): Builder => $query->with('media'))
             ->when($this->recordType->hasImageField(), fn (Builder $query): Builder => $query->with('recordType'))
-            ->when($this->status, function (Builder $query, string $status): Builder {
+            ->when($this->recordType->admin_only ? '' : $this->status, function (Builder $query, string $status): Builder {
                 if ($status === ContentStatus::SCHEDULED->value) {
                     return $query->where('status', ContentStatus::PUBLISHED)
                         ->where('published_at', '>', now());
@@ -243,53 +243,57 @@ return new class extends Component
                 </flux:modal.trigger>
             @endcan
 
-            <flux:dropdown position="bottom" align="start">
-                <flux:button
-                    class="shrink-0"
-                    size="sm"
-                    icon="funnel"
-                    iconVariant="outline"
-                >{{ __('Filter') }}</flux:button>
+            @if (! $recordType->admin_only || $this->fieldFilters !== [])
+                <flux:dropdown position="bottom" align="start">
+                    <flux:button
+                        class="shrink-0"
+                        size="sm"
+                        icon="funnel"
+                        iconVariant="outline"
+                    >{{ __('Filter') }}</flux:button>
 
-                <flux:menu>
-                    <flux:menu.submenu heading="{{ __('Status') }}">
-                        <flux:menu.radio.group wire:model.live="status" heading="{{ __('Status') }}">
-                            <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
-                            @foreach (ContentStatus::cases() as $statusOption)
-                                <flux:menu.radio value="{{ $statusOption->value }}">
-                                    {{ $statusOption->label() }}</flux:menu.radio>
-                            @endforeach
-                        </flux:menu.radio.group>
-                    </flux:menu.submenu>
-
-                    @foreach ($this->fieldFilters as $filterField)
-                        @php($filterLabel = $recordType->fieldLabel($filterField))
-                        <flux:menu.submenu heading="{{ $filterLabel }}" wire:key="filter-{{ $filterField['key'] }}">
-                            <flux:menu.radio.group
-                                wire:model.live="filters.{{ $filterField['key'] }}"
-                                heading="{{ $filterLabel }}"
-                            >
-                                <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
-                                @if ($filterField['type'] === \App\Enums\FieldType::BOOLEAN->value)
-                                    <flux:menu.radio value="1">{{ __('Yes') }}</flux:menu.radio>
-                                    <flux:menu.radio value="0">{{ __('No') }}</flux:menu.radio>
-                                @else
-                                    @foreach ($filterField['options'] ?? [] as $filterOption)
-                                        <flux:menu.radio value="{{ $filterOption }}">
-                                            {{ $filterOption }}</flux:menu.radio>
+                    <flux:menu>
+                        @unless ($recordType->admin_only)
+                            <flux:menu.submenu heading="{{ __('Status') }}">
+                                <flux:menu.radio.group wire:model.live="status" heading="{{ __('Status') }}">
+                                    <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
+                                    @foreach (ContentStatus::cases() as $statusOption)
+                                        <flux:menu.radio value="{{ $statusOption->value }}">
+                                            {{ $statusOption->label() }}</flux:menu.radio>
                                     @endforeach
-                                @endif
-                            </flux:menu.radio.group>
-                        </flux:menu.submenu>
-                    @endforeach
-                    @if ($status !== '' || array_filter($filters) !== [])
-                        <flux:menu.separator />
-                        <flux:menu.item icon="x-mark" wire:click="clearFilters">
-                            {{ __('Clear filters') }}</flux:menu.item>
-                    @endif
-                </flux:menu>
-            </flux:dropdown>
-            @if (ContentStatus::tryFrom($status))
+                                </flux:menu.radio.group>
+                            </flux:menu.submenu>
+                        @endunless
+
+                        @foreach ($this->fieldFilters as $filterField)
+                            @php($filterLabel = $recordType->fieldLabel($filterField))
+                            <flux:menu.submenu heading="{{ $filterLabel }}" wire:key="filter-{{ $filterField['key'] }}">
+                                <flux:menu.radio.group
+                                    wire:model.live="filters.{{ $filterField['key'] }}"
+                                    heading="{{ $filterLabel }}"
+                                >
+                                    <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
+                                    @if ($filterField['type'] === \App\Enums\FieldType::BOOLEAN->value)
+                                        <flux:menu.radio value="1">{{ __('Yes') }}</flux:menu.radio>
+                                        <flux:menu.radio value="0">{{ __('No') }}</flux:menu.radio>
+                                    @else
+                                        @foreach ($filterField['options'] ?? [] as $filterOption)
+                                            <flux:menu.radio value="{{ $filterOption }}">
+                                                {{ $filterOption }}</flux:menu.radio>
+                                        @endforeach
+                                    @endif
+                                </flux:menu.radio.group>
+                            </flux:menu.submenu>
+                        @endforeach
+                        @if ($status !== '' || array_filter($filters) !== [])
+                            <flux:menu.separator />
+                            <flux:menu.item icon="x-mark" wire:click="clearFilters">
+                                {{ __('Clear filters') }}</flux:menu.item>
+                        @endif
+                    </flux:menu>
+                </flux:dropdown>
+            @endif
+            @if (! $recordType->admin_only && ContentStatus::tryFrom($status))
                 <x-admin.filter-chip :label="ContentStatus::from($status)->label()" wire:click="$set('status', '')" />
             @endif
 
@@ -346,7 +350,9 @@ return new class extends Component
                 @if ($this->hasMultipleActiveLocales())
                     <flux:table.column>{{ __('Languages') }}</flux:table.column>
                 @endif
-                <flux:table.column>{{ __('Status') }}</flux:table.column>
+                @unless ($recordType->admin_only)
+                    <flux:table.column>{{ __('Status') }}</flux:table.column>
+                @endunless
                 <flux:table.column
                     sortable
                     :sorted="$sortBy === 'updated_at'"
@@ -399,11 +405,13 @@ return new class extends Component
                             </flux:table.cell>
                         @endif
 
-                        <flux:table.cell>
-                            <flux:badge color="{{ $row->computed_status->color() }}" size="sm">
-                                {{ $row->computed_status->label() }}
-                            </flux:badge>
-                        </flux:table.cell>
+                        @unless ($recordType->admin_only)
+                            <flux:table.cell>
+                                <flux:badge color="{{ $row->computed_status->color() }}" size="sm">
+                                    {{ $row->computed_status->label() }}
+                                </flux:badge>
+                            </flux:table.cell>
+                        @endunless
 
                         <flux:table.cell> {{ $row->updated_at?->format('M d, Y H:i') }} </flux:table.cell>
 
@@ -411,7 +419,7 @@ return new class extends Component
                             <flux:dropdown class="flex justify-end">
                                 <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
                                 <flux:menu>
-                                    @if ($row->slug !== '')
+                                    @if (! $recordType->admin_only && $row->slug !== '')
                                         <flux:menu.item
                                             icon="eye"
                                             href="{{ route('record', [$recordType->slug_prefix, $row->slug]) }}"

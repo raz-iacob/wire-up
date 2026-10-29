@@ -98,6 +98,7 @@ return new class extends Component
             'has_detail_page' => true,
             'has_index_page' => false,
             'sellable' => (bool) ($preset['sellable'] ?? false),
+            'admin_only' => false,
             'fields' => array_map(fn (array $field): array => $this->hydrateField($field, $locale), $preset['fields']),
             'open' => true,
         ];
@@ -117,6 +118,7 @@ return new class extends Component
             'has_detail_page' => true,
             'has_index_page' => false,
             'sellable' => false,
+            'admin_only' => false,
             'fields' => [],
             'open' => true,
         ];
@@ -240,6 +242,7 @@ return new class extends Component
 
         DB::transaction(function () use ($create, $update, $locale): void {
             foreach ($this->types as $position => $row) {
+                $sellable = (bool) ($row['sellable'] ?? false) && ! (bool) ($row['admin_only'] ?? false);
                 $attributes = [
                     'slug_prefix' => $row['slug_prefix'],
                     'icon' => $row['icon'],
@@ -247,8 +250,9 @@ return new class extends Component
                     'breadcrumbs' => (bool) $row['breadcrumbs'],
                     'has_detail_page' => (bool) ($row['has_detail_page'] ?? true),
                     'has_index_page' => (bool) ($row['has_index_page'] ?? false),
-                    'sellable' => (bool) ($row['sellable'] ?? false),
-                    'fields' => (bool) ($row['sellable'] ?? false)
+                    'sellable' => $sellable,
+                    'admin_only' => (bool) ($row['admin_only'] ?? false),
+                    'fields' => $sellable
                         ? RecordTypePresets::withSellableFields($this->serializeFields($row['fields'], $locale))
                         : $this->serializeFields($row['fields'], $locale),
                     'position' => $position,
@@ -399,6 +403,7 @@ return new class extends Component
             'has_detail_page' => $type->has_detail_page,
             'has_index_page' => $type->has_index_page,
             'sellable' => $type->sellable,
+            'admin_only' => $type->admin_only,
             'fields' => array_map(fn (array $field): array => $this->hydrateField([...$field, 'placement' => $type->placementFor($field)->value], $locale), $type->fields),
             'open' => false,
         ];
@@ -524,6 +529,7 @@ return new class extends Component
             $rules["types.$index.has_detail_page"] = ['boolean'];
             $rules["types.$index.has_index_page"] = ['boolean'];
             $rules["types.$index.sellable"] = ['boolean'];
+            $rules["types.$index.admin_only"] = ['boolean'];
             $rules["types.$index.fields"] = ['array'];
             $rules["types.$index.fields.*.key"] = [
                 'required', 'string', 'distinct', 'regex:/^[a-z][a-z0-9_]*$/',

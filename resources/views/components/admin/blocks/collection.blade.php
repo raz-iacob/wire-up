@@ -8,7 +8,7 @@
     $source = data_get($content, 'source', 'latest');
     $linkType = data_get($content, 'button.link.type', 'url');
 
-    $recordTypes = \App\Models\RecordType::query()->orderBy('position')->get(['id', 'name']);
+    $recordTypes = \App\Models\RecordType::query()->where('admin_only', false)->orderBy('position')->get(['id', 'name']);
     $categories = \App\Models\Category::query()->with('translations')->get()->sortBy(fn ($category) => $category->name)->values();
 
     $selectedType = $selectedTypeId ? \App\Models\RecordType::query()->find($selectedTypeId) : null;

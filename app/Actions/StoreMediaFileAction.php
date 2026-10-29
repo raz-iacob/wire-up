@@ -22,18 +22,23 @@ final readonly class StoreMediaFileAction
     /**
      * @param  array{width?: ?int, height?: ?int, duration?: ?int, thumbnail?: ?string, alt_text?: ?string, mime_type?: ?string, metadata?: array<string, mixed>}  $metadata
      */
-    public function handle(string $path, string $originalName, array $metadata = []): Media
+    public function handle(string $path, string $originalName, array $metadata = [], bool $private = false): Media
     {
         $etag = (string) md5_file($path);
         $existing = Media::query()->where('etag', $etag)->first();
 
         if ($existing instanceof Media) {
+            if ($private) {
+                new SetMediaPrivacyAction()->handle($existing, true);
+            }
+
             return $existing;
         }
 
         $originalExtension = mb_strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
         $basename = pathinfo($originalName, PATHINFO_FILENAME);
         $detectedMime = $metadata['mime_type'] ?? (string) mime_content_type($path);
+        $private = $private && MediaType::fromMimeType($detectedMime) === MediaType::DOCUMENT;
 
         $isSvg = $originalExtension === 'svg';
         $isHeic = in_array($originalExtension, ['heic', 'heif'], true) || str_contains(mb_strtolower($detectedMime), 'hei');
@@ -48,7 +53,7 @@ final readonly class StoreMediaFileAction
         } elseif ($isHeic) {
             [$size, $mimeType, $width, $height] = $this->storeConvertedHeic($path, $filename);
         } else {
-            [$size, $mimeType] = $this->storeVerbatim($path, $filename, $detectedMime);
+            [$size, $mimeType] = $this->storeVerbatim($path, $filename, $detectedMime, $private);
 
             if ($width === null && MediaType::fromMimeType($mimeType) === MediaType::IMAGE) {
                 $dimensions = getimagesize($path);
@@ -64,12 +69,13 @@ final readonly class StoreMediaFileAction
             'filename' => $basename.'.'.$extension,
             'alt_text' => $metadata['alt_text'] ?? $basename,
             'mime_type' => $mimeType,
-            'thumbnail' => $this->storeThumbnail($metadata['thumbnail'] ?? null, $basename),
+            'thumbnail' => $this->storeThumbnail($metadata['thumbnail'] ?? null, $basename, $private),
             'size' => $size,
             'duration' => $metadata['duration'] ?? null,
             'width' => $width,
             'height' => $height,
             'metadata' => $metadata['metadata'] ?? null,
+            'is_private' => $private,
         ]);
     }
 
@@ -123,14 +129,14 @@ final readonly class StoreMediaFileAction
     /**
      * @return array{0: int, 1: string}
      */
-    private function storeVerbatim(string $path, string $filename, string $mimeType): array
+    private function storeVerbatim(string $path, string $filename, string $mimeType, bool $private): array
     {
-        $this->disk()->putFileAs('media', new File($path), $filename, 'public');
+        $this->disk($private)->putFileAs('media', new File($path), $filename, $private ? [] : 'public');
 
         return [(int) filesize($path), $mimeType];
     }
 
-    private function storeThumbnail(?string $thumbnail, string $basename): ?string
+    private function storeThumbnail(?string $thumbnail, string $basename, bool $private): ?string
     {
         if ($thumbnail === null || preg_match('/^data:image\/([a-zA-Z0-9]+);base64,/', $thumbnail, $matches) !== 1) {
             return null;
@@ -144,13 +150,13 @@ final readonly class StoreMediaFileAction
 
         $filename = 'media/'.Str::uuid()->toString().'_'.Str::slug($basename).'_thumb.'.$matches[1];
 
-        $this->disk()->put($filename, (string) base64_decode($base64, true), 'public');
+        $this->disk($private)->put($filename, (string) base64_decode($base64, true), $private ? [] : 'public');
 
         return $filename;
     }
 
-    private function disk(): Filesystem
+    private function disk(bool $private = false): Filesystem
     {
-        return Storage::disk(config()->string('filesystems.media'));
+        return Storage::disk(config()->string($private ? 'filesystems.private_media' : 'filesystems.media'));
     }
 }

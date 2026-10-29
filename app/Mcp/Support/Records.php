@@ -40,6 +40,7 @@ final readonly class Records
             'has_detail_page' => $type->has_detail_page,
             'has_index_page' => $type->has_index_page,
             'sellable' => $type->sellable,
+            'admin_only' => $type->admin_only,
             'record_count' => $type->records()->count(),
             'fields' => self::fieldSummaries($type),
         ];

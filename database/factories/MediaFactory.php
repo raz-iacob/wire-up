@@ -34,7 +34,17 @@ final class MediaFactory extends Factory
                 : null,
             'width' => fn (array $attributes): ?int => $this->typeOf($attributes) === MediaType::DOCUMENT ? null : fake()->numberBetween(100, 4000),
             'height' => fn (array $attributes): ?int => $this->typeOf($attributes) === MediaType::DOCUMENT ? null : fake()->numberBetween(100, 3000),
+            'is_private' => false,
         ];
+    }
+
+    public function private(): static
+    {
+        return $this->state(fn (): array => [
+            'type' => MediaType::DOCUMENT,
+            'mime_type' => 'application/pdf',
+            'is_private' => true,
+        ]);
     }
 
     public function pexels(): static

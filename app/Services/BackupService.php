@@ -215,6 +215,19 @@ final readonly class BackupService
         return File::isDirectory($root) ? $root : null;
     }
 
+    public function privateUploadsRoot(): ?string
+    {
+        $disk = config()->string('filesystems.private_media');
+
+        if (config("filesystems.disks.{$disk}.driver") !== 'local') {
+            return null;
+        }
+
+        $root = Storage::disk($disk)->path('media');
+
+        return File::isDirectory($root) ? $root : null;
+    }
+
     private function writeArchive(string $archive, string $dump, string $kind): void
     {
         $zip = new ZipArchive;
@@ -250,21 +263,23 @@ final readonly class BackupService
      */
     private function addUploadedFiles(ZipArchive $zip): array
     {
-        $root = $this->uploadsRoot();
-
-        if ($root === null || ! SettingsService::current()->backupIncludesFiles()) {
-            return ['count' => 0, 'bytes' => 0];
-        }
-
         $count = 0;
         $bytes = 0;
 
-        foreach (File::allFiles($root) as $file) {
-            $name = 'files/'.str_replace('\\', '/', $file->getRelativePathname());
-            $zip->addFile($file->getPathname(), $name);
-            $zip->setCompressionName($name, ZipArchive::CM_STORE);
-            $count++;
-            $bytes += (int) $file->getSize();
+        if (! SettingsService::current()->backupIncludesFiles()) {
+            return ['count' => $count, 'bytes' => $bytes];
+        }
+
+        $roots = array_filter(['files/' => $this->uploadsRoot(), 'private-files/media/' => $this->privateUploadsRoot()]);
+
+        foreach ($roots as $prefix => $root) {
+            foreach (File::allFiles($root) as $file) {
+                $name = $prefix.str_replace('\\', '/', $file->getRelativePathname());
+                $zip->addFile($file->getPathname(), $name);
+                $zip->setCompressionName($name, ZipArchive::CM_STORE);
+                $count++;
+                $bytes += (int) $file->getSize();
+            }
         }
 
         return ['count' => $count, 'bytes' => $bytes];

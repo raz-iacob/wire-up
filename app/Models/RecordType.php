@@ -30,6 +30,7 @@ use Illuminate\Support\Once;
  * @property-read bool $has_detail_page
  * @property-read bool $has_index_page
  * @property-read bool $sellable
+ * @property-read bool $admin_only
  * @property-read int $position
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
@@ -135,6 +136,7 @@ final class RecordType extends Model
             'has_detail_page' => 'boolean',
             'has_index_page' => 'boolean',
             'sellable' => 'boolean',
+            'admin_only' => 'boolean',
             'position' => 'integer',
         ];
     }
@@ -342,6 +344,11 @@ final class RecordType extends Model
 
     protected static function booted(): void
     {
+        self::saving(function (self $type): void {
+            if ($type->admin_only) {
+                $type->forceFill(['breadcrumbs' => false, 'has_detail_page' => false, 'has_index_page' => false, 'sellable' => false]);
+            }
+        });
         self::deleting(fn (self $type) => $type->translations()->delete());
         self::saved(fn () => Once::flush());
         self::deleted(fn () => Once::flush());

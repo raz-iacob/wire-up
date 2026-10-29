@@ -27,6 +27,7 @@ final class UploadMediaTool extends Tool
             [
                 'path' => ['required', 'string', 'max:1024'],
                 'alt' => ['sometimes', 'string', 'max:255'],
+                'private' => ['sometimes', 'boolean'],
             ],
             ['path.required' => 'Pass the name of a file inside the import folder.'],
         );
@@ -42,7 +43,7 @@ final class UploadMediaTool extends Tool
             $media = resolve(StoreMediaFileAction::class)->handle($resolved, basename($resolved), [
                 'alt_text' => $validated['alt'] ?? null,
                 'metadata' => ['source' => 'import'],
-            ]);
+            ], (bool) ($validated['private'] ?? false));
         } catch (Throwable $throwable) {
             return Response::error($throwable->getMessage());
         }
@@ -64,6 +65,8 @@ final class UploadMediaTool extends Tool
                 ->description('File name inside the server import folder, e.g. "logo.svg". A nested name like "brand/logo.svg" works; paths outside the folder are refused.'),
             'alt' => $schema->string()
                 ->description('Alt text describing the file. Defaults to the file name.'),
+            'private' => $schema->boolean()
+                ->description('Documents only: store the file privately so only signed-in staff can open it and it never appears on the site, e.g. a signed contract. Defaults to false; ignored for images, video and audio.'),
         ];
     }
 

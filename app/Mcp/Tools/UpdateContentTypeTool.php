@@ -33,6 +33,7 @@ final class UpdateContentTypeTool extends Tool
                 'has_detail_page' => ['nullable', 'boolean'],
                 'has_index_page' => ['nullable', 'boolean'],
                 'sellable' => ['nullable', 'boolean'],
+                'admin_only' => ['nullable', 'boolean'],
                 ...Records::fieldRules(),
             ],
             [
@@ -64,7 +65,7 @@ final class UpdateContentTypeTool extends Tool
             $attributes['breadcrumbs'] = (bool) $validated['breadcrumbs'];
         }
 
-        foreach (['has_detail_page', 'has_index_page', 'sellable'] as $flag) {
+        foreach (['has_detail_page', 'has_index_page', 'sellable', 'admin_only'] as $flag) {
             if (($validated[$flag] ?? null) !== null) {
                 $attributes[$flag] = (bool) $validated[$flag];
             }
@@ -128,6 +129,9 @@ final class UpdateContentTypeTool extends Tool
 
             'sellable' => $schema->boolean()
                 ->description('Sell the records of this type: adds current_price (money), billing (select: One-time, Monthly, Yearly) and shippable (boolean) fields if missing, and shows a buy button on each record once Stripe is connected.'),
+
+            'admin_only' => $schema->boolean()
+                ->description('Keep this type off the site: no record pages or listing, not offered to collection blocks, and documents attached to its records are stored privately (only signed-in staff can open them). Use it for internal lists such as clients or leads. Turning it on makes the existing documents private.'),
 
             'fields' => $schema->array()
                 ->items($schema->object())

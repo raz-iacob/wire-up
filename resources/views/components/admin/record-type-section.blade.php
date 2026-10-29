@@ -83,32 +83,41 @@
             </div>
 
             <flux:switch
-                wire:model="types.{{ $index }}.breadcrumbs"
-                label="{{ __('Show breadcrumbs') }}"
-                description="{{ __('Adds the trail back to the home page on every record of this type.') }}"
+                wire:model.live="types.{{ $index }}.admin_only"
+                label="{{ __('Admin only') }}"
+                description="{{ __('Keeps these records off the site, for internal lists like clients or leads. Their documents are private.') }}"
                 align="left"
             />
 
-            <flux:switch
-                wire:model.live="types.{{ $index }}.has_detail_page"
-                label="{{ __('Give each record its own page') }}"
-                description="{{ __('Off when the records only feed cards. Cards stop linking anywhere and the records leave the sitemap and site search.') }}"
-                align="left"
-            />
+            @unless ($type['admin_only'] ?? false)
+                <flux:switch
+                    wire:model="types.{{ $index }}.breadcrumbs"
+                    label="{{ __('Show breadcrumbs') }}"
+                    description="{{ __('Adds the trail back to the home page on every record of this type.') }}"
+                    align="left"
+                />
 
-            <flux:switch
-                wire:model="types.{{ $index }}.has_index_page"
-                label="{{ __('Publish a listing at the URL prefix') }}"
-                description="{{ __('Lists every published record of this type. A page with the same web address wins.') }}"
-                align="left"
-            />
+                <flux:switch
+                    wire:model.live="types.{{ $index }}.has_detail_page"
+                    label="{{ __('Give each record its own page') }}"
+                    description="{{ __('Off when the records only feed cards. Cards stop linking anywhere and the records leave the sitemap and site search.') }}"
+                    align="left"
+                />
 
-            <flux:switch
-                wire:model.live="types.{{ $index }}.sellable"
-                label="{{ __('Sell these records') }}"
-                description="{{ __('Adds price, billing and shipping fields, and a buy button once Stripe is connected.') }}"
-                align="left"
-            />
+                <flux:switch
+                    wire:model="types.{{ $index }}.has_index_page"
+                    label="{{ __('Publish a listing at the URL prefix') }}"
+                    description="{{ __('Lists every published record of this type. A page with the same web address wins.') }}"
+                    align="left"
+                />
+
+                <flux:switch
+                    wire:model.live="types.{{ $index }}.sellable"
+                    label="{{ __('Sell these records') }}"
+                    description="{{ __('Adds price, billing and shipping fields, and a buy button once Stripe is connected.') }}"
+                    align="left"
+                />
+            @endunless
 
             <div class="space-y-3">
                 <div class="flex items-center justify-between gap-3">

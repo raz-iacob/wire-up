@@ -236,7 +236,9 @@ final class Record extends Model
 
         return self::query()
             ->whereKey($ids)
-            ->whereHas('recordType', fn (Builder $query): Builder => $query->where('key', (string) ($field['record_type'] ?? '')))
+            ->whereHas('recordType', fn (Builder $query): Builder => $query
+                ->where('key', (string) ($field['record_type'] ?? ''))
+                ->when($publishedOnly, fn (Builder $query): Builder => $query->where('admin_only', false)))
             ->when($publishedOnly, fn (Builder $query): Builder => $query->publishedInLocale())
             ->with(['translations', 'slugs', 'recordType'])
             ->get()
@@ -305,7 +307,7 @@ final class Record extends Model
         $locale = $translatable ? app()->getLocale() : resolve('localization')->getDefaultLocale();
 
         return $this->media
-            ->filter(fn (Media $media): bool => $media->pivot->role === $key && $media->pivot->locale === $locale)
+            ->filter(fn (Media $media): bool => ! $media->is_private && $media->pivot->role === $key && $media->pivot->locale === $locale)
             ->sortBy(fn (Media $media): int => (int) $media->pivot->position)
             ->values()
             ->all();

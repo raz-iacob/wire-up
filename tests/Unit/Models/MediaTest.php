@@ -33,6 +33,7 @@ test('to array', function (): void {
             'metadata',
             'created_at',
             'updated_at',
+            'is_private',
         ]);
 });
 

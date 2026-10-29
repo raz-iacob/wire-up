@@ -136,7 +136,8 @@ final class SiteExporter
      */
     private function addMedia(ZipArchive $zip, array $media): array
     {
-        $disk = Storage::disk(config()->string('filesystems.media'));
+        $publicDisk = Storage::disk(config()->string('filesystems.media'));
+        $privateDisk = Storage::disk(config()->string('filesystems.private_media'));
 
         $count = 0;
         $bytes = 0;
@@ -144,6 +145,7 @@ final class SiteExporter
 
         foreach ($media as $item) {
             $source = is_string($item['source'] ?? null) ? $item['source'] : '';
+            $disk = (bool) ($item['is_private'] ?? false) ? $privateDisk : $publicDisk;
 
             if ($source === '' || ! SiteBundle::isSafeRelativePath($source)) {
                 $missing[] = $source;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Record;
+use App\Models\RecordType;
 use Illuminate\Contracts\Database\Eloquent\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -72,6 +73,18 @@ final class RecordCollectionQuery
      * @param  array<string, mixed>  $content
      */
     private function recordTypeId(array $content, ?Record $current = null): ?int
+    {
+        $recordTypeId = $this->requestedTypeId($content, $current);
+
+        return $recordTypeId !== null && RecordType::query()->whereKey($recordTypeId)->where('admin_only', false)->exists()
+            ? $recordTypeId
+            : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $content
+     */
+    private function requestedTypeId(array $content, ?Record $current = null): ?int
     {
         if ($this->source($content) === 'related') {
             if (! $current instanceof Record) {

@@ -15,6 +15,7 @@
         :locale="$mediaLocale"
         :multi-locale="$translatable && $multiLocale"
         :multiple="false"
+        :private="$recordType->admin_only"
         :label="$label"
     />
     @if ($help)

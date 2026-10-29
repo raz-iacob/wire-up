@@ -43,6 +43,10 @@ final readonly class UpdateRecordAction
 
             $record->recordRevision();
         });
+
+        if ($record->recordType->admin_only) {
+            new MakeDocumentsPrivateAction()->handle($record);
+        }
     }
 
     /**

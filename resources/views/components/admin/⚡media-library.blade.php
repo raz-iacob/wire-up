@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\DownloadMediaAction;
 use App\Actions\ImportPexelsMediaAction;
+use App\Actions\SetMediaPrivacyAction;
 use App\Actions\StoreMediaFileAction;
 use App\Actions\UpdateMediaAction;
 use App\Enums\MediaType;
@@ -65,6 +66,10 @@ return new class extends Component
 
     public string $altText = '';
 
+    public bool $private = false;
+
+    public bool $uploadPrivate = false;
+
     public bool $showDeleteModal = false;
 
     public bool $loaded = false;
@@ -108,7 +113,7 @@ return new class extends Component
 
     /** @param ?array<int, array<string, mixed>|Media> $media */
     #[On('select-media')]
-    public function handleSelectMedia(string $target, ?string $type = null, int $max = 1, ?array $media = null): void
+    public function handleSelectMedia(string $target, ?string $type = null, int $max = 1, ?array $media = null, bool $private = false): void
     {
         $types = collect(explode(',', (string) $type))
             ->map(fn (string $value): ?MediaType => MediaType::tryFrom(mb_trim($value)))
@@ -116,6 +121,7 @@ return new class extends Component
             ->values();
 
         $this->target = $target;
+        $this->uploadPrivate = $private;
         $this->allowedTypes = $types->map(fn (MediaType $mediaType): string => $mediaType->value)->all();
         $this->type = $types->count() === 1 ? $types->first() : null;
         $this->typeFilter = $this->type->value ?? '';
@@ -228,10 +234,11 @@ return new class extends Component
         }
 
         $this->altText = $this->selected->first()->alt_text;
+        $this->private = (bool) $this->selected->first()->is_private;
         $this->showEditModal = true;
     }
 
-    public function update(UpdateMediaAction $action): void
+    public function update(UpdateMediaAction $action, SetMediaPrivacyAction $privacy): void
     {
         if ($this->selected->count() !== 1) {
             return;
@@ -241,6 +248,7 @@ return new class extends Component
         $action->handle($media, [
             'alt_text' => $this->altText,
         ]);
+        $privacy->handle($media, $this->private);
 
         $this->syncSelected(collect([$media]));
         $this->medias = collect();
@@ -605,7 +613,7 @@ return new class extends Component
                     'duration' => $metadata['duration'] ?? null,
                     'thumbnail' => $metadata['thumbnail'] ?? null,
                     'mime_type' => $file->getMimeType(),
-                ]);
+                ], $this->uploadPrivate);
             } catch (Throwable) {
                 Flux::toast(
                     variant: 'danger',
@@ -762,6 +770,14 @@ return new class extends Component
                                     loading="lazy"
                                     @if ($this->isSelected($media['id'])) data-selected @endif
                                 />
+                                @if ($media['private'] ?? false)
+                                    <div
+                                        class="absolute top-2 right-2 rounded-full bg-black/60 p-1"
+                                        title="{{ __('Private') }}"
+                                    >
+                                        <flux:icon name="lock-closed" class="size-4 text-white" />
+                                    </div>
+                                @endif
                                 @if ($media['icon'] !== 'photo')
                                     <div class="absolute right-2 bottom-2 rounded-full bg-black/60 p-1">
                                         <flux:icon name="{{ $media['icon'] }}" class="size-4 text-white" />
@@ -1105,6 +1121,13 @@ return new class extends Component
                                         <flux:text class="text-xs">{{ __('Type') }}</flux:text>
                                         <flux:text class="text-xs">{{ $firstMedia->type->label() }}</flux:text>
                                     </div>
+                                    @if ($firstMedia->is_private)
+                                        <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+                                        <div class="flex items-center justify-between">
+                                            <flux:text class="text-xs">{{ __('Access') }}</flux:text>
+                                            <flux:text class="text-xs">{{ __('Private') }}</flux:text>
+                                        </div>
+                                    @endif
                                     @if ($firstMedia->dimensions)
                                         <div class="my-2 h-px bg-zinc-200 dark:bg-zinc-700"></div>
                                         <div class="flex items-center justify-between">
@@ -1206,6 +1229,14 @@ return new class extends Component
                 <flux:text class="mt-2">{{ __('Modifying this item will update its content and details everywhere it’s used.') }}</flux:text>
             </div>
             <flux:input label="{{ __('Name') }}" wire:model="altText" autofocus />
+            @if ($selected->count() === 1 && $selected->first()->type === MediaType::DOCUMENT)
+                <flux:switch
+                    wire:model="private"
+                    label="{{ __('Private') }}"
+                    description="{{ __('Only signed-in staff can open it. Hidden on the site.') }}"
+                    align="left"
+                />
+            @endif
 
             {{-- <div x-show="$wire.selected?.type === 'video' && $wire.selected?.encoded?.status == 'COMPLETE'" x-cloak>
                 <flux:label>Preview image</flux:label>

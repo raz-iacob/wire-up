@@ -28,6 +28,7 @@ final class MediaItem
             'width' => $media->width,
             'height' => $media->height,
             'dimensions' => $media->dimensions,
+            'private' => (bool) $media->is_private,
             'created_at' => $media->created_at->toDateTimeString(),
         ];
     }

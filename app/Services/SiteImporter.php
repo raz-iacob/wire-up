@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Actions\GrantRecordTypeAbilitiesAction;
+use App\Models\Media;
 use App\Models\RecordType;
 use App\Models\Settings;
 use Illuminate\Support\Facades\DB;
@@ -207,9 +208,11 @@ final class SiteImporter
     private function restoreMedia(ZipArchive $zip, array $sources): void
     {
         $disk = Storage::disk(config()->string('filesystems.media'));
+        $privateDisk = Storage::disk(config()->string('filesystems.private_media'));
+        $privateSources = Media::query()->where('is_private', true)->pluck('source')->flip();
 
         foreach ($sources as $source) {
-            $disk->put($source, (string) $zip->getFromName($source));
+            ($privateSources->has($source) ? $privateDisk : $disk)->put($source, (string) $zip->getFromName($source));
         }
     }
 

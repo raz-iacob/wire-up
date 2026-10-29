@@ -715,202 +715,211 @@ return new class extends Component
                     <flux:separator />
                 @endif
 
-                <flux:fieldset class="pb-6">
-                    <flux:legend>{{ __('Content') }}</flux:legend>
-                    <flux:description>{{ __('Build and customize this record using flexible content blocks.') }}</flux:description>
+                @unless ($recordType->admin_only)
+                    <flux:fieldset class="pb-6">
+                        <flux:legend>{{ __('Content') }}</flux:legend>
+                        <flux:description>{{ __('Build and customize this record using flexible content blocks.') }}</flux:description>
 
-                    <div class="mt-6">
-                        <div wire:sort="reorderBlocks" class="mb-6 flex flex-col gap-3">
-                            @foreach ($blocks as $index => $block)
-                                @php($blockType = \App\Enums\BlockType::from($block['type']))
-                                <flux:card
-                                    size="sm"
-                                    class="overflow-hidden p-0!"
-                                    wire:key="block-{{ $block['id'] }}"
-                                    wire:sort:item="{{ $block['id'] }}"
-                                    x-data="{ open: {{ str_starts_with((string) $block['id'], 'new-') ? 'true' : 'false' }} }"
-                                    x-on:blocks-toggle-all.window="open = $event.detail"
-                                >
-                                    <div class="flex items-center justify-between gap-3 bg-zinc-100 px-3 py-2 dark:bg-white/10">
-                                        <div
-                                            wire:sort:handle
-                                            class="cursor-grab text-zinc-400"
-                                            title="{{ __('Drag to reorder') }}"
-                                        >
-                                            <flux:icon name="bars-3" variant="mini" />
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            class="flex min-w-0 grow items-center gap-2 text-left"
-                                            x-on:click="open = ! open"
-                                        >
-                                            <flux:heading
-                                                class="truncate"
-                                                x-text="window.blockTitle($wire.blocks[@js((string) $index)], $wire.locale, @js($blockType->label()))"
-                                            >{{ $blockType->editorTitle($block['content'], $locale) }}</flux:heading>
-                                        </button>
-
-                                        <div wire:sort:ignore class="flex shrink-0 items-center gap-1">
-                                            <flux:button
-                                                size="sm"
-                                                variant="subtle"
-                                                square
-                                                x-on:click="open = ! open"
-                                                :tooltip="__('Toggle')"
+                        <div class="mt-6">
+                            <div wire:sort="reorderBlocks" class="mb-6 flex flex-col gap-3">
+                                @foreach ($blocks as $index => $block)
+                                    @php($blockType = \App\Enums\BlockType::from($block['type']))
+                                    <flux:card
+                                        size="sm"
+                                        class="overflow-hidden p-0!"
+                                        wire:key="block-{{ $block['id'] }}"
+                                        wire:sort:item="{{ $block['id'] }}"
+                                        x-data="{ open: {{ str_starts_with((string) $block['id'], 'new-') ? 'true' : 'false' }} }"
+                                        x-on:blocks-toggle-all.window="open = $event.detail"
+                                    >
+                                        <div class="flex items-center justify-between gap-3 bg-zinc-100 px-3 py-2 dark:bg-white/10">
+                                            <div
+                                                wire:sort:handle
+                                                class="cursor-grab text-zinc-400"
+                                                title="{{ __('Drag to reorder') }}"
                                             >
-                                                <flux:icon name="chevron-down" variant="mini" x-show="! open" />
-                                                <flux:icon name="chevron-up" variant="mini" x-show="open" x-cloak />
-                                            </flux:button>
+                                                <flux:icon name="bars-3" variant="mini" />
+                                            </div>
 
-                                            <flux:dropdown position="bottom" align="end">
+                                            <button
+                                                type="button"
+                                                class="flex min-w-0 grow items-center gap-2 text-left"
+                                                x-on:click="open = ! open"
+                                            >
+                                                <flux:heading
+                                                    class="truncate"
+                                                    x-text="window.blockTitle($wire.blocks[@js((string) $index)], $wire.locale, @js($blockType->label()))"
+                                                >{{ $blockType->editorTitle($block['content'], $locale) }}</flux:heading>
+                                            </button>
+
+                                            <div wire:sort:ignore class="flex shrink-0 items-center gap-1">
                                                 <flux:button
                                                     size="sm"
-                                                    icon="ellipsis-horizontal"
                                                     variant="subtle"
                                                     square
-                                                    :tooltip="__('Options')"
+                                                    x-on:click="open = ! open"
+                                                    :tooltip="__('Toggle')"
+                                                >
+                                                    <flux:icon name="chevron-down" variant="mini" x-show="! open" />
+                                                    <flux:icon name="chevron-up" variant="mini" x-show="open" x-cloak />
+                                                </flux:button>
+
+                                                <flux:dropdown position="bottom" align="end">
+                                                    <flux:button
+                                                        size="sm"
+                                                        icon="ellipsis-horizontal"
+                                                        variant="subtle"
+                                                        square
+                                                        :tooltip="__('Options')"
+                                                    />
+                                                    <flux:menu>
+                                                        <flux:menu.item
+                                                            icon="arrows-pointing-out"
+                                                            x-show="! open"
+                                                            x-on:click="$dispatch('blocks-toggle-all', true)"
+                                                        >
+                                                            {{ __('Expand all') }}</flux:menu.item>
+                                                        <flux:menu.item
+                                                            icon="arrows-pointing-in"
+                                                            x-show="open"
+                                                            x-on:click="$dispatch('blocks-toggle-all', false)"
+                                                        >
+                                                            {{ __('Collapse all') }}</flux:menu.item>
+                                                        <flux:menu.separator />
+                                                        <flux:menu.item
+                                                            icon="arrow-up"
+                                                            wire:click="openBlockPicker({{ $loop->index }})"
+                                                        >
+                                                            {{ __('Add above') }}</flux:menu.item>
+                                                        <flux:menu.item
+                                                            icon="arrow-down"
+                                                            wire:click="openBlockPicker({{ $loop->index + 1 }})"
+                                                        >
+                                                            {{ __('Add below') }}</flux:menu.item>
+                                                        <flux:menu.item
+                                                            icon="document-duplicate"
+                                                            wire:click="duplicateBlock('{{ $block['id'] }}')"
+                                                        >
+                                                            {{ __('Duplicate') }}</flux:menu.item>
+                                                        <flux:menu.separator />
+                                                        <flux:menu.item
+                                                            icon="trash"
+                                                            variant="danger"
+                                                            wire:click="confirmRemoveBlock('{{ $block['id'] }}')"
+                                                        >
+                                                            {{ __('Delete') }}</flux:menu.item>
+                                                    </flux:menu>
+                                                </flux:dropdown>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-4" x-show="open" x-collapse x-cloak>
+                                            @includeIf($blockType->adminView(), ['block' => $block, 'locale' => $locale, 'multiLocale' => count($activeLocales) > 1, 'index' => $index, 'pageOptions' => $this->pageLinkOptions])
+
+                                            @if ($blockType->hasAnchor())
+                                                <div class="mt-6">
+                                                    <flux:input
+                                                        wire:model.lazy="blocks.{{ $index }}.content.anchor"
+                                                        label="{{ __('Anchor') }}"
+                                                        description="{{ __('Link directly to this block with #your-anchor.') }}"
+                                                        icon="hashtag"
+                                                        placeholder="contact"
+                                                    />
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </flux:card>
+                                @endforeach
+                            </div>
+
+                            <flux:button
+                                icon="plus"
+                                variant="filled"
+                                wire:click="openBlockPicker"
+                            >{{ __('Add block') }}</flux:button>
+
+                            <flux:modal name="block-picker" class="w-full md:max-w-5xl">
+                                @php($pickerSearches = collect(\App\Enums\BlockType::sorted())->map(fn (\App\Enums\BlockType $type): string => \Illuminate\Support\Str::lower($type->label().' '.$type->description()))->values())
+                                <div
+                                    class="space-y-6"
+                                    x-data="{ q: '' }"
+                                    x-on:block-picker-opened.window="
+                                        q = '';
+                                        $nextTick(() => {
+                                            const i = $refs.blockSearch;
+                                            (i?.tagName === 'INPUT' ? i : i?.querySelector('input'))?.focus();
+                                        });
+                                    "
+                                >
+                                    <div class="space-y-4">
+                                        <flux:heading size="lg">{{ __('Add a block') }}</flux:heading>
+                                        <flux:input
+                                            x-ref="blockSearch"
+                                            x-model="q"
+                                            icon="magnifying-glass"
+                                            clearable
+                                            placeholder="{{ __('Search blocks…') }}"
+                                        />
+                                    </div>
+                                    <div class="grid min-h-100 grid-cols-1 content-start gap-3 overflow-y-auto overscroll-contain p-1 sm:grid-cols-3 md:h-[calc(100vh-20rem)] lg:grid-cols-5">
+                                        @foreach (\App\Enums\BlockType::sorted() as $pickerType)
+                                            <button
+                                                type="button"
+                                                wire:click="addBlock('{{ $pickerType->value }}')"
+                                                x-show="q.trim() === '' || @js($pickerSearches[$loop->index]).includes(q.toLowerCase().trim())"
+                                                class="flex h-fit flex-col gap-2 rounded-lg border border-zinc-200 p-4 text-left transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/5"
+                                            >
+                                                <flux:icon
+                                                    name="{{ $pickerType->icon() }}"
+                                                    class="size-6 text-zinc-400"
                                                 />
-                                                <flux:menu>
-                                                    <flux:menu.item
-                                                        icon="arrows-pointing-out"
-                                                        x-show="! open"
-                                                        x-on:click="$dispatch('blocks-toggle-all', true)"
-                                                    >
-                                                        {{ __('Expand all') }}</flux:menu.item>
-                                                    <flux:menu.item
-                                                        icon="arrows-pointing-in"
-                                                        x-show="open"
-                                                        x-on:click="$dispatch('blocks-toggle-all', false)"
-                                                    >
-                                                        {{ __('Collapse all') }}</flux:menu.item>
-                                                    <flux:menu.separator />
-                                                    <flux:menu.item
-                                                        icon="arrow-up"
-                                                        wire:click="openBlockPicker({{ $loop->index }})"
-                                                    >
-                                                        {{ __('Add above') }}</flux:menu.item>
-                                                    <flux:menu.item
-                                                        icon="arrow-down"
-                                                        wire:click="openBlockPicker({{ $loop->index + 1 }})"
-                                                    >
-                                                        {{ __('Add below') }}</flux:menu.item>
-                                                    <flux:menu.item
-                                                        icon="document-duplicate"
-                                                        wire:click="duplicateBlock('{{ $block['id'] }}')"
-                                                    >
-                                                        {{ __('Duplicate') }}</flux:menu.item>
-                                                    <flux:menu.separator />
-                                                    <flux:menu.item
-                                                        icon="trash"
-                                                        variant="danger"
-                                                        wire:click="confirmRemoveBlock('{{ $block['id'] }}')"
-                                                    >
-                                                        {{ __('Delete') }}</flux:menu.item>
-                                                </flux:menu>
-                                            </flux:dropdown>
+                                                <flux:heading size="sm">{{ $pickerType->label() }}</flux:heading>
+                                                <flux:text size="sm">{{ $pickerType->description() }}</flux:text>
+                                            </button>
+                                        @endforeach
+
+                                        <div
+                                            class="col-span-full py-10 text-center"
+                                            x-show="q.trim() !== '' && @js($pickerSearches->all()).every(h => ! h.includes(q.toLowerCase().trim()))"
+                                            x-cloak
+                                        >
+                                            <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No blocks match your search.') }}</flux:text>
                                         </div>
                                     </div>
+                                </div>
+                            </flux:modal>
 
-                                    <div class="p-4" x-show="open" x-collapse x-cloak>
-                                        @includeIf($blockType->adminView(), ['block' => $block, 'locale' => $locale, 'multiLocale' => count($activeLocales) > 1, 'index' => $index, 'pageOptions' => $this->pageLinkOptions])
-
-                                        @if ($blockType->hasAnchor())
-                                            <div class="mt-6">
-                                                <flux:input
-                                                    wire:model.lazy="blocks.{{ $index }}.content.anchor"
-                                                    label="{{ __('Anchor') }}"
-                                                    description="{{ __('Link directly to this block with #your-anchor.') }}"
-                                                    icon="hashtag"
-                                                    placeholder="contact"
-                                                />
-                                            </div>
-                                        @endif
+                            <flux:modal name="remove-block" class="min-w-[22rem]">
+                                <div class="space-y-6">
+                                    <div>
+                                        <flux:heading size="lg">{{ __('Remove block') }}</flux:heading>
+                                        <flux:text class="mt-2">{{ __('Are you sure you want to remove this block? This cannot be undone.') }}</flux:text>
                                     </div>
-                                </flux:card>
-                            @endforeach
+                                    <div class="flex gap-2">
+                                        <flux:spacer />
+                                        <flux:modal.close>
+                                            <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                                        </flux:modal.close>
+                                        <flux:button
+                                            variant="danger"
+                                            wire:click="removeBlock"
+                                        >{{ __('Remove') }}</flux:button>
+                                    </div>
+                                </div>
+                            </flux:modal>
                         </div>
+                    </flux:fieldset>
 
-                        <flux:button
-                            icon="plus"
-                            variant="filled"
-                            wire:click="openBlockPicker"
-                        >{{ __('Add block') }}</flux:button>
-
-                        <flux:modal name="block-picker" class="w-full md:max-w-5xl">
-                            @php($pickerSearches = collect(\App\Enums\BlockType::sorted())->map(fn (\App\Enums\BlockType $type): string => \Illuminate\Support\Str::lower($type->label().' '.$type->description()))->values())
-                            <div
-                                class="space-y-6"
-                                x-data="{ q: '' }"
-                                x-on:block-picker-opened.window="
-                                    q = '';
-                                    $nextTick(() => {
-                                        const i = $refs.blockSearch;
-                                        (i?.tagName === 'INPUT' ? i : i?.querySelector('input'))?.focus();
-                                    });
-                                "
-                            >
-                                <div class="space-y-4">
-                                    <flux:heading size="lg">{{ __('Add a block') }}</flux:heading>
-                                    <flux:input
-                                        x-ref="blockSearch"
-                                        x-model="q"
-                                        icon="magnifying-glass"
-                                        clearable
-                                        placeholder="{{ __('Search blocks…') }}"
-                                    />
-                                </div>
-                                <div class="grid min-h-100 grid-cols-1 content-start gap-3 overflow-y-auto overscroll-contain p-1 sm:grid-cols-3 md:h-[calc(100vh-20rem)] lg:grid-cols-5">
-                                    @foreach (\App\Enums\BlockType::sorted() as $pickerType)
-                                        <button
-                                            type="button"
-                                            wire:click="addBlock('{{ $pickerType->value }}')"
-                                            x-show="q.trim() === '' || @js($pickerSearches[$loop->index]).includes(q.toLowerCase().trim())"
-                                            class="flex h-fit flex-col gap-2 rounded-lg border border-zinc-200 p-4 text-left transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/5"
-                                        >
-                                            <flux:icon name="{{ $pickerType->icon() }}" class="size-6 text-zinc-400" />
-                                            <flux:heading size="sm">{{ $pickerType->label() }}</flux:heading>
-                                            <flux:text size="sm">{{ $pickerType->description() }}</flux:text>
-                                        </button>
-                                    @endforeach
-
-                                    <div
-                                        class="col-span-full py-10 text-center"
-                                        x-show="q.trim() !== '' && @js($pickerSearches->all()).every(h => ! h.includes(q.toLowerCase().trim()))"
-                                        x-cloak
-                                    >
-                                        <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No blocks match your search.') }}</flux:text>
-                                    </div>
-                                </div>
-                            </div>
-                        </flux:modal>
-
-                        <flux:modal name="remove-block" class="min-w-[22rem]">
-                            <div class="space-y-6">
-                                <div>
-                                    <flux:heading size="lg">{{ __('Remove block') }}</flux:heading>
-                                    <flux:text class="mt-2">{{ __('Are you sure you want to remove this block? This cannot be undone.') }}</flux:text>
-                                </div>
-                                <div class="flex gap-2">
-                                    <flux:spacer />
-                                    <flux:modal.close>
-                                        <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
-                                    </flux:modal.close>
-                                    <flux:button
-                                        variant="danger"
-                                        wire:click="removeBlock"
-                                    >{{ __('Remove') }}</flux:button>
-                                </div>
-                            </div>
-                        </flux:modal>
-                    </div>
-                </flux:fieldset>
-
-                <flux:separator />
+                    <flux:separator />
+                @endunless
 
                 <flux:fieldset>
-                    <flux:legend>{{ __('SEO Settings') }}</flux:legend>
-                    <flux:description>{{ __('The main information for this record and how it appears in search results.') }}</flux:description>
+                    @if ($recordType->admin_only)
+                        <flux:legend>{{ __('Details') }}</flux:legend>
+                    @else
+                        <flux:legend>{{ __('SEO Settings') }}</flux:legend>
+                        <flux:description>{{ __('The main information for this record and how it appears in search results.') }}</flux:description>
+                    @endif
 
                     <div class="mt-6 flex flex-col gap-6">
                         <x-forms.input-translated
@@ -919,107 +928,114 @@ return new class extends Component
                             :multi-locale="count($activeLocales) > 1"
                             label="{{ __('Title') }}"
                         />
-                        <x-forms.url-translated
-                            name="slugs"
-                            :$locale
-                            :multi-locale="count($activeLocales) > 1"
-                            :base-path="$recordType->slug_prefix"
-                            label="{{ __('Web Address') }}"
-                        />
-                        <x-forms.textarea-translated
-                            name="description"
-                            :$locale
-                            :multi-locale="count($activeLocales) > 1"
-                            label="{{ __('Description') }}"
-                        />
-                        <livewire:admin.media-selector
-                            wire:model="media.og_image.{{ $locale }}"
-                            wire:key="record-og-image-{{ $locale }}"
-                            type="image"
-                            name="og_image"
-                            :locale="$locale"
-                            :multi-locale="count($activeLocales) > 1"
-                            :crops="['desktop' => ['label' => __('Desktop'), 'w' => 1200, 'h' => 700], 'mobile' => ['label' => __('Mobile'), 'w' => 800, 'h' => 800]]"
-                            label="{{ __('Open Graph Image') }}"
-                        />
-                        <flux:switch
-                            wire:model="noindex"
-                            label="{{ __('Discourage search engines from indexing this record') }}"
-                            description="{{ __('Adds a noindex tag to this record only and leaves it out of the sitemap.') }}"
-                            align="left"
-                        />
+                        @unless ($recordType->admin_only)
+                            <x-forms.url-translated
+                                name="slugs"
+                                :$locale
+                                :multi-locale="count($activeLocales) > 1"
+                                :base-path="$recordType->slug_prefix"
+                                label="{{ __('Web Address') }}"
+                            />
+                            <x-forms.textarea-translated
+                                name="description"
+                                :$locale
+                                :multi-locale="count($activeLocales) > 1"
+                                label="{{ __('Description') }}"
+                            />
+                            <livewire:admin.media-selector
+                                wire:model="media.og_image.{{ $locale }}"
+                                wire:key="record-og-image-{{ $locale }}"
+                                type="image"
+                                name="og_image"
+                                :locale="$locale"
+                                :multi-locale="count($activeLocales) > 1"
+                                :crops="['desktop' => ['label' => __('Desktop'), 'w' => 1200, 'h' => 700], 'mobile' => ['label' => __('Mobile'), 'w' => 800, 'h' => 800]]"
+                                label="{{ __('Open Graph Image') }}"
+                            />
+                            <flux:switch
+                                wire:model="noindex"
+                                label="{{ __('Discourage search engines from indexing this record') }}"
+                                description="{{ __('Adds a noindex tag to this record only and leaves it out of the sitemap.') }}"
+                                align="left"
+                            />
+                        @endunless
                     </div>
                 </flux:fieldset>
 
-                <flux:separator />
+                @unless ($recordType->admin_only)
+                    <flux:separator />
 
-                <x-admin.layout-fields
-                    :locale="$locale"
-                    :menu-options="$menuOptions"
-                    :layout="$layout"
-                    name="record"
-                    :description="__('Optional design overrides for this record\'s page.')"
-                    :css-description="__('Add custom CSS rules that apply only to this record\'s page.')"
-                />
+                    <x-admin.layout-fields
+                        :locale="$locale"
+                        :menu-options="$menuOptions"
+                        :layout="$layout"
+                        name="record"
+                        :description="__('Optional design overrides for this record\'s page.')"
+                        :css-description="__('Add custom CSS rules that apply only to this record\'s page.')"
+                    />
+                @endunless
             </div>
         </div>
 
         <div class="mb-10 md:col-span-2 md:mb-0">
             <flux:card class="flex flex-col gap-6 md:sticky md:top-24">
                 <flux:accordion>
-                    <flux:accordion.item>
-                        <flux:accordion.heading>
-                            <div class="flex items-center justify-between">
-                                {{ __('Status') }}
-                                <flux:text class="{{ $status->textColor() }}">{{ $status->label() }}</flux:text>
-                            </div>
-                        </flux:accordion.heading>
-
-                        <flux:accordion.content class="mt-3 flex flex-col gap-6">
-                            <flux:select
-                                variant="listbox"
-                                placeholder="{{ __('Choose status') }}"
-                                wire:model.live="status"
-                            >
-                                @foreach (ContentStatus::cases() as $statusOption)
-                                    <flux:select.option value="{{ $statusOption->value }}">
-                                        {{ $statusOption->label() }}
-                                    </flux:select.option>
-                                @endforeach
-                            </flux:select>
-
-                            <div x-cloak x-show="$wire.status === '{{ ContentStatus::SCHEDULED->value }}'">
-                                <flux:date-picker
-                                    wire:model="published_at"
-                                    label="{{ __('Publish on') }}"
-                                    selectable-header
-                                />
-                            </div>
-                        </flux:accordion.content>
-                    </flux:accordion.item>
-
-                    @if (config('site.allow_registration'))
+                    @unless ($recordType->admin_only)
                         <flux:accordion.item>
                             <flux:accordion.heading>
                                 <div class="flex items-center justify-between">
-                                    {{ __('Members only') }}
-                                    <flux:text>
-                                        <span x-text="$wire.members_only ? @js(__('Yes')) : @js(__('No'))">{{ $members_only ? __('Yes') : __('No') }}</span>
-                                    </flux:text>
+                                    {{ __('Status') }}
+                                    <flux:text class="{{ $status->textColor() }}">{{ $status->label() }}</flux:text>
                                 </div>
                             </flux:accordion.heading>
 
-                            <flux:accordion.content class="mt-3">
-                                <flux:switch
-                                    wire:model="members_only"
-                                    label="{{ __('Require visitors to sign in to view this record.') }}"
-                                    align="left"
-                                />
+                            <flux:accordion.content class="mt-3 flex flex-col gap-6">
+                                <flux:select
+                                    variant="listbox"
+                                    placeholder="{{ __('Choose status') }}"
+                                    wire:model.live="status"
+                                >
+                                    @foreach (ContentStatus::cases() as $statusOption)
+                                        <flux:select.option value="{{ $statusOption->value }}">
+                                            {{ $statusOption->label() }}
+                                        </flux:select.option>
+                                    @endforeach
+                                </flux:select>
+
+                                <div x-cloak x-show="$wire.status === '{{ ContentStatus::SCHEDULED->value }}'">
+                                    <flux:date-picker
+                                        wire:model="published_at"
+                                        label="{{ __('Publish on') }}"
+                                        selectable-header
+                                    />
+                                </div>
                             </flux:accordion.content>
                         </flux:accordion.item>
-                    @endif
 
-                    @if (count($activeLocales) > 1)
+                        @if (config('site.allow_registration'))
+                            <flux:accordion.item>
+                                <flux:accordion.heading>
+                                    <div class="flex items-center justify-between">
+                                        {{ __('Members only') }}
+                                        <flux:text>
+                                            <span x-text="$wire.members_only ? @js(__('Yes')) : @js(__('No'))">{{ $members_only ? __('Yes') : __('No') }}</span>
+                                        </flux:text>
+                                    </div>
+                                </flux:accordion.heading>
+
+                                <flux:accordion.content class="mt-3">
+                                    <flux:switch
+                                        wire:model="members_only"
+                                        label="{{ __('Require visitors to sign in to view this record.') }}"
+                                        align="left"
+                                    />
+                                </flux:accordion.content>
+                            </flux:accordion.item>
+                        @endif
+
+                    @endunless
+
+                    @if (! $recordType->admin_only && count($activeLocales) > 1)
                         <flux:accordion.item>
                             <flux:accordion.heading>
                                 <div class="flex items-center justify-between">
@@ -1083,9 +1099,11 @@ return new class extends Component
                     </flux:accordion.item>
                 </flux:accordion>
 
-                <flux:button wire:click="preview" icon="eye" variant="filled" class="w-full">
-                    {{ __('Preview') }}
-                </flux:button>
+                @unless ($recordType->admin_only)
+                    <flux:button wire:click="preview" icon="eye" variant="filled" class="w-full">
+                        {{ __('Preview') }}
+                    </flux:button>
+                @endunless
 
                 <div class="grid grid-cols-2 gap-4">
                     <flux:button type="submit" variant="primary" icon="check"> {{ __('Update') }} </flux:button>
