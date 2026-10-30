@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\ActivityEvent;
 use App\Models\User;
+use App\Services\ActivityLog;
 use App\Services\SettingsService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\View\View;
@@ -51,6 +53,10 @@ return new class extends Component
 
         if (! Auth::attemptWhen($credentials, fn (User $user): bool => $user->active, remember: $this->remember)) {
             RateLimiter::hit($this->throttleKey());
+
+            if (RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+                ActivityLog::record(ActivityEvent::LOCKED_OUT, $credentials['email']);
+            }
 
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),

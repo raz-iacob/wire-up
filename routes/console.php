@@ -8,6 +8,7 @@ use App\Console\Commands\CreateBackupCommand;
 use App\Console\Commands\PruneAbandonedOrdersCommand;
 use App\Console\Commands\PruneImageCacheCommand;
 use App\Console\Commands\ReconcileOrdersCommand;
+use App\Models\Activity;
 use App\Models\NotFoundPath;
 use Illuminate\Support\Facades\Schedule;
 
@@ -31,7 +32,7 @@ Schedule::command(PruneAbandonedOrdersCommand::class)
     ->daily()
     ->withoutOverlapping();
 
-Schedule::command('model:prune', ['--model' => [NotFoundPath::class]])
+Schedule::command('model:prune', ['--model' => [NotFoundPath::class, Activity::class]])
     ->daily()
     ->withoutOverlapping();
 

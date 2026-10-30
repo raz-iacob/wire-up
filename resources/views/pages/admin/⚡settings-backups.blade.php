@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
+use App\Enums\ActivityEvent;
 use App\Jobs\RunBackup;
+use App\Services\ActivityLog;
 use App\Services\BackupService;
 use App\Services\SettingsService;
 use Carbon\CarbonImmutable;
@@ -101,7 +103,7 @@ return new class extends Component
 
         $backups->markPending();
 
-        dispatch(new RunBackup);
+        dispatch(new RunBackup(auth()->user()?->id));
     }
 
     public function refreshState(): void
@@ -130,6 +132,10 @@ return new class extends Component
         $this->authorize('settings.edit');
 
         $deleted = $this->deleteFile !== null && resolve(BackupService::class)->delete($this->deleteFile);
+
+        if ($deleted) {
+            ActivityLog::record(ActivityEvent::BACKUP_DELETED, $this->deleteFile);
+        }
 
         $this->deleteFile = null;
         unset($this->backups);

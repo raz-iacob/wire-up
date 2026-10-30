@@ -24,9 +24,9 @@ trait HasRevisions
         return $this->morphMany(Revision::class, 'revisionable')->latest('id');
     }
 
-    public function recordRevision(): void
+    public function recordRevision(): bool
     {
-        $this->storeRevision(
+        return $this->storeRevision(
             auth()->id(),
             RevisionSource::tryFrom((string) Context::get(RevisionSource::CONTEXT_KEY)) ?? RevisionSource::EDITOR,
         );
@@ -94,13 +94,13 @@ trait HasRevisions
         return array_map(fn (mixed $item): mixed => is_array($item) ? self::normalizeSnapshot($item) : $item, $value);
     }
 
-    private function storeRevision(?int $userId, RevisionSource $source, mixed $createdAt = null): void
+    private function storeRevision(?int $userId, RevisionSource $source, mixed $createdAt = null): bool
     {
         $content = $this->revisionSnapshot();
         $hash = hash('sha256', json_encode($content, JSON_THROW_ON_ERROR));
 
         if ($this->revisions()->value('hash') === $hash) {
-            return;
+            return false;
         }
 
         $this->revisions()->create([
@@ -118,5 +118,7 @@ trait HasRevisions
             ->where('revisionable_id', $this->getKey())
             ->whereNotIn('id', $kept)
             ->delete();
+
+        return true;
     }
 }

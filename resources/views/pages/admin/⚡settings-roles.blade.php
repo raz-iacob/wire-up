@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Enums\ActivityEvent;
 use App\Enums\PermissionAction;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\ActivityLog;
 use App\Services\PermissionRegistry;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
@@ -128,6 +130,8 @@ return new class extends Component
             }
 
             $role->delete();
+
+            ActivityLog::record(ActivityEvent::ROLE_DELETED, $role);
         }
 
         foreach ($this->roles as $role) {
@@ -190,16 +194,20 @@ return new class extends Component
 
             $model->save();
 
+            if ($model->wasChanged()) {
+                ActivityLog::record(ActivityEvent::ROLE_UPDATED, $model);
+            }
+
             return;
         }
 
-        Role::query()->create([
+        ActivityLog::record(ActivityEvent::ROLE_CREATED, Role::query()->create([
             'key' => $this->uniqueKey($name),
             'name' => $name,
             'abilities' => $this->serialize($role['grants']),
             'bypass' => false,
             'is_protected' => false,
-        ]);
+        ]));
     }
 
     /**

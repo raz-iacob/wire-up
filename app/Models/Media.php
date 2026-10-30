@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ActivityEvent;
 use App\Enums\MediaType;
+use App\Services\ActivityLog;
 use App\Services\ImageService;
 use App\Services\MediaUsageService;
 use App\Traits\ClearsPageCache;
@@ -92,6 +94,8 @@ final class Media extends Model
     {
         if ($this->canDeleteSafely()) {
             parent::delete();
+
+            ActivityLog::record(ActivityEvent::MEDIA_DELETED, $this);
 
             $this->disk()->delete($this->source);
             ImageService::purgeCache($this->source);

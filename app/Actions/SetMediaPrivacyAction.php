@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Enums\MediaType;
 use App\Models\Media;
+use App\Services\ActivityLog;
 use App\Services\ImageService;
 use Illuminate\Support\Facades\Storage;
 
@@ -32,5 +34,7 @@ final readonly class SetMediaPrivacyAction
         }
 
         $media->forceFill(['is_private' => $private])->save();
+
+        ActivityLog::record($private ? ActivityEvent::MEDIA_MADE_PRIVATE : ActivityEvent::MEDIA_MADE_PUBLIC, $media);
     }
 }

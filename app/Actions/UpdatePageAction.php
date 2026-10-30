@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Enums\ContentStatus;
 use App\Models\Page;
+use App\Services\ActivityLog;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +19,7 @@ final readonly class UpdatePageAction
     {
         DB::transaction(function () use ($page, $attributes): void {
             $page->recordBaselineRevision();
+            $previousStatus = $page->computed_status;
 
             $redirects = new RedirectMovedContentAction();
             $previousPaths = isset($attributes['slugs']) ? $redirects->livePaths($page) : [];
@@ -45,7 +47,7 @@ final readonly class UpdatePageAction
                 $page->categories()->sync($attributes['categories']);
             }
 
-            $page->recordRevision();
+            ActivityLog::contentSaved($page, $previousStatus, $page->recordRevision());
         });
     }
 

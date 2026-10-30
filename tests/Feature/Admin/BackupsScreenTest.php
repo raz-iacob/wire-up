@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\ActivityEvent;
 use App\Jobs\RunBackup;
+use App\Models\Activity;
 use App\Models\Role;
 use App\Models\Settings;
 use App\Models\User;
@@ -102,7 +104,7 @@ it('queues a backup on request and refuses a second one while it runs', function
         ->call('backUpNow')
         ->assertDispatched('toast-show');
 
-    Queue::assertPushed(RunBackup::class, 1);
+    Queue::assertPushed(RunBackup::class, fn (RunBackup $job): bool => $job->userId === auth()->id());
     expect(resolve(BackupService::class)->state()['status'])->toBe('pending');
 });
 
@@ -141,7 +143,8 @@ it('deletes a backup after confirmation but never a pre-update dump', function (
         ->assertDispatched('toast-show');
 
     expect(File::exists($archive))->toBeFalse()
-        ->and(File::exists($dump))->toBeTrue();
+        ->and(File::exists($dump))->toBeTrue()
+        ->and(Activity::query()->sole()->only(['event', 'subject_label']))->toBe(['event' => ActivityEvent::BACKUP_DELETED, 'subject_label' => 'backup-2026-10-29-101500-manual.zip']);
 });
 
 it('shows the screen to people who may only look, without the buttons', function (): void {

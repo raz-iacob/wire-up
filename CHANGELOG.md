@@ -30,6 +30,8 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The Not found tab in Settings → Redirects lists the addresses visitors asked for that don't exist, most requested first, so you can redirect the ones that matter. Addresses nobody has asked for in 30 days are cleared automatically.
 - AI agents can list, add and delete redirects, adding up to 500 in one go when they rebuild a site. The AI assistant asks you before it deletes one.
 - Redirects are included in site exports and imports.
+- Settings → Activity log shows who did what and when: pages and records created, edited, published and deleted, uploads, settings changes (which settings, never their values), invitations and role changes, roles, redirects, order fulfilments, refunds and cancellations, backups, site imports and updates. It also records sign-ins, sign-outs, failed sign-in attempts, lockouts and wrong two-factor codes, with the address they came from. Filter it by area or person, or search it. Work done by the AI assistant or an AI agent is marked as such, and entries are kept for 180 days.
+- Owners and Administrators can see the activity log, and the Activity log permission in User Roles gives it to other roles. People who can see it get the latest activity on the dashboard instead of the recently edited content.
 
 ## v0.5.2 — 2026-10-29
 

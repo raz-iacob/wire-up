@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\Record;
+use App\Services\ActivityLog;
 use App\Services\PageCache;
 use App\Services\StripeService;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +55,8 @@ final readonly class IssueRefundAction
                 'status' => $amount === $refundable ? OrderStatus::REFUNDED : $order->status,
                 'restocked_at' => $restock && $order->restocked_at === null ? now() : $order->restocked_at,
             ]);
+
+            ActivityLog::record(ActivityEvent::ORDER_REFUNDED, $order, ['amount' => $amount, 'currency' => $order->currency]);
         });
     }
 }

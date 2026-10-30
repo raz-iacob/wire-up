@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Services\ActivityLog;
 use Illuminate\Support\Facades\DB;
 
 final readonly class DeleteRecordAction
@@ -13,6 +15,8 @@ final readonly class DeleteRecordAction
     public function handle(Record $record): void
     {
         DB::transaction(function () use ($record): void {
+            ActivityLog::record(ActivityEvent::RECORD_DELETED, $record);
+
             $this->unlink($record);
 
             $record->delete();

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\ActivityEvent;
+use App\Services\ActivityLog;
 use App\Services\UpdateService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -60,6 +62,8 @@ final class UpdateCommand extends Command
         }
 
         $updates->markFinished($tag);
+
+        ActivityLog::record(ActivityEvent::SYSTEM_UPDATED, $tag);
 
         $this->newLine();
         $this->info("Wire-Up is now on {$tag}.");

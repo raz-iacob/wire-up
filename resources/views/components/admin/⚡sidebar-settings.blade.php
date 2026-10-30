@@ -127,6 +127,14 @@ return new class extends Component
             >
                 {{ __('User Roles') }}</flux:sidebar.item>
         @endcan
+        @can('activity.view')
+            <flux:sidebar.item
+                :href="route('admin.settings-activity')"
+                :current="request()->routeIs('admin.settings-activity')"
+                wire:navigate.hover
+            >
+                {{ __('Activity log') }}</flux:sidebar.item>
+        @endcan
         <flux:sidebar.item
             :href="route('admin.settings-updates')"
             :current="request()->routeIs('admin.settings-updates')"

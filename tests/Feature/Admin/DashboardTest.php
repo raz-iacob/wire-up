@@ -2,16 +2,33 @@
 
 declare(strict_types=1);
 
+use App\Enums\ActivityEvent;
 use App\Enums\ContentStatus;
+use App\Models\Activity;
+use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Role;
 use App\Models\Submission;
 use App\Models\User;
+use App\Services\PermissionRegistry;
 use App\Services\UpdateService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+
+function staffWithoutActivityLog(string $name): User
+{
+    $role = Role::query()->firstOrCreate(['key' => 'no-activity-log'], [
+        'name' => 'No activity log',
+        'abilities' => array_values(array_diff(PermissionRegistry::abilityKeys(), ['activity.view'])),
+        'bypass' => false,
+        'is_protected' => false,
+    ]);
+
+    return User::factory()->role($role)->create(['name' => $name, 'active' => true]);
+}
 
 it('can render the dashboard screen', function (): void {
     $response = $this->actingAsAdmin()
@@ -84,7 +101,7 @@ it('shows content breakdown and recent activity', function (): void {
         'metadata' => ['published_locales' => ['en']],
     ]);
 
-    $this->actingAsAdmin();
+    $this->actingAs(staffWithoutActivityLog('Content Editor'));
 
     Livewire::test('pages::admin.dashboard')
         ->assertOk()
@@ -117,8 +134,8 @@ it('lists users who are currently online', function (): void {
 
 it('shows who edited an item in recent activity when multiple staff exist', function (): void {
     $type = RecordType::factory()->create(['key' => 'product', 'slug_prefix' => 'products', 'fields' => []]);
-    $editor = User::factory()->create(['name' => 'Grace Hopper', 'role' => 'owner', 'active' => true]);
-    User::factory()->create(['name' => 'View Admin', 'role' => 'owner', 'active' => true]);
+    $editor = staffWithoutActivityLog('Grace Hopper');
+    staffWithoutActivityLog('View Admin');
 
     $this->actingAs($editor);
     Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Team Item']]);
@@ -130,7 +147,7 @@ it('shows who edited an item in recent activity when multiple staff exist', func
 
 it('hides the editor in recent activity when only one staff user exists', function (): void {
     $type = RecordType::factory()->create(['key' => 'product', 'slug_prefix' => 'products', 'fields' => []]);
-    $admin = User::factory()->create(['name' => 'Solo Admin', 'role' => 'owner', 'active' => true]);
+    $admin = staffWithoutActivityLog('Solo Admin');
 
     $this->actingAs($admin);
     Record::factory()->create(['record_type_id' => $type->id, 'title' => ['en' => 'Solo Item']]);
@@ -138,6 +155,28 @@ it('hides the editor in recent activity when only one staff user exists', functi
     Livewire::test('pages::admin.dashboard')
         ->assertSee('Solo Item')
         ->assertDontSee('by Solo Admin');
+});
+
+it('shows the latest activity to people who may see the log, leaving out sign-ins', function (): void {
+    $page = Page::factory()->create();
+    Activity::factory()->create(['event' => ActivityEvent::PAGE_PUBLISHED, 'subject_type' => 'page', 'subject_id' => $page->id, 'subject_label' => 'Spring menu']);
+    Activity::factory()->create(['event' => ActivityEvent::BACKUP_CREATED, 'subject_label' => null]);
+    Activity::factory()->create(['event' => ActivityEvent::SIGNED_IN, 'subject_label' => 'should-not-show']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.dashboard')
+        ->assertSee(route('admin.settings-activity'))
+        ->assertSee(route('admin.pages-edit', $page))
+        ->assertSeeInOrder(['Created backup', 'System', 'Spring menu', 'Published page · System'])
+        ->assertDontSee('should-not-show')
+        ->assertDontSee('Nothing edited yet.');
+});
+
+it('says when the activity log is still empty', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.dashboard')->assertSee('Nothing yet.');
 });
 
 it('counts distinct anonymous visitors rather than session rows', function (): void {

@@ -52,6 +52,10 @@ Route::middleware('can:roles.view')->group(function (): void {
     Route::livewire('settings/roles', 'pages::admin.settings-roles')->name('settings-roles');
 });
 
+Route::middleware('can:activity.view')->group(function (): void {
+    Route::livewire('settings/activity', 'pages::admin.settings-activity')->name('settings-activity');
+});
+
 Route::middleware('can:settings.view')->group(function (): void {
     Route::redirect('settings', 'admin/settings/general');
     Route::livewire('settings/general', 'pages::admin.settings-general')->name('settings-general');

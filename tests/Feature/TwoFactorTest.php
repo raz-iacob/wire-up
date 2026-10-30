@@ -7,6 +7,8 @@ use App\Actions\DisableTwoFactorAction;
 use App\Actions\EnableTwoFactorAction;
 use App\Actions\RegenerateRecoveryCodesAction;
 use App\Actions\VerifyTwoFactorCodeAction;
+use App\Enums\ActivityEvent;
+use App\Models\Activity;
 use App\Models\Settings;
 use App\Models\User;
 use App\Services\SettingsService;
@@ -240,6 +242,7 @@ it('keeps a wrong challenge code out', function (): void {
         ->assertHasErrors('code');
 
     $this->assertGuest();
+    expect(Activity::query()->sole()->only(['event', 'user_id']))->toBe(['event' => ActivityEvent::TWO_FACTOR_FAILED, 'user_id' => $user->id]);
 });
 
 it('reports a bad recovery code against the recovery field', function (): void {

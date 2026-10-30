@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\ActivityEvent;
+use App\Services\ActivityLog;
 use App\Services\SiteImporter;
 use App\Services\TransferService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -56,6 +58,8 @@ final class RunSiteImport implements ShouldBeUnique, ShouldQueue
         $report = $importer->import($this->path, $this->ownerId);
 
         $transfers->markFinished($bundle, $this->summary($report));
+
+        ActivityLog::record(ActivityEvent::SITE_IMPORTED, $bundle, userId: $this->ownerId);
 
         $this->cleanUp();
     }

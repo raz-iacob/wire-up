@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Enums\ContentStatus;
 use App\Models\Page;
+use App\Services\ActivityLog;
 use Illuminate\Support\Facades\DB;
 
 final readonly class DuplicatePageAction
@@ -53,6 +55,8 @@ final readonly class DuplicatePageAction
 
             $copy->load('translations');
             $copy->setSlugs();
+
+            ActivityLog::record(ActivityEvent::PAGE_DUPLICATED, $copy);
 
             return $copy;
         });

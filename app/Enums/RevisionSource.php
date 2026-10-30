@@ -9,6 +9,7 @@ enum RevisionSource: string
     case EDITOR = 'editor';
     case ASSISTANT = 'assistant';
     case AGENT = 'agent';
+    case SYSTEM = 'system';
 
     public const string CONTEXT_KEY = 'revision_source';
 
@@ -18,6 +19,7 @@ enum RevisionSource: string
             self::EDITOR => __('Editor'),
             self::ASSISTANT => __('AI assistant'),
             self::AGENT => __('AI agent'),
+            self::SYSTEM => __('System'),
         };
     }
 }

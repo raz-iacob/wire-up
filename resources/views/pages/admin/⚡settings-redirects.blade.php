@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Actions\ImportRedirectsAction;
 use App\Actions\SaveRedirectAction;
+use App\Enums\ActivityEvent;
 use App\Enums\RedirectOrigin;
 use App\Models\NotFoundPath;
 use App\Models\Redirect;
+use App\Services\ActivityLog;
 use Flux\Flux;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -116,7 +118,7 @@ return new class extends Component
 
         $redirect = $this->editingId === null ? null : Redirect::query()->findOrFail($this->editingId);
 
-        $action->handle($this->from, $this->to, $this->statusCode, RedirectOrigin::MANUAL, $redirect);
+        ActivityLog::record(ActivityEvent::REDIRECT_SAVED, $action->handle($this->from, $this->to, $this->statusCode, RedirectOrigin::MANUAL, $redirect));
 
         $this->reset('editingId', 'from', 'to', 'statusCode');
         unset($this->redirects, $this->notFound);

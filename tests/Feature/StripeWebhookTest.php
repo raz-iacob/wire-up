@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Enums\OrderStatus;
+use App\Enums\RevisionSource;
+use App\Models\Activity;
 use App\Models\Order;
 
 it('refuses every webhook while no signing secret is configured', function (): void {
@@ -50,8 +52,13 @@ it('records a refund made in the stripe dashboard', function (): void {
     config(['cashier.webhook.secret' => 'whsec_real']);
     $order = Order::factory()->paid()->create(['stripe_payment_intent' => 'pi_hook']);
 
+    stripeWebhook('charge.refunded', ['id' => 'ch_1', 'payment_intent' => 'pi_hook', 'amount_refunded' => 500, 'refunded' => false])->assertOk();
     stripeWebhook('charge.refunded', ['id' => 'ch_1', 'payment_intent' => 'pi_hook', 'amount_refunded' => 2000, 'refunded' => true])->assertOk();
     stripeWebhook('charge.refunded', ['id' => 'ch_2', 'payment_intent' => null])->assertOk();
 
-    expect($order->refresh()->status)->toBe(OrderStatus::REFUNDED);
+    expect($order->refresh()->status)->toBe(OrderStatus::REFUNDED)
+        ->and(Activity::query()->orderBy('id')->get()->map(fn (Activity $activity): array => [$activity->source, $activity->properties])->all())->toBe([
+            [RevisionSource::SYSTEM, ['amount' => 500, 'currency' => 'USD']],
+            [RevisionSource::SYSTEM, ['amount' => 1500, 'currency' => 'USD']],
+        ]);
 });

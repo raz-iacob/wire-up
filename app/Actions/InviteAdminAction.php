@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\ActivityLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -26,6 +28,8 @@ final readonly class InviteAdminAction
             'email' => $email,
             'role_id' => $role->id,
         ], Str::random(16)));
+
+        ActivityLog::record(ActivityEvent::USER_INVITED, $user, ['role' => $role->name]);
 
         return ['user' => $user, 'status' => $this->sendInvite->handle($inviter, $user)];
     }

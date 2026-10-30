@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Console\Commands\UpdateCommand;
+use App\Enums\ActivityEvent;
+use App\Enums\RevisionSource;
+use App\Models\Activity;
 use App\Services\UpdateService;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\File;
@@ -46,7 +49,8 @@ it('updates to the latest release', function (): void {
 
     expect($service->currentVersion())->toBe('v1.0.0')
         ->and($service->state()['status'])->toBe('finished')
-        ->and($service->latestVersion())->toBe('v1.0.0');
+        ->and($service->latestVersion())->toBe('v1.0.0')
+        ->and(Activity::query()->sole()->only(['event', 'source', 'subject_label']))->toBe(['event' => ActivityEvent::SYSTEM_UPDATED, 'source' => RevisionSource::SYSTEM, 'subject_label' => 'v1.0.0']);
 });
 
 it('updates to a pinned tag', function (): void {

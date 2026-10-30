@@ -207,6 +207,7 @@ return new class extends Component
             ['label' => __('Inbox'), 'description' => '', 'icon' => 'inbox', 'keywords' => 'messages contact form submissions enquiries', 'url' => route('admin.inbox-index'), 'can' => 'inbox.view'],
             ['label' => __('Users'), 'description' => '', 'icon' => 'user', 'keywords' => 'accounts members staff people', 'url' => route('admin.users-index'), 'can' => 'users.view'],
             ['label' => __('Roles'), 'description' => __('Settings'), 'icon' => 'shield-check', 'keywords' => 'permissions abilities access', 'url' => route('admin.settings-roles'), 'can' => 'roles.view'],
+            ['label' => __('Activity log'), 'description' => __('Settings'), 'icon' => 'clock', 'keywords' => 'audit history who changed sign-ins logins events', 'url' => route('admin.settings-activity'), 'can' => 'activity.view'],
             $settings(__('General'), 'settings-general', 'homepage timezone contact email registration'),
             $settings(__('Content types'), 'settings-content-types', 'records blueprint fields presets'),
             $settings(__('Identity'), 'settings-identity', 'title tagline favicon share image seo noindex'),

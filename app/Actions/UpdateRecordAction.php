@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Enums\ContentStatus;
 use App\Models\Record;
+use App\Services\ActivityLog;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +19,7 @@ final readonly class UpdateRecordAction
     {
         DB::transaction(function () use ($record, $attributes): void {
             $record->recordBaselineRevision();
+            $previousStatus = $record->computed_status;
 
             $redirects = new RedirectMovedContentAction();
             $previousPaths = isset($attributes['slugs']) ? $redirects->livePaths($record) : [];
@@ -45,7 +47,7 @@ final readonly class UpdateRecordAction
                 $this->syncMedia($record, $attributes['media']);
             }
 
-            $record->recordRevision();
+            ActivityLog::contentSaved($record, $previousStatus, $record->recordRevision());
         });
 
         if ($record->recordType->admin_only) {

@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Actions\VerifyTwoFactorCodeAction;
+use App\Enums\ActivityEvent;
 use App\Models\User;
+use App\Services\ActivityLog;
 use App\Services\SettingsService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\View\View;
@@ -56,6 +58,8 @@ return new class extends Component
 
         if (! $action->handle($user, $this->code, $this->recovery_code)) {
             RateLimiter::hit($this->throttleKey($user));
+
+            ActivityLog::record(ActivityEvent::TWO_FACTOR_FAILED, userId: $user->id);
 
             $usedRecoveryCode = $this->usingRecoveryCode;
 

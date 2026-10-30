@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Actions\CancelOrderAction;
 use App\Actions\IssueRefundAction;
+use App\Enums\ActivityEvent;
 use App\Enums\OrderStatus;
+use App\Models\Activity;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Record;
@@ -35,7 +37,8 @@ it('refunds the whole order through stripe and can put the items back in stock',
     expect($order->refresh()->status)->toBe(OrderStatus::REFUNDED)
         ->and($order->refunded_amount)->toBe(3000)
         ->and($order->restocked_at)->not->toBeNull()
-        ->and($record->refresh()->stock)->toBe(3);
+        ->and($record->refresh()->stock)->toBe(3)
+        ->and(Activity::query()->where('event', ActivityEvent::ORDER_REFUNDED)->sole()->properties)->toBe(['amount' => 3000, 'currency' => 'USD']);
 
     stripe()->assertSent('POST', '/v1/refunds', fn (array $params): bool => $params === ['payment_intent' => 'pi_refund', 'amount' => 3000]);
 });
@@ -127,7 +130,8 @@ it('cancels an unpaid order from the order page and from the list', function (st
         : Livewire::test('pages::admin.orders-index')->call('cancel', $order->id);
 
     expect($order->refresh()->status)->toBe(OrderStatus::CANCELLED)
-        ->and($record->refresh()->stock)->toBe(2);
+        ->and($record->refresh()->stock)->toBe(2)
+        ->and(Activity::query()->where('event', ActivityEvent::ORDER_CANCELLED)->sole()->subject_id)->toBe($order->id);
 })->with(['show', 'index']);
 
 it('keeps an order that was paid just before it was cancelled', function (): void {
@@ -178,5 +182,6 @@ it('marks a paid order fulfilled from the list and shows each customer’s email
         ->call('markFulfilled', $order->id)
         ->call('markFulfilled', 999_999);
 
-    expect($order->refresh()->status)->toBe(OrderStatus::FULFILLED);
+    expect($order->refresh()->status)->toBe(OrderStatus::FULFILLED)
+        ->and(loggedEvents())->toBe([ActivityEvent::ORDER_FULFILLED]);
 });

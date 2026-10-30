@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 use App\Models\Category;
 use App\Models\Media;
+use App\Models\Order;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Redirect;
+use App\Models\Role;
+use App\Models\Submission;
 use App\Models\User;
 
 return [
@@ -26,5 +30,9 @@ return [
         'category' => Category::class,
         'record_type' => RecordType::class,
         'user' => User::class,
+        'role' => Role::class,
+        'order' => Order::class,
+        'submission' => Submission::class,
+        'redirect' => Redirect::class,
     ],
 ];

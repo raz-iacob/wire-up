@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ActivityEvent;
 use App\Enums\RedirectOrigin;
+use App\Services\ActivityLog;
 use App\Services\RedirectService;
 use Carbon\CarbonInterface;
 use Database\Factories\RedirectFactory;
@@ -46,6 +48,10 @@ final class Redirect extends Model
     protected static function booted(): void
     {
         self::saved(RedirectService::flush(...));
-        self::deleted(RedirectService::flush(...));
+        self::deleted(function (self $redirect): void {
+            RedirectService::flush();
+
+            ActivityLog::record(ActivityEvent::REDIRECT_DELETED, $redirect);
+        });
     }
 }

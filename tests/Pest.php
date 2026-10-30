@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\ActivityEvent;
 use App\Enums\ContentStatus;
+use App\Models\Activity;
 use App\Models\Record;
 use App\Models\RecordType;
 use Illuminate\Database\QueryException;
@@ -186,4 +188,12 @@ function downloadedCsv(Testable $component): array
     fclose($handle);
 
     return $rows;
+}
+
+/**
+ * @return list<ActivityEvent>
+ */
+function loggedEvents(): array
+{
+    return Activity::query()->orderBy('id')->get()->map(fn (Activity $activity): ActivityEvent => $activity->event)->values()->all();
 }

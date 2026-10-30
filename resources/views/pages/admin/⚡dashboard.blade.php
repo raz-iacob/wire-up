@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\ActivityArea;
 use App\Enums\OrderStatus;
+use App\Models\Activity;
 use App\Models\Media;
 use App\Models\Order;
 use App\Models\Page;
@@ -18,6 +20,7 @@ use Carbon\CarbonInterface;
 use Flux\DateRange;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -184,6 +187,20 @@ return new class extends Component
         usort($items, fn (array $a, array $b): int => $b['updated'] <=> $a['updated']);
 
         return array_slice($items, 0, 8);
+    }
+
+    /**
+     * @return Collection<int, Activity>
+     */
+    #[Computed]
+    public function latestActivity(): Collection
+    {
+        return Activity::query()
+            ->with(['user', 'subject' => fn (MorphTo $subject): MorphTo => $subject->morphWith([Record::class => ['recordType']])])
+            ->whereNotIn('event', ActivityArea::SIGN_INS->events())
+            ->latest('id')
+            ->limit(8)
+            ->get();
     }
 
     #[Computed]
@@ -393,35 +410,84 @@ return new class extends Component
                     </div>
                 </flux:card>
 
-                <flux:card class="space-y-4">
-                    <flux:heading size="lg">{{ __('Recent activity') }}</flux:heading>
-                    @if (empty($this->recentActivity))
-                        <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('Nothing edited yet.') }}</flux:text>
-                    @else
-                        <div class="divide-y divide-zinc-100 dark:divide-white/5">
-                            @foreach ($this->recentActivity as $item)
-                                <a
-                                    href="{{ $item['url'] }}"
-                                    wire:navigate
-                                    wire:key="activity-{{ $item['url'] }}"
-                                    class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
-                                >
-                                    <div class="min-w-0 flex-1">
-                                        <flux:heading size="sm" class="truncate">{{ $item['title'] }}</flux:heading>
-                                        <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
-                                            {{ $item['type'] }} · {{ $item['updated']?->diffForHumans() }}
-                                            @if ($this->hasMultipleStaff && $item['editor']) ·{{ __('by :name', ['name' => $item['editor']]) }}@endif
-                                        </flux:text>
-                                    </div>
-                                    <flux:badge
-                                        size="sm"
-                                        :color="$item['status']->color()"
-                                    >{{ $item['status']->label() }}</flux:badge>
-                                </a>
-                            @endforeach
+                @can('activity.view')
+                    <flux:card class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <flux:heading size="lg">{{ __('Recent activity') }}</flux:heading>
+                            <flux:button
+                                size="sm"
+                                variant="ghost"
+                                inset
+                                :href="route('admin.settings-activity')"
+                                wire:navigate
+                            >{{ __('View all') }}</flux:button>
                         </div>
-                    @endif
-                </flux:card>
+                        @if ($this->latestActivity->isEmpty())
+                            <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('Nothing yet.') }}</flux:text>
+                        @else
+                            <div class="divide-y divide-zinc-100 dark:divide-white/5">
+                                @foreach ($this->latestActivity as $activity)
+                                    <div
+                                        wire:key="log-{{ $activity->id }}"
+                                        class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+                                    >
+                                        <flux:icon
+                                            :name="$activity->event->area()->icon()"
+                                            variant="mini"
+                                            class="shrink-0 text-zinc-400"
+                                        />
+                                        <div class="min-w-0 flex-1">
+                                            <flux:heading size="sm" class="truncate">
+                                                @if ($activity->subjectUrl() !== null)
+                                                    <a
+                                                        href="{{ $activity->subjectUrl() }}"
+                                                        wire:navigate
+                                                        class="hover:underline"
+                                                    >{{ $activity->subject_label }}</a>
+                                                @else
+                                                    {{ $activity->subject_label ?? $activity->event->label() }}
+                                                @endif
+                                            </flux:heading>
+                                            <flux:text size="sm" class="truncate text-zinc-500 dark:text-zinc-400">
+                                                {{ implode(' · ', array_filter([$activity->subject_label !== null ? $activity->event->label() : null, $activity->actorName(), $activity->created_at->diffForHumans()])) }}
+                                            </flux:text>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </flux:card>
+                @else
+                    <flux:card class="space-y-4">
+                        <flux:heading size="lg">{{ __('Recent activity') }}</flux:heading>
+                        @if (empty($this->recentActivity))
+                            <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('Nothing edited yet.') }}</flux:text>
+                        @else
+                            <div class="divide-y divide-zinc-100 dark:divide-white/5">
+                                @foreach ($this->recentActivity as $item)
+                                    <a
+                                        href="{{ $item['url'] }}"
+                                        wire:navigate
+                                        wire:key="activity-{{ $item['url'] }}"
+                                        class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+                                    >
+                                        <div class="min-w-0 flex-1">
+                                            <flux:heading size="sm" class="truncate">{{ $item['title'] }}</flux:heading>
+                                            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                                {{ $item['type'] }} · {{ $item['updated']?->diffForHumans() }}
+                                                @if ($this->hasMultipleStaff && $item['editor']) ·{{ __('by :name', ['name' => $item['editor']]) }}@endif
+                                            </flux:text>
+                                        </div>
+                                        <flux:badge
+                                            size="sm"
+                                            :color="$item['status']->color()"
+                                        >{{ $item['status']->label() }}</flux:badge>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
+                    </flux:card>
+                @endcan
             </div>
         @endisland
 

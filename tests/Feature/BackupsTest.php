@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Console\Commands\CreateBackupCommand;
 use App\Console\Commands\RestoreBackupCommand;
+use App\Enums\ActivityEvent;
 use App\Jobs\RunBackup;
+use App\Models\Activity;
 use App\Notifications\BackupFailed;
 use App\Services\BackupService;
 use App\Services\DatabaseDumper;
@@ -44,6 +46,8 @@ function backupSourceDatabase(): string
 
     config()->set('database.connections.sqlite_backup', ['driver' => 'sqlite', 'database' => $database, 'prefix' => '', 'foreign_key_constraints' => false]);
     config()->set('database.default', 'sqlite_backup');
+
+    (require database_path('migrations/'.basename((string) collect(glob(database_path('migrations/*_create_activities_table.php')))->first())))->up();
 
     return $database;
 }
@@ -343,7 +347,8 @@ it('makes a manual backup from the command line', function (): void {
         ->expectsOutputToContain('Backed up to')
         ->assertExitCode(0);
 
-    expect(array_column(resolve(BackupService::class)->all(), 'kind'))->toBe(['manual']);
+    expect(array_column(resolve(BackupService::class)->all(), 'kind'))->toBe(['manual'])
+        ->and(Activity::query()->sole()->only(['event', 'subject_label']))->toBe(['event' => ActivityEvent::BACKUP_CREATED, 'subject_label' => resolve(BackupService::class)->all()[0]['file']]);
 });
 
 it('tells the owner by email and Slack when an automatic backup fails', function (): void {
@@ -375,6 +380,20 @@ it('sends no alert for a failed manual backup or when nobody can be told', funct
     $this->artisan(CreateBackupCommand::class, ['--scheduled' => true])->assertExitCode(1);
 
     Notification::assertNothingSent();
+});
+
+it('logs a backup that fails from the command line', function (): void {
+    backupSourceDatabase();
+    File::ensureDirectoryExists(config()->string('wireup.backup_path'));
+    File::put(config()->string('wireup.backup_path').'/backup-2020-01-01-000000-manual.zip', str_repeat('x', 1000));
+    app()->instance(BackupService::class, new BackupService(new DatabaseDumper, new SiteBundle, fn (string $directory): float => 100.0));
+
+    $this->artisan(CreateBackupCommand::class)->assertExitCode(1);
+
+    $activity = Activity::query()->sole();
+
+    expect($activity->event)->toBe(ActivityEvent::BACKUP_FAILED)
+        ->and($activity->properties['reason'])->toContain('There is not enough free disk space for another backup');
 });
 
 it('reports an alert that cannot be delivered instead of failing again', function (): void {
@@ -503,9 +522,10 @@ it('runs a queued backup through to a finished archive', function (): void {
     $backups = resolve(BackupService::class);
     $backups->markPending();
 
-    new RunBackup()->handle($backups);
+    new RunBackup(42)->handle($backups);
 
     expect($backups->state()['status'])->toBe('finished')
         ->and($backups->state()['file'])->toBe($backups->all()[0]['file'])
-        ->and($backups->all()[0]['kind'])->toBe('manual');
+        ->and($backups->all()[0]['kind'])->toBe('manual')
+        ->and(Activity::query()->sole()->only(['event', 'user_id', 'subject_label']))->toBe(['event' => ActivityEvent::BACKUP_CREATED, 'user_id' => 42, 'subject_label' => $backups->all()[0]['file']]);
 });

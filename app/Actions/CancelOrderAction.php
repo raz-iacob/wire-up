@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Services\ActivityLog;
 use App\Services\StripeService;
 use Stripe\Exception\ApiErrorException;
 
@@ -37,6 +39,8 @@ final readonly class CancelOrderAction
         }
 
         $this->release->handle($order);
+
+        ActivityLog::record(ActivityEvent::ORDER_CANCELLED, $order);
 
         return true;
     }

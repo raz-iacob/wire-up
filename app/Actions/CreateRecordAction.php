@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
+use App\Enums\ContentStatus;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Services\ActivityLog;
 use Illuminate\Support\Facades\DB;
 
 final readonly class CreateRecordAction
@@ -17,6 +20,7 @@ final readonly class CreateRecordAction
     {
         return DB::transaction(function () use ($recordType, $attributes): Record {
             $attributes['record_type_id'] = $recordType->id;
+            $attributes['status'] ??= ContentStatus::DRAFT;
             $attributes['metadata'] = [
                 ...($attributes['metadata'] ?? []),
                 'published_locales' => $attributes['metadata']['published_locales']
@@ -26,6 +30,8 @@ final readonly class CreateRecordAction
             $record = Record::query()->create($attributes);
             $record->setRelation('recordType', $recordType);
             $record->setSlugs();
+
+            ActivityLog::record(ActivityEvent::RECORD_CREATED, $record);
 
             return $record;
         });

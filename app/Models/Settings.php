@@ -61,16 +61,27 @@ final class Settings extends Model
 
     /**
      * @param  array<string, mixed>  $values
+     * @return list<string>
      */
-    public static function set(array $values): void
+    public static function set(array $values): array
     {
-        DB::transaction(function () use ($values): void {
+        $changed = DB::transaction(function () use ($values): array {
+            $changed = [];
+
             foreach ($values as $key => $value) {
-                self::query()->updateOrCreate(['key' => $key], ['value' => $value]);
+                $setting = self::query()->updateOrCreate(['key' => $key], ['value' => $value]);
+
+                if ($setting->wasRecentlyCreated || $setting->wasChanged('value')) {
+                    $changed[] = (string) $key;
+                }
             }
+
+            return $changed;
         });
 
         self::flush();
+
+        return $changed;
     }
 
     public static function flush(): void

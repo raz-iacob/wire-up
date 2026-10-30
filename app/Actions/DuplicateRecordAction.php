@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Enums\ContentStatus;
 use App\Models\Record;
+use App\Services\ActivityLog;
 use Illuminate\Support\Facades\DB;
 
 final readonly class DuplicateRecordAction
@@ -56,6 +58,8 @@ final readonly class DuplicateRecordAction
             $copy->setRelation('recordType', $record->recordType);
             $copy->load('translations');
             $copy->setSlugs();
+
+            ActivityLog::record(ActivityEvent::RECORD_DUPLICATED, $copy);
 
             return $copy;
         });

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Models\RecordType;
 use App\Models\Role;
+use App\Services\ActivityLog;
 use RuntimeException;
 
 final readonly class DeleteRecordTypeAction
@@ -16,6 +18,8 @@ final readonly class DeleteRecordTypeAction
         throw_if($recordType->linkedFromOtherTypes() !== [], RuntimeException::class, 'Cannot delete a content type that other content types link to.');
 
         $recordType->delete();
+
+        ActivityLog::record(ActivityEvent::RECORD_TYPE_DELETED, $recordType);
 
         $prefix = 'records.'.$recordType->key.'.';
 

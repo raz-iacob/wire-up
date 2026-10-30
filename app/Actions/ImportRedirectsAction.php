@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Enums\RedirectOrigin;
 use App\Models\Redirect;
+use App\Services\ActivityLog;
 use App\Services\RedirectService;
 use Illuminate\Support\Facades\DB;
 
@@ -42,6 +44,10 @@ final readonly class ImportRedirectsAction
                 $save->handle($from, $to, in_array($status, [301, 302], true) ? $status : 301, $origin);
 
                 $exists ? $summary['updated']++ : $summary['added']++;
+            }
+
+            if ($summary['added'] + $summary['updated'] > 0) {
+                ActivityLog::record(ActivityEvent::REDIRECTS_IMPORTED, properties: ['added' => $summary['added'], 'updated' => $summary['updated']]);
             }
         });
 

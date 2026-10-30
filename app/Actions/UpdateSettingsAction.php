@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Models\Settings;
+use App\Services\ActivityLog;
 
 final readonly class UpdateSettingsAction
 {
@@ -13,6 +15,10 @@ final readonly class UpdateSettingsAction
      */
     public function handle(array $values): void
     {
-        Settings::set($values);
+        $changed = Settings::set($values);
+
+        if ($changed !== []) {
+            ActivityLog::record(ActivityEvent::SETTINGS_UPDATED, properties: ['keys' => $changed]);
+        }
     }
 }

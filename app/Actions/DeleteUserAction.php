@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Models\User;
+use App\Services\ActivityLog;
 use Illuminate\Validation\ValidationException;
 use Laravel\Cashier\Subscription;
 use Stripe\Exception\ApiErrorException;
@@ -29,5 +31,7 @@ final readonly class DeleteUserAction
         }
 
         $user->delete();
+
+        ActivityLog::record(ActivityEvent::USER_DELETED, $user);
     }
 }

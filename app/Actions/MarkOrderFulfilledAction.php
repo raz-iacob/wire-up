@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\ActivityEvent;
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Services\ActivityLog;
 
 final readonly class MarkOrderFulfilledAction
 {
@@ -16,6 +18,8 @@ final readonly class MarkOrderFulfilledAction
         }
 
         $order->update(['status' => OrderStatus::FULFILLED, 'fulfilled_at' => now()]);
+
+        ActivityLog::record(ActivityEvent::ORDER_FULFILLED, $order);
 
         return true;
     }

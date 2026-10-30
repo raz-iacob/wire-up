@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\ActivityEvent;
 use App\Notifications\BackupFailed;
+use App\Services\ActivityLog;
 use App\Services\BackupService;
 use App\Services\SettingsService;
 use App\Services\SlackWebhookChannel;
@@ -40,12 +42,16 @@ final class CreateBackupCommand extends Command
         } catch (Throwable $exception) {
             $this->components->error($exception->getMessage());
 
+            ActivityLog::record(ActivityEvent::BACKUP_FAILED, properties: ['reason' => $exception->getMessage()]);
+
             if ($scheduled) {
                 $this->notifyFailure($exception->getMessage());
             }
 
             return self::FAILURE;
         }
+
+        ActivityLog::record(ActivityEvent::BACKUP_CREATED, basename($archive));
 
         $this->components->info("Backed up to {$archive}");
 

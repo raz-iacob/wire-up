@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Enums\ActivityEvent;
 use App\Enums\ContentStatus;
 use App\Jobs\RunSiteImport;
+use App\Models\Activity;
 use App\Models\Page;
+use App\Models\User;
 use App\Services\SiteBundle;
 use App\Services\SiteExporter;
 use App\Services\SiteImporter;
@@ -49,11 +52,14 @@ it('imports and reports a summary when an import is pending', function (): void 
     $transfers = resolve(TransferService::class);
     $transfers->markPending('job.zip');
 
-    runImportJob($bundle);
+    $owner = User::factory()->create();
+
+    runImportJob($bundle, $owner->id);
 
     $state = $transfers->state();
 
-    expect($state['status'])->toBe('finished')
+    expect(Activity::query()->sole()->only(['event', 'user_id', 'subject_label']))->toBe(['event' => ActivityEvent::SITE_IMPORTED, 'user_id' => $owner->id, 'subject_label' => 'job.zip'])
+        ->and($state['status'])->toBe('finished')
         ->and($state['bundle'])->toBe('job.zip')
         ->and($state['output'])->toContain('pages')
         ->and($state['output'])->toContain('media files')

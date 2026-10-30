@@ -74,7 +74,7 @@ trait HasPublishing
             }
 
             return $this->status;
-        });
+        })->withoutObjectCaching();
     }
 
     /**
