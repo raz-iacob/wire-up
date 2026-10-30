@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Locale;
 use App\Models\Page;
+use App\Models\Settings;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -247,4 +248,18 @@ it('returns to the first page when the search or status changes', function (): v
         ->call('gotoPage', 2)
         ->set('status', 'draft')
         ->assertSet('paginators.page', 1);
+});
+
+it('refuses to delete the homepage and offers no delete for it', function (): void {
+    $home = Page::factory()->create(['title' => 'Home Sweet Home']);
+    Settings::set(['home_page_id' => $home->id]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->assertDontSeeHtml('wire:click="confirmDelete('.$home->id.')"')
+        ->call('delete', $home->id)
+        ->assertDispatched('toast-show');
+
+    expect(Page::query()->whereKey($home->id)->exists())->toBeTrue();
 });

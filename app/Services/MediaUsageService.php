@@ -7,6 +7,8 @@ namespace App\Services;
 use App\Models\Block;
 use App\Models\Media;
 use App\Models\Mediable;
+use App\Models\Page;
+use App\Models\Record;
 use App\Models\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +21,10 @@ final class MediaUsageService
             return true;
         }
         if ($this->blockQuery($media)->exists()) {
+            return true;
+        }
+
+        if ($this->layoutOwners($media) !== []) {
             return true;
         }
 
@@ -43,11 +49,16 @@ final class MediaUsageService
             ->map(fn (Block $block): string => $this->blockLabel($block))
             ->all();
 
+        $layouts = array_map(
+            fn (Model $owner): string => $this->ownerLabel($owner).' — '.__('Background'),
+            $this->layoutOwners($media),
+        );
+
         $settings = $this->settingsQuery($media)->exists()
             ? [__('Site settings')]
             : [];
 
-        return collect([...$pivot, ...$blocks, ...$settings])
+        return collect([...$pivot, ...$blocks, ...$layouts, ...$settings])
             ->unique()
             ->values()
             ->all();
@@ -67,6 +78,19 @@ final class MediaUsageService
     private function settingsQuery(Media $media): Builder
     {
         return Settings::query()->where('value', 'like', '%'.$this->needle($media).'%');
+    }
+
+    /**
+     * @return array<int, Page|Record>
+     */
+    private function layoutOwners(Media $media): array
+    {
+        $needle = '%'.$this->needle($media).'%';
+
+        return [
+            ...Page::query()->where('metadata', 'like', $needle)->get()->all(),
+            ...Record::query()->where('metadata', 'like', $needle)->get()->all(),
+        ];
     }
 
     private function needle(Media $media): string

@@ -299,3 +299,32 @@ it('returns to the first page when the search or status changes', function (): v
         ->set('status', 'active')
         ->assertSet('paginators.page', 1);
 });
+
+it('lets only owners hand out the owner role or change an owner from the list', function (): void {
+    $admin = User::factory()->admin()->create(['active' => true]);
+    $owner = User::factory()->owner()->create(['active' => true]);
+
+    $component = Livewire::actingAs($admin)->test('pages::admin.users-index');
+
+    expect($component->get('assignableRoles')->pluck('key')->all())->not->toContain('owner')
+        ->and($component->get('manageableIds'))->not->toContain($owner->id);
+
+    $component->call('toggleStatus', $owner->id)->assertDispatched('toast-show');
+
+    expect($owner->fresh()->active)->toBeTrue()
+        ->and(Livewire::actingAs($owner)->test('pages::admin.users-index')->get('assignableRoles')->pluck('key')->all())->toContain('owner');
+});
+
+it('will not disable your own account or the last owner who can sign in from the list', function (): void {
+    $owner = User::factory()->owner()->create(['active' => true]);
+    $disabledOwner = User::factory()->owner()->create(['active' => false]);
+
+    Livewire::actingAs($owner)->test('pages::admin.users-index')
+        ->call('toggleStatus', $owner->id)
+        ->assertDispatched('toast-show');
+
+    Livewire::actingAs($disabledOwner)->test('pages::admin.users-index')
+        ->call('toggleStatus', $owner->id);
+
+    expect($owner->fresh()->active)->toBeTrue();
+});

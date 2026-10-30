@@ -17,6 +17,11 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The new command php artisan wireup:backup:create backs up the database and every uploaded file into one zip in storage/app/backups, and php artisan wireup:backup:restore puts a site back from one: it switches the site to maintenance mode, loads the database and the files, applies any newer database changes and brings the site back up. It refuses a backup taken by a newer version of Wire-Up, and leaves the site in maintenance mode if the database cannot be loaded.
 - A database backup that fails part-way, such as the one taken before an update, no longer leaves a broken file behind that later counted as one of the five kept backups.
 - Settings → Backups lists every backup with its date, type and size, makes a new one with Back up now, and downloads or deletes them. Automatic backups can be switched on there, daily or weekly at 3am, with how many to keep and whether to include uploaded files; they are off until you switch them on, because backups take disk space, and the screen shows how much they use and how much is free. If an automatic backup fails, you get an email at the communication address and a Slack message if Slack is connected.
+- Only owners can change an owner's account or give someone the Owner role. Administrators could edit, disable or set the password of an owner, and invite new owners.
+- The users list no longer lets you disable your own account or the last owner who can sign in, matching the checks on the edit screen.
+- The homepage can no longer be deleted from the Pages list. Choose another homepage first.
+- Images used as a page or record background count as in use, so the media library no longer lets you delete them.
+- Changing a content type's web address prefix no longer breaks its record pages: the records move to the new address straight away instead of showing "not found" until each was saved again.
 
 ## v0.5.2 — 2026-10-29
 

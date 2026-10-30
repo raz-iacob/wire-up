@@ -8,6 +8,7 @@ use App\Actions\UpdateUserAction;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\SettingsService;
+use App\Services\UserGuard;
 use App\Traits\WithSorting;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
@@ -63,10 +64,27 @@ return new class extends Component
     #[Computed]
     public function assignableRoles(): Collection
     {
+        $guard = resolve(UserGuard::class);
+
         return $this->roles ??= Role::query()
             ->where(fn (Builder $query): Builder => $query->where('bypass', true)->orWhere('abilities', '<>', '[]'))
             ->orderBy('id')
-            ->get();
+            ->get()
+            ->filter(fn (Role $role): bool => $guard->canAssign(auth()->user(), $role))
+            ->values();
+    }
+
+    /** @return array<int, int> */
+    #[Computed]
+    public function manageableIds(): array
+    {
+        $guard = resolve(UserGuard::class);
+
+        return collect($this->users()->items())
+            ->filter(fn (User $user): bool => $guard->canManage(auth()->user(), $user))
+            ->map(fn (User $user): int => $user->id)
+            ->values()
+            ->all();
     }
 
     #[Computed]
@@ -103,6 +121,19 @@ return new class extends Component
     public function toggleStatus(User $user, UpdateUserAction $action): void
     {
         $this->authorize('users.edit');
+
+        $guard = resolve(UserGuard::class);
+        $refusal = match (true) {
+            ! $guard->canManage(auth()->user(), $user) => __('Only an owner can change an owner’s account.'),
+            $user->active => $guard->loginLockReason(auth()->user(), $user),
+            default => null,
+        };
+
+        if ($refusal !== null) {
+            Flux::toast($refusal, variant: 'danger');
+
+            return;
+        }
 
         $action->handle($user, [
             'active' => ! $user->active,
@@ -243,7 +274,7 @@ return new class extends Component
                             <flux:dropdown class="flex justify-end">
                                 <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
                                 <flux:menu>
-                                    @can('users.edit')
+                                    @if (auth()->user()?->can('users.edit') && in_array($row->id, $this->manageableIds, true))
                                         <flux:menu.item icon="pencil" href="{{ route('admin.users-edit', $row->id) }}">
                                             {{ __('Edit') }}
                                         </flux:menu.item>
@@ -267,7 +298,7 @@ return new class extends Component
                                                 {{ __('Enable') }}
                                             </flux:menu.item>
                                         @endif
-                                    @endcan
+                                    @endif
                                 </flux:menu>
                             </flux:dropdown>
                         </flux:table.cell>

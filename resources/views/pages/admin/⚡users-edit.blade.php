@@ -7,9 +7,9 @@ use App\Actions\UpdateUserAction;
 use App\Actions\UpdateUserPasswordAction;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\UserGuard;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Password;
@@ -41,6 +41,8 @@ return new class extends Component
     {
         $this->authorize('users.edit');
 
+        abort_unless(resolve(UserGuard::class)->canManage(auth()->user(), $user), 403);
+
         $this->user = $user;
         $this->name = $user->name;
         $this->email = $user->email;
@@ -53,21 +55,19 @@ return new class extends Component
     #[Computed]
     public function roles(): Collection
     {
-        return Role::query()->orderBy('id')->get();
+        $guard = resolve(UserGuard::class);
+
+        return Role::query()
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (Role $role): bool => $guard->canAssign(auth()->user(), $role))
+            ->values();
     }
 
     #[Computed]
     public function loginLockReason(): ?string
     {
-        if ($this->user->is(auth()->user())) {
-            return __('You cannot lock yourself out.');
-        }
-
-        if ($this->user->active && $this->user->role?->bypass && $this->isLastSuperAdmin()) {
-            return __('The site must keep one full-access user who can sign in.');
-        }
-
-        return null;
+        return resolve(UserGuard::class)->loginLockReason(auth()->user(), $this->user);
     }
 
     #[Computed]
@@ -120,6 +120,13 @@ return new class extends Component
         ]);
 
         $targetRole = Role::query()->findOrFail($validated['roleId']);
+        $guard = resolve(UserGuard::class);
+
+        if (! $guard->canAssign($editor, $targetRole)) {
+            $this->addError('roleId', __('Only an owner can give out this role.'));
+
+            return;
+        }
 
         if ($this->user->is($editor) && $targetRole->id !== $this->user->role_id) {
             $this->addError('roleId', __('You cannot change your own role.'));
@@ -127,7 +134,7 @@ return new class extends Component
             return;
         }
 
-        if ($this->user->role?->bypass && ! $targetRole->bypass && $this->isLastSuperAdmin()) {
+        if ($this->user->role?->bypass && ! $targetRole->bypass && $guard->isLastFullAccessUser($this->user)) {
             $this->addError('roleId', __('The site must keep at least one full-access role.'));
 
             return;
@@ -176,15 +183,6 @@ return new class extends Component
         return $this->view()
             ->title(__('Edit').' '.$this->user->name)
             ->layout('layouts::admin');
-    }
-
-    private function isLastSuperAdmin(): bool
-    {
-        return User::query()
-            ->whereKeyNot($this->user->id)
-            ->where('active', true)
-            ->whereHas('role', fn (Builder $query): Builder => $query->where('bypass', true))
-            ->doesntExist();
     }
 };
 ?>

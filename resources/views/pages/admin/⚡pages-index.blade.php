@@ -7,6 +7,7 @@ use App\Actions\DeletePageAction;
 use App\Actions\DuplicatePageAction;
 use App\Enums\ContentStatus;
 use App\Models\Page;
+use App\Models\Settings;
 use App\Services\SettingsService;
 use App\Traits\WithSorting;
 use Flux\Flux;
@@ -96,6 +97,14 @@ return new class extends Component
         $this->authorize('pages.delete');
 
         $page = Page::query()->findOrFail($id);
+
+        if ($page->id === $this->configuredHomePageId()) {
+            Flux::modal('confirm-delete')->close();
+            Flux::toast(__('The homepage can’t be deleted. Choose another homepage in Settings → General first.'), variant: 'danger');
+
+            return;
+        }
+
         $action->handle($page);
 
         $this->selectedId = null;
@@ -133,6 +142,12 @@ return new class extends Component
     public function hasMultipleActiveLocales(): bool
     {
         return resolve('localization')->getActiveLocaleCodes()->count() > 1;
+    }
+
+    #[Computed]
+    public function configuredHomePageId(): int
+    {
+        return (int) Settings::get('home_page_id');
     }
 
     #[Computed]
@@ -287,7 +302,7 @@ return new class extends Component
                                         </flux:menu.item>
                                     @endcan
 
-                                    @can('pages.delete')
+                                    @if ($row->id !== $this->configuredHomePageId && auth()->user()?->can('pages.delete'))
                                         <flux:menu.separator />
                                         <flux:menu.item
                                             icon="trash"
@@ -296,7 +311,7 @@ return new class extends Component
                                         >
                                             {{ __('Delete') }}
                                         </flux:menu.item>
-                                    @endcan
+                                    @endif
                                 </flux:menu>
                             </flux:dropdown>
                         </flux:table.cell>

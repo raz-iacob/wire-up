@@ -505,18 +505,37 @@ it('prevents a user from changing their own role', function (): void {
     expect($user->fresh()->role->key)->toBe('admin');
 });
 
-it('blocks demoting the only owner', function (): void {
+it('keeps owner accounts and the owner role out of reach for everyone but owners', function (): void {
     $admin = User::factory()->admin()->create(['active' => true]);
     $owner = User::factory()->owner()->create();
-    $adminRoleId = Role::query()->where('key', 'admin')->value('id');
+    $editor = User::factory()->editor()->create();
+    $ownerRoleId = Role::query()->where('key', 'owner')->value('id');
 
-    $this->actingAs($admin);
+    Livewire::actingAs($admin)
+        ->test('pages::admin.users-edit', ['user' => $owner])
+        ->assertForbidden();
 
-    $response = Livewire::test('pages::admin.users-edit', ['user' => $owner])
-        ->set('roleId', $adminRoleId)
-        ->call('update');
+    $component = Livewire::actingAs($admin)->test('pages::admin.users-edit', ['user' => $editor]);
 
-    $response->assertHasErrors(['roleId']);
+    expect($component->get('roles')->pluck('key')->all())->not->toContain('owner');
+
+    $component->set('roleId', $ownerRoleId)
+        ->call('update')
+        ->assertHasErrors(['roleId']);
+
+    expect($editor->fresh()->role->key)->toBe('editor');
+});
+
+it('blocks demoting the only owner who can sign in', function (): void {
+    $disabledOwner = User::factory()->owner()->create(['active' => false]);
+    $owner = User::factory()->owner()->create(['active' => true]);
+
+    Livewire::actingAs($disabledOwner)
+        ->test('pages::admin.users-edit', ['user' => $owner])
+        ->set('roleId', Role::query()->where('key', 'admin')->value('id'))
+        ->call('update')
+        ->assertHasErrors(['roleId']);
+
     expect($owner->fresh()->role->key)->toBe('owner');
 });
 
@@ -558,13 +577,13 @@ it('keeps one full-access user able to sign in', function (): void {
         'role' => 'owner',
     ]);
 
-    $administrator = User::factory()->create([
-        'email' => 'administrator@example.com',
-        'active' => true,
-        'role' => 'admin',
+    $disabledOwner = User::factory()->create([
+        'email' => 'disabled-owner@example.com',
+        'active' => false,
+        'role' => 'owner',
     ]);
 
-    Livewire::actingAs($administrator)
+    Livewire::actingAs($disabledOwner)
         ->test('pages::admin.users-edit', ['user' => $owner])
         ->set('active', false)
         ->call('update')
@@ -603,13 +622,9 @@ it('cannot demote the only full-access user who can still sign in', function ():
         'role' => 'owner',
     ]);
 
-    $administrator = User::factory()->create([
-        'email' => 'admin-two@example.com',
-        'active' => true,
-        'role' => 'admin',
-    ]);
+    $dormantOwner = User::query()->where('email', 'dormant-owner@example.com')->firstOrFail();
 
-    Livewire::actingAs($administrator)
+    Livewire::actingAs($dormantOwner)
         ->test('pages::admin.users-edit', ['user' => $owner])
         ->set('roleId', Role::query()->where('key', 'editor')->value('id'))
         ->call('update')

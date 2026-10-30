@@ -6,6 +6,7 @@ use App\Enums\BlockType;
 use App\Models\Block;
 use App\Models\Media;
 use App\Models\Page;
+use App\Models\Record;
 use App\Models\Settings;
 use App\Services\MediaUsageService;
 
@@ -94,4 +95,18 @@ it('does not match a different media source', function (): void {
     ]);
 
     expect(resolve(MediaUsageService::class)->isInUse($media))->toBeFalse();
+});
+
+it('counts a page or record background image as in use', function (): void {
+    $media = Media::factory()->create(['source' => 'media/backdrop-photo.jpg']);
+    Page::factory()->create(['title' => 'Landing', 'metadata' => ['layout' => ['backgroundImage' => ['source' => 'media/backdrop-photo.jpg']]]]);
+    $service = resolve(MediaUsageService::class);
+
+    expect($service->isInUse($media))->toBeTrue()
+        ->and($service->labels($media))->toBe(['Page: Landing — Background']);
+
+    $recordMedia = Media::factory()->create(['source' => 'media/record-backdrop.jpg']);
+    Record::factory()->create(['metadata' => ['layout' => ['backgroundImage' => ['source' => 'media/record-backdrop.jpg']]]]);
+
+    expect($service->isInUse($recordMedia))->toBeTrue();
 });
