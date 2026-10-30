@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Actions\UpdateUserLastAccessAction;
+use App\Services\Impersonation;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,7 +17,7 @@ final class TrackUserAccess
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($user = $request->user()) {
+        if (($user = $request->user()) && ! Impersonation::active()) {
             defer(fn () => (new UpdateUserLastAccessAction)->handle($user, $request->header('User-Agent'), $request->ip()));
         }
 

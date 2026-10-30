@@ -30,6 +30,7 @@ use Illuminate\Support\Str;
  * @property-read string|null $ip
  * @property-read CarbonInterface $created_at
  * @property-read User|null $user
+ * @property-read User|null $impersonator
  * @property-read Model|null $subject
  */
 final class Activity extends Model
@@ -67,6 +68,14 @@ final class Activity extends Model
     }
 
     /**
+     * @return BelongsTo<User, $this>
+     */
+    public function impersonator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'impersonator_id');
+    }
+
+    /**
      * @return MorphTo<Model, $this>
      */
     public function subject(): MorphTo
@@ -85,11 +94,17 @@ final class Activity extends Model
     public function actorName(): string
     {
         return match (true) {
+            $this->impersonator_id !== null => $this->impersonator->name ?? __('Deleted user'),
             $this->user instanceof User => $this->user->name,
             $this->user_id !== null => __('Deleted user'),
             $this->source === RevisionSource::EDITOR => __('Someone'),
             default => $this->source->label(),
         };
+    }
+
+    public function actingAs(): ?string
+    {
+        return $this->impersonator_id === null ? null : ($this->user->name ?? __('Deleted user'));
     }
 
     public function viaAssistant(): bool

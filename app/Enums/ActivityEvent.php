@@ -42,6 +42,8 @@ enum ActivityEvent: string
     case USER_ENABLED = 'user.enabled';
     case USER_DISABLED = 'user.disabled';
     case USER_DELETED = 'user.deleted';
+    case IMPERSONATION_STARTED = 'user.impersonation_started';
+    case IMPERSONATION_STOPPED = 'user.impersonation_stopped';
     case SIGNED_IN = 'auth.signed_in';
     case SIGNED_OUT = 'auth.signed_out';
     case SIGN_IN_FAILED = 'auth.failed';
@@ -96,6 +98,8 @@ enum ActivityEvent: string
             self::USER_ENABLED => __('Enabled account'),
             self::USER_DISABLED => __('Disabled account'),
             self::USER_DELETED => __('Deleted account'),
+            self::IMPERSONATION_STARTED => __('Logged in as user'),
+            self::IMPERSONATION_STOPPED => __('Returned to the admin'),
             self::SIGNED_IN => __('Signed in'),
             self::SIGNED_OUT => __('Signed out'),
             self::SIGN_IN_FAILED => __('Failed sign-in'),

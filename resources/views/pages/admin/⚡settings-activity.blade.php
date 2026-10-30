@@ -46,9 +46,11 @@ return new class extends Component
         $area = ActivityArea::tryFrom($this->area);
 
         return Activity::query()
-            ->with(['user', 'subject' => fn (MorphTo $subject): MorphTo => $subject->morphWith([Record::class => ['recordType']])])
+            ->with(['user', 'impersonator', 'subject' => fn (MorphTo $subject): MorphTo => $subject->morphWith([Record::class => ['recordType']])])
             ->when($area instanceof ActivityArea, fn (Builder $query): Builder => $query->whereIn('event', $area?->events() ?? []))
-            ->when($this->person !== '', fn (Builder $query): Builder => $query->where('user_id', (int) $this->person))
+            ->when($this->person !== '', fn (Builder $query): Builder => $query->where(
+                fn (Builder $query): Builder => $query->where('user_id', (int) $this->person)->orWhere('impersonator_id', (int) $this->person),
+            ))
             ->when($this->search !== '', fn (Builder $query): Builder => $query->where(
                 fn (Builder $query): Builder => $query
                     ->whereLike('subject_label', "%{$this->search}%")
@@ -165,6 +167,10 @@ return new class extends Component
                             </flux:table.cell>
                             <flux:table.cell>
                                 <flux:text variant="strong" class="truncate">{{ $activity->actorName() }}</flux:text>
+                                @if ($activity->actingAs() !== null)
+                                    <flux:text size="sm" class="truncate">
+                                        {{ __('as :name', ['name' => $activity->actingAs()]) }}</flux:text>
+                                @endif
                                 @if ($activity->viaAssistant())
                                     <flux:badge size="sm" color="violet">{{ __('AI assistant') }}</flux:badge>
                                 @endif

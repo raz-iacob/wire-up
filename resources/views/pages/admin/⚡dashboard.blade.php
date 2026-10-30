@@ -196,7 +196,7 @@ return new class extends Component
     public function latestActivity(): Collection
     {
         return Activity::query()
-            ->with(['user', 'subject' => fn (MorphTo $subject): MorphTo => $subject->morphWith([Record::class => ['recordType']])])
+            ->with(['user', 'impersonator', 'subject' => fn (MorphTo $subject): MorphTo => $subject->morphWith([Record::class => ['recordType']])])
             ->whereNotIn('event', ActivityArea::SIGN_INS->events())
             ->latest('id')
             ->limit(8)

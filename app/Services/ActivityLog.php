@@ -33,6 +33,7 @@ final class ActivityLog
 
         rescue(fn (): Activity => Activity::query()->create([
             'user_id' => $userId,
+            'impersonator_id' => Impersonation::impersonatorId(),
             'source' => RevisionSource::tryFrom((string) Context::get(RevisionSource::CONTEXT_KEY)) ?? ($userId === null ? RevisionSource::SYSTEM : RevisionSource::EDITOR),
             'event' => $event,
             'subject_type' => $subject instanceof Model ? $subject->getMorphClass() : null,

@@ -7,6 +7,7 @@ use App\Actions\UpdateUserAction;
 use App\Actions\UpdateUserPasswordAction;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Impersonation;
 use App\Services\UserGuard;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
@@ -68,6 +69,21 @@ return new class extends Component
     public function loginLockReason(): ?string
     {
         return resolve(UserGuard::class)->loginLockReason(auth()->user(), $this->user);
+    }
+
+    #[Computed]
+    public function canImpersonate(): bool
+    {
+        return Impersonation::canStart(auth()->user(), $this->user);
+    }
+
+    public function impersonate(): void
+    {
+        $this->authorize('users.edit');
+
+        Impersonation::start(auth()->user(), $this->user);
+
+        $this->redirectRoute('account');
     }
 
     #[Computed]
@@ -316,6 +332,11 @@ return new class extends Component
                     {{ __('Back') }}
                 </flux:button>
             </div>
+
+            @if ($this->canImpersonate)
+                <flux:button type="button" wire:click="impersonate" icon="arrow-right-end-on-rectangle" class="w-full">
+                    {{ __('Log in as :name', ['name' => $user->name]) }}</flux:button>
+            @endif
 
             <flux:text size="sm">
                 {{ __('Last login') }} {{ $user->last_seen_at?->diffForHumans() ?? __('Never') }}

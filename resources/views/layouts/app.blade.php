@@ -44,6 +44,8 @@
         @endif
 
         <div class="flex min-h-screen flex-col">
+            <x-site.impersonation-banner />
+
             @unless ($siteLayout['hideHeader'])
                 <livewire:site.header />
             @endunless

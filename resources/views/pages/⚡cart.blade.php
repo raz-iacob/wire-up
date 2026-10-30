@@ -8,6 +8,8 @@ use App\Models\Order;
 use App\Models\Record;
 use App\Models\User;
 use App\Services\CartService;
+use App\Services\Impersonation;
+use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -56,6 +58,12 @@ return new class extends Component
 
     public function checkout(CreateCheckoutAction $checkout): void
     {
+        if (Impersonation::active()) {
+            Flux::toast(__('This is not available while you view the site as someone else.'), variant: 'warning');
+
+            return;
+        }
+
         $user = auth()->user();
 
         try {

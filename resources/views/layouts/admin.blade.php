@@ -107,10 +107,6 @@
                     >
                         {{ __('Help') }}</flux:navmenu.item>
 
-                    {{-- @if (session()->has('impersonate'))
-                        <livewire:admin.components.stop-impersonating />
-                        @endif --}}
-
                     <flux:navmenu.separator />
 
                     <form method="POST" action="{{ route('logout') }}" class="w-full">
@@ -172,10 +168,6 @@
                         wire:navigate
                     >
                         {{ __('Help') }}</flux:navmenu.item>
-
-                    {{-- @if (session()->has('impersonate'))
-                        <livewire:admin.components.stop-impersonating />
-                        @endif --}}
 
                     <flux:navmenu.separator />
 

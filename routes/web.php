@@ -6,6 +6,7 @@ use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\OgImageController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\StopImpersonationController;
 use App\Http\Middleware\CachePublicPages;
 use App\Http\Middleware\MarkdownForAgents;
 use App\Http\Middleware\RedirectHomepageSlug;
@@ -38,6 +39,7 @@ Route::group(['prefix' => resolve('localization')->setLocale()], function (): vo
         Route::livewire('account', 'pages::account')->name('account');
 
         Route::post('logout', [SessionController::class, 'destroy'])->name('logout');
+        Route::post('impersonation/stop', StopImpersonationController::class)->name('impersonation.stop');
     });
 });
 

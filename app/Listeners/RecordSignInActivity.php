@@ -6,6 +6,7 @@ namespace App\Listeners;
 
 use App\Enums\ActivityEvent;
 use App\Services\ActivityLog;
+use App\Services\Impersonation;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -14,6 +15,10 @@ final readonly class RecordSignInActivity
 {
     public function handle(Login|Logout|Failed $event): void
     {
+        if (Impersonation::active()) {
+            return;
+        }
+
         $userId = $event->user?->getAuthIdentifier();
         $userId = is_numeric($userId) ? (int) $userId : null;
 

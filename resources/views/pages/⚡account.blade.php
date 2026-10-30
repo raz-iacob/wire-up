@@ -8,6 +8,7 @@ use App\Actions\UpdateUserAction;
 use App\Actions\UpdateUserPasswordAction;
 use App\Models\Record;
 use App\Models\User;
+use App\Services\Impersonation;
 use Flux\Flux;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\View\View;
@@ -65,6 +66,10 @@ return new class extends Component
 
     public function updateProfile(UpdateUserAction $action): void
     {
+        if ($this->refusedWhileImpersonating()) {
+            return;
+        }
+
         $credentials = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user->id)],
@@ -82,6 +87,10 @@ return new class extends Component
 
     public function updatePassword(UpdateUserPasswordAction $action): void
     {
+        if ($this->refusedWhileImpersonating()) {
+            return;
+        }
+
         $this->validate([
             'current_password' => ['required', 'string', 'current_password'],
             'password' => ['required', 'string', PasswordRule::defaults(), 'confirmed'],
@@ -126,6 +135,10 @@ return new class extends Component
 
     public function manageBilling(): void
     {
+        if ($this->refusedWhileImpersonating()) {
+            return;
+        }
+
         try {
             $url = $this->user->billingPortalUrl(route('account'));
         } catch (ApiErrorException|InvalidCustomer $exception) {
@@ -141,6 +154,12 @@ return new class extends Component
 
     public function logout(): void
     {
+        if (Impersonation::active()) {
+            $this->redirect(Impersonation::stop($this->user));
+
+            return;
+        }
+
         Auth::logout();
 
         Session::invalidate();
@@ -151,6 +170,10 @@ return new class extends Component
 
     public function delete(DeleteUserAction $action): void
     {
+        if ($this->refusedWhileImpersonating()) {
+            return;
+        }
+
         $this->validate([
             'delete_password' => ['required', 'current_password'],
         ], attributes: [
@@ -172,6 +195,15 @@ return new class extends Component
         return $this->view()
             ->title(__('My account'))
             ->layoutData(['description' => __('Manage your account details and password.')]);
+    }
+
+    private function refusedWhileImpersonating(): bool
+    {
+        if (Impersonation::active()) {
+            Flux::toast(__('This is not available while you view the site as someone else.'), variant: 'warning');
+        }
+
+        return Impersonation::active();
     }
 
     private function subscriptionName(Subscription $subscription): string

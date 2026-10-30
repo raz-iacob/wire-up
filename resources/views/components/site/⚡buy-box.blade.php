@@ -6,6 +6,7 @@ use App\Actions\StartSubscriptionCheckoutAction;
 use App\Models\Record;
 use App\Models\User;
 use App\Services\CartService;
+use App\Services\Impersonation;
 use App\Services\ShopService;
 use Flux\Flux;
 use Livewire\Attributes\Computed;
@@ -73,6 +74,12 @@ return new class extends Component
             session()->put('url.intended', $this->record->getUrl());
 
             $this->redirectRoute('login');
+
+            return;
+        }
+
+        if (Impersonation::active()) {
+            Flux::toast(__('This is not available while you view the site as someone else.'), variant: 'warning');
 
             return;
         }

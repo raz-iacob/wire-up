@@ -32,6 +32,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Redirects are included in site exports and imports.
 - Settings → Activity log shows who did what and when: pages and records created, edited, published and deleted, uploads, settings changes (which settings, never their values), invitations and role changes, roles, redirects, order fulfilments, refunds and cancellations, backups, site imports and updates. It also records sign-ins, sign-outs, failed sign-in attempts, lockouts and wrong two-factor codes, with the address they came from. Filter it by area or person, or search it. Work done by the AI assistant or an AI agent is marked as such, and entries are kept for 180 days.
 - Owners and Administrators can see the activity log, and the Activity log permission in User Roles gives it to other roles. People who can see it get the latest activity on the dashboard instead of the recently edited content.
+- Log in as a member to see the site exactly as they do: choose Log in as in the Users list or on their profile. A banner on every page shows whose account you are using, and Back to the admin (or signing out) returns you to their profile. While you view as a member, their profile, password, billing and account deletion are locked, checkout and subscribing are turned off, and their last-seen time is left alone. Only people who can edit users can do this, and only for members without admin access. Both steps appear in the activity log.
 
 ## v0.5.2 — 2026-10-29
 

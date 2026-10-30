@@ -7,6 +7,7 @@ use App\Actions\SendAdminInviteAction;
 use App\Actions\UpdateUserAction;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Impersonation;
 use App\Services\SettingsService;
 use App\Services\UserGuard;
 use App\Traits\WithSorting;
@@ -87,6 +88,17 @@ return new class extends Component
             ->all();
     }
 
+    /** @return array<int, int> */
+    #[Computed]
+    public function impersonatableIds(): array
+    {
+        return collect($this->users()->items())
+            ->filter(fn (User $user): bool => Impersonation::canStart(auth()->user(), $user))
+            ->map(fn (User $user): int => $user->id)
+            ->values()
+            ->all();
+    }
+
     #[Computed]
     public function mailConfigured(): bool
     {
@@ -138,6 +150,15 @@ return new class extends Component
         $action->handle($user, [
             'active' => ! $user->active,
         ]);
+    }
+
+    public function impersonate(int $id): void
+    {
+        $this->authorize('users.edit');
+
+        Impersonation::start(auth()->user(), User::query()->findOrFail($id));
+
+        $this->redirectRoute('account');
     }
 
     /** @return LengthAwarePaginator<int, User> */
@@ -278,6 +299,14 @@ return new class extends Component
                                         <flux:menu.item icon="pencil" href="{{ route('admin.users-edit', $row->id) }}">
                                             {{ __('Edit') }}
                                         </flux:menu.item>
+                                        @if (in_array($row->id, $this->impersonatableIds, true))
+                                            <flux:menu.item
+                                                icon="arrow-right-end-on-rectangle"
+                                                wire:click="impersonate({{ $row->id }})"
+                                            >
+                                                {{ __('Log in as') }}
+                                            </flux:menu.item>
+                                        @endif
 
                                         <flux:menu.separator />
                                         @if ($row->active)
