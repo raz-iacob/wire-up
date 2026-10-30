@@ -954,3 +954,37 @@ it('keeps the library open and selects the import when picking multiple', functi
         ->assertSet('pexelsMode', false)
         ->assertCount('selected', 1);
 });
+
+it('narrows the gallery to files nothing uses and deletes them all at once', function (): void {
+    $unused = Media::factory()->count(2)->create();
+    $used = Media::factory()->create(['source' => 'media/used.jpg']);
+    Block::factory()->create(['type' => BlockType::TEXT_IMAGE, 'content' => ['image' => ['source' => 'media/used.jpg']]]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'media-gallery', type: null, max: 50, media: null)
+        ->assertCount('medias', 3)
+        ->assertDontSee('Select all shown')
+        ->set('unusedOnly', true)
+        ->assertCount('medias', 2)
+        ->call('selectAllShown')
+        ->assertCount('selected', 2)
+        ->call('deleteCurrentItem')
+        ->assertCount('selected', 0)
+        ->assertCount('medias', 0)
+        ->assertSee('Every file is in use.');
+
+    expect(Media::query()->pluck('id')->all())->toBe([$used->id])
+        ->and(Media::query()->whereKey($unused->modelKeys())->exists())->toBeFalse();
+});
+
+it('keeps the unused filter out of the picker and starts each opening without it', function (): void {
+    Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'media-gallery', type: null, max: 50, media: null)
+        ->set('unusedOnly', true)
+        ->dispatch('select-media', target: 'cover', type: 'image', max: 1, media: null)
+        ->assertSet('unusedOnly', false)
+        ->assertDontSeeHtml('wire:model.live="unusedOnly"')
+        ->assertCount('medias', 1);
+});

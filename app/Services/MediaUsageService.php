@@ -12,9 +12,17 @@ use App\Models\Record;
 use App\Models\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 final class MediaUsageService
 {
+    private const array FILE_NAME_COLUMNS = [
+        'blocks' => 'content',
+        'settings' => 'value',
+        'pages' => 'metadata',
+        'records' => 'metadata',
+    ];
+
     public function isInUse(Media $media): bool
     {
         if ($media->mediables()->exists()) {
@@ -29,6 +37,25 @@ final class MediaUsageService
         }
 
         return $this->settingsQuery($media)->exists();
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function unusedIds(): array
+    {
+        $candidates = Media::query()->whereDoesntHave('mediables')->pluck('source', 'id');
+
+        if ($candidates->isEmpty()) {
+            return [];
+        }
+
+        $referenced = $this->referencedFileNames();
+
+        return $candidates
+            ->reject(fn (string $source): bool => isset($referenced[basename($source)]))
+            ->keys()
+            ->all();
     }
 
     /**
@@ -91,6 +118,26 @@ final class MediaUsageService
             ...Page::query()->where('metadata', 'like', $needle)->get()->all(),
             ...Record::query()->where('metadata', 'like', $needle)->get()->all(),
         ];
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    private function referencedFileNames(): array
+    {
+        $names = [];
+
+        foreach (self::FILE_NAME_COLUMNS as $table => $column) {
+            foreach (DB::table($table)->select(['id', $column])->whereNotNull($column)->lazyById(500) as $row) {
+                preg_match_all('/[A-Za-z0-9._~%+-]+\.[A-Za-z0-9]{2,5}/', (string) $row->{$column}, $matches);
+
+                foreach ($matches[0] as $name) {
+                    $names[$name] = true;
+                }
+            }
+        }
+
+        return $names;
     }
 
     private function needle(Media $media): string

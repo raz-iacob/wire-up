@@ -110,3 +110,29 @@ it('counts a page or record background image as in use', function (): void {
 
     expect($service->isInUse($recordMedia))->toBeTrue();
 });
+
+it('lists only the files nothing on the site uses', function (): void {
+    $unused = Media::factory()->create(['source' => 'media/9b2c_forgotten-photo.jpg']);
+    $attached = Media::factory()->create(['source' => 'media/attached.jpg']);
+    Page::factory()->create()->media()->attach($attached, ['role' => 'og_image', 'locale' => 'en']);
+    $inBlock = Media::factory()->create(['source' => 'media/4f1e_in-a-block.png']);
+    Block::factory()->create(['type' => BlockType::TEXT_IMAGE, 'content' => ['image' => ['id' => $inBlock->id, 'source' => $inBlock->source]]]);
+    $logo = Media::factory()->create(['source' => 'media/site-logo.svg']);
+    Settings::set(['logo' => ['source' => $logo->source]]);
+    $backdrop = Media::factory()->create(['source' => 'media/backdrop.webp']);
+    Record::factory()->create(['metadata' => ['layout' => ['backgroundImage' => ['source' => $backdrop->source]]]]);
+    $lookalike = Media::factory()->create(['source' => 'media/photo.jpg']);
+    Block::factory()->create(['type' => BlockType::TEXT_IMAGE, 'content' => ['image' => ['source' => 'media/old-photo.jpg']]]);
+
+    $unusedIds = resolve(MediaUsageService::class)->unusedIds();
+
+    expect($unusedIds)->toContain($unused->id, $lookalike->id)
+        ->not->toContain($attached->id, $inBlock->id, $logo->id, $backdrop->id);
+});
+
+it('finds no unused files when every file is attached', function (): void {
+    Media::query()->delete();
+    Page::factory()->create()->media()->attach(Media::factory()->create(), ['role' => 'og_image', 'locale' => 'en']);
+
+    expect(resolve(MediaUsageService::class)->unusedIds())->toBeEmpty();
+});

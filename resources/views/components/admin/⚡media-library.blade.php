@@ -10,6 +10,7 @@ use App\Actions\UpdateMediaAction;
 use App\Enums\MediaType;
 use App\Models\Media;
 use App\Services\MediaItem;
+use App\Services\MediaUsageService;
 use App\Services\PexelsService;
 use App\Services\UploadLimit;
 use Flux\Flux;
@@ -58,6 +59,8 @@ return new class extends Component
 
     public string $typeFilter = '';
 
+    public bool $unusedOnly = false;
+
     public int $perPage = 20;
 
     public bool $hasMore = true;
@@ -105,7 +108,7 @@ return new class extends Component
 
     public function updated(string $propertyName): void
     {
-        if (in_array($propertyName, ['search', 'typeFilter'], true)) {
+        if (in_array($propertyName, ['search', 'typeFilter', 'unusedOnly'], true)) {
             $this->medias = collect();
             $this->loadMedia();
         }
@@ -125,6 +128,7 @@ return new class extends Component
         $this->allowedTypes = $types->map(fn (MediaType $mediaType): string => $mediaType->value)->all();
         $this->type = $types->count() === 1 ? $types->first() : null;
         $this->typeFilter = $this->type->value ?? '';
+        $this->unusedOnly = false;
         $this->syncSelected($this->hydrateSelection($media ?? []));
         $this->showLibrary = true;
         $this->max = $max;
@@ -212,6 +216,11 @@ return new class extends Component
     public function clearSelection(): void
     {
         $this->syncSelected(collect());
+    }
+
+    public function selectAllShown(): void
+    {
+        $this->selectMediaRange($this->medias->pluck('id')->all());
     }
 
     public function insertMedia(): void
@@ -312,6 +321,7 @@ return new class extends Component
             ->latest()
             ->when($this->allowedTypes !== [], fn ($q) => $q->whereIn('type', $this->allowedTypes))
             ->when($this->typeFilter, fn ($q, $t) => $q->where('type', $t))
+            ->when($this->unusedOnly, fn ($q) => $q->whereKey(resolve(MediaUsageService::class)->unusedIds()))
             ->when($this->search, fn ($q, $s) => $q->whereAny(['filename', 'alt_text'], 'like', "%{$s}%")
             );
 
@@ -684,6 +694,12 @@ return new class extends Component
                                     @endforeach
                                 </flux:select>
                             </div>
+                            @if ($target === 'media-gallery')
+                                <flux:field variant="inline" class="shrink-0">
+                                    <flux:switch wire:model.live="unusedOnly" />
+                                    <flux:label class="whitespace-nowrap">{{ __('Not used') }}</flux:label>
+                                </flux:field>
+                            @endif
                             <div class="w-full sm:shrink-0 md:w-52">
                                 <flux:input
                                     icon="magnifying-glass"
@@ -795,7 +811,7 @@ return new class extends Component
                         @empty
                             @if ($loaded)
                                 <div class="col-span-full py-10 text-center">
-                                    <flux:text class="text-zinc-500 dark:text-zinc-400">{{ __('No media found.') }}</flux:text>
+                                    <flux:text class="text-zinc-500 dark:text-zinc-400">{{ $unusedOnly ? __('Every file is in use.') : __('No media found.') }}</flux:text>
                                 </div>
                             @endif
 
@@ -1197,6 +1213,13 @@ return new class extends Component
                                 size="sm"
                                 class="text-zinc-500 dark:text-zinc-400"
                             >{{ $max > 1 ? __('No files selected.') : __('No file selected.') }}</flux:text>
+                            @if ($unusedOnly && $medias->isNotEmpty())
+                                <flux:button
+                                    size="sm"
+                                    class="mt-4"
+                                    wire:click="selectAllShown"
+                                >{{ __('Select all shown') }}</flux:button>
+                            @endif
                         </div>
                     @endif
 
