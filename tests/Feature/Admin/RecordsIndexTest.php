@@ -5,9 +5,11 @@ declare(strict_types=1);
 use App\Actions\CreateRecordAction;
 use App\Enums\ContentStatus;
 use App\Enums\MediaType;
+use App\Models\Category;
 use App\Models\Media;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Role;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -370,4 +372,152 @@ it('shows each active filter as a removable chip and clears them all at once', f
         ->assertSet('filters', [])
         ->assertDontSee('Sold: No')
         ->assertDontSee('Clear filters');
+});
+
+it('publishes and unpublishes only the selected records of this type', function (): void {
+    $type = productType();
+    $lamp = Record::factory()->for($type)->create();
+    $chair = Record::factory()->for($type)->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $elsewhere = Record::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('selected', [(string) $lamp->id, (string) $elsewhere->id])
+        ->call('publishSelected')
+        ->assertDispatched('toast-show', toastSays('1 item published.'))
+        ->set('selected', [(string) $chair->id])
+        ->call('unpublishSelected')
+        ->assertDispatched('toast-show', toastSays('1 item unpublished.'));
+
+    expect($lamp->fresh()->status)->toBe(ContentStatus::PUBLISHED)
+        ->and($chair->fresh()->status)->toBe(ContentStatus::DRAFT)
+        ->and($elsewhere->fresh()->status)->toBe(ContentStatus::DRAFT);
+});
+
+it('adds the selected records to a category', function (): void {
+    $type = productType();
+    $lamp = Record::factory()->for($type)->create();
+    $sale = Category::factory()->create(['name' => ['en' => 'Sale']]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('selected', [(string) $lamp->id])
+        ->set('bulkCategoryId', $sale->id)
+        ->call('addSelectedToCategory')
+        ->assertDispatched('toast-show', toastSays('1 item added to Sale.'));
+
+    expect($lamp->fresh()->categories->modelKeys())->toBe([$sale->id]);
+});
+
+it('deletes the selected records', function (): void {
+    $type = productType();
+    $records = Record::factory()->for($type)->count(2)->create();
+    $kept = Record::factory()->for($type)->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('selected', $records->map(fn (Record $record): string => (string) $record->id)->all())
+        ->call('deleteSelected')
+        ->assertDispatched('toast-show', toastSays('2 items deleted.'));
+
+    expect(Record::query()->whereKey($records->modelKeys())->exists())->toBeFalse()
+        ->and($kept->fresh())->not->toBeNull();
+});
+
+it('keeps bulk changes from staff who may only view the type, but lets them export', function (): void {
+    $type = productType();
+    $lamp = Record::factory()->for($type)->create();
+    $viewer = User::factory()->role(Role::factory()->create(['abilities' => ['records.'.$type->key.'.view'], 'bypass' => false]))->create(['active' => true]);
+
+    $this->actingAs($viewer);
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->assertDontSeeHtml('wire:click="publishSelected"')
+        ->assertDontSeeHtml('wire:click="deleteSelected"')
+        ->set('selected', [(string) $lamp->id])
+        ->call('publishSelected')
+        ->assertForbidden();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('selected', [(string) $lamp->id])
+        ->call('deleteSelected')
+        ->assertForbidden();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->call('export')
+        ->assertFileDownloaded();
+
+    expect($lamp->fresh())->not->toBeNull()
+        ->and($lamp->fresh()->status)->toBe(ContentStatus::DRAFT);
+});
+
+it('offers no publishing in bulk for an admin-only type', function (): void {
+    $type = RecordType::factory()->adminOnly()->create();
+    $client = Record::factory()->for($type)->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->assertDontSeeHtml('wire:click="publishSelected"')
+        ->assertSeeHtml('wire:click="deleteSelected"')
+        ->set('selected', [(string) $client->id])
+        ->call('publishSelected')
+        ->assertForbidden();
+
+    expect($client->fresh()->status)->toBe(ContentStatus::DRAFT);
+});
+
+it('exports the filtered records with every field in full', function (): void {
+    $this->travelTo(now()->setDate(2026, 10, 29));
+    $type = productType();
+    $long = str_repeat('A very long summary. ', 6);
+    $lamp = resolve(CreateRecordAction::class)->handle($type, ['title' => 'Desk lamp']);
+    $lamp->update(['data' => ['price' => 25, 'summary' => ['en' => $long]], 'status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $lamp->categories()->attach(Category::factory()->create(['name' => ['en' => 'Lighting']]));
+    resolve(CreateRecordAction::class)->handle($type, ['title' => 'Draft chair']);
+
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('status', ContentStatus::PUBLISHED->value)
+        ->call('export')
+        ->assertFileDownloaded($type->key.'-2026-10-29.csv');
+
+    $rows = downloadedCsv($component);
+
+    expect($rows[0])->toBe(['Title', 'Slug', 'Status', 'Published on', 'Price', 'Summary', 'Categories', 'Last updated'])
+        ->and($rows)->toHaveCount(2)
+        ->and(array_slice($rows[1], 0, 3))->toBe(['Desk lamp', $lamp->fresh()->slug, 'Published'])
+        ->and(array_slice($rows[1], 4, 3))->toBe(['25', $long, 'Lighting']);
+});
+
+it('exports only the selected records when some are selected', function (): void {
+    $type = productType();
+    $lamp = resolve(CreateRecordAction::class)->handle($type, ['title' => 'Desk lamp']);
+    resolve(CreateRecordAction::class)->handle($type, ['title' => 'Chair']);
+
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.records-index', ['recordType' => $type])
+        ->set('selected', [(string) $lamp->id])
+        ->call('export');
+
+    expect(array_column(array_slice(downloadedCsv($component), 1), 0))->toBe(['Desk lamp']);
+});
+
+it('leaves the publishing columns out of an admin-only type export', function (): void {
+    $type = RecordType::factory()->adminOnly()->create(['fields' => [
+        ['key' => 'company', 'type' => 'text', 'label' => ['en' => 'Company'], 'translatable' => false],
+    ]]);
+    Record::factory()->for($type)->create(['title' => ['en' => 'Ada'], 'data' => ['company' => '=cmd|calc']]);
+
+    $this->actingAsAdmin();
+
+    $rows = downloadedCsv(Livewire::test('pages::admin.records-index', ['recordType' => $type])->call('export'));
+
+    expect($rows[0])->toBe(['Title', 'Company', 'Categories', 'Last updated'])
+        ->and(array_slice($rows[1], 0, 2))->toBe(['Ada', "'=cmd|calc"]);
 });

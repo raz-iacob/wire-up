@@ -2,27 +2,36 @@
 
 declare(strict_types=1);
 
+use App\Actions\AddToCategoryAction;
 use App\Actions\CreateRecordAction;
 use App\Actions\DeleteRecordAction;
 use App\Actions\DuplicateRecordAction;
+use App\Actions\UpdateRecordAction;
 use App\Enums\ContentStatus;
 use App\Enums\FieldType;
+use App\Models\Category;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Services\CsvExport;
+use App\Traits\WithBulkSelection;
 use App\Traits\WithSorting;
 use Flux\Flux;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 return new class extends Component
 {
-    use WithPagination, WithSorting;
+    use WithBulkSelection, WithPagination, WithSorting;
 
     public RecordType $recordType;
 
@@ -49,6 +58,8 @@ return new class extends Component
     public string $duplicateTitle = '';
 
     public int $perPage = 20;
+
+    public ?int $bulkCategoryId = null;
 
     public function updatedSearch(): void
     {
@@ -141,17 +152,178 @@ return new class extends Component
         Flux::toast(__(':name deleted successfully.', ['name' => $this->recordType->name]));
     }
 
+    public function publishSelected(UpdateRecordAction $action): void
+    {
+        $this->authorize('records.'.$this->recordType->key.'.edit');
+
+        abort_if($this->recordType->admin_only, 403);
+
+        $records = $this->selectedRecords()->reject(fn (Record $record): bool => $record->computed_status === ContentStatus::PUBLISHED);
+
+        foreach ($records as $record) {
+            $action->handle($record, ['status' => ContentStatus::PUBLISHED]);
+        }
+
+        $this->finishBulkAction(trans_choice('{0} The selected items are already published.|{1} :count item published.|[2,*] :count items published.', $records->count(), ['count' => $records->count()]));
+    }
+
+    public function unpublishSelected(UpdateRecordAction $action): void
+    {
+        $this->authorize('records.'.$this->recordType->key.'.edit');
+
+        abort_if($this->recordType->admin_only, 403);
+
+        $records = $this->selectedRecords()->reject(fn (Record $record): bool => $record->status === ContentStatus::DRAFT);
+
+        foreach ($records as $record) {
+            $action->handle($record, ['status' => ContentStatus::DRAFT]);
+        }
+
+        $this->finishBulkAction(trans_choice('{0} The selected items are already drafts.|{1} :count item unpublished.|[2,*] :count items unpublished.', $records->count(), ['count' => $records->count()]));
+    }
+
+    public function addSelectedToCategory(AddToCategoryAction $action): void
+    {
+        $this->authorize('records.'.$this->recordType->key.'.edit');
+
+        $this->validate(
+            ['bulkCategoryId' => ['required', 'integer', Rule::exists('categories', 'id')]],
+            attributes: ['bulkCategoryId' => __('category')],
+        );
+
+        $category = Category::query()->findOrFail($this->bulkCategoryId);
+        $added = $this->selectedRecords()->filter(fn (Record $record): bool => $action->handle($record, $category))->count();
+
+        $this->bulkCategoryId = null;
+
+        Flux::modal('bulk-category')->close();
+
+        $this->finishBulkAction(trans_choice('{0} The selected items are already in :category.|{1} :count item added to :category.|[2,*] :count items added to :category.', $added, ['count' => $added, 'category' => $category->name]));
+    }
+
+    public function deleteSelected(DeleteRecordAction $action): void
+    {
+        $this->authorize('records.'.$this->recordType->key.'.delete');
+
+        $records = $this->selectedRecords();
+
+        foreach ($records as $record) {
+            $action->handle($record);
+        }
+
+        Flux::modal('bulk-delete')->close();
+
+        $this->finishBulkAction(trans_choice('{0} No items deleted.|{1} :count item deleted.|[2,*] :count items deleted.', $records->count(), ['count' => $records->count()]));
+    }
+
+    public function export(CsvExport $csv): StreamedResponse
+    {
+        $this->authorize('records.'.$this->recordType->key.'.view');
+
+        $fields = $this->recordType->fields;
+        $publishing = ! $this->recordType->admin_only;
+        $ids = $this->selectedIds();
+
+        $records = $this->recordsQuery()
+            ->with(['media', 'categories.translations'])
+            ->when($ids !== [], fn (Builder $query): Builder => $query->whereKey($ids))
+            ->get();
+
+        $headers = [
+            __('Title'),
+            ...($publishing ? [__('Slug'), __('Status'), __('Published on')] : []),
+            ...array_map($this->recordType->fieldLabel(...), $fields),
+            __('Categories'),
+            __('Last updated'),
+        ];
+
+        $rows = $records->map(fn (Record $record): array => [
+            $record->title,
+            ...($publishing ? [$record->slug, $record->computed_status->label(), $record->published_at?->format('Y-m-d H:i')] : []),
+            ...array_map($record->exportValue(...), $fields),
+            $record->categories->map(fn (Category $category): string => $category->name)->implode('; '),
+            $record->updated_at->format('Y-m-d H:i'),
+        ])->all();
+
+        return $csv->download($this->recordType->key.'-'.now()->format('Y-m-d').'.csv', $headers, $rows);
+    }
+
     /** @return LengthAwarePaginator<int, Record> */
     #[Computed]
     public function records(): LengthAwarePaginator
     {
-        $locale = app()->getLocale();
-
-        $paginator = Record::query()
-            ->where('record_type_id', $this->recordType->id)
-            ->with(['translations', 'slugs'])
+        return $this->recordsQuery()
             ->when($this->recordType->hasMediaColumns() || $this->recordType->hasImageField(), fn (Builder $query): Builder => $query->with('media'))
             ->when($this->recordType->hasImageField(), fn (Builder $query): Builder => $query->with('recordType'))
+            ->paginate($this->perPage);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    #[Computed]
+    public function columnFields(): array
+    {
+        return $this->recordType->indexColumnFields();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    #[Computed]
+    public function fieldFilters(): array
+    {
+        return $this->recordType->filterableFields();
+    }
+
+    /**
+     * @return EloquentCollection<int, Category>
+     */
+    #[Computed]
+    public function categoryOptions(): EloquentCollection
+    {
+        return Category::query()
+            ->with('translations')
+            ->get()
+            ->sortBy(fn (Category $category): string => $category->name)
+            ->values();
+    }
+
+    #[Computed]
+    public function canEdit(): bool
+    {
+        return auth()->user()?->can('records.'.$this->recordType->key.'.edit') ?? false;
+    }
+
+    #[Computed]
+    public function canDelete(): bool
+    {
+        return auth()->user()?->can('records.'.$this->recordType->key.'.delete') ?? false;
+    }
+
+    #[Computed]
+    public function hasMultipleActiveLocales(): bool
+    {
+        return resolve('localization')->getActiveLocaleCodes()->count() > 1;
+    }
+
+    public function render(): View
+    {
+        return $this->view()
+            ->title($this->recordType->name)
+            ->layout('layouts::admin');
+    }
+
+    /**
+     * @return EloquentBuilder<Record>
+     */
+    private function recordsQuery(): EloquentBuilder
+    {
+        $locale = app()->getLocale();
+
+        $query = Record::query()
+            ->where('record_type_id', $this->recordType->id)
+            ->with(['translations', 'slugs'])
             ->when($this->recordType->admin_only ? '' : $this->status, function (Builder $query, string $status): Builder {
                 if ($status === ContentStatus::SCHEDULED->value) {
                     return $query->where('status', ContentStatus::PUBLISHED)
@@ -174,63 +346,44 @@ return new class extends Component
                 : "data->{$field['key']}";
 
             match ($field['type']) {
-                FieldType::BOOLEAN->value => $paginator->where($path, $value === '1'),
-                FieldType::MULTI_SELECT->value => $paginator->whereJsonContains($path, $value),
-                default => $paginator->where($path, $value),
+                FieldType::BOOLEAN->value => $query->where($path, $value === '1'),
+                FieldType::MULTI_SELECT->value => $query->whereJsonContains($path, $value),
+                default => $query->where($path, $value),
             };
         }
 
         if ($this->sortBy === 'title') {
-            $paginator->orderByTranslation('title', $this->sortDirection);
+            $query->orderByTranslation('title', $this->sortDirection);
         } elseif (in_array($this->sortBy, $this->recordType->sortableFieldKeys(), true)) {
             $field = $this->recordType->fieldByKey($this->sortBy);
             $path = ($field['translatable'] ?? false)
                 ? "data->{$this->sortBy}->{$locale}"
                 : "data->{$this->sortBy}";
 
-            $paginator->orderBy($path, $this->sortDirection);
+            $query->orderBy($path, $this->sortDirection);
         } else {
-            $paginator->orderBy($this->sortBy, $this->sortDirection);
+            $query->orderBy($this->sortBy, $this->sortDirection);
         }
 
-        return $paginator->paginate($this->perPage);
+        return $query;
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return EloquentCollection<int, Record>
      */
-    #[Computed]
-    public function columnFields(): array
+    private function selectedRecords(): EloquentCollection
     {
-        return $this->recordType->indexColumnFields();
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    #[Computed]
-    public function fieldFilters(): array
-    {
-        return $this->recordType->filterableFields();
-    }
-
-    #[Computed]
-    public function hasMultipleActiveLocales(): bool
-    {
-        return resolve('localization')->getActiveLocaleCodes()->count() > 1;
-    }
-
-    public function render(): View
-    {
-        return $this->view()
-            ->title($this->recordType->name)
-            ->layout('layouts::admin');
+        return Record::query()
+            ->where('record_type_id', $this->recordType->id)
+            ->with(['translations', 'recordType'])
+            ->whereKey($this->selectedIds())
+            ->get();
     }
 };
 ?>
 <div>
     <div class="space-y-6">
-        <div class="flex flex-wrap items-center gap-3">
+        <div x-show="$wire.selected.length === 0" class="flex flex-wrap items-center gap-3">
             @can('records.'.$recordType->key.'.create')
                 <flux:modal.trigger name="add-new">
                     <flux:button
@@ -293,6 +446,14 @@ return new class extends Component
                     </flux:menu>
                 </flux:dropdown>
             @endif
+            <flux:button
+                class="shrink-0"
+                size="sm"
+                icon="arrow-down-tray"
+                iconVariant="outline"
+                wire:click="export"
+            >{{ __('Export') }}</flux:button>
+
             @if (! $recordType->admin_only && ContentStatus::tryFrom($status))
                 <x-admin.filter-chip :label="ContentStatus::from($status)->label()" wire:click="$set('status', '')" />
             @endif
@@ -318,152 +479,208 @@ return new class extends Component
             </div>
         </div>
 
-        <flux:table
-            class="max-h-[calc(100dvh-12rem)] md:w-full md:table-fixed"
-            :paginate="$this->records"
-            container:class="max-h-[calc(100dvh-12rem)]"
-        >
-            <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
-                <flux:table.column
-                    sortable
-                    :sorted="$sortBy === 'title'"
-                    :direction="$sortDirection"
-                    wire:click="sort('title')"
-                    class="w-[28rem]"
-                >
-                    {{ __('Title') }}</flux:table.column>
-                @foreach ($this->columnFields as $field)
-                    @php($fieldSortable = (bool) ($field['sortable'] ?? false) && ! (\App\Enums\FieldType::tryFrom($field['type'])?->isMedia() ?? false))
-                    @php($fieldLabel = $this->recordType->fieldLabel($field))
-                    @if ($fieldSortable)
-                        <flux:table.column
-                            sortable
-                            :sorted="$sortBy === $field['key']"
-                            :direction="$sortDirection"
-                            wire:click="sort('{{ $field['key'] }}')"
-                        >
-                            {{ $fieldLabel }}</flux:table.column>
-                    @else
-                        <flux:table.column>{{ $fieldLabel }}</flux:table.column>
-                    @endif
-                @endforeach
-                @if ($this->hasMultipleActiveLocales())
-                    <flux:table.column>{{ __('Languages') }}</flux:table.column>
-                @endif
+        <x-admin.bulk-bar>
+            @if ($this->canEdit)
                 @unless ($recordType->admin_only)
-                    <flux:table.column>{{ __('Status') }}</flux:table.column>
+                    <flux:button
+                        size="sm"
+                        icon="eye"
+                        iconVariant="outline"
+                        wire:click="publishSelected"
+                    >{{ __('Publish') }}</flux:button>
+                    <flux:button
+                        size="sm"
+                        icon="eye-slash"
+                        iconVariant="outline"
+                        wire:click="unpublishSelected"
+                    >{{ __('Unpublish') }}</flux:button>
                 @endunless
-                <flux:table.column
-                    sortable
-                    :sorted="$sortBy === 'updated_at'"
-                    :direction="$sortDirection"
-                    wire:click="sort('updated_at')"
-                >
-                    {{ __('Last updated') }}</flux:table.column>
-                <flux:table.column class="w-10"></flux:table.column>
-            </flux:table.columns>
+                @if ($this->categoryOptions->isNotEmpty())
+                    <flux:modal.trigger name="bulk-category">
+                        <flux:button
+                            size="sm"
+                            icon="tag"
+                            iconVariant="outline"
+                        >{{ __('Add to category') }}</flux:button>
+                    </flux:modal.trigger>
+                @endif
+            @endif
+            <flux:button
+                size="sm"
+                icon="arrow-down-tray"
+                iconVariant="outline"
+                wire:click="export"
+            >{{ __('Export') }}</flux:button>
+            @if ($this->canDelete)
+                <flux:modal.trigger name="bulk-delete">
+                    <flux:button
+                        size="sm"
+                        variant="danger"
+                        icon="trash"
+                        iconVariant="outline"
+                    >{{ __('Delete') }}</flux:button>
+                </flux:modal.trigger>
+            @endif
+        </x-admin.bulk-bar>
 
-            <flux:table.rows>
-                @foreach ($this->records as $row)
-                    <flux:table.row wire:key="{{ $row->id }}">
-                        <flux:table.cell>
-                            <a
-                                href="{{ route('admin.records-edit', [$this->recordType, $row]) }}"
-                                class="flex min-w-0 items-center gap-3"
+        <flux:checkbox.group wire:model="selected">
+            <flux:table
+                class="max-h-[calc(100dvh-12rem)] md:w-full md:table-fixed"
+                :paginate="$this->records"
+                container:class="max-h-[calc(100dvh-12rem)]"
+            >
+                <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
+                    <flux:table.column class="w-8">
+                        <flux:checkbox.all :aria-label="__('Select all')"
+                    /></flux:table.column>
+                    <flux:table.column
+                        sortable
+                        :sorted="$sortBy === 'title'"
+                        :direction="$sortDirection"
+                        wire:click="sort('title')"
+                        class="w-[28rem]"
+                    >
+                        {{ __('Title') }}</flux:table.column>
+                    @foreach ($this->columnFields as $field)
+                        @php($fieldSortable = (bool) ($field['sortable'] ?? false) && ! (\App\Enums\FieldType::tryFrom($field['type'])?->isMedia() ?? false))
+                        @php($fieldLabel = $this->recordType->fieldLabel($field))
+                        @if ($fieldSortable)
+                            <flux:table.column
+                                sortable
+                                :sorted="$sortBy === $field['key']"
+                                :direction="$sortDirection"
+                                wire:click="sort('{{ $field['key'] }}')"
                             >
-                                @if ($this->recordType->hasImageField())
-                                    @php($thumbnail = $row->primaryImageUrl(200))
-                                    <div class="size-9 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
-                                        @if ($thumbnail)
-                                            <img
-                                                src="{{ $thumbnail }}"
-                                                alt=""
-                                                class="size-full object-cover"
-                                                loading="lazy"
-                                            />
-                                        @else
-                                            <div class="flex size-full items-center justify-center text-zinc-300 dark:text-zinc-600">
-                                                <flux:icon name="photo" class="size-4" />
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endif
-                                <flux:text
-                                    variant="strong"
-                                    class="truncate hover:underline"
-                                >{{ $row->title !== '' ? $row->title : __('Untitled') }}</flux:text>
-                            </a>
-                        </flux:table.cell>
-
-                        @foreach ($this->columnFields as $field)
-                            <flux:table.cell class="whitespace-nowrap">{{ $row->columnValue($field) }}</flux:table.cell>
-                        @endforeach
-
-                        @if ($this->hasMultipleActiveLocales())
-                            <flux:table.cell class="whitespace-nowrap">
-                                <x-admin.language-codes :active="$row->published_locales" />
-                            </flux:table.cell>
+                                {{ $fieldLabel }}</flux:table.column>
+                        @else
+                            <flux:table.column>{{ $fieldLabel }}</flux:table.column>
                         @endif
+                    @endforeach
+                    @if ($this->hasMultipleActiveLocales())
+                        <flux:table.column>{{ __('Languages') }}</flux:table.column>
+                    @endif
+                    @unless ($recordType->admin_only)
+                        <flux:table.column>{{ __('Status') }}</flux:table.column>
+                    @endunless
+                    <flux:table.column
+                        sortable
+                        :sorted="$sortBy === 'updated_at'"
+                        :direction="$sortDirection"
+                        wire:click="sort('updated_at')"
+                    >
+                        {{ __('Last updated') }}</flux:table.column>
+                    <flux:table.column class="w-10"></flux:table.column>
+                </flux:table.columns>
 
-                        @unless ($recordType->admin_only)
+                <flux:table.rows>
+                    @foreach ($this->records as $row)
+                        <flux:table.row wire:key="{{ $row->id }}">
                             <flux:table.cell>
-                                <flux:badge color="{{ $row->computed_status->color() }}" size="sm">
-                                    {{ $row->computed_status->label() }}
-                                </flux:badge>
+                                <flux:checkbox
+                                    :value="$row->id"
+                                    :aria-label="__('Select :title', ['title' => $row->title !== '' ? $row->title : __('Untitled')])"
+                                />
                             </flux:table.cell>
-                        @endunless
-
-                        <flux:table.cell> {{ $row->updated_at?->format('M d, Y H:i') }} </flux:table.cell>
-
-                        <flux:table.cell>
-                            <flux:dropdown class="flex justify-end">
-                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
-                                <flux:menu>
-                                    @if (! $recordType->admin_only && $row->slug !== '')
-                                        <flux:menu.item
-                                            icon="eye"
-                                            href="{{ route('record', [$recordType->slug_prefix, $row->slug]) }}"
-                                            target="_blank"
-                                        >
-                                            {{ __('View') }}
-                                        </flux:menu.item>
+                            <flux:table.cell>
+                                <a
+                                    href="{{ route('admin.records-edit', [$this->recordType, $row]) }}"
+                                    class="flex min-w-0 items-center gap-3"
+                                >
+                                    @if ($this->recordType->hasImageField())
+                                        @php($thumbnail = $row->primaryImageUrl(200))
+                                        <div class="size-9 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
+                                            @if ($thumbnail)
+                                                <img
+                                                    src="{{ $thumbnail }}"
+                                                    alt=""
+                                                    class="size-full object-cover"
+                                                    loading="lazy"
+                                                />
+                                            @else
+                                                <div class="flex size-full items-center justify-center text-zinc-300 dark:text-zinc-600">
+                                                    <flux:icon name="photo" class="size-4" />
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
+                                    <flux:text
+                                        variant="strong"
+                                        class="truncate hover:underline"
+                                    >{{ $row->title !== '' ? $row->title : __('Untitled') }}</flux:text>
+                                </a>
+                            </flux:table.cell>
 
-                                    @can('records.'.$recordType->key.'.create')
-                                        <flux:menu.item
-                                            icon="document-duplicate"
-                                            wire:click="duplicate({{ $row->id }})"
-                                        >
-                                            {{ __('Duplicate') }}
-                                        </flux:menu.item>
-                                    @endcan
+                            @foreach ($this->columnFields as $field)
+                                <flux:table.cell class="whitespace-nowrap">
+                                    {{ $row->columnValue($field) }}</flux:table.cell>
+                            @endforeach
 
-                                    @can('records.'.$recordType->key.'.edit')
-                                        <flux:menu.item
-                                            icon="pencil"
-                                            href="{{ route('admin.records-edit', [$this->recordType, $row]) }}"
-                                        >
-                                            {{ __('Edit') }}
-                                        </flux:menu.item>
-                                    @endcan
+                            @if ($this->hasMultipleActiveLocales())
+                                <flux:table.cell class="whitespace-nowrap">
+                                    <x-admin.language-codes :active="$row->published_locales" />
+                                </flux:table.cell>
+                            @endif
 
-                                    @can('records.'.$recordType->key.'.delete')
-                                        <flux:menu.separator />
-                                        <flux:menu.item
-                                            icon="trash"
-                                            variant="danger"
-                                            wire:click="confirmDelete({{ $row->id }})"
-                                        >
-                                            {{ __('Delete') }}
-                                        </flux:menu.item>
-                                    @endcan
-                                </flux:menu>
-                            </flux:dropdown>
-                        </flux:table.cell>
-                    </flux:table.row>
-                @endforeach
-            </flux:table.rows>
-        </flux:table>
+                            @unless ($recordType->admin_only)
+                                <flux:table.cell>
+                                    <flux:badge color="{{ $row->computed_status->color() }}" size="sm">
+                                        {{ $row->computed_status->label() }}
+                                    </flux:badge>
+                                </flux:table.cell>
+                            @endunless
+
+                            <flux:table.cell> {{ $row->updated_at?->format('M d, Y H:i') }} </flux:table.cell>
+
+                            <flux:table.cell>
+                                <flux:dropdown class="flex justify-end">
+                                    <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" square />
+                                    <flux:menu>
+                                        @if (! $recordType->admin_only && $row->slug !== '')
+                                            <flux:menu.item
+                                                icon="eye"
+                                                href="{{ route('record', [$recordType->slug_prefix, $row->slug]) }}"
+                                                target="_blank"
+                                            >
+                                                {{ __('View') }}
+                                            </flux:menu.item>
+                                        @endif
+
+                                        @can('records.'.$recordType->key.'.create')
+                                            <flux:menu.item
+                                                icon="document-duplicate"
+                                                wire:click="duplicate({{ $row->id }})"
+                                            >
+                                                {{ __('Duplicate') }}
+                                            </flux:menu.item>
+                                        @endcan
+
+                                        @can('records.'.$recordType->key.'.edit')
+                                            <flux:menu.item
+                                                icon="pencil"
+                                                href="{{ route('admin.records-edit', [$this->recordType, $row]) }}"
+                                            >
+                                                {{ __('Edit') }}
+                                            </flux:menu.item>
+                                        @endcan
+
+                                        @can('records.'.$recordType->key.'.delete')
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                wire:click="confirmDelete({{ $row->id }})"
+                                            >
+                                                {{ __('Delete') }}
+                                            </flux:menu.item>
+                                        @endcan
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
+        </flux:checkbox.group>
     </div>
 
     <flux:modal name="add-new" class="md:w-96">
@@ -497,6 +714,57 @@ return new class extends Component
             </div>
         </form>
     </flux:modal>
+
+    @if ($this->canEdit)
+        <flux:modal name="bulk-category" class="md:w-96">
+            <form wire:submit="addSelectedToCategory" class="space-y-6">
+                <flux:heading size="lg">{{ __('Add to category') }}</flux:heading>
+                <flux:select
+                    wire:model="bulkCategoryId"
+                    variant="listbox"
+                    searchable
+                    :label="__('Category')"
+                    :placeholder="__('Choose a category…')"
+                >
+                    @foreach ($this->categoryOptions as $categoryOption)
+                        <flux:select.option
+                            :value="$categoryOption->id"
+                            wire:key="bulk-category-{{ $categoryOption->id }}"
+                        >
+                            {{ $categoryOption->name }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <div class="flex gap-3">
+                    <flux:spacer />
+                    <flux:modal.close>
+                        <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                    </flux:modal.close>
+                    <flux:button type="submit" variant="primary">{{ __('Add') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+    @endif
+
+    @if ($this->canDelete)
+        <flux:modal name="bulk-delete" class="min-w-88">
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg" class="mb-6">{{ __('Delete the selected items?') }}</flux:heading>
+                    <flux:text>{{ __('This action cannot be reversed.') }}</flux:text>
+                </div>
+                <div class="flex gap-3">
+                    <flux:spacer />
+                    <flux:modal.close>
+                        <flux:button>{{ __('No, Keep them.') }}</flux:button>
+                    </flux:modal.close>
+                    <flux:button
+                        wire:click="deleteSelected"
+                        variant="danger"
+                    >{{ __('Yes, Delete them!') }}</flux:button>
+                </div>
+            </div>
+        </flux:modal>
+    @endif
 
     <flux:modal name="confirm-delete" class="min-w-88">
         <div class="space-y-6">

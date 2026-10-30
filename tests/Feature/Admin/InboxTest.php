@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Models\Page;
+use App\Models\Role;
 use App\Models\Submission;
 use App\Models\User;
 use Livewire\Livewire;
@@ -159,4 +161,85 @@ it('shows the unread count on the sidebar', function (): void {
         ->get(route('admin.inbox-index'))
         ->assertOk()
         ->assertSee('Inbox');
+});
+
+it('marks the selected messages as read or unread', function (): void {
+    $unread = Submission::factory()->create();
+    $read = Submission::factory()->read()->create();
+    $untouched = Submission::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.inbox-index')
+        ->set('selected', [(string) $unread->id, (string) $read->id])
+        ->call('markSelectedRead')
+        ->assertDispatched('toast-show', toastSays('1 message marked as read.'));
+
+    expect($unread->fresh()->isRead())->toBeTrue()
+        ->and($untouched->fresh()->isRead())->toBeFalse();
+
+    Livewire::test('pages::admin.inbox-index')
+        ->set('selected', [(string) $unread->id, (string) $read->id])
+        ->call('markSelectedUnread')
+        ->assertDispatched('toast-show', toastSays('2 messages marked as unread.'));
+
+    expect($unread->fresh()->isRead())->toBeFalse()
+        ->and($read->fresh()->isRead())->toBeFalse();
+});
+
+it('deletes the selected messages for staff who may delete them', function (): void {
+    $doomed = Submission::factory()->count(2)->create();
+    $kept = Submission::factory()->create();
+    $viewer = User::factory()->role(Role::factory()->create(['abilities' => ['inbox.view'], 'bypass' => false]))->create(['active' => true]);
+    $ids = $doomed->map(fn (Submission $submission): string => (string) $submission->id)->all();
+
+    $this->actingAs($viewer);
+
+    Livewire::test('pages::admin.inbox-index')
+        ->assertDontSeeHtml('wire:click="deleteSelected"')
+        ->set('selected', $ids)
+        ->call('deleteSelected')
+        ->assertForbidden();
+
+    expect(Submission::query()->count())->toBe(3);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.inbox-index')
+        ->set('selected', $ids)
+        ->call('deleteSelected')
+        ->assertDispatched('toast-show', toastSays('2 messages deleted.'));
+
+    expect(Submission::query()->pluck('id')->all())->toBe([$kept->id]);
+});
+
+it('exports the filtered messages with each extra form field as its own column', function (): void {
+    $this->travelTo(now()->setDate(2026, 10, 29)->setTime(9, 30));
+    $page = Page::factory()->create(['title' => 'Contact']);
+    Submission::factory()->for($page)->create([
+        'form_name' => 'Quote request',
+        'name' => 'Ada Lovelace',
+        'email' => 'ada@example.com',
+        'message' => 'Hello',
+        'country' => 'GB',
+        'metadata' => [['label' => 'Budget', 'value' => '500'], ['label' => 'Newsletter', 'value' => true]],
+    ]);
+    Submission::factory()->create(['name' => 'Grace Hopper', 'metadata' => [['label' => 'Company', 'value' => 'Navy']]]);
+    Submission::factory()->read()->create(['name' => 'Already read', 'metadata' => [['label' => 'Ignored', 'value' => 'x']]]);
+
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.inbox-index')
+        ->set('status', 'unread')
+        ->set('sortDirection', 'asc')
+        ->set('sortBy', 'name')
+        ->call('export')
+        ->assertFileDownloaded('inbox-2026-10-29.csv');
+
+    $rows = downloadedCsv($component);
+
+    expect($rows[0])->toBe(['Date', 'Form', 'Name', 'Email', 'Phone', 'Subject', 'Message', 'Budget', 'Newsletter', 'Company', 'Page', 'Country'])
+        ->and($rows)->toHaveCount(3)
+        ->and($rows[1])->toBe(['2026-10-29 09:30', 'Quote request', 'Ada Lovelace', 'ada@example.com', '', '', 'Hello', '500', 'Yes', '', 'Contact', 'United Kingdom'])
+        ->and(array_slice($rows[2], 7, 3))->toBe(['', '', 'Navy']);
 });

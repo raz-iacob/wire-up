@@ -223,6 +223,45 @@ final class Record extends Model
 
     /**
      * @param  array<string, mixed>  $field
+     */
+    public function exportValue(array $field): string
+    {
+        $type = FieldType::tryFrom((string) ($field['type'] ?? ''));
+        $key = (string) ($field['key'] ?? '');
+
+        if ($type === FieldType::RELATIONSHIP) {
+            return $this->linkedRecords($field, publishedOnly: false)->map(fn (self $record): string => $record->title)->implode('; ');
+        }
+
+        if ($type?->isMedia() ?? false) {
+            return $this->media
+                ->filter(fn (Media $media): bool => $media->pivot->role === $key)
+                ->sortBy(fn (Media $media): int => (int) $media->pivot->position)
+                ->map(fn (Media $media): string => $media->filename ?? basename($media->source))
+                ->unique()
+                ->implode('; ');
+        }
+
+        $value = $this->fieldValue($key, (bool) ($field['translatable'] ?? false));
+
+        if (is_array($value)) {
+            return implode('; ', array_filter($value, is_scalar(...)));
+        }
+
+        if (! is_scalar($value) || $value === '') {
+            return '';
+        }
+
+        return match ($type) {
+            FieldType::BOOLEAN => $value ? __('Yes') : __('No'),
+            FieldType::DATETIME => str_replace('T', ' ', (string) $value),
+            FieldType::RICH_TEXT => str(html_entity_decode(strip_tags((string) preg_replace('/<\/(?:p|div|li|h[1-6]|blockquote)>|<br\s*\/?>/i', '$0 ', (string) $value)), ENT_QUOTES | ENT_HTML5, 'UTF-8'))->squish()->value(),
+            default => (string) $value,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
      * @return Collection<int, self>
      */
     public function linkedRecords(array $field, bool $publishedOnly = true): Collection

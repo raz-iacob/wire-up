@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Livewire\Features\SupportTesting\Testable;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Playwright\Playwright;
 use Tests\Support\FakeStripe;
@@ -158,4 +159,31 @@ function menusPayload(array $menus): array
     }
 
     return $payload;
+}
+
+function toastSays(string $text): Closure
+{
+    return fn (string $event, array $payload): bool => ($payload['slots']['text'] ?? null) === $text;
+}
+
+/**
+ * @return array<int, array<int, string|null>>
+ */
+function downloadedCsv(Testable $component): array
+{
+    $handle = fopen('php://temp', 'r+b');
+    fwrite($handle, (string) base64_decode((string) data_get($component->effects, 'download.content'), true));
+    rewind($handle);
+
+    expect(fread($handle, 3))->toBe("\xEF\xBB\xBF");
+
+    $rows = [];
+
+    while (($row = fgetcsv($handle, escape: '')) !== false) {
+        $rows[] = $row;
+    }
+
+    fclose($handle);
+
+    return $rows;
 }

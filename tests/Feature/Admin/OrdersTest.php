@@ -196,3 +196,30 @@ it('shows the chosen status as a removable filter chip', function (): void {
         ->assertSeeHtml('aria-label="Remove filter"')
         ->assertSee('Clear filters');
 });
+
+it('exports the filtered orders with plain amounts, the address and the items', function (): void {
+    $this->travelTo(now()->setDate(2026, 10, 29)->setTime(9, 30));
+    $order = Order::factory()->paid()->create([
+        'reference' => 'EXPORT01',
+        'subtotal_amount' => 123456,
+        'shipping_amount' => 500,
+        'total_amount' => 123956,
+        'shipping_method' => 'Courier',
+        'shipping_address' => ['name' => 'Sam Buyer', 'address' => ['line1' => '1 Main St', 'city' => 'Toronto', 'state' => 'ON', 'postal_code' => 'M5V 2T6', 'country' => 'CA']],
+    ]);
+    OrderItem::factory()->for($order)->create(['name' => 'Desk lamp', 'quantity' => 2]);
+    OrderItem::factory()->for($order)->create(['name' => 'Bulb', 'quantity' => 1]);
+    Order::factory()->create(['reference' => 'PENDING1']);
+
+    $component = Livewire::actingAs(orderStaff(['orders.view']))
+        ->test('pages::admin.orders-index')
+        ->set('status', 'paid')
+        ->call('export')
+        ->assertFileDownloaded('orders-2026-10-29.csv');
+
+    $rows = downloadedCsv($component);
+
+    expect($rows[0])->toBe(['Order', 'Placed on', 'Status', 'Customer', 'Email', 'Currency', 'Subtotal', 'Shipping', 'Tax', 'Discount', 'Total', 'Refunded', 'Shipping method', 'Shipping address', 'Items'])
+        ->and($rows)->toHaveCount(2)
+        ->and($rows[1])->toBe(['EXPORT01', '2026-10-29 09:30', 'Paid', 'Sam Buyer', 'buyer@example.com', 'USD', '1234.56', '5.00', '0.00', '0.00', '1239.56', '0.00', 'Courier', 'Sam Buyer, 1 Main St, Toronto ON M5V 2T6, CA', 'Desk lamp × 2; Bulb × 1']);
+});

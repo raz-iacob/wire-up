@@ -382,3 +382,35 @@ it('counts a price field as content when there is a price, a sold mark or no sto
         ->and(sellableRecord([], ['stock' => 0], sellable: false)->hasFieldContent($priceField))->toBeTrue()
         ->and(sellableRecord([], sellable: false)->hasFieldContent($priceField))->toBeFalse();
 });
+
+it('gives full field values for a spreadsheet export', function (): void {
+    $type = RecordType::factory()->create(['key' => 'book']);
+    $sequel = Record::factory()->for($type)->create(['title' => ['en' => 'Unreleased sequel'], 'status' => ContentStatus::DRAFT]);
+    $record = Record::factory()->for($type)->create(['data' => [
+        'notes' => str_repeat('Long notes. ', 10),
+        'body' => '<p>Fish &amp; chips</p><p>Served hot</p>',
+        'paperback' => false,
+        'released_at' => '2026-07-06T14:30',
+        'labels' => ['classic', 'fiction'],
+        'tagline' => ['en' => 'A tale'],
+        'blank' => '',
+        'sequels' => [$sequel->id],
+    ]]);
+    $cover = Media::factory()->create(['filename' => 'cover.jpg']);
+    $back = Media::factory()->create(['filename' => null, 'source' => 'media/back-page.jpg']);
+    $record->media()->attach($back->id, ['role' => 'gallery', 'locale' => 'en', 'position' => 1]);
+    $record->media()->attach($cover->id, ['role' => 'gallery', 'locale' => 'en', 'position' => 0]);
+
+    $fresh = Record::query()->with('media')->find($record->id);
+
+    expect($fresh->exportValue(['key' => 'notes', 'type' => 'text']))->toBe(str_repeat('Long notes. ', 10))
+        ->and($fresh->exportValue(['key' => 'body', 'type' => 'rich-text']))->toBe('Fish & chips Served hot')
+        ->and($fresh->exportValue(['key' => 'paperback', 'type' => 'boolean']))->toBe('No')
+        ->and($fresh->exportValue(['key' => 'released_at', 'type' => 'datetime']))->toBe('2026-07-06 14:30')
+        ->and($fresh->exportValue(['key' => 'labels', 'type' => 'tags']))->toBe('classic; fiction')
+        ->and($fresh->exportValue(['key' => 'tagline', 'type' => 'text', 'translatable' => true]))->toBe('A tale')
+        ->and($fresh->exportValue(['key' => 'blank', 'type' => 'text']))->toBeEmpty()
+        ->and($fresh->exportValue(['key' => 'missing', 'type' => 'number']))->toBeEmpty()
+        ->and($fresh->exportValue(['key' => 'sequels', 'type' => 'relationship', 'record_type' => 'book']))->toBe('Unreleased sequel')
+        ->and($fresh->exportValue(['key' => 'gallery', 'type' => 'media-gallery']))->toBe('cover.jpg; back-page.jpg');
+});

@@ -52,6 +52,13 @@ final readonly class ShopService
         return config()->string('currencies.'.$code.'.symbol', $code).Number::format($amount / 10 ** $decimals, precision: $decimals);
     }
 
+    public function decimalAmount(int $amount, string $currency): string
+    {
+        $decimals = config()->integer('currencies.'.$currency.'.decimals', 2);
+
+        return number_format($amount / 10 ** $decimals, $decimals, '.', '');
+    }
+
     /**
      * @return array<string, string>
      */

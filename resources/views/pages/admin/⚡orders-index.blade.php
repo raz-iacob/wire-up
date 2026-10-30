@@ -6,15 +6,20 @@ use App\Actions\CancelOrderAction;
 use App\Actions\MarkOrderFulfilledAction;
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Services\CsvExport;
+use App\Services\ShopService;
 use Flux\Flux;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Stripe\Exception\ApiErrorException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 return new class extends Component
 {
@@ -86,18 +91,42 @@ return new class extends Component
         Flux::toast($cancelled ? __('Order cancelled and its stock released.') : __('This order was paid in the meantime, so it was kept.'), variant: $cancelled ? 'success' : 'warning');
     }
 
+    public function export(CsvExport $csv, ShopService $shop): StreamedResponse
+    {
+        $this->authorize('orders.view');
+
+        $headers = [
+            __('Order'), __('Placed on'), __('Status'), __('Customer'), __('Email'), __('Currency'),
+            __('Subtotal'), __('Shipping'), __('Tax'), __('Discount'), __('Total'), __('Refunded'),
+            __('Shipping method'), __('Shipping address'), __('Items'),
+        ];
+
+        $rows = $this->ordersQuery()->with('items')->get()->map(fn (Order $order): array => [
+            $order->reference,
+            $order->created_at->format('Y-m-d H:i'),
+            $order->status->label(),
+            $order->name,
+            $order->email,
+            $order->currency,
+            $shop->decimalAmount($order->subtotal_amount, $order->currency),
+            $shop->decimalAmount($order->shipping_amount, $order->currency),
+            $shop->decimalAmount($order->tax_amount, $order->currency),
+            $shop->decimalAmount($order->discount_amount, $order->currency),
+            $shop->decimalAmount($order->total_amount, $order->currency),
+            $shop->decimalAmount($order->refunded_amount, $order->currency),
+            $order->shipping_method,
+            $this->addressLine($order),
+            $order->items->map(fn (OrderItem $item): string => $item->name.' × '.$item->quantity)->implode('; '),
+        ])->all();
+
+        return $csv->download('orders-'.now()->format('Y-m-d').'.csv', $headers, $rows);
+    }
+
     /** @return LengthAwarePaginator<int, Order> */
     #[Computed]
     public function orders(): LengthAwarePaginator
     {
-        $status = OrderStatus::tryFrom($this->status);
-        $sortBy = in_array($this->sortBy, self::SORTABLE, true) ? $this->sortBy : 'created_at';
-
-        return Order::query()
-            ->when($status, fn (Builder $query, OrderStatus $status): Builder => $query->where('status', $status))
-            ->when($this->search, fn (Builder $query, string $search): Builder => $query->whereAny(['reference', 'email', 'name'], 'like', "%{$search}%"))
-            ->orderBy($sortBy, $this->sortDirection === 'asc' ? 'asc' : 'desc')
-            ->paginate(20);
+        return $this->ordersQuery()->paginate(20);
     }
 
     public function render(): View
@@ -105,6 +134,28 @@ return new class extends Component
         return $this->view()
             ->title(__('Orders'))
             ->layout('layouts::admin');
+    }
+
+    /**
+     * @return EloquentBuilder<Order>
+     */
+    private function ordersQuery(): EloquentBuilder
+    {
+        $status = OrderStatus::tryFrom($this->status);
+        $sortBy = in_array($this->sortBy, self::SORTABLE, true) ? $this->sortBy : 'created_at';
+
+        return Order::query()
+            ->when($status, fn (Builder $query, OrderStatus $status): Builder => $query->where('status', $status))
+            ->when($this->search, fn (Builder $query, string $search): Builder => $query->whereAny(['reference', 'email', 'name'], 'like', "%{$search}%"))
+            ->orderBy($sortBy, $this->sortDirection === 'asc' ? 'asc' : 'desc');
+    }
+
+    private function addressLine(Order $order): string
+    {
+        $address = (array) data_get($order->shipping_address, 'address', []);
+        $locality = implode(' ', array_filter([$address['city'] ?? null, $address['state'] ?? null, $address['postal_code'] ?? null], is_string(...)));
+
+        return implode(', ', array_filter([data_get($order->shipping_address, 'name'), $address['line1'] ?? null, $address['line2'] ?? null, $locality, $address['country'] ?? null], fn (mixed $part): bool => is_string($part) && $part !== ''));
     }
 };
 ?>
@@ -133,6 +184,13 @@ return new class extends Component
                 @endif
             </flux:menu>
         </flux:dropdown>
+        <flux:button
+            class="shrink-0"
+            size="sm"
+            icon="arrow-down-tray"
+            iconVariant="outline"
+            wire:click="export"
+        >{{ __('Export') }}</flux:button>
         @if (\App\Enums\OrderStatus::tryFrom($status))
             <x-admin.filter-chip
                 :label="\App\Enums\OrderStatus::from($status)->label()"

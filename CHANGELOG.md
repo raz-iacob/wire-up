@@ -22,6 +22,8 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The homepage can no longer be deleted from the Pages list. Choose another homepage first.
 - Images used as a page or record background count as in use, so the media library no longer lets you delete them.
 - Changing a content type's web address prefix no longer breaks its record pages: the records move to the new address straight away instead of showing "not found" until each was saved again.
+- The Pages, content type and Inbox lists have checkboxes, so you can act on many rows at once. Pages and records can be published, unpublished, added to a category or deleted together; messages can be marked read or unread or deleted. Bulk delete never removes the homepage, and each action needs the same permission as doing it one row at a time.
+- Records, Inbox messages and Orders can be exported to a CSV file that opens in Excel, Numbers or Google Sheets. The export follows the list's current search and filters, or only the selected rows. Records include every field in full, messages include each extra form field as its own column, and orders include amounts, the shipping address and the items. Cells that a spreadsheet would run as a formula are made safe.
 
 ## v0.5.2 — 2026-10-29
 

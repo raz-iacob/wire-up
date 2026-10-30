@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Enums\ContentStatus;
+use App\Models\Category;
 use App\Models\Locale;
 use App\Models\Page;
+use App\Models\Role;
 use App\Models\Settings;
 use App\Models\User;
 use Livewire\Livewire;
@@ -262,4 +265,130 @@ it('refuses to delete the homepage and offers no delete for it', function (): vo
         ->assertDispatched('toast-show');
 
     expect(Page::query()->whereKey($home->id)->exists())->toBeTrue();
+});
+
+it('publishes the selected pages and counts only the ones that changed', function (): void {
+    $alpha = Page::factory()->create(['title' => 'Alpha']);
+    $beta = Page::factory()->create(['title' => 'Beta']);
+    $livePublishedAt = now()->subWeek()->startOfSecond();
+    $live = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => $livePublishedAt]);
+    $untouched = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->set('selected', [(string) $alpha->id, (string) $beta->id, (string) $live->id])
+        ->call('publishSelected')
+        ->assertDispatched('toast-show', toastSays('2 pages published.'))
+        ->assertSet('selected', []);
+
+    expect($alpha->fresh()->status)->toBe(ContentStatus::PUBLISHED)
+        ->and($beta->fresh()->status)->toBe(ContentStatus::PUBLISHED)
+        ->and($live->fresh()->published_at?->equalTo($livePublishedAt))->toBeTrue()
+        ->and($untouched->fresh()->status)->toBe(ContentStatus::DRAFT);
+});
+
+it('unpublishes the selected pages, scheduled ones included', function (): void {
+    $live = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $scheduled = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->addDay()]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->set('selected', [(string) $live->id, (string) $scheduled->id])
+        ->call('unpublishSelected')
+        ->assertDispatched('toast-show', toastSays('2 pages unpublished.'));
+
+    expect($live->fresh()->status)->toBe(ContentStatus::DRAFT)
+        ->and($scheduled->fresh()->status)->toBe(ContentStatus::DRAFT)
+        ->and($scheduled->fresh()->published_at)->toBeNull();
+});
+
+it('adds the selected pages to a category without touching their status', function (): void {
+    $live = Page::factory()->create(['status' => ContentStatus::PUBLISHED, 'published_at' => now()->subDay()]);
+    $draft = Page::factory()->create();
+    $news = Category::factory()->create(['name' => ['en' => 'News']]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->set('selected', [(string) $live->id, (string) $draft->id])
+        ->set('bulkCategoryId', $news->id)
+        ->call('addSelectedToCategory')
+        ->assertHasNoErrors()
+        ->assertDispatched('toast-show', toastSays('2 pages added to News.'))
+        ->assertSet('bulkCategoryId', null);
+
+    expect($live->fresh()->categories->modelKeys())->toBe([$news->id])
+        ->and($live->fresh()->status)->toBe(ContentStatus::PUBLISHED)
+        ->and($draft->fresh()->categories->modelKeys())->toBe([$news->id]);
+});
+
+it('asks which category before adding pages to one', function (): void {
+    $page = Page::factory()->create();
+    Category::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->set('selected', [(string) $page->id])
+        ->call('addSelectedToCategory')
+        ->assertHasErrors(['bulkCategoryId' => 'required'])
+        ->assertSee('The category field is required.');
+
+    expect($page->categories()->exists())->toBeFalse();
+});
+
+it('deletes the selected pages but keeps the homepage', function (): void {
+    $home = Page::factory()->create(['title' => 'Home']);
+    Settings::set(['home_page_id' => $home->id]);
+    $alpha = Page::factory()->create();
+    $beta = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->set('selected', [(string) $home->id, (string) $alpha->id, (string) $beta->id])
+        ->call('deleteSelected')
+        ->assertDispatched('toast-show', toastSays('2 pages deleted. The homepage was kept. Choose another homepage in Settings → General to delete it.'));
+
+    expect(Page::query()->whereKey($home->id)->exists())->toBeTrue()
+        ->and(Page::query()->whereKey([$alpha->id, $beta->id])->exists())->toBeFalse();
+});
+
+it('keeps bulk changes from staff who may only view pages', function (): void {
+    $page = Page::factory()->create();
+    $viewer = User::factory()->role(Role::factory()->create(['abilities' => ['pages.view'], 'bypass' => false]))->create(['active' => true]);
+
+    $this->actingAs($viewer);
+
+    Livewire::test('pages::admin.pages-index')
+        ->assertDontSeeHtml('aria-label="Select all"')
+        ->set('selected', [(string) $page->id])
+        ->call('publishSelected')
+        ->assertForbidden();
+
+    Livewire::test('pages::admin.pages-index')
+        ->set('selected', [(string) $page->id])
+        ->call('deleteSelected')
+        ->assertForbidden();
+
+    expect($page->fresh()->status)->toBe(ContentStatus::DRAFT);
+});
+
+it('clears the selection when the search, the filter or the page changes', function (): void {
+    $page = Page::factory()->create();
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.pages-index')
+        ->set('selected', [(string) $page->id])
+        ->set('search', 'something')
+        ->assertSet('selected', [])
+        ->set('selected', [(string) $page->id])
+        ->set('status', ContentStatus::DRAFT->value)
+        ->assertSet('selected', [])
+        ->set('selected', [(string) $page->id])
+        ->call('gotoPage', 2)
+        ->assertSet('selected', []);
 });
