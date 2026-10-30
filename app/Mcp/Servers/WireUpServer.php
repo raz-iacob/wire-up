@@ -12,9 +12,11 @@ use App\Mcp\Tools\CreateContentTypeTool;
 use App\Mcp\Tools\CreateMenuTool;
 use App\Mcp\Tools\CreatePageTool;
 use App\Mcp\Tools\CreateRecordTool;
+use App\Mcp\Tools\CreateRedirectsTool;
 use App\Mcp\Tools\DeleteMediaTool;
 use App\Mcp\Tools\DeletePageTool;
 use App\Mcp\Tools\DeleteRecordTool;
+use App\Mcp\Tools\DeleteRedirectTool;
 use App\Mcp\Tools\GetContentStringsTool;
 use App\Mcp\Tools\GetInterfaceTranslationsTool;
 use App\Mcp\Tools\GetMenusTool;
@@ -31,6 +33,7 @@ use App\Mcp\Tools\ListMediaTool;
 use App\Mcp\Tools\ListOrdersTool;
 use App\Mcp\Tools\ListPagesTool;
 use App\Mcp\Tools\ListRecordsTool;
+use App\Mcp\Tools\ListRedirectsTool;
 use App\Mcp\Tools\PublishPageTool;
 use App\Mcp\Tools\PublishRecordTool;
 use App\Mcp\Tools\ReadWebpageTool;
@@ -110,6 +113,11 @@ Typical workflow for building or replicating a site:
 10. When the shop is in use, `list-orders` and `get-order` read the orders
     customers placed. They are read-only: fulfilment and refunds happen in the
     admin and in Stripe.
+11. Keep old links working. When the site replaces an older one at the same
+    address, send each old URL to its new page with `create-redirects`.
+    `list-redirects` shows the existing redirects and the addresses visitors
+    ask for that do not exist; `delete-redirect` removes one for good.
+    Changing a page or record's web address adds a redirect by itself.
 MD)]
 final class WireUpServer extends Server
 {
@@ -145,6 +153,9 @@ final class WireUpServer extends Server
         ReadWebpageTool::class,
         SearchPexelsTool::class,
         ImportPexelsMediaTool::class,
+        ListRedirectsTool::class,
+        CreateRedirectsTool::class,
+        DeleteRedirectTool::class,
         GetSettingsTool::class,
         UpdateDesignTool::class,
         UpdateIdentityTool::class,

@@ -19,6 +19,9 @@ final readonly class UpdatePageAction
         DB::transaction(function () use ($page, $attributes): void {
             $page->recordBaselineRevision();
 
+            $redirects = new RedirectMovedContentAction();
+            $previousPaths = isset($attributes['slugs']) ? $redirects->livePaths($page) : [];
+
             $page->update([
                 ...Arr::except($attributes, ['slugs', 'status', 'og_image', 'blocks', 'categories']),
                 ...$this->handlePublication($page, $attributes),
@@ -27,6 +30,7 @@ final readonly class UpdatePageAction
 
             if (isset($attributes['slugs'])) {
                 $page->updateSlugs($attributes['slugs']);
+                $redirects->handle($page, $previousPaths);
             }
 
             if (isset($attributes['blocks'])) {

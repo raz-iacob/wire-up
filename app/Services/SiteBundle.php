@@ -30,6 +30,7 @@ final class SiteBundle
         'translations',
         'mediables',
         'categorizables',
+        'redirects',
     ];
 
     /**

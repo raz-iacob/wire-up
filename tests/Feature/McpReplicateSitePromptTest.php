@@ -25,6 +25,7 @@ it('returns the replication playbook for a url', function (): void {
         ->assertSee('read-webpage')
         ->assertSee('scaffold-site')
         ->assertSee('create-content-type')
+        ->assertSee('create-redirects')
         ->assertSee('publish-record');
 });
 

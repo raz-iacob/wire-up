@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Models\RecordType;
+use App\Services\RedirectService;
 
 final readonly class CreateRecordTypeAction
 {
@@ -18,6 +19,8 @@ final readonly class CreateRecordTypeAction
         $recordType = RecordType::query()->create($attributes);
 
         new GrantRecordTypeAbilitiesAction()->handle($recordType->key);
+
+        resolve(RedirectService::class)->releasePrefix($recordType->slug_prefix);
 
         return $recordType;
     }

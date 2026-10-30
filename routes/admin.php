@@ -67,6 +67,7 @@ Route::middleware('can:settings.view')->group(function (): void {
     Route::livewire('settings/updates', 'pages::admin.settings-updates')->name('settings-updates');
     Route::livewire('settings/export-import', 'pages::admin.settings-export-import')->name('settings-export-import');
     Route::livewire('settings/backups', 'pages::admin.settings-backups')->name('settings-backups');
+    Route::livewire('settings/redirects', 'pages::admin.settings-redirects')->name('settings-redirects');
     Route::get('settings/backups/{file}', BackupDownloadController::class)
         ->where('file', '[A-Za-z0-9._-]+')
         ->middleware('can:settings.edit')

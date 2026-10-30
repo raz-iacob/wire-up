@@ -6,6 +6,7 @@ use App\Enums\ContentStatus;
 use App\Models\Page;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Redirect;
 use App\Models\Revision;
 use App\Models\Role;
 use App\Models\Settings;
@@ -270,6 +271,20 @@ it('survives a full export and import round trip', function (): void {
         ->and(Record::query()->find($record->id)?->title)->toBe('Green Giant')
         ->and(Record::query()->find($record->id)?->recordType->key)->toBe('product')
         ->and(Settings::get('custom_css'))->toBe('.a{color:red}');
+});
+
+it('carries redirects across and serves them as soon as the import ends', function (): void {
+    Redirect::factory()->create(['from' => '/old-shop', 'to' => '/store']);
+
+    $bundle = importPath('redirects.zip');
+    SiteExporter::current()->export($bundle);
+
+    DB::table('redirects')->delete();
+    $this->get('/old-shop')->assertNotFound();
+
+    SiteImporter::current()->import($bundle, null);
+
+    $this->get('/old-shop')->assertRedirect(url('/store'));
 });
 
 it('fails on a bundle that cannot be opened', function (): void {

@@ -70,6 +70,7 @@ it('exposes every WireUp tool and the block-types resource to the assistant', fu
         'list-categories', 'create-category',
         'list-media', 'import-media-from-url', 'list-import-files', 'upload-media', 'delete-media',
         'render-page', 'read-webpage', 'search-pexels', 'import-pexels-media',
+        'list-redirects', 'create-redirects', 'delete-redirect',
         'get-settings', 'update-design', 'update-identity',
         'get-menus', 'create-menu', 'update-menu', 'update-social',
         'get-interface-translations', 'update-interface-translations',
@@ -91,7 +92,7 @@ it('wraps tools for the SDK by their assistant policy', function (): void {
 
 it('marks publishing and deleting as requiring confirmation', function (): void {
     expect(SiteAssistant::confirmableToolNames())
-        ->toEqualCanonicalizing(['publish-page', 'delete-page', 'publish-record', 'delete-record', 'delete-media'])
+        ->toEqualCanonicalizing(['publish-page', 'delete-page', 'publish-record', 'delete-record', 'delete-media', 'delete-redirect'])
         ->and(SiteAssistant::confirmableToolClass('publish-page'))->toBe(PublishPageTool::class)
         ->and(SiteAssistant::confirmableToolClass('publish-record'))->toBe(PublishRecordTool::class)
         ->and(SiteAssistant::confirmableToolClass('create-page'))->toBeNull();
@@ -158,11 +159,11 @@ it('exposes only the reviewed tool surface to the assistant', function (): void 
 
     expect($visible)->toBe([
         'create-category', 'create-content-type', 'create-menu', 'create-page',
-        'create-record', 'delete-media', 'delete-page', 'delete-record',
-        'get-content-strings', 'get-interface-translations', 'get-menus', 'get-page',
+        'create-record', 'create-redirects', 'delete-media', 'delete-page', 'delete-record',
+        'delete-redirect', 'get-content-strings', 'get-interface-translations', 'get-menus', 'get-page',
         'get-record', 'get-settings', 'import-media-from-url', 'import-pexels-media',
         'list-categories', 'list-content-types', 'list-import-files', 'list-media',
-        'list-pages', 'list-records', 'publish-page', 'publish-record',
+        'list-pages', 'list-records', 'list-redirects', 'publish-page', 'publish-record',
         'read-webpage', 'render-page', 'scaffold-site', 'search-pexels',
         'update-content-strings', 'update-content-type', 'update-design', 'update-identity',
         'update-interface-translations', 'update-menu', 'update-page', 'update-page-blocks',

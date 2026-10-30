@@ -8,6 +8,7 @@ use App\Mcp\Servers\WireUpServer;
 use App\Mcp\Tools\DeleteMediaTool;
 use App\Mcp\Tools\DeletePageTool;
 use App\Mcp\Tools\DeleteRecordTool;
+use App\Mcp\Tools\DeleteRedirectTool;
 use App\Models\Block;
 use App\Models\Media;
 use App\Models\Page;
@@ -118,9 +119,11 @@ it('gates every delete tool behind owner confirmation for the assistant', functi
         ->toContain('delete-page')
         ->toContain('delete-record')
         ->toContain('delete-media')
+        ->toContain('delete-redirect')
         ->and(SiteAssistant::confirmableToolClass('delete-page'))->toBe(DeletePageTool::class)
         ->and(SiteAssistant::confirmableToolClass('delete-record'))->toBe(DeleteRecordTool::class)
-        ->and(SiteAssistant::confirmableToolClass('delete-media'))->toBe(DeleteMediaTool::class);
+        ->and(SiteAssistant::confirmableToolClass('delete-media'))->toBe(DeleteMediaTool::class)
+        ->and(SiteAssistant::confirmableToolClass('delete-redirect'))->toBe(DeleteRedirectTool::class);
 });
 
 it('advertises each delete tool with the id it needs', function (string $tool, string $name, string $argument): void {
@@ -134,6 +137,7 @@ it('advertises each delete tool with the id it needs', function (string $tool, s
     'page' => [DeletePageTool::class, 'delete-page', 'page'],
     'record' => [DeleteRecordTool::class, 'delete-record', 'record'],
     'media' => [DeleteMediaTool::class, 'delete-media', 'media'],
+    'redirect' => [DeleteRedirectTool::class, 'delete-redirect', 'redirect'],
 ]);
 
 it('refuses to delete anything unless the call confirms it', function (string $tool, array $arguments): void {
@@ -143,6 +147,7 @@ it('refuses to delete anything unless the call confirms it', function (string $t
     'page' => [DeletePageTool::class, ['page' => 1]],
     'record' => [DeleteRecordTool::class, ['record' => 1]],
     'media' => [DeleteMediaTool::class, ['media' => 1]],
+    'redirect' => [DeleteRedirectTool::class, ['redirect' => 1]],
 ]);
 
 it('keeps a page that was asked to be deleted without confirmation', function (): void {

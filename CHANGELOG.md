@@ -25,6 +25,11 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The Pages, content type and Inbox lists have checkboxes, so you can act on many rows at once. Pages and records can be published, unpublished, added to a category or deleted together; messages can be marked read or unread or deleted. Bulk delete never removes the homepage, and each action needs the same permission as doing it one row at a time.
 - Records, Inbox messages and Orders can be exported to a CSV file that opens in Excel, Numbers or Google Sheets. The export follows the list's current search and filters, or only the selected rows. Records include every field in full, messages include each extra form field as its own column, and orders include amounts, the shipping address and the items. Cells that a spreadsheet would run as a formula are made safe.
 - The media library can show only the files nothing on the site uses: switch on Not used in Media, then Select all shown and delete them in one go to free up space. A file still in use, in a block, a field, a page background or the site settings, is never deleted.
+- Settings → Redirects sends old web addresses to new ones, so links and search results keep working after you move or rename pages. Add a redirect by hand, permanent (301) or temporary (302), to a page on the site or another website, or import a CSV of old and new addresses. End both addresses with /* to move a whole folder. Each redirect shows how often it is used.
+- Changing the web address of a published page or record adds a redirect from the old address automatically, and renaming a content type's prefix moves all its record pages and its listing page. A page that later takes an old address back gets it, and chains of moves always send visitors there in one step.
+- The Not found tab in Settings → Redirects lists the addresses visitors asked for that don't exist, most requested first, so you can redirect the ones that matter. Addresses nobody has asked for in 30 days are cleared automatically.
+- AI agents can list, add and delete redirects, adding up to 500 in one go when they rebuild a site. The AI assistant asks you before it deletes one.
+- Redirects are included in site exports and imports.
 
 ## v0.5.2 — 2026-10-29
 

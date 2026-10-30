@@ -27,6 +27,8 @@ final readonly class UpdateRecordTypeAction
                     ->where('sluggable_type', new Record()->getMorphClass())
                     ->whereIn('sluggable_id', $recordType->records()->select('id'))
                     ->update(['base_path' => $recordType->slug_prefix]);
+
+                new RedirectMovedContentAction()->handlePrefix($recordType, $previousPrefix);
             }
         });
 

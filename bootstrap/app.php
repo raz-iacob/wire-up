@@ -6,7 +6,9 @@ use App\Http\Controllers\StripeWebhookController;
 use App\Http\Middleware\LocaleRedirect;
 use App\Http\Middleware\OnlyAdmins;
 use App\Http\Middleware\RequireTwoFactor;
+use App\Http\Middleware\ServeRedirects;
 use App\Http\Middleware\TrackUserAccess;
+use App\Services\RedirectService;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Cashier\Http\Controllers\PaymentController;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -37,6 +40,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 : route('home')
         );
 
+        $middleware->append(ServeRedirects::class);
+
         $middleware->appendToGroup('web', [
             LocaleRedirect::class,
             TrackUserAccess::class,
@@ -54,4 +59,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReportDuplicates();
         $exceptions->dontReport(CannotUpdateLockedPropertyException::class);
+        $exceptions->render(function (NotFoundHttpException $exception, Request $request): null {
+            resolve(RedirectService::class)->recordNotFound($request);
+
+            return null;
+        });
     })->create();

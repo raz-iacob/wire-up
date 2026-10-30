@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\RedirectService;
 use Carbon\CarbonInterface;
 use Database\Factories\SlugFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,13 @@ final class Slug extends Model
     use HasFactory;
 
     /**
+     * @var array<string, string>
+     */
+    protected $attributes = [
+        'base_path' => '',
+    ];
+
+    /**
      * @return array<string, string>
      */
     public function casts(): array
@@ -50,5 +58,19 @@ final class Slug extends Model
     public function sluggable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function publicPath(): string
+    {
+        return RedirectService::localizedPath($this->locale, $this->base_path, $this->slug);
+    }
+
+    protected static function booted(): void
+    {
+        self::saved(function (self $slug): void {
+            if ($slug->wasRecentlyCreated || $slug->wasChanged(['slug', 'base_path', 'locale'])) {
+                resolve(RedirectService::class)->release([$slug->publicPath()]);
+            }
+        });
     }
 }

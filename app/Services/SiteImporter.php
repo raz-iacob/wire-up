@@ -230,5 +230,6 @@ final class SiteImporter
         Settings::flush();
 
         cache()->forget('site-locales');
+        cache()->forget(RedirectService::CACHE_KEY);
     }
 }
