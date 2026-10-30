@@ -88,6 +88,11 @@ final class UserFactory extends Factory
         return $this->preset('owner');
     }
 
+    public function developer(): self
+    {
+        return $this->preset('developer');
+    }
+
     public function admin(): self
     {
         return $this->preset('admin');

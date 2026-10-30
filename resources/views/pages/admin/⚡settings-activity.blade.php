@@ -46,7 +46,7 @@ return new class extends Component
         $area = ActivityArea::tryFrom($this->area);
 
         return Activity::query()
-            ->with(['user', 'impersonator', 'subject' => fn (MorphTo $subject): MorphTo => $subject->morphWith([Record::class => ['recordType']])])
+            ->with(['user.role', 'impersonator.role', 'subject' => fn (MorphTo $subject): MorphTo => $subject->morphWith([Record::class => ['recordType']])])
             ->when($area instanceof ActivityArea, fn (Builder $query): Builder => $query->whereIn('event', $area?->events() ?? []))
             ->when($this->person !== '', fn (Builder $query): Builder => $query->where(
                 fn (Builder $query): Builder => $query->where('user_id', (int) $this->person)->orWhere('impersonator_id', (int) $this->person),
@@ -54,7 +54,7 @@ return new class extends Component
             ->when($this->search !== '', fn (Builder $query): Builder => $query->where(
                 fn (Builder $query): Builder => $query
                     ->whereLike('subject_label', "%{$this->search}%")
-                    ->orWhereHas('user', fn (Builder $user): Builder => $user->whereLike('name', "%{$this->search}%")),
+                    ->orWhereHas('user', fn (Builder $user): Builder => $user->visibleToViewer()->whereLike('name', "%{$this->search}%")),
             ))
             ->latest('id')
             ->paginate(50);
@@ -70,7 +70,7 @@ return new class extends Component
             ->filter(fn (Role $role): bool => $role->canAccessAdmin())
             ->pluck('id');
 
-        return User::query()->whereIn('role_id', $staffRoleIds)->orderBy('name')->get();
+        return User::query()->visibleToViewer()->whereIn('role_id', $staffRoleIds)->orderBy('name')->get();
     }
 
     public function clearFilters(): void

@@ -12,12 +12,16 @@ final class UserGuard
 {
     public function canManage(?User $actor, User $target): bool
     {
+        if ($target->isDeveloper()) {
+            return $actor?->isDeveloper() ?? false;
+        }
+
         return ! ($target->role->bypass ?? false) || ($actor->role->bypass ?? false);
     }
 
     public function canAssign(?User $actor, Role $role): bool
     {
-        return ! $role->bypass || ($actor->role->bypass ?? false);
+        return ! $role->isDeveloper() && (! $role->bypass || ($actor->role->bypass ?? false));
     }
 
     public function loginLockReason(?User $actor, User $target): ?string

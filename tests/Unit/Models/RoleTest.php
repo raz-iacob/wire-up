@@ -7,8 +7,9 @@ use App\Models\User;
 
 it('seeds the preset roles on a freshly migrated database', function (): void {
     expect(Role::query()->pluck('key')->sort()->values()->all())
-        ->toBe(['admin', 'author', 'editor', 'member', 'owner'])
+        ->toBe(['admin', 'author', 'developer', 'editor', 'member', 'owner'])
         ->and(Role::query()->where('key', 'owner')->firstOrFail()->bypass)->toBeTrue()
+        ->and(Role::query()->where('key', 'developer')->firstOrFail()->only(['bypass', 'is_protected']))->toBe(['bypass' => true, 'is_protected' => true])
         ->and(Role::query()->where('key', 'admin')->firstOrFail()->is_protected)->toBeFalse();
 });
 

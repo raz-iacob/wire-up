@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use App\Services\RolePresets;
 
-it('seeds the five default roles', function (): void {
+it('seeds the six default roles', function (): void {
     expect(array_column(RolePresets::all(), 'key'))
-        ->toBe(['owner', 'admin', 'editor', 'author', 'member']);
+        ->toBe(['owner', 'admin', 'editor', 'author', 'member', 'developer']);
 });
 
 it('finds a preset by key', function (): void {

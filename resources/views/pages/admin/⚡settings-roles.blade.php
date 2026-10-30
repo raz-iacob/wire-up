@@ -30,6 +30,7 @@ return new class extends Component
     public function mount(): void
     {
         $this->roles = Role::query()
+            ->where('key', '!=', Role::DEVELOPER)
             ->orderBy('id')
             ->get()
             ->map(fn (Role $role): array => $this->hydrateRole($role))

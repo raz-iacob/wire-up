@@ -44,7 +44,7 @@ trait HasRevisionHistory
     #[Computed]
     public function revisionHistory(): Collection
     {
-        return $this->revisionable()->revisions()->with('user')->get();
+        return $this->revisionable()->revisions()->with('user.role')->get();
     }
 
     public function openHistory(): void

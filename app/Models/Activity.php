@@ -94,8 +94,8 @@ final class Activity extends Model
     public function actorName(): string
     {
         return match (true) {
-            $this->impersonator_id !== null => $this->impersonator->name ?? __('Deleted user'),
-            $this->user instanceof User => $this->user->name,
+            $this->impersonator_id !== null => $this->impersonator?->visibleName() ?? __('Deleted user'),
+            $this->user instanceof User => $this->user->visibleName(),
             $this->user_id !== null => __('Deleted user'),
             $this->source === RevisionSource::EDITOR => __('Someone'),
             default => $this->source->label(),
@@ -104,7 +104,7 @@ final class Activity extends Model
 
     public function actingAs(): ?string
     {
-        return $this->impersonator_id === null ? null : ($this->user->name ?? __('Deleted user'));
+        return $this->impersonator_id === null ? null : ($this->user?->visibleName() ?? __('Deleted user'));
     }
 
     public function viaAssistant(): bool

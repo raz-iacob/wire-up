@@ -167,6 +167,7 @@ return new class extends Component
     {
         return User::query()
             ->with('role')
+            ->visibleToViewer()
             ->when($this->status, fn (Builder $query, string $status): Builder => $query->where('active', $status === 'active'))
             ->when($this->search, fn (Builder $query, string $search): Builder => $query->whereAny(['name', 'email'], 'like', "%{$search}%"))
             ->orderBy($this->sortBy, $this->sortDirection)

@@ -64,7 +64,7 @@ final class Revision extends Model
     public function authorName(): string
     {
         return match ($this->source) {
-            RevisionSource::EDITOR => $this->user->name ?? __('Someone'),
+            RevisionSource::EDITOR => $this->user?->visibleName() ?? __('Someone'),
             default => $this->source->label(),
         };
     }

@@ -27,6 +27,8 @@ final class Role extends Model
     /** @use HasFactory<RoleFactory> */
     use HasFactory;
 
+    public const string DEVELOPER = 'developer';
+
     /**
      * @return array<string, string>
      */
@@ -55,6 +57,11 @@ final class Role extends Model
     public function canAccessAdmin(): bool
     {
         return $this->bypass || $this->abilities !== [];
+    }
+
+    public function isDeveloper(): bool
+    {
+        return $this->key === self::DEVELOPER;
     }
 
     public function isInUse(): bool

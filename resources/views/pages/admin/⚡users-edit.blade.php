@@ -61,7 +61,7 @@ return new class extends Component
         return Role::query()
             ->orderBy('id')
             ->get()
-            ->filter(fn (Role $role): bool => $guard->canAssign(auth()->user(), $role))
+            ->filter(fn (Role $role): bool => $role->id === $this->user->role_id || $guard->canAssign(auth()->user(), $role))
             ->values();
     }
 
@@ -138,7 +138,7 @@ return new class extends Component
         $targetRole = Role::query()->findOrFail($validated['roleId']);
         $guard = resolve(UserGuard::class);
 
-        if (! $guard->canAssign($editor, $targetRole)) {
+        if ($targetRole->id !== $this->user->role_id && ! $guard->canAssign($editor, $targetRole)) {
             $this->addError('roleId', __('Only an owner can give out this role.'));
 
             return;

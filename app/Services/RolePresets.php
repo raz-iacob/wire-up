@@ -51,6 +51,13 @@ final class RolePresets
                 'bypass' => false,
                 'is_protected' => true,
             ],
+            [
+                'key' => 'developer',
+                'name' => 'Developer',
+                'abilities' => [],
+                'bypass' => true,
+                'is_protected' => true,
+            ],
         ];
     }
 

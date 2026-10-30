@@ -7,7 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-it('creates an admin user holding the owner role on a fresh install', function (): void {
+it('creates an admin user holding the developer role on a fresh install', function (): void {
     $this->artisan(CreateAdminUserCommand::class)
         ->expectsOutput('Create a new admin user')
         ->expectsQuestion('Enter name', 'Admin User')
@@ -19,7 +19,8 @@ it('creates an admin user holding the owner role on a fresh install', function (
 
     $user = User::query()->where('email', 'admin@example.com')->firstOrFail();
 
-    expect($user->role_id)->toBe(Role::query()->where('key', 'owner')->firstOrFail()->id)
+    expect($user->role_id)->toBe(Role::query()->where('key', Role::DEVELOPER)->firstOrFail()->id)
+        ->and($user->isDeveloper())->toBeTrue()
         ->and($user->canAccessAdmin())->toBeTrue();
 });
 
@@ -49,7 +50,7 @@ it('creates the admin user without prompting when every detail is passed as an o
     $user = User::query()->where('email', 'scripted@example.com')->firstOrFail();
 
     expect($user->name)->toBe('Scripted Admin')
-        ->and($user->role_id)->toBe(Role::query()->where('key', 'owner')->firstOrFail()->id)
+        ->and($user->role_id)->toBe(Role::query()->where('key', Role::DEVELOPER)->firstOrFail()->id)
         ->and(Hash::check('secret-password', $user->password))->toBeTrue();
 });
 

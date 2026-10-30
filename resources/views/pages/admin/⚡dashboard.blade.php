@@ -133,6 +133,7 @@ return new class extends Component
     public function onlineUsers(): Collection
     {
         return User::query()
+            ->visibleToViewer()
             ->whereNotNull('last_seen_at')
             ->where('last_seen_at', '>=', now()->subMinutes(15))
             ->latest('last_seen_at')
@@ -153,7 +154,7 @@ return new class extends Component
     public function recentActivity(): array
     {
         $records = Record::query()
-            ->with(['recordType', 'editor', 'translations'])
+            ->with(['recordType', 'editor.role', 'translations'])
             ->latest('updated_at')
             ->limit(8)
             ->get()
@@ -163,12 +164,12 @@ return new class extends Component
                 'updated' => $record->updated_at,
                 'url' => route('admin.records-edit', [$record->recordType, $record]),
                 'status' => $record->computed_status,
-                'editor' => $record->editor?->name,
+                'editor' => $record->editor?->visibleName(),
             ])
             ->all();
 
         $pages = Page::query()
-            ->with(['editor', 'translations'])
+            ->with(['editor.role', 'translations'])
             ->latest('updated_at')
             ->limit(8)
             ->get()
@@ -178,7 +179,7 @@ return new class extends Component
                 'updated' => $page->updated_at,
                 'url' => route('admin.pages-edit', $page),
                 'status' => $page->computed_status,
-                'editor' => $page->editor?->name,
+                'editor' => $page->editor?->visibleName(),
             ])
             ->all();
 
@@ -196,7 +197,7 @@ return new class extends Component
     public function latestActivity(): Collection
     {
         return Activity::query()
-            ->with(['user', 'impersonator', 'subject' => fn (MorphTo $subject): MorphTo => $subject->morphWith([Record::class => ['recordType']])])
+            ->with(['user.role', 'impersonator.role', 'subject' => fn (MorphTo $subject): MorphTo => $subject->morphWith([Record::class => ['recordType']])])
             ->whereNotIn('event', ActivityArea::SIGN_INS->events())
             ->latest('id')
             ->limit(8)

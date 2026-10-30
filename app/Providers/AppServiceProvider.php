@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Role;
 use App\Models\Settings;
 use App\Models\User;
 use App\Services\AiModelCatalog;
@@ -60,6 +61,10 @@ final class AppServiceProvider extends ServiceProvider
     private function configureGates(): void
     {
         Gate::before(function (User $user, string $ability): ?bool {
+            if ($ability === Role::DEVELOPER) {
+                return $user->isDeveloper();
+            }
+
             if ($user->role?->bypass) {
                 return true;
             }

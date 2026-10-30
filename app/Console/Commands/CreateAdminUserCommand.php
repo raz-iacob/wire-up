@@ -50,7 +50,7 @@ final class CreateAdminUserCommand extends Command
         $user = $action->handle([
             'name' => $name,
             'email' => $email,
-            'role_id' => Role::query()->where('key', 'owner')->value('id'),
+            'role_id' => Role::query()->where('key', Role::DEVELOPER)->value('id'),
             'email_verified_at' => now(),
         ], $password);
 
