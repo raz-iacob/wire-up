@@ -376,7 +376,7 @@ return new class extends Component
                 const crop = logo.crop?.default || Object.values(logo.crop || {})[0]
                 if (crop && logo.source) {
                     const opts = `w=${crop.w ?? 480},h=${crop.h ?? 160},crop=${crop.crop_w ?? 0}-${crop.crop_h ?? 0}-${crop.crop_x ?? 0}-${crop.crop_y ?? 0},q=${crop.q ?? 80},fm=${crop.fm ?? 'jpg'}`
-                    return `/img/${opts}/${logo.source}`
+                    return `/admin/img/${opts}/${logo.source}`
                 }
                 return logo.preview
             },

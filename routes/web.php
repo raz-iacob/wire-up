@@ -45,10 +45,12 @@ Route::group(['prefix' => resolve('localization')->setLocale()], function (): vo
 
 Route::get('img/{options}/{path}', [ImageController::class, 'show'])
     ->where('path', '.*')
+    ->withoutMiddleware('web')
     ->name('image.show');
 
 Route::get('og/{type}/{id}/{locale}.png', [OgImageController::class, 'show'])
     ->where(['type' => 'page|record', 'id' => '[0-9]+', 'locale' => '[A-Za-z_-]+'])
+    ->withoutMiddleware('web')
     ->name('og.show');
 
 Route::get('robots.txt', function (): Response {

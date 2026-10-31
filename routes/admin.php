@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\BackupDownloadController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\MediaFileController;
 use Illuminate\Support\Facades\Route;
 
 Route::livewire('/', 'pages::admin.dashboard')->name('dashboard');
 
 Route::get('media/{media}/file', MediaFileController::class)->name('media-file');
+Route::get('img/{options}/{path}', [ImageController::class, 'show'])->where('path', '.*')->name('image-preview');
 Route::livewire('analytics', 'pages::admin.analytics')->name('analytics');
 
 Route::livewire('help', 'pages::admin.help')->name('help');

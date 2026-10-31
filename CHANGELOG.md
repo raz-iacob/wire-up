@@ -4,6 +4,7 @@ Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
+- Images and share images no longer set cookies or start a visitor session, so a CDN such as Cloudflare can cache them and image requests no longer leave empty sessions behind.
 - Content types can be made admin only in Settings → Content types, for internal lists such as clients or leads. Their records never appear on the site, Collection blocks can't list them, and the list and editor drop the status, preview and SEO options they don't need.
 - Documents can now be private: only signed-in staff can open them, and they never appear on the site. Mark a document private when you edit it in the media library. Documents attached to records of an admin-only content type are made private automatically, including the ones already there when you switch the type to admin only. Private documents are included in backups and site exports.
 - The admin no longer picks up the site's fonts and colours right after you sign in. Moving between the site and the admin now always loads a fresh page, so each keeps only its own styles, with no reload needed.

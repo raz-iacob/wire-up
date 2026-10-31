@@ -105,7 +105,7 @@ it('rebuilds the card when the title changes and drops the old one', function ()
         ->and(File::glob(config()->string('wireup.og_path').'/page-'.$page->id.'/en-*.png'))->toHaveCount(1);
 });
 
-it('serves the generated card over a public url', function (): void {
+it('serves the generated card over a public url without cookies', function (): void {
     fakeOgBrowser();
 
     $page = sharedPage();
@@ -113,9 +113,11 @@ it('serves the generated card over a public url', function (): void {
 
     $this->get('/shared')->assertOk()->assertSee('/og/page/'.$page->id.'/en.png', false);
 
-    $this->get(route('og.show', ['type' => 'page', 'id' => $page->id, 'locale' => 'en']))
+    $response = $this->get(route('og.show', ['type' => 'page', 'id' => $page->id, 'locale' => 'en']))
         ->assertOk()
         ->assertHeader('content-type', 'image/png');
+
+    expect($response->headers->getCookies())->toBeEmpty();
 });
 
 it('refuses the card for content that is not live', function (): void {

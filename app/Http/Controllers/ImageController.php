@@ -15,7 +15,7 @@ final class ImageController
 {
     public function show(Request $request, string $options, string $path): Response|BinaryFileResponse
     {
-        abort_unless($request->hasValidRelativeSignature() || (bool) auth()->user()?->canAccessAdmin(), 404, 'File not found');
+        abort_unless($request->routeIs('admin.image-preview') || $request->hasValidRelativeSignature(), 404, 'File not found');
 
         if (str_ends_with(mb_strtolower($path), '.svg')) {
             $response = ImageService::svg($path);

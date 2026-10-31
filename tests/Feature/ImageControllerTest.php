@@ -40,11 +40,32 @@ it('rejects requests without a valid signature', function (): void {
         ->assertNotFound();
 });
 
-it('serves unsigned requests for admins so the admin previews keep working', function (): void {
+it('rejects unsigned requests on the public route even for admins', function (): void {
     $this->actingAsAdmin();
 
     $this->get(route('image.show', ['options' => 'w=50', 'path' => 'test-image.jpg']))
-        ->assertOk();
+        ->assertNotFound();
+});
+
+it('serves unsigned admin previews from the admin image route', function (): void {
+    $this->actingAsAdmin();
+
+    $this->get(route('admin.image-preview', ['options' => 'w=50', 'path' => 'test-image.jpg']))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'image/jpeg');
+});
+
+it('keeps the admin image route away from guests', function (): void {
+    $this->get(route('admin.image-preview', ['options' => 'w=50', 'path' => 'test-image.jpg']))
+        ->assertRedirect(route('login'));
+});
+
+it('serves images without setting cookies so a CDN can cache them', function (): void {
+    $response = $this->get(ImageService::url('w=50', 'test-image.jpg'));
+
+    $response->assertOk();
+
+    expect($response->headers->getCookies())->toBeEmpty();
 });
 
 it('caches the transformed output and serves repeats from the cache', function (): void {

@@ -224,7 +224,7 @@ return new class extends Component
                     const c = f.crop && f.crop.default;
                     if (c && f.source) {
                         const opts = `w=${c.w || 512},h=${c.h || 512},crop=${c.crop_w || 0}-${c.crop_h || 0}-${c.crop_x || 0}-${c.crop_y || 0},q=${c.q || 80},fm=${c.fm || 'png'}`;
-                        return `/img/${opts}/${f.source}`;
+                        return `/admin/img/${opts}/${f.source}`;
                     }
                     return f.preview || null;
                 },
@@ -234,7 +234,7 @@ return new class extends Component
                     const c = f.crop && f.crop.default;
                     if (c && f.source) {
                         const opts = `w=${c.w || 1200},h=${c.h || 630},crop=${c.crop_w || 0}-${c.crop_h || 0}-${c.crop_x || 0}-${c.crop_y || 0},q=${c.q || 80},fm=${c.fm || 'jpg'}`;
-                        return `/img/${opts}/${f.source}`;
+                        return `/admin/img/${opts}/${f.source}`;
                     }
                     return f.preview || null;
                 },
