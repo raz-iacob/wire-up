@@ -7,10 +7,12 @@ namespace App\Models;
 use App\Services\PageCache;
 use Carbon\CarbonInterface;
 use Database\Factories\SettingsFactory;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -30,6 +32,20 @@ final class Settings extends Model
     public const string CACHE_KEY = 'site-config';
 
     /**
+     * @var array<int, string>
+     */
+    public const array ENCRYPTED_KEYS = [
+        'pexels_api_key',
+        'google_analytics_credentials',
+        'google_maps_api_key',
+        'slack_webhook_url',
+        'ai_api_key',
+        'mail_password',
+        'stripe_secret_key',
+        'stripe_webhook_secret',
+    ];
+
+    /**
      * @return array<string, mixed>
      */
     public static function cached(): array
@@ -38,17 +54,17 @@ final class Settings extends Model
             $warm = cache()->get(self::CACHE_KEY);
 
             if (is_array($warm)) {
-                return $warm;
+                return self::decrypted($warm);
             }
 
             if (! Schema::hasTable('settings')) {
                 return [];
             }
 
-            return cache()->rememberForever(
+            return self::decrypted(cache()->rememberForever(
                 self::CACHE_KEY,
                 fn (): array => self::query()->get(['key', 'value'])->pluck('value', 'key')->all()
-            );
+            ));
         } catch (QueryException) {
             return [];
         }
@@ -69,9 +85,12 @@ final class Settings extends Model
             $changed = [];
 
             foreach ($values as $key => $value) {
-                $setting = self::query()->updateOrCreate(['key' => $key], ['value' => $value]);
+                $setting = self::query()->firstOrNew(['key' => $key]);
+                $stored = $setting->value;
+                $setting->value = $value !== '' && self::decryptValue((string) $key, $stored) === $value ? $stored : self::encryptValue((string) $key, $value);
 
-                if ($setting->wasRecentlyCreated || $setting->wasChanged('value')) {
+                if ($setting->isDirty()) {
+                    $setting->save();
                     $changed[] = (string) $key;
                 }
             }
@@ -82,6 +101,24 @@ final class Settings extends Model
         self::flush();
 
         return $changed;
+    }
+
+    public static function encryptValue(string $key, mixed $value): mixed
+    {
+        return in_array($key, self::ENCRYPTED_KEYS, true) && is_string($value) && $value !== '' ? Crypt::encryptString($value) : $value;
+    }
+
+    public static function decryptValue(string $key, mixed $value): mixed
+    {
+        if (! in_array($key, self::ENCRYPTED_KEYS, true) || ! is_string($value) || $value === '') {
+            return $value;
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (DecryptException) {
+            return '';
+        }
     }
 
     public static function flush(): void
@@ -102,5 +139,18 @@ final class Settings extends Model
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @return array<string, mixed>
+     */
+    private static function decrypted(array $values): array
+    {
+        foreach (array_intersect_key($values, array_flip(self::ENCRYPTED_KEYS)) as $key => $value) {
+            $values[$key] = self::decryptValue($key, $value);
+        }
+
+        return $values;
     }
 }

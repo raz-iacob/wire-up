@@ -16,7 +16,7 @@ final class PexelsIntegrationForm extends Form
     public function rules(): array
     {
         return [
-            'pexels_api_key' => ['required', 'string', 'max:255'],
+            'pexels_api_key' => [filled(config('site.pexels_api_key')) ? 'nullable' : 'required', 'string', 'max:255'],
         ];
     }
 

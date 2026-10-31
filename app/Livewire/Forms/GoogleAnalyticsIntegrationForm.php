@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Forms;
 
 use Closure;
+use Illuminate\Validation\Rule;
 use Livewire\Form;
 
 final class GoogleAnalyticsIntegrationForm extends Form
@@ -23,7 +24,7 @@ final class GoogleAnalyticsIntegrationForm extends Form
         return [
             'google_analytics_id' => ['required', 'string', 'max:40', 'regex:/^G-[A-Z0-9]+$/'],
             'google_analytics_property_id' => ['nullable', 'string', 'max:20', 'regex:/^\d+$/', 'required_with:google_analytics_credentials'],
-            'google_analytics_credentials' => ['nullable', 'string', 'max:10000', 'required_with:google_analytics_property_id', function (string $attribute, mixed $value, Closure $fail): void {
+            'google_analytics_credentials' => ['nullable', 'string', 'max:10000', Rule::when(blank(config('site.google_analytics_credentials')), 'required_with:google_analytics_property_id'), function (string $attribute, mixed $value, Closure $fail): void {
                 $decoded = json_decode((string) $value, true);
                 $email = is_array($decoded) ? ($decoded['client_email'] ?? null) : null;
                 $key = is_array($decoded) ? ($decoded['private_key'] ?? null) : null;

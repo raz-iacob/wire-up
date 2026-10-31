@@ -139,18 +139,19 @@ it('excludes credential settings by default', function (): void {
         ->and($keys)->toContain('currency');
 });
 
-it('includes credential settings on request', function (): void {
+it('includes credential settings on request, decrypted so another install can read them', function (): void {
     Storage::fake(config()->string('filesystems.media'));
 
-    Settings::set(['pexels_api_key' => 'secret-key']);
+    Settings::set(['pexels_api_key' => 'secret-key', 'mail_host' => 'smtp.example.com']);
 
     $path = exportPath();
     $manifest = SiteExporter::current()->export($path, withSecrets: true);
 
-    $keys = array_column(bundleEntry($path, SiteBundle::SITE_ENTRY)['settings'], 'key');
+    $values = array_column(bundleEntry($path, SiteBundle::SITE_ENTRY)['settings'], 'value', 'key');
 
     expect($manifest['with_secrets'])->toBeTrue()
-        ->and($keys)->toContain('pexels_api_key');
+        ->and($values['pexels_api_key'])->toBe('"secret-key"')
+        ->and($values['mail_host'])->toBe('"smtp.example.com"');
 });
 
 it('strips signed preview urls out of exported json', function (): void {

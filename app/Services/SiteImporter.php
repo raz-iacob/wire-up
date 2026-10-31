@@ -170,6 +170,12 @@ final class SiteImporter
             $row['fields'] = $this->normalizeFields($row['fields'] ?? null);
         }
 
+        $key = (string) ($row['key'] ?? '');
+
+        if ($table === 'settings' && in_array($key, Settings::ENCRYPTED_KEYS, true) && is_string($row['value'] ?? null)) {
+            $row['value'] = json_encode(Settings::encryptValue($key, json_decode($row['value'], true)));
+        }
+
         return $row;
     }
 

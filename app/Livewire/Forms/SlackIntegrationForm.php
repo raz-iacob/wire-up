@@ -16,7 +16,7 @@ final class SlackIntegrationForm extends Form
     public function rules(): array
     {
         return [
-            'slack_webhook_url' => ['required', 'string', 'max:500', 'url', 'regex:#^https://hooks\.slack\.com/#'],
+            'slack_webhook_url' => [filled(config('site.slack_webhook_url')) ? 'nullable' : 'required', 'string', 'max:500', 'url', 'regex:#^https://hooks\.slack\.com/#'],
         ];
     }
 

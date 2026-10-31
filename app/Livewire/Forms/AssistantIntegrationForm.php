@@ -22,7 +22,7 @@ final class AssistantIntegrationForm extends Form
     {
         return [
             'ai_provider' => ['required', 'string', 'in:'.implode(',', array_keys(AiModelCatalog::PROVIDERS))],
-            'ai_api_key' => ['required', 'string', 'max:255'],
+            'ai_api_key' => [filled(config('site.ai_api_key')) && $this->ai_provider === config('site.ai_provider') ? 'nullable' : 'required', 'string', 'max:255'],
             'ai_model' => ['required', 'string', 'max:100'],
         ];
     }

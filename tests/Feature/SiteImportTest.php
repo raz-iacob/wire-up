@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\SiteBundle;
 use App\Services\SiteExporter;
 use App\Services\SiteImporter;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -247,6 +248,23 @@ it('refreshes cached settings after an import', function (): void {
 
     expect(Settings::get('currency'))->toBe('JPY')
         ->and(config('site.currency'))->toBe('JPY');
+});
+
+it('encrypts the credentials a bundle carries as it imports them', function (): void {
+    $bundle = makeBundle([
+        'settings' => [
+            ['id' => 1, 'key' => 'mail_password', 'value' => '"hunter2"', 'created_at' => null, 'updated_at' => null],
+            ['id' => 2, 'key' => 'mail_host', 'value' => '"smtp.example.com"', 'created_at' => null, 'updated_at' => null],
+        ],
+    ]);
+
+    SiteImporter::current()->import($bundle, null);
+
+    $stored = json_decode((string) DB::table('settings')->where('key', 'mail_password')->value('value'), true);
+
+    expect(Crypt::decryptString($stored))->toBe('hunter2')
+        ->and(DB::table('settings')->where('key', 'mail_host')->value('value'))->toBe('"smtp.example.com"')
+        ->and(Settings::get('mail_password'))->toBe('hunter2');
 });
 
 it('survives a full export and import round trip', function (): void {

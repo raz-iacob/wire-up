@@ -16,7 +16,7 @@ final class GoogleMapsIntegrationForm extends Form
     public function rules(): array
     {
         return [
-            'google_maps_api_key' => ['required', 'string', 'max:255'],
+            'google_maps_api_key' => [filled(config('site.google_maps_api_key')) ? 'nullable' : 'required', 'string', 'max:255'],
         ];
     }
 

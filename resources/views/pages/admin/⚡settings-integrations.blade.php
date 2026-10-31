@@ -11,6 +11,7 @@ use App\Livewire\Forms\MailIntegrationForm;
 use App\Livewire\Forms\PexelsIntegrationForm;
 use App\Livewire\Forms\SlackIntegrationForm;
 use App\Livewire\Forms\StripeIntegrationForm;
+use App\Models\Settings;
 use App\Services\AiModelCatalog;
 use App\Services\IntegrationTester;
 use App\Services\IntegrationTestResult;
@@ -52,7 +53,7 @@ return new class extends Component
     {
         return resolve(AiModelCatalog::class)->options(
             $this->assistantForm->ai_provider,
-            mb_trim($this->assistantForm->ai_api_key),
+            $this->assistantApiKey(),
             $this->assistantForm->ai_model,
         );
     }
@@ -72,14 +73,9 @@ return new class extends Component
 
     public function mount(): void
     {
-        $this->pexelsForm->pexels_api_key = is_string(config('site.pexels_api_key')) ? config()->string('site.pexels_api_key') : '';
         $this->googleAnalyticsForm->google_analytics_id = is_string(config('site.google_analytics_id')) ? config()->string('site.google_analytics_id') : '';
         $this->googleAnalyticsForm->google_analytics_property_id = is_string(config('site.google_analytics_property_id')) ? config()->string('site.google_analytics_property_id') : '';
-        $this->googleAnalyticsForm->google_analytics_credentials = is_string(config('site.google_analytics_credentials')) ? config()->string('site.google_analytics_credentials') : '';
-        $this->googleMapsForm->google_maps_api_key = is_string(config('site.google_maps_api_key')) ? config()->string('site.google_maps_api_key') : '';
-        $this->slackForm->slack_webhook_url = is_string(config('site.slack_webhook_url')) ? config()->string('site.slack_webhook_url') : '';
         $this->assistantForm->ai_provider = array_key_exists((string) config('site.ai_provider'), AiModelCatalog::PROVIDERS) ? config()->string('site.ai_provider') : 'anthropic';
-        $this->assistantForm->ai_api_key = is_string(config('site.ai_api_key')) ? config()->string('site.ai_api_key') : '';
         $this->assistantForm->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : resolve(AiModelCatalog::class)->defaultFor($this->assistantForm->ai_provider);
         $this->stripeForm->stripe_publishable_key = $this->savedSetting('stripe_publishable_key');
         $this->customCodeForm->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
@@ -89,7 +85,6 @@ return new class extends Component
         $this->mailForm->mail_host = is_string(config('site.mail_host')) ? config()->string('site.mail_host') : '';
         $this->mailForm->mail_port = is_numeric(config('site.mail_port')) ? (int) config('site.mail_port') : 587;
         $this->mailForm->mail_username = is_string(config('site.mail_username')) ? config()->string('site.mail_username') : '';
-        $this->mailForm->mail_password = is_string(config('site.mail_password')) ? config()->string('site.mail_password') : '';
         $this->mailForm->mail_encryption = in_array(config('site.mail_encryption'), ['tls', 'ssl'], true) ? config()->string('site.mail_encryption') : 'tls';
         $this->mailForm->mail_from_address = is_string(config('site.mail_from_address')) ? config()->string('site.mail_from_address') : '';
         $this->mailForm->mail_from_name = is_string(config('site.mail_from_name')) ? config()->string('site.mail_from_name') : '';
@@ -123,11 +118,13 @@ return new class extends Component
             'mail_host' => $validated['mail_host'],
             'mail_port' => $validated['mail_port'],
             'mail_username' => $validated['mail_username'],
-            'mail_password' => $validated['mail_password'],
+            'mail_password' => $this->typedOrSaved($validated['mail_password'], 'mail_password'),
             'mail_encryption' => $validated['mail_encryption'],
             'mail_from_address' => $validated['mail_from_address'],
             'mail_from_name' => mb_trim((string) $validated['mail_from_name']),
         ]);
+
+        $this->mailForm->reset('mail_password');
 
         $this->dispatch('integrations-updated');
 
@@ -141,7 +138,9 @@ return new class extends Component
 
         $validated = $this->pexelsForm->validate();
 
-        $action->handle(['pexels_api_key' => $validated['pexels_api_key']]);
+        $action->handle(['pexels_api_key' => $this->typedOrSaved($validated['pexels_api_key'], 'pexels_api_key')]);
+
+        $this->pexelsForm->reset('pexels_api_key');
 
         Flux::modal('integration-pexels')->close();
         Flux::toast(__('Pexels connected.'), variant: 'success');
@@ -152,12 +151,15 @@ return new class extends Component
         $this->authorize('settings.edit');
 
         $validated = $this->googleAnalyticsForm->validate();
+        $propertyId = mb_trim((string) ($validated['google_analytics_property_id'] ?? ''));
 
         $action->handle([
             'google_analytics_id' => $validated['google_analytics_id'],
-            'google_analytics_property_id' => mb_trim((string) ($validated['google_analytics_property_id'] ?? '')),
-            'google_analytics_credentials' => mb_trim((string) ($validated['google_analytics_credentials'] ?? '')),
+            'google_analytics_property_id' => $propertyId,
+            'google_analytics_credentials' => $propertyId === '' ? '' : $this->typedOrSaved($validated['google_analytics_credentials'] ?? '', 'google_analytics_credentials'),
         ]);
+
+        $this->googleAnalyticsForm->reset('google_analytics_credentials');
 
         $this->dispatch('integrations-updated');
 
@@ -171,7 +173,9 @@ return new class extends Component
 
         $validated = $this->googleMapsForm->validate();
 
-        $action->handle(['google_maps_api_key' => $validated['google_maps_api_key']]);
+        $action->handle(['google_maps_api_key' => $this->typedOrSaved($validated['google_maps_api_key'], 'google_maps_api_key')]);
+
+        $this->googleMapsForm->reset('google_maps_api_key');
 
         Flux::modal('integration-google-maps')->close();
         Flux::toast(__('Google Maps connected.'), variant: 'success');
@@ -185,7 +189,9 @@ return new class extends Component
 
         $validated = $this->slackForm->validate();
 
-        $action->handle(['slack_webhook_url' => $validated['slack_webhook_url']]);
+        $action->handle(['slack_webhook_url' => $this->typedOrSaved($validated['slack_webhook_url'], 'slack_webhook_url')]);
+
+        $this->slackForm->reset('slack_webhook_url');
 
         Flux::modal('integration-slack')->close();
         Flux::toast(__('Slack connected.'), variant: 'success');
@@ -199,9 +205,11 @@ return new class extends Component
 
         $action->handle([
             'ai_provider' => $validated['ai_provider'],
-            'ai_api_key' => $validated['ai_api_key'],
+            'ai_api_key' => $this->assistantApiKey(),
             'ai_model' => mb_trim($validated['ai_model']),
         ]);
+
+        $this->assistantForm->reset('ai_api_key');
 
         $this->dispatch('integrations-updated');
 
@@ -279,12 +287,26 @@ return new class extends Component
         Flux::toast(__('Disconnected.'), variant: 'success');
     }
 
+    /**
+     * @return array<string, string>
+     */
     #[Computed]
-    public function stripeSecretHint(): string
+    public function secretHints(): array
     {
-        $secretKey = $this->savedSetting('stripe_secret_key');
+        $hints = [];
 
-        return $secretKey === '' ? '' : Str::before($secretKey, '_').'_'.Str::betweenFirst($secretKey, '_', '_').'_…'.Str::substr($secretKey, -4);
+        foreach (Settings::ENCRYPTED_KEYS as $key) {
+            $saved = $this->savedSetting($key);
+
+            $hints[$key] = match (true) {
+                $saved === '' => '',
+                $key === 'stripe_secret_key' => Str::before($saved, '_').'_'.Str::betweenFirst($saved, '_', '_').'_…'.Str::substr($saved, -4),
+                $key === 'google_analytics_credentials' => $this->serviceAccountEmail($saved),
+                default => '…'.Str::substr($saved, -4),
+            };
+        }
+
+        return $hints;
     }
 
     #[Computed]
@@ -319,7 +341,7 @@ return new class extends Component
             return;
         }
 
-        $this->reportTest($tester->slack($validated['slack_webhook_url']));
+        $this->reportTest($tester->slack($this->typedOrSaved($validated['slack_webhook_url'], 'slack_webhook_url')));
     }
 
     public function testMail(IntegrationTester $tester): void
@@ -340,7 +362,7 @@ return new class extends Component
             'port' => $validated['mail_port'],
             'encryption' => $validated['mail_encryption'],
             'username' => $validated['mail_username'],
-            'password' => $validated['mail_password'],
+            'password' => $this->typedOrSaved($validated['mail_password'], 'mail_password'),
             'from_address' => $validated['mail_from_address'],
             'from_name' => mb_trim((string) $validated['mail_from_name']),
         ], $this->testEmailRecipient()));
@@ -358,7 +380,7 @@ return new class extends Component
 
         $this->reportTest($tester->assistant(
             $validated['ai_provider'],
-            $validated['ai_api_key'],
+            $this->assistantApiKey(),
             mb_trim($validated['ai_model']),
         ));
     }
@@ -448,6 +470,31 @@ return new class extends Component
         return is_string($value) ? $value : '';
     }
 
+    private function typedOrSaved(mixed $typed, string $key): string
+    {
+        $typed = mb_trim((string) $typed);
+
+        return $typed !== '' ? $typed : $this->savedSetting($key);
+    }
+
+    private function assistantApiKey(): string
+    {
+        $typed = mb_trim($this->assistantForm->ai_api_key);
+
+        if ($typed !== '' || $this->assistantForm->ai_provider !== $this->savedSetting('ai_provider')) {
+            return $typed;
+        }
+
+        return $this->savedSetting('ai_api_key');
+    }
+
+    private function serviceAccountEmail(string $credentials): string
+    {
+        $email = data_get(json_decode($credentials, true), 'client_email');
+
+        return is_string($email) && $email !== '' ? $email : '…';
+    }
+
     private function allowsAnotherTest(): bool
     {
         $key = 'integration-test:'.auth()->id();
@@ -509,7 +556,7 @@ return new class extends Component
                 </div>
             </flux:card>
 
-            @php($pexelsConnected = $this->pexelsForm->pexels_api_key !== '')
+            @php($pexelsConnected = $this->secretHints['pexels_api_key'] !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -562,7 +609,7 @@ return new class extends Component
                 </div>
             </flux:card>
 
-            @php($mapsConnected = $this->googleMapsForm->google_maps_api_key !== '')
+            @php($mapsConnected = $this->secretHints['google_maps_api_key'] !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -588,7 +635,7 @@ return new class extends Component
                 </div>
             </flux:card>
 
-            @php($slackConnected = $this->slackForm->slack_webhook_url !== '')
+            @php($slackConnected = $this->secretHints['slack_webhook_url'] !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -616,7 +663,7 @@ return new class extends Component
                 </div>
             </flux:card>
 
-            @php($assistantConnected = $this->assistantForm->ai_api_key !== '')
+            @php($assistantConnected = $this->secretHints['ai_api_key'] !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -639,7 +686,7 @@ return new class extends Component
                 </div>
             </flux:card>
 
-            @php($mailConnected = $this->mailForm->mail_password !== '')
+            @php($mailConnected = $this->secretHints['mail_password'] !== '')
             <flux:card class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -701,7 +748,8 @@ return new class extends Component
                     type="password"
                     viewable
                     :label="__('Password or API key')"
-                    :placeholder="__('Paste your SMTP password or API key…')"
+                    :placeholder="$mailConnected ? $this->secretHints['mail_password'] : __('Paste your SMTP password or API key…')"
+                    :description="$mailConnected ? __('Leave blank to keep the saved password.') : null"
                 />
 
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -719,7 +767,7 @@ return new class extends Component
                 </div>
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($this->mailForm->mail_password !== '')
+                    @if ($mailConnected)
                         <flux:button
                             variant="subtle"
                             wire:click="disconnect('mail')"
@@ -756,8 +804,8 @@ return new class extends Component
                     type="password"
                     viewable
                     :label="__('Secret key')"
-                    :placeholder="$this->stripeSecretHint() !== '' ? $this->stripeSecretHint() : 'sk_test_…'"
-                    :description="$this->stripeSecretHint() !== '' ? __('Leave blank to keep the saved key.') : null"
+                    :placeholder="$this->secretHints['stripe_secret_key'] !== '' ? $this->secretHints['stripe_secret_key'] : 'sk_test_…'"
+                    :description="$this->secretHints['stripe_secret_key'] !== '' ? __('Leave blank to keep the saved key.') : null"
                 />
 
                 <flux:separator variant="subtle" />
@@ -807,11 +855,12 @@ return new class extends Component
                     type="password"
                     viewable
                     :label="__('Pexels API key')"
-                    :placeholder="__('Paste your Pexels API key…')"
+                    :placeholder="$pexelsConnected ? $this->secretHints['pexels_api_key'] : __('Paste your Pexels API key…')"
+                    :description="$pexelsConnected ? __('Leave blank to keep the saved key.') : null"
                 />
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($this->pexelsForm->pexels_api_key !== '')
+                    @if ($pexelsConnected)
                         <flux:button
                             variant="subtle"
                             wire:click="disconnect('pexels')"
@@ -859,7 +908,8 @@ return new class extends Component
                         rows="5"
                         class="font-mono text-sm"
                         :label="__('Service account JSON')"
-                        :placeholder="__('Paste the JSON key file…')"
+                        :placeholder="$this->secretHints['google_analytics_credentials'] !== '' ? $this->secretHints['google_analytics_credentials'] : __('Paste the JSON key file…')"
+                        :description="$this->secretHints['google_analytics_credentials'] !== '' ? __('Leave blank to keep the saved key file.') : null"
                     />
                 </div>
 
@@ -889,11 +939,12 @@ return new class extends Component
                     type="password"
                     viewable
                     :label="__('Google Maps API key')"
-                    :placeholder="__('Paste your Google Maps API key…')"
+                    :placeholder="$mapsConnected ? $this->secretHints['google_maps_api_key'] : __('Paste your Google Maps API key…')"
+                    :description="$mapsConnected ? __('Leave blank to keep the saved key.') : null"
                 />
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($this->googleMapsForm->google_maps_api_key !== '')
+                    @if ($mapsConnected)
                         <flux:button
                             variant="subtle"
                             wire:click="disconnect('google-maps')"
@@ -916,12 +967,15 @@ return new class extends Component
 
                 <flux:input
                     wire:model="slackForm.slack_webhook_url"
+                    type="password"
+                    viewable
                     :label="__('Slack webhook URL')"
-                    placeholder="https://hooks.slack.com/services/…"
+                    :placeholder="$slackConnected ? 'https://hooks.slack.com/services/'.$this->secretHints['slack_webhook_url'] : 'https://hooks.slack.com/services/…'"
+                    :description="$slackConnected ? __('Leave blank to keep the saved webhook.') : null"
                 />
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($this->slackForm->slack_webhook_url !== '')
+                    @if ($slackConnected)
                         <flux:button
                             variant="subtle"
                             wire:click="disconnect('slack')"
@@ -958,7 +1012,8 @@ return new class extends Component
                     type="password"
                     viewable
                     :label="__('API key')"
-                    :placeholder="__('Paste your API key…')"
+                    :placeholder="$assistantConnected ? $this->secretHints['ai_api_key'] : __('Paste your API key…')"
+                    :description="$assistantConnected ? __('Leave blank to keep the saved key.') : null"
                 />
 
                 <flux:select
@@ -980,7 +1035,7 @@ return new class extends Component
                 </flux:select>
 
                 <div class="flex items-center justify-between gap-4">
-                    @if ($this->assistantForm->ai_api_key !== '')
+                    @if ($assistantConnected)
                         <flux:button
                             variant="subtle"
                             wire:click="disconnect('assistant')"

@@ -33,14 +33,10 @@ it('redirects guests away from integrations settings', function (): void {
         ->assertRedirectToRoute('login');
 });
 
-it('hydrates the saved credentials and custom code on mount', function (): void {
+it('hydrates the saved settings and custom code on mount', function (): void {
     Settings::set([
-        'pexels_api_key' => 'saved-pexels-key',
         'google_analytics_id' => 'G-SAVED01',
         'google_analytics_property_id' => '987654321',
-        'google_analytics_credentials' => '{"client_email":"saved@example.com","private_key":"saved-key"}',
-        'google_maps_api_key' => 'saved-maps-key',
-        'slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/saved',
         'head_scripts' => '<script>head()</script>',
         'body_scripts' => '<script>body()</script>',
     ]);
@@ -48,14 +44,165 @@ it('hydrates the saved credentials and custom code on mount', function (): void 
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-integrations')
-        ->assertSet('pexelsForm.pexels_api_key', 'saved-pexels-key')
         ->assertSet('googleAnalyticsForm.google_analytics_id', 'G-SAVED01')
         ->assertSet('googleAnalyticsForm.google_analytics_property_id', '987654321')
-        ->assertSet('googleAnalyticsForm.google_analytics_credentials', '{"client_email":"saved@example.com","private_key":"saved-key"}')
-        ->assertSet('googleMapsForm.google_maps_api_key', 'saved-maps-key')
-        ->assertSet('slackForm.slack_webhook_url', 'https://hooks.slack.com/services/T0/B0/saved')
         ->assertSet('customCodeForm.head_scripts', '<script>head()</script>')
         ->assertSet('customCodeForm.body_scripts', '<script>body()</script>');
+});
+
+it('never sends a saved secret back to the browser, only a hint of it', function (): void {
+    Settings::set([
+        'pexels_api_key' => 'saved-pexels-key-PX01',
+        'google_analytics_id' => 'G-SAVED01',
+        'google_analytics_property_id' => '987654321',
+        'google_analytics_credentials' => '{"client_email":"saved@example.com","private_key":"saved-private-key"}',
+        'google_maps_api_key' => 'saved-maps-key-MP02',
+        'slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/saved-SL03',
+        'ai_provider' => 'anthropic',
+        'ai_api_key' => 'sk-ant-saved-AI04',
+        'mail_host' => 'smtp.example.com',
+        'mail_password' => 'saved-mail-password-ML05',
+        'stripe_publishable_key' => 'pk_test_saved',
+        'stripe_secret_key' => 'sk_test_saved-ST06',
+    ]);
+
+    $this->actingAsAdmin();
+
+    $html = $this->get(route('admin.settings-integrations'))->assertOk()->getContent();
+
+    expect($html)->not->toContain('saved-pexels-key')
+        ->and($html)->not->toContain('saved-private-key')
+        ->and($html)->not->toContain('saved-maps-key')
+        ->and($html)->not->toContain('B0/saved')
+        ->and($html)->not->toContain('sk-ant-saved')
+        ->and($html)->not->toContain('saved-mail-password')
+        ->and($html)->not->toContain('sk_test_saved')
+        ->and($html)->toContain('…PX01')
+        ->and($html)->toContain('saved@example.com')
+        ->and($html)->toContain('…MP02')
+        ->and($html)->toContain('https://hooks.slack.com/services/…SL03')
+        ->and($html)->toContain('…AI04')
+        ->and($html)->toContain('…ML05')
+        ->and($html)->toContain('sk_test_…ST06');
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->assertSet('pexelsForm.pexels_api_key', '')
+        ->assertSet('googleAnalyticsForm.google_analytics_credentials', '')
+        ->assertSet('googleMapsForm.google_maps_api_key', '')
+        ->assertSet('slackForm.slack_webhook_url', '')
+        ->assertSet('assistantForm.ai_api_key', '')
+        ->assertSet('mailForm.mail_password', '')
+        ->assertSee('Leave blank to keep the saved key.');
+});
+
+it('keeps the saved secret when its field is left blank', function (string $method, array $saved, array $typed, string $key): void {
+    Settings::set($saved);
+
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.settings-integrations');
+
+    foreach ($typed as $field => $value) {
+        $component->set($field, $value);
+    }
+
+    $component->call($method)->assertHasNoErrors();
+
+    expect(Settings::get($key))->toBe($saved[$key]);
+})->with([
+    'pexels' => ['connectPexels', ['pexels_api_key' => 'saved-pexels'], [], 'pexels_api_key'],
+    'google maps' => ['connectGoogleMaps', ['google_maps_api_key' => 'saved-maps'], [], 'google_maps_api_key'],
+    'slack' => ['connectSlack', ['slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/saved'], [], 'slack_webhook_url'],
+    'google analytics reports' => ['connectGoogleAnalytics', ['google_analytics_id' => 'G-SAVED01', 'google_analytics_property_id' => '987654321', 'google_analytics_credentials' => '{"client_email":"a@b.c","private_key":"k"}'], [], 'google_analytics_credentials'],
+    'ai assistant' => ['connectAssistant', ['ai_provider' => 'anthropic', 'ai_api_key' => 'sk-ant-saved', 'ai_model' => 'claude-opus-5-5'], [], 'ai_api_key'],
+    'email' => ['connectMail', ['mail_provider' => 'custom', 'mail_host' => 'smtp.example.com', 'mail_port' => 587, 'mail_username' => 'user', 'mail_password' => 'saved-password', 'mail_encryption' => 'tls', 'mail_from_address' => 'hi@example.com', 'mail_from_name' => 'Site'], [], 'mail_password'],
+]);
+
+it('replaces a saved secret with a newly typed one and clears the field again', function (): void {
+    Settings::set(['pexels_api_key' => 'saved-pexels']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('pexelsForm.pexels_api_key', '  new-pexels  ')
+        ->call('connectPexels')
+        ->assertHasNoErrors()
+        ->assertSet('pexelsForm.pexels_api_key', '');
+
+    expect(Settings::get('pexels_api_key'))->toBe('new-pexels');
+});
+
+it('asks for a new AI key when the provider changes', function (): void {
+    Settings::set(['ai_provider' => 'anthropic', 'ai_api_key' => 'sk-ant-saved']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('assistantForm.ai_provider', 'openai')
+        ->call('connectAssistant')
+        ->assertHasErrors(['assistantForm.ai_api_key' => 'required']);
+
+    expect(Settings::get('ai_provider'))->toBe('anthropic');
+});
+
+it('asks for the email password again when the SMTP host changes', function (): void {
+    Settings::set(['mail_provider' => 'custom', 'mail_host' => 'smtp.example.com', 'mail_password' => 'saved-password']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('mailForm.mail_host', 'smtp.other.com')
+        ->set('mailForm.mail_username', 'user')
+        ->set('mailForm.mail_from_address', 'hi@example.com')
+        ->set('mailForm.mail_from_name', 'Site')
+        ->call('connectMail')
+        ->assertHasErrors(['mailForm.mail_password' => 'required']);
+});
+
+it('drops the saved analytics key file when the property id is cleared', function (): void {
+    Settings::set(['google_analytics_id' => 'G-SAVED01', 'google_analytics_property_id' => '987654321', 'google_analytics_credentials' => '{"client_email":"a@b.c","private_key":"k"}']);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->set('googleAnalyticsForm.google_analytics_property_id', '')
+        ->call('connectGoogleAnalytics')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('google_analytics_credentials'))->toBe('');
+});
+
+it('tests the saved credentials when the secret field is left blank', function (): void {
+    Http::fake(['hooks.slack.com/*' => Http::response('ok')]);
+    Mail::fake();
+    ConnectionCheck::fake(['OK']);
+
+    Settings::set([
+        'slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/saved',
+        'ai_provider' => 'anthropic',
+        'ai_api_key' => 'sk-ant-saved',
+        'mail_provider' => 'custom',
+        'mail_host' => 'smtp.example.com',
+        'mail_password' => 'saved-password',
+    ]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-integrations')
+        ->call('testSlack')
+        ->assertHasNoErrors()
+        ->set('assistantForm.ai_model', 'claude-sonnet-5')
+        ->call('testAssistant')
+        ->assertHasNoErrors()
+        ->set('mailForm.mail_username', 'user@example.com')
+        ->set('mailForm.mail_from_address', 'hello@example.com')
+        ->set('mailForm.mail_from_name', 'Example Site')
+        ->call('testMail')
+        ->assertHasNoErrors();
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://hooks.slack.com/services/T0/B0/saved');
+    ConnectionCheck::assertPrompted('ping');
+    Mail::assertSent(IntegrationTestMail::class);
 });
 
 it('persists and trims the custom head and body code on update', function (): void {
@@ -341,7 +488,7 @@ it('hydrates the saved AI Assistant settings on mount', function (): void {
 
     Livewire::test('pages::admin.settings-integrations')
         ->assertSet('assistantForm.ai_provider', 'anthropic')
-        ->assertSet('assistantForm.ai_api_key', 'sk-ant-saved')
+        ->assertSet('assistantForm.ai_api_key', '')
         ->assertSet('assistantForm.ai_model', 'claude-sonnet-5');
 });
 
@@ -415,7 +562,7 @@ it('connects the AI Assistant by persisting provider, key and model', function (
         ->assertHasNoErrors();
 
     expect(Settings::get('ai_provider'))->toBe('anthropic')
-        ->and(Settings::get('ai_api_key'))->toBe('  sk-ant-new  ')
+        ->and(Settings::get('ai_api_key'))->toBe('sk-ant-new')
         ->and(Settings::get('ai_model'))->toBe('claude-opus-4-8');
 });
 
@@ -585,7 +732,7 @@ it('hydrates the saved email settings on mount', function (): void {
     Livewire::test('pages::admin.settings-integrations')
         ->assertSet('mailForm.mail_provider', 'sendgrid')
         ->assertSet('mailForm.mail_host', 'smtp.sendgrid.net')
-        ->assertSet('mailForm.mail_password', 'sg-secret')
+        ->assertSet('mailForm.mail_password', '')
         ->assertSet('mailForm.mail_encryption', 'tls');
 });
 

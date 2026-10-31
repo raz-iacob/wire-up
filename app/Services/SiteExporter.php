@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Settings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -74,14 +75,33 @@ final class SiteExporter
             ->map(fn (object $row): array => $this->scrubRow((array) $row))
             ->all();
 
-        if ($table !== 'settings' || $withSecrets) {
+        if ($table !== 'settings') {
             return $rows;
+        }
+
+        if ($withSecrets) {
+            return array_map($this->decryptSetting(...), $rows);
         }
 
         return array_values(array_filter(
             $rows,
             fn (array $row): bool => ! in_array($row['key'] ?? null, SiteBundle::SECRET_SETTINGS, true),
         ));
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    private function decryptSetting(array $row): array
+    {
+        $key = (string) ($row['key'] ?? '');
+
+        if (in_array($key, Settings::ENCRYPTED_KEYS, true) && is_string($row['value'] ?? null)) {
+            $row['value'] = json_encode(Settings::decryptValue($key, json_decode($row['value'], true)));
+        }
+
+        return $row;
     }
 
     /**
