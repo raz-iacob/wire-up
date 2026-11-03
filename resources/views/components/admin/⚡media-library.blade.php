@@ -59,7 +59,7 @@ return new class extends Component
 
     public string $typeFilter = '';
 
-    public bool $unusedOnly = false;
+    public string $usage = '';
 
     public int $perPage = 20;
 
@@ -106,9 +106,17 @@ return new class extends Component
         $this->selected = $this->selectionFromIds($this->selectedIds);
     }
 
+    public function clearFilters(): void
+    {
+        $this->typeFilter = $this->type->value ?? '';
+        $this->usage = '';
+        $this->medias = collect();
+        $this->loadMedia();
+    }
+
     public function updated(string $propertyName): void
     {
-        if (in_array($propertyName, ['search', 'typeFilter', 'unusedOnly'], true)) {
+        if (in_array($propertyName, ['search', 'typeFilter', 'usage'], true)) {
             $this->medias = collect();
             $this->loadMedia();
         }
@@ -128,7 +136,7 @@ return new class extends Component
         $this->allowedTypes = $types->map(fn (MediaType $mediaType): string => $mediaType->value)->all();
         $this->type = $types->count() === 1 ? $types->first() : null;
         $this->typeFilter = $this->type->value ?? '';
-        $this->unusedOnly = false;
+        $this->usage = '';
         $this->syncSelected($this->hydrateSelection($media ?? []));
         $this->showLibrary = true;
         $this->max = $max;
@@ -321,7 +329,8 @@ return new class extends Component
             ->latest()
             ->when($this->allowedTypes !== [], fn ($q) => $q->whereIn('type', $this->allowedTypes))
             ->when($this->typeFilter, fn ($q, $t) => $q->where('type', $t))
-            ->when($this->unusedOnly, fn ($q) => $q->whereKey(resolve(MediaUsageService::class)->unusedIds()))
+            ->when($this->usage === 'unused', fn ($q) => $q->whereKey(resolve(MediaUsageService::class)->unusedIds()))
+            ->when($this->usage === 'used', fn ($q) => $q->whereKeyNot(resolve(MediaUsageService::class)->unusedIds()))
             ->when($this->search, fn ($q, $s) => $q->whereAny(['filename', 'alt_text'], 'like', "%{$s}%")
             );
 
@@ -680,25 +689,61 @@ return new class extends Component
                                 />
                             </div>
                         @else
-                            <div class="w-full sm:shrink-0 md:w-52">
-                                <flux:select
-                                    variant="listbox"
-                                    wire:model.live="typeFilter"
-                                    :disabled="$type !== null"
-                                    placeholder="{{ __('Filter by type') }}"
-                                >
-                                    <flux:select.option value="">{{ __('All Media') }}</flux:select.option>
-                                    @foreach (($allowedTypes !== [] ? array_map([MediaType::class, 'from'], $allowedTypes) : MediaType::cases()) as $typeOption)
-                                        <flux:select.option value="{{ $typeOption->value }}">
-                                            {{ $typeOption->label(true) }}</flux:select.option>
-                                    @endforeach
-                                </flux:select>
-                            </div>
-                            @if ($target === 'media-gallery')
-                                <flux:field variant="inline" class="shrink-0">
-                                    <flux:switch wire:model.live="unusedOnly" />
-                                    <flux:label class="whitespace-nowrap">{{ __('Not used') }}</flux:label>
-                                </flux:field>
+                            @if ($type === null || $target === 'media-gallery')
+                                <flux:dropdown position="bottom" align="start">
+                                    <flux:button
+                                        class="shrink-0"
+                                        icon="funnel"
+                                        iconVariant="outline"
+                                    >{{ __('Filter') }}</flux:button>
+
+                                    <flux:menu>
+                                        @if ($type === null)
+                                            <flux:menu.submenu heading="{{ __('Type') }}">
+                                                <flux:menu.radio.group
+                                                    wire:model.live="typeFilter"
+                                                    heading="{{ __('Type') }}"
+                                                >
+                                                    <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
+                                                    @foreach (($allowedTypes !== [] ? array_map([MediaType::class, 'from'], $allowedTypes) : MediaType::cases()) as $typeOption)
+                                                        <flux:menu.radio value="{{ $typeOption->value }}">
+                                                            {{ $typeOption->label(true) }}</flux:menu.radio>
+                                                    @endforeach
+                                                </flux:menu.radio.group>
+                                            </flux:menu.submenu>
+                                        @endif
+                                        @if ($target === 'media-gallery')
+                                            <flux:menu.submenu heading="{{ __('Usage') }}">
+                                                <flux:menu.radio.group
+                                                    wire:model.live="usage"
+                                                    heading="{{ __('Usage') }}"
+                                                >
+                                                    <flux:menu.radio value="" checked>{{ __('All') }}</flux:menu.radio>
+                                                    <flux:menu.radio value="used">{{ __('In use') }}</flux:menu.radio>
+                                                    <flux:menu.radio value="unused">
+                                                        {{ __('Not used') }}</flux:menu.radio>
+                                                </flux:menu.radio.group>
+                                            </flux:menu.submenu>
+                                        @endif
+                                        @if (($type === null && $typeFilter !== '') || $usage !== '')
+                                            <flux:menu.separator />
+                                            <flux:menu.item icon="x-mark" wire:click="clearFilters">
+                                                {{ __('Clear filters') }}</flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            @endif
+                            @if ($type === null && MediaType::tryFrom($typeFilter))
+                                <x-admin.filter-chip
+                                    :label="MediaType::from($typeFilter)->label(true)"
+                                    wire:click="$set('typeFilter', '')"
+                                />
+                            @endif
+                            @if (in_array($usage, ['used', 'unused'], true))
+                                <x-admin.filter-chip
+                                    :label="$usage === 'used' ? __('In use') : __('Not used')"
+                                    wire:click="$set('usage', '')"
+                                />
                             @endif
                             <div class="w-full sm:shrink-0 md:w-52">
                                 <flux:input
@@ -811,7 +856,7 @@ return new class extends Component
                         @empty
                             @if ($loaded)
                                 <div class="col-span-full py-10 text-center">
-                                    <flux:text class="text-zinc-500 dark:text-zinc-400">{{ $unusedOnly ? __('Every file is in use.') : __('No media found.') }}</flux:text>
+                                    <flux:text class="text-zinc-500 dark:text-zinc-400">{{ $usage === 'unused' ? __('Every file is in use.') : __('No media found.') }}</flux:text>
                                 </div>
                             @endif
 
@@ -1213,7 +1258,28 @@ return new class extends Component
                                 size="sm"
                                 class="text-zinc-500 dark:text-zinc-400"
                             >{{ $max > 1 ? __('No files selected.') : __('No file selected.') }}</flux:text>
-                            @if ($unusedOnly && $medias->isNotEmpty())
+                            @unless ($pexelsMode)
+                                <div class="mt-6 space-y-3">
+                                    <flux:text size="sm" variant="strong">{{ __('How to select') }}</flux:text>
+                                    <dl class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 text-sm">
+                                        <dt>
+                                            <kbd class="rounded-md border border-zinc-200 px-1.5 py-0.5 font-mono text-xs dark:border-zinc-700">{{ __('Click') }}</kbd>
+                                        </dt>
+                                        <dd class="text-zinc-500 dark:text-zinc-400">
+                                            {{ $max > 1 ? __('Add or remove a file') : __('Select a file') }}
+                                        </dd>
+                                        @if ($max > 1)
+                                            <dt class="flex items-center gap-1">
+                                                <kbd class="rounded-md border border-zinc-200 px-1.5 py-0.5 font-mono text-xs dark:border-zinc-700">Shift</kbd>
+                                                <span class="text-zinc-400">+</span>
+                                                <kbd class="rounded-md border border-zinc-200 px-1.5 py-0.5 font-mono text-xs dark:border-zinc-700">{{ __('Click') }}</kbd>
+                                            </dt>
+                                            <dd class="text-zinc-500 dark:text-zinc-400">{{ __('Select a range') }}</dd>
+                                        @endif
+                                    </dl>
+                                </div>
+                            @endunless
+                            @if ($usage === 'unused' && $medias->isNotEmpty())
                                 <flux:button
                                     size="sm"
                                     class="mt-4"

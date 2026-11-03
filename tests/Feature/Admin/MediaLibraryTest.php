@@ -963,8 +963,11 @@ it('narrows the gallery to files nothing uses and deletes them all at once', fun
     Livewire::test('admin.media-library')
         ->dispatch('select-media', target: 'media-gallery', type: null, max: 50, media: null)
         ->assertCount('medias', 3)
+        ->set('usage', 'used')
+        ->assertCount('medias', 1)
+        ->assertSet('medias.0.id', $used->id)
         ->assertDontSee('Select all shown')
-        ->set('unusedOnly', true)
+        ->set('usage', 'unused')
         ->assertCount('medias', 2)
         ->call('selectAllShown')
         ->assertCount('selected', 2)
@@ -982,9 +985,44 @@ it('keeps the unused filter out of the picker and starts each opening without it
 
     Livewire::test('admin.media-library')
         ->dispatch('select-media', target: 'media-gallery', type: null, max: 50, media: null)
-        ->set('unusedOnly', true)
+        ->set('usage', 'unused')
         ->dispatch('select-media', target: 'cover', type: 'image', max: 1, media: null)
-        ->assertSet('unusedOnly', false)
-        ->assertDontSeeHtml('wire:model.live="unusedOnly"')
+        ->assertSet('usage', '')
+        ->assertDontSeeHtml('wire:model.live="usage"')
         ->assertCount('medias', 1);
+});
+
+it('filters the gallery from the Filter menu, shows each filter as a chip and clears them together', function (): void {
+    Media::factory()->count(2)->create(['type' => MediaType::IMAGE]);
+    Media::factory()->create(['type' => MediaType::VIDEO]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'media-gallery', type: null, max: 50, media: null)
+        ->assertSeeHtml('wire:model.live="typeFilter"')
+        ->assertDontSee(['Clear filters', 'Remove filter'])
+        ->set('typeFilter', MediaType::IMAGE->value)
+        ->set('usage', 'unused')
+        ->assertCount('medias', 2)
+        ->assertSee('Clear filters')
+        ->assertSeeHtml("wire:click=\"\$set('typeFilter', '')\"")
+        ->assertSeeHtml("wire:click=\"\$set('usage', '')\"")
+        ->call('clearFilters')
+        ->assertSet('typeFilter', '')
+        ->assertSet('usage', '')
+        ->assertCount('medias', 3)
+        ->dispatch('select-media', target: 'cover', type: 'image', max: 1, media: null)
+        ->assertDontSeeHtml('wire:model.live="typeFilter"');
+});
+
+it('explains how to select files until something is selected', function (): void {
+    $media = Media::factory()->create(['type' => MediaType::IMAGE]);
+
+    Livewire::test('admin.media-library')
+        ->dispatch('select-media', target: 'media-gallery', type: null, max: 50, media: null)
+        ->assertSee(['How to select', 'Add or remove a file', 'Select a range'])
+        ->call('selectMediaById', $media->id)
+        ->assertDontSee('How to select')
+        ->dispatch('select-media', target: 'cover', type: 'image', max: 1, media: null)
+        ->assertSee(['How to select', 'Select a file'])
+        ->assertDontSee('Select a range');
 });
