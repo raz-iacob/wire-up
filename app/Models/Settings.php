@@ -43,6 +43,7 @@ final class Settings extends Model
         'mail_password',
         'stripe_secret_key',
         'stripe_webhook_secret',
+        'error_report_slack_webhook_url',
     ];
 
     /**

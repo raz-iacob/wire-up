@@ -154,5 +154,13 @@ return new class extends Component
             wire:navigate.hover
         >
             {{ __('Backups') }}</flux:sidebar.item>
+        @can('developer')
+            <flux:sidebar.item
+                :href="route('admin.settings-developer')"
+                :current="request()->routeIs('admin.settings-developer')"
+                wire:navigate.hover
+            >
+                {{ __('Developer') }}</flux:sidebar.item>
+        @endcan
     </flux:sidebar.group>
 </div>

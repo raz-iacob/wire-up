@@ -8,6 +8,7 @@ use App\Http\Middleware\OnlyAdmins;
 use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\ServeRedirects;
 use App\Http\Middleware\TrackUserAccess;
+use App\Services\ErrorReporter;
 use App\Services\RedirectService;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -59,6 +60,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReportDuplicates();
         $exceptions->dontReport(CannotUpdateLockedPropertyException::class);
+        $exceptions->report(function (Throwable $exception): void {
+            resolve(ErrorReporter::class)->report($exception);
+        });
         $exceptions->render(function (NotFoundHttpException $exception, Request $request): null {
             resolve(RedirectService::class)->recordNotFound($request);
 
