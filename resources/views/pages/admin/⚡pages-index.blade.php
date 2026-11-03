@@ -266,7 +266,7 @@ return new class extends Component
 };
 ?>
 <div>
-    <div class="space-y-6">
+    <div class="space-y-6" x-data="bulkSelection($wire, @js($this->bulkEnabled))">
         <div x-show="$wire.selected.length === 0" class="flex flex-wrap items-center gap-3">
             @can('pages.create')
                 <flux:modal.trigger name="add-new">
@@ -351,7 +351,7 @@ return new class extends Component
             >
                 <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
                     @if ($this->bulkEnabled)
-                        <flux:table.column class="w-8">
+                        <flux:table.column class="w-11 ps-3!">
                             <flux:checkbox.all :aria-label="__('Select all')"
                         /></flux:table.column>
                     @endif
@@ -379,9 +379,14 @@ return new class extends Component
 
                 <flux:table.rows>
                     @foreach ($this->pages as $row)
-                        <flux:table.row wire:key="{{ $row->id }}">
+                        <flux:table.row
+                            wire:key="{{ $row->id }}"
+                            x-bind:class="{ 'bg-zinc-50 dark:bg-zinc-900': isSelected({{ $row->id }}) }"
+                            x-on:dblclick="toggleRow($event, {{ $row->id }})"
+                            x-on:mousedown="$event.detail > 1 && $event.preventDefault()"
+                        >
                             @if ($this->bulkEnabled)
-                                <flux:table.cell>
+                                <flux:table.cell class="ps-3!">
                                     <flux:checkbox
                                         :value="$row->id"
                                         :aria-label="__('Select :title', ['title' => $row->title])"

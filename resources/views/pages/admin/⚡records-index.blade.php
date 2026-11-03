@@ -382,7 +382,7 @@ return new class extends Component
 };
 ?>
 <div>
-    <div class="space-y-6">
+    <div class="space-y-6" x-data="bulkSelection($wire)">
         <div x-show="$wire.selected.length === 0" class="flex flex-wrap items-center gap-3">
             @can('records.'.$recordType->key.'.create')
                 <flux:modal.trigger name="add-new">
@@ -507,7 +507,7 @@ return new class extends Component
                 container:class="max-h-[calc(100dvh-12rem)]"
             >
                 <flux:table.columns sticky class="bg-white dark:bg-zinc-800">
-                    <flux:table.column class="w-8">
+                    <flux:table.column class="w-11 ps-3!">
                         <flux:checkbox.all :aria-label="__('Select all')"
                     /></flux:table.column>
                     <flux:table.column
@@ -551,8 +551,13 @@ return new class extends Component
 
                 <flux:table.rows>
                     @foreach ($this->records as $row)
-                        <flux:table.row wire:key="{{ $row->id }}">
-                            <flux:table.cell>
+                        <flux:table.row
+                            wire:key="{{ $row->id }}"
+                            x-bind:class="{ 'bg-zinc-50 dark:bg-zinc-900': isSelected({{ $row->id }}) }"
+                            x-on:dblclick="toggleRow($event, {{ $row->id }})"
+                            x-on:mousedown="$event.detail > 1 && $event.preventDefault()"
+                        >
+                            <flux:table.cell class="ps-3!">
                                 <flux:checkbox
                                     :value="$row->id"
                                     :aria-label="__('Select :title', ['title' => $row->title !== '' ? $row->title : __('Untitled')])"
