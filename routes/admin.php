@@ -56,6 +56,7 @@ Route::middleware('can:roles.view')->group(function (): void {
 
 Route::middleware('can:developer')->group(function (): void {
     Route::livewire('settings/developer', 'pages::admin.settings-developer')->name('settings-developer');
+    Route::livewire('settings/errors', 'pages::admin.settings-errors')->name('settings-errors');
 });
 
 Route::middleware('can:activity.view')->group(function (): void {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\ErrorLog;
 use App\Services\SettingsService;
 use App\Services\StripeService;
 use App\Services\UpdateService;
@@ -33,6 +34,12 @@ return new class extends Component
     public function showAssistant(): bool
     {
         return filled(config('site.ai_api_key'));
+    }
+
+    #[Computed]
+    public function unresolvedErrors(): int
+    {
+        return ErrorLog::unresolvedCount();
     }
 
     #[Computed]
@@ -161,6 +168,13 @@ return new class extends Component
                 wire:navigate.hover
             >
                 {{ __('Developer') }}</flux:sidebar.item>
+            <flux:sidebar.item
+                :href="route('admin.settings-errors')"
+                :current="request()->routeIs('admin.settings-errors')"
+                :badge="$this->unresolvedErrors ?: null"
+                wire:navigate.hover
+            >
+                {{ __('Error log') }}</flux:sidebar.item>
         @endcan
     </flux:sidebar.group>
 </div>

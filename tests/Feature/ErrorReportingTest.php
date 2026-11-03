@@ -2,28 +2,17 @@
 
 declare(strict_types=1);
 
-use App\Models\Settings;
+use App\Models\ErrorLog;
 use App\Models\User;
 use App\Notifications\ErrorReported;
 use App\Services\ErrorReporter;
 use App\Services\SlackWebhookChannel;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Notifications\Events\NotificationSending;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
-
-function reportErrorsTo(string $email = 'dev@example.com', string $slack = 'https://hooks.slack.com/services/T0/B0/dev'): void
-{
-    Settings::set(['error_report_email' => $email, 'error_report_slack_webhook_url' => $slack]);
-}
-
-function errorAtLine(int $line): RuntimeException
-{
-    $exception = new RuntimeException('Something broke');
-    new ReflectionProperty(Exception::class, 'line')->setValue($exception, $line);
-
-    return $exception;
-}
 
 it('emails and messages Slack about an unexpected error, leaving out the query string', function (): void {
     Notification::fake();
@@ -35,11 +24,16 @@ it('emails and messages Slack about an unexpected error, leaving out the query s
         ->assertServerError();
 
     Notification::assertSentOnDemandTimes(ErrorReported::class, 2);
-    Notification::assertSentOnDemand(ErrorReported::class, function (ErrorReported $notification, array $channels, AnonymousNotifiable $notifiable) use ($user): bool {
-        $mail = implode("\n", $notification->toMail($notifiable)->introLines);
+    $error = ErrorLog::query()->sole();
+
+    Notification::assertSentOnDemand(ErrorReported::class, function (ErrorReported $notification, array $channels, AnonymousNotifiable $notifiable) use ($user, $error): bool {
+        $message = $notification->toMail($notifiable);
+        $mail = implode("\n", $message->introLines);
         $slack = (string) json_encode($notification->toSlackWebhook());
 
         return $channels === ['mail']
+            && $message->actionUrl === route('admin.settings-errors', ['error' => $error->id])
+            && str_contains($slack, json_encode(route('admin.settings-errors', ['error' => $error->id]), JSON_THROW_ON_ERROR))
             && $notifiable->routes['mail'] === 'dev@example.com'
             && str_contains($mail, '**RuntimeException:** The flux capacitor broke')
             && str_contains($mail, 'Where: tests/Feature/ErrorReportingTest.php:')
@@ -63,9 +57,10 @@ it('describes an error from the command line or a queue', function (): void {
 
     Notification::assertSentOnDemand(
         ErrorReported::class,
-        fn (ErrorReported $notification): bool => $notification->address === 'Command line or queue'
-            && $notification->context['Signed in'] === 'No'
-            && $notification->message === 'The queue fell over',
+        fn (ErrorReported $notification): bool => $notification->error->address === null
+            && $notification->details()['Address'] === 'Command line or queue'
+            && $notification->details()['Signed in'] === 'No'
+            && $notification->error->message === 'The queue fell over',
     );
 });
 
@@ -122,4 +117,16 @@ it('still messages Slack when email fails, and never reports its own failures', 
     report(errorAtLine(2));
 
     Http::assertSentCount(2);
+});
+
+it('ignores an error raised while it is already sending a report', function (): void {
+    Http::fake(['hooks.slack.com/*' => Http::response('ok')]);
+    reportErrorsTo(email: '');
+    Event::listen(NotificationSending::class, fn () => report(new LogicException('Raised while sending')));
+
+    report(errorAtLine(1));
+
+    Http::assertSentCount(1);
+
+    expect(ErrorLog::query()->pluck('message')->all())->toBe(['Something broke']);
 });

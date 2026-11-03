@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\ErrorLog;
 use App\Notifications\ErrorReported;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
@@ -19,11 +20,24 @@ final class ErrorReporter
 
     public function report(Throwable $exception): void
     {
-        if (self::$sending || $this->routes() === [] || ! $this->isFirstInAnHour($exception)) {
+        if (self::$sending) {
             return;
         }
 
-        $this->deliver(new ErrorReported($exception));
+        self::$sending = true;
+
+        try {
+            $error = ErrorLog::forException($exception);
+            $reopened = $error->isResolved();
+
+            rescue(fn (): bool => $error->describe($exception)->save(), false, report: false);
+
+            if ($this->routes() !== [] && ($this->isFirstInAnHour($error->fingerprint) || $reopened)) {
+                $this->deliver(new ErrorReported($error));
+            }
+        } finally {
+            self::$sending = false;
+        }
     }
 
     /**
@@ -31,7 +45,9 @@ final class ErrorReporter
      */
     public function sendTest(): array
     {
-        return $this->deliver(new ErrorReported(new RuntimeException(__('This is a test error report. Error reports are working.'))));
+        $error = new ErrorLog()->describe(new RuntimeException(__('This is a test error report. Error reports are working.')));
+
+        return $this->deliver(new ErrorReported($error));
     }
 
     /**
@@ -51,27 +67,20 @@ final class ErrorReporter
     private function deliver(ErrorReported $notification): array
     {
         $failures = [];
-        self::$sending = true;
 
-        try {
-            foreach ($this->routes() as $channel => $route) {
-                try {
-                    Notification::sendNow(new AnonymousNotifiable()->route($channel, $route), $notification);
-                } catch (Throwable $exception) {
-                    $failures[] = $exception->getMessage();
-                }
+        foreach ($this->routes() as $channel => $route) {
+            try {
+                Notification::sendNow(new AnonymousNotifiable()->route($channel, $route), $notification);
+            } catch (Throwable $exception) {
+                $failures[] = $exception->getMessage();
             }
-        } finally {
-            self::$sending = false;
         }
 
         return $failures;
     }
 
-    private function isFirstInAnHour(Throwable $exception): bool
+    private function isFirstInAnHour(string $fingerprint): bool
     {
-        $fingerprint = hash('sha256', $exception::class.'|'.$exception->getFile().'|'.$exception->getLine());
-
         return (bool) rescue(
             fn (): bool => cache()->add('error-report:'.$fingerprint, true, now()->addHour())
                 && RateLimiter::attempt('error-reports', self::MAX_PER_HOUR, fn (): bool => true, 3600),

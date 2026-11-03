@@ -7,6 +7,7 @@ use App\Enums\ContentStatus;
 use App\Models\Activity;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Settings;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\SQLiteDatabaseDoesNotExistException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -196,4 +197,17 @@ function downloadedCsv(Testable $component): array
 function loggedEvents(): array
 {
     return Activity::query()->orderBy('id')->get()->map(fn (Activity $activity): ActivityEvent => $activity->event)->values()->all();
+}
+
+function reportErrorsTo(string $email = 'dev@example.com', string $slack = 'https://hooks.slack.com/services/T0/B0/dev'): void
+{
+    Settings::set(['error_report_email' => $email, 'error_report_slack_webhook_url' => $slack]);
+}
+
+function errorAtLine(int $line, string $message = 'Something broke'): RuntimeException
+{
+    $exception = new RuntimeException($message);
+    new ReflectionProperty(Exception::class, 'line')->setValue($exception, $line);
+
+    return $exception;
 }

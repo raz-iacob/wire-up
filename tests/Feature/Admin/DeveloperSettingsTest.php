@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\ErrorLog;
 use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
@@ -89,6 +90,8 @@ it('sends a test report to the saved destinations and says when one fails', func
         ->assertDispatched('toast-show', fn (string $event, array $payload): bool => str_starts_with((string) ($payload['slots']['text'] ?? ''), 'The test report could not be sent:'));
 
     Http::assertSentCount(2);
+
+    expect(ErrorLog::query()->exists())->toBeFalse();
 });
 
 it('asks for somewhere to send reports before sending a test', function (): void {

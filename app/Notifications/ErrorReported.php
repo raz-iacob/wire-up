@@ -4,52 +4,16 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Models\ErrorLog;
 use App\Services\SettingsService;
-use App\Services\UpdateService;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
-use Throwable;
 
 final class ErrorReported extends Notification
 {
-    public readonly string $type;
-
-    public readonly string $message;
-
-    public readonly string $location;
-
-    public readonly string $address;
-
-    /**
-     * @var list<string>
-     */
-    public readonly array $trace;
-
-    /**
-     * @var array<string, string>
-     */
-    public readonly array $context;
-
-    public function __construct(Throwable $exception)
-    {
-        $this->type = $exception::class;
-        $this->message = Str::limit(mb_trim($exception->getMessage()), 1000);
-        $this->location = $this->relative($exception->getFile()).':'.$exception->getLine();
-        $this->address = app()->runningInConsole() && request()->route() === null ? __('Command line or queue') : request()->method().' '.request()->url();
-        $this->trace = array_map(
-            fn (array $frame): string => $this->relative($frame['file']).':'.($frame['line'] ?? ''),
-            array_slice(array_filter($exception->getTrace(), fn (array $frame): bool => isset($frame['file'])), 0, 10),
-        );
-        $this->context = [
-            __('Where') => $this->location,
-            __('Address') => $this->address,
-            __('Signed in') => auth()->check() ? __('User #:id', ['id' => auth()->id()]) : __('No'),
-            __('Version') => 'Wire-Up '.(resolve(UpdateService::class)->currentVersion() ?? '?').' · PHP '.PHP_VERSION.' · '.app()->environment(),
-            __('Time') => now()->toDateTimeString(),
-        ];
-    }
+    public function __construct(public readonly ErrorLog $error) {}
 
     /**
      * @return array<int, string>
@@ -59,19 +23,40 @@ final class ErrorReported extends Notification
         return $notifiable instanceof AnonymousNotifiable ? array_keys($notifiable->routes) : ['mail'];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function details(): array
+    {
+        $context = $this->error->context;
+
+        return [
+            __('Where') => $this->error->file.':'.$this->error->line,
+            __('Address') => $this->error->address ?? __('Command line or queue'),
+            __('Signed in') => $this->error->user_id === null ? __('No') : __('User #:id', ['id' => $this->error->user_id]),
+            __('Occurrences') => (string) $this->error->occurrences,
+            __('Version') => 'Wire-Up '.($context['version'] ?? '?').' · PHP '.($context['php'] ?? '?').' · '.($context['environment'] ?? '?'),
+            __('Time') => $this->error->last_seen_at->toDateTimeString(),
+        ];
+    }
+
     public function toMail(object $notifiable): MailMessage
     {
         $mail = new MailMessage()
             ->from(config()->string('mail.from.address'), resolve(SettingsService::class)->brandName())
             ->error()
             ->subject($this->subject())
-            ->line('**'.class_basename($this->type).':** '.$this->message);
+            ->line('**'.class_basename($this->error->type).':** '.Str::limit($this->error->message, 1000));
 
-        foreach ($this->context as $label => $value) {
+        foreach ($this->details() as $label => $value) {
             $mail->line($label.': '.$value);
         }
 
-        return $mail->line(__('Stack trace:'))->lines($this->trace);
+        if ($this->error->exists) {
+            $mail->action(__('Open the error log'), $this->url());
+        }
+
+        return $mail->line(__('Stack trace:'))->lines(array_slice($this->error->trace, 0, 10));
     }
 
     /**
@@ -80,26 +65,33 @@ final class ErrorReported extends Notification
     public function toSlackWebhook(): array
     {
         $escape = fn (string $text): string => str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], $text);
-        $details = collect($this->context)->map(fn (string $value, string $label): string => '*'.$label.':* '.$escape($value))->implode("\n");
+        $details = collect($this->details())->map(fn (string $value, string $label): string => '*'.$label.':* '.$escape($value))->implode("\n");
 
-        return [
-            'text' => $this->subject(),
-            'blocks' => [
-                ['type' => 'header', 'text' => ['type' => 'plain_text', 'text' => Str::limit($this->subject(), 150), 'emoji' => true]],
-                ['type' => 'section', 'text' => ['type' => 'mrkdwn', 'text' => '*'.$escape($this->type).'*'."\n".$escape($this->message)]],
-                ['type' => 'section', 'text' => ['type' => 'mrkdwn', 'text' => $details]],
-                ['type' => 'section', 'text' => ['type' => 'mrkdwn', 'text' => "```\n".$escape(implode("\n", $this->trace))."\n```"]],
-            ],
+        $blocks = [
+            ['type' => 'header', 'text' => ['type' => 'plain_text', 'text' => Str::limit($this->subject(), 150), 'emoji' => true]],
+            ['type' => 'section', 'text' => ['type' => 'mrkdwn', 'text' => '*'.$escape($this->error->type).'*'."\n".$escape(Str::limit($this->error->message, 1000))]],
+            ['type' => 'section', 'text' => ['type' => 'mrkdwn', 'text' => $details]],
+            ['type' => 'section', 'text' => ['type' => 'mrkdwn', 'text' => "```\n".$escape(implode("\n", array_slice($this->error->trace, 0, 10)))."\n```"]],
         ];
+
+        if ($this->error->exists) {
+            $blocks[] = ['type' => 'actions', 'elements' => [[
+                'type' => 'button',
+                'text' => ['type' => 'plain_text', 'text' => __('Open the error log'), 'emoji' => true],
+                'url' => $this->url(),
+            ]]];
+        }
+
+        return ['text' => $this->subject(), 'blocks' => $blocks];
     }
 
     private function subject(): string
     {
-        return __('Error on :site: :type', ['site' => resolve(SettingsService::class)->brandName(), 'type' => class_basename($this->type)]);
+        return __('Error on :site: :type', ['site' => resolve(SettingsService::class)->brandName(), 'type' => class_basename($this->error->type)]);
     }
 
-    private function relative(string $path): string
+    private function url(): string
     {
-        return Str::after($path, base_path().DIRECTORY_SEPARATOR);
+        return route('admin.settings-errors', ['error' => $this->error->id]);
     }
 }
