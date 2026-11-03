@@ -446,14 +446,6 @@ return new class extends Component
                     </flux:menu>
                 </flux:dropdown>
             @endif
-            <flux:button
-                class="shrink-0"
-                size="sm"
-                icon="arrow-down-tray"
-                iconVariant="outline"
-                wire:click="export"
-            >{{ __('Export') }}</flux:button>
-
             @if (! $recordType->admin_only && ContentStatus::tryFrom($status))
                 <x-admin.filter-chip :label="ContentStatus::from($status)->label()" wire:click="$set('status', '')" />
             @endif
@@ -477,48 +469,33 @@ return new class extends Component
                     clearable
                 />
             </div>
-        </div>
-
-        <x-admin.bulk-bar>
-            @if ($this->canEdit)
-                @unless ($recordType->admin_only)
-                    <flux:button
-                        size="sm"
-                        icon="eye"
-                        iconVariant="outline"
-                        wire:click="publishSelected"
-                    >{{ __('Publish') }}</flux:button>
-                    <flux:button
-                        size="sm"
-                        icon="eye-slash"
-                        iconVariant="outline"
-                        wire:click="unpublishSelected"
-                    >{{ __('Unpublish') }}</flux:button>
-                @endunless
-                @if ($this->categoryOptions->isNotEmpty())
-                    <flux:modal.trigger name="bulk-category">
-                        <flux:button
-                            size="sm"
-                            icon="tag"
-                            iconVariant="outline"
-                        >{{ __('Add to category') }}</flux:button>
-                    </flux:modal.trigger>
-                @endif
-            @endif
             <flux:button
+                class="shrink-0"
                 size="sm"
                 icon="arrow-down-tray"
                 iconVariant="outline"
                 wire:click="export"
             >{{ __('Export') }}</flux:button>
+        </div>
+
+        <x-admin.bulk-bar>
+            @if ($this->canEdit)
+                @unless ($recordType->admin_only)
+                    <flux:menu.item icon="eye" wire:click="publishSelected">{{ __('Publish') }}</flux:menu.item>
+                    <flux:menu.item icon="eye-slash" wire:click="unpublishSelected">
+                        {{ __('Unpublish') }}</flux:menu.item>
+                @endunless
+                @if ($this->categoryOptions->isNotEmpty())
+                    <flux:modal.trigger name="bulk-category">
+                        <flux:menu.item icon="tag">{{ __('Add to category') }}</flux:menu.item>
+                    </flux:modal.trigger>
+                @endif
+            @endif
+            <flux:menu.item icon="arrow-down-tray" wire:click="export">{{ __('Export') }}</flux:menu.item>
             @if ($this->canDelete)
+                <flux:menu.separator />
                 <flux:modal.trigger name="bulk-delete">
-                    <flux:button
-                        size="sm"
-                        variant="danger"
-                        icon="trash"
-                        iconVariant="outline"
-                    >{{ __('Delete') }}</flux:button>
+                    <flux:menu.item variant="danger" icon="trash">{{ __('Delete') }}</flux:menu.item>
                 </flux:modal.trigger>
             @endif
         </x-admin.bulk-bar>

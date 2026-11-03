@@ -323,36 +323,21 @@ return new class extends Component
         @if ($this->bulkEnabled)
             <x-admin.bulk-bar>
                 @can('pages.edit')
-                    <flux:button
-                        size="sm"
-                        icon="eye"
-                        iconVariant="outline"
-                        wire:click="publishSelected"
-                    >{{ __('Publish') }}</flux:button>
-                    <flux:button
-                        size="sm"
-                        icon="eye-slash"
-                        iconVariant="outline"
-                        wire:click="unpublishSelected"
-                    >{{ __('Unpublish') }}</flux:button>
+                    <flux:menu.item icon="eye" wire:click="publishSelected">{{ __('Publish') }}</flux:menu.item>
+                    <flux:menu.item icon="eye-slash" wire:click="unpublishSelected">
+                        {{ __('Unpublish') }}</flux:menu.item>
                     @if ($this->categoryOptions->isNotEmpty())
                         <flux:modal.trigger name="bulk-category">
-                            <flux:button
-                                size="sm"
-                                icon="tag"
-                                iconVariant="outline"
-                            >{{ __('Add to category') }}</flux:button>
+                            <flux:menu.item icon="tag">{{ __('Add to category') }}</flux:menu.item>
                         </flux:modal.trigger>
                     @endif
                 @endcan
                 @can('pages.delete')
+                    @can('pages.edit')
+                        <flux:menu.separator />
+                    @endcan
                     <flux:modal.trigger name="bulk-delete">
-                        <flux:button
-                            size="sm"
-                            variant="danger"
-                            icon="trash"
-                            iconVariant="outline"
-                        >{{ __('Delete') }}</flux:button>
+                        <flux:menu.item variant="danger" icon="trash">{{ __('Delete') }}</flux:menu.item>
                     </flux:modal.trigger>
                 @endcan
             </x-admin.bulk-bar>

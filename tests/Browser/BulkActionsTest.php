@@ -18,6 +18,7 @@ it('selects pages on the list and publishes them in one go', function (): void {
         ->click('[aria-label="Select Alpha"]')
         ->click('[aria-label="Select Beta"]')
         ->waitForText('2 selected')
+        ->click('2 selected')
         ->click('Publish')
         ->waitForText('2 pages published.')
         ->assertNoJavascriptErrors();

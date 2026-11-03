@@ -240,13 +240,6 @@ return new class extends Component
                     @endif
                 </flux:menu>
             </flux:dropdown>
-            <flux:button
-                class="shrink-0"
-                size="sm"
-                icon="arrow-down-tray"
-                iconVariant="outline"
-                wire:click="export"
-            >{{ __('Export') }}</flux:button>
             @if (in_array($status, ['unread', 'read'], true))
                 <x-admin.filter-chip
                     :label="$status === 'unread' ? __('Unread') : __('Read')"
@@ -263,35 +256,23 @@ return new class extends Component
                     clearable
                 />
             </div>
-        </div>
-
-        <x-admin.bulk-bar>
             <flux:button
-                size="sm"
-                icon="envelope-open"
-                iconVariant="outline"
-                wire:click="markSelectedRead"
-            >{{ __('Mark as read') }}</flux:button>
-            <flux:button
-                size="sm"
-                icon="envelope"
-                iconVariant="outline"
-                wire:click="markSelectedUnread"
-            >{{ __('Mark as unread') }}</flux:button>
-            <flux:button
+                class="shrink-0"
                 size="sm"
                 icon="arrow-down-tray"
                 iconVariant="outline"
                 wire:click="export"
             >{{ __('Export') }}</flux:button>
+        </div>
+
+        <x-admin.bulk-bar>
+            <flux:menu.item icon="envelope-open" wire:click="markSelectedRead">{{ __('Mark as read') }}</flux:menu.item>
+            <flux:menu.item icon="envelope" wire:click="markSelectedUnread">{{ __('Mark as unread') }}</flux:menu.item>
+            <flux:menu.item icon="arrow-down-tray" wire:click="export">{{ __('Export') }}</flux:menu.item>
             @if ($this->canDelete)
+                <flux:menu.separator />
                 <flux:modal.trigger name="bulk-delete">
-                    <flux:button
-                        size="sm"
-                        variant="danger"
-                        icon="trash"
-                        iconVariant="outline"
-                    >{{ __('Delete') }}</flux:button>
+                    <flux:menu.item variant="danger" icon="trash">{{ __('Delete') }}</flux:menu.item>
                 </flux:modal.trigger>
             @endif
         </x-admin.bulk-bar>

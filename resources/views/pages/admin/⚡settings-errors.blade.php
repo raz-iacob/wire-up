@@ -211,25 +211,11 @@ return new class extends Component
         </div>
 
         <x-admin.bulk-bar>
-            <flux:button
-                size="sm"
-                icon="check-circle"
-                iconVariant="outline"
-                wire:click="resolveSelected"
-            >{{ __('Resolve') }}</flux:button>
-            <flux:button
-                size="sm"
-                icon="arrow-path"
-                iconVariant="outline"
-                wire:click="reopenSelected"
-            >{{ __('Reopen') }}</flux:button>
+            <flux:menu.item icon="check-circle" wire:click="resolveSelected">{{ __('Resolve') }}</flux:menu.item>
+            <flux:menu.item icon="arrow-path" wire:click="reopenSelected">{{ __('Reopen') }}</flux:menu.item>
+            <flux:menu.separator />
             <flux:modal.trigger name="bulk-delete">
-                <flux:button
-                    size="sm"
-                    variant="danger"
-                    icon="trash"
-                    iconVariant="outline"
-                >{{ __('Delete') }}</flux:button>
+                <flux:menu.item variant="danger" icon="trash">{{ __('Delete') }}</flux:menu.item>
             </flux:modal.trigger>
         </x-admin.bulk-bar>
 

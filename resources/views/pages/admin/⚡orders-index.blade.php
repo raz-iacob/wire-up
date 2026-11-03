@@ -184,13 +184,6 @@ return new class extends Component
                 @endif
             </flux:menu>
         </flux:dropdown>
-        <flux:button
-            class="shrink-0"
-            size="sm"
-            icon="arrow-down-tray"
-            iconVariant="outline"
-            wire:click="export"
-        >{{ __('Export') }}</flux:button>
         @if (\App\Enums\OrderStatus::tryFrom($status))
             <x-admin.filter-chip
                 :label="\App\Enums\OrderStatus::from($status)->label()"
@@ -207,6 +200,13 @@ return new class extends Component
                 clearable
             />
         </div>
+        <flux:button
+            class="shrink-0"
+            size="sm"
+            icon="arrow-down-tray"
+            iconVariant="outline"
+            wire:click="export"
+        >{{ __('Export') }}</flux:button>
     </div>
 
     <flux:table :paginate="$this->orders" class="md:w-full md:table-fixed">

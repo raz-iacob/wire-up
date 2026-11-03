@@ -1,7 +1,10 @@
 <div x-cloak x-show="$wire.selected.length > 0" {{ $attributes->class('flex flex-wrap items-center gap-2') }}>
-    <flux:text variant="strong" class="me-1 shrink-0 tabular-nums">
-        <span x-text="$wire.selected.length"></span> {{ __('selected') }}
-    </flux:text>
-    {{ $slot }}
-    <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearSelection">{{ __('Clear') }}</flux:button>
+    <flux:dropdown position="bottom" align="start">
+        <flux:button size="sm" icon:trailing="chevron-down" class="tabular-nums">
+            <span x-text="$wire.selected.length"></span> {{ __('selected') }}
+        </flux:button>
+
+        <flux:menu> {{ $slot }} </flux:menu>
+    </flux:dropdown>
+    <flux:button size="sm" variant="ghost" wire:click="clearSelection">{{ __('Clear') }}</flux:button>
 </div>
