@@ -669,26 +669,9 @@ return new class extends Component
         <div class="grid gap-6 md:grid-cols-7">
             <div class="md:col-span-5">
                 <div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center md:gap-6">
-                    <flux:heading class="text-lg!">{{ $pexelsMode ? __('Search Pexels') : __('Media Library') }}</flux:heading>
-                    <div class="flex items-center gap-3">
-                        @if ($pexelsMode)
-                            @if ($this->pexelsHasBothKinds())
-                                <div class="w-full sm:shrink-0 md:w-40">
-                                    <flux:select variant="listbox" wire:model.live="pexelsKind">
-                                        <flux:select.option value="image">{{ __('Photos') }}</flux:select.option>
-                                        <flux:select.option value="video">{{ __('Videos') }}</flux:select.option>
-                                    </flux:select>
-                                </div>
-                            @endif
-                            <div class="w-full sm:shrink-0 md:w-52">
-                                <flux:input
-                                    icon="magnifying-glass"
-                                    wire:model.live.debounce.500ms="pexelsQuery"
-                                    placeholder="{{ __('Search Pexels...') }}"
-                                    clearable
-                                />
-                            </div>
-                        @else
+                    <div class="flex flex-wrap items-center gap-3">
+                        <flux:heading class="me-1 text-lg!">{{ $pexelsMode ? __('Search Pexels') : __('Media Library') }}</flux:heading>
+                        @unless ($pexelsMode)
                             @if ($type === null || $target === 'media-gallery')
                                 <flux:dropdown position="bottom" align="start">
                                     <flux:button
@@ -745,6 +728,27 @@ return new class extends Component
                                     wire:click="$set('usage', '')"
                                 />
                             @endif
+                        @endunless
+                    </div>
+                    <div class="flex items-center gap-3">
+                        @if ($pexelsMode)
+                            @if ($this->pexelsHasBothKinds())
+                                <div class="w-full sm:shrink-0 md:w-40">
+                                    <flux:select variant="listbox" wire:model.live="pexelsKind">
+                                        <flux:select.option value="image">{{ __('Photos') }}</flux:select.option>
+                                        <flux:select.option value="video">{{ __('Videos') }}</flux:select.option>
+                                    </flux:select>
+                                </div>
+                            @endif
+                            <div class="w-full sm:shrink-0 md:w-52">
+                                <flux:input
+                                    icon="magnifying-glass"
+                                    wire:model.live.debounce.500ms="pexelsQuery"
+                                    placeholder="{{ __('Search Pexels...') }}"
+                                    clearable
+                                />
+                            </div>
+                        @else
                             <div class="w-full sm:shrink-0 md:w-52">
                                 <flux:input
                                     icon="magnifying-glass"
@@ -1254,10 +1258,7 @@ return new class extends Component
                         </div>
                     @else
                         <div class="grow" wire:loading.remove wire:target="selectMedia">
-                            <flux:text
-                                size="sm"
-                                class="text-zinc-500 dark:text-zinc-400"
-                            >{{ $max > 1 ? __('No files selected.') : __('No file selected.') }}</flux:text>
+                            <flux:heading size="lg">{{ $max > 1 ? __('No files selected') : __('No file selected') }}</flux:heading>
                             @unless ($pexelsMode)
                                 <div class="mt-6 space-y-3">
                                     <flux:text size="sm" variant="strong">{{ __('How to select') }}</flux:text>
