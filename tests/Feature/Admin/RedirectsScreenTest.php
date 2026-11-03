@@ -17,15 +17,15 @@ function redirectsViewer(): User
     return User::factory()->role($role)->create(['active' => true]);
 }
 
-it('lists redirects with their type and use, linked from the settings sidebar', function (): void {
+it('lists redirects with their type and use, linked from the sidebar just above settings', function (): void {
     Redirect::factory()->create(['from' => '/old-team', 'to' => '/people', 'origin' => RedirectOrigin::AUTOMATIC, 'hits' => 1234, 'last_hit_at' => now()]);
     Redirect::factory()->create(['from' => '/summer', 'to' => 'https://shop.example.com/sale', 'status_code' => 302]);
 
     $this->actingAsAdmin()
-        ->get(route('admin.settings-redirects'))
+        ->get(route('admin.redirects-index'))
         ->assertOk()
-        ->assertSeeLivewire('pages::admin.settings-redirects')
-        ->assertSee(route('admin.settings-redirects'))
+        ->assertSeeLivewire('pages::admin.redirects-index')
+        ->assertSeeInOrder([route('admin.redirects-index'), route('admin.settings-general')])
         ->assertSeeInOrder(['/summer', 'https://shop.example.com/sale', 'Temporary', 'Never', '/old-team', 'Automatic', '/people', 'Permanent', '1,234', now()->format('M d, Y H:i')]);
 });
 
@@ -35,7 +35,7 @@ it('searches redirects by either address', function (): void {
 
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->set('search', 'peop')
         ->assertSee('/old-team')
         ->assertDontSee('/summer')
@@ -46,7 +46,7 @@ it('searches redirects by either address', function (): void {
 it('says how redirects appear when there are none yet', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->assertSee('Changing the web address of a published page adds one automatically.')
         ->assertSee('Nothing yet.');
 });
@@ -54,7 +54,7 @@ it('says how redirects appear when there are none yet', function (): void {
 it('adds a redirect from the form', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->call('add')
         ->set('from', '/Old-Page/')
         ->set('to', '/new-page')
@@ -74,7 +74,7 @@ it('adds a redirect from the form', function (): void {
 it('explains what is wrong with a redirect in plain words', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->call('save')
         ->assertHasErrors(['from' => 'The old address field is required.', 'to' => 'The new address field is required.'])
         ->set('from', '/same')
@@ -90,7 +90,7 @@ it('edits a redirect in place', function (): void {
 
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->call('edit', $redirect->id)
         ->assertSet('from', '/old')
         ->assertSet('to', '/first')
@@ -107,7 +107,7 @@ it('deletes a redirect after confirming', function (): void {
 
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->call('confirmDelete', $redirect->id)
         ->assertSet('deletingId', $redirect->id)
         ->call('delete')
@@ -124,7 +124,7 @@ it('imports redirects from a csv and summarises what it skipped', function (): v
 
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->set('csv', $csv)
         ->call('import')
         ->assertHasNoErrors()
@@ -144,7 +144,7 @@ it('refuses a csv with more redirects than one import takes', function (): void 
 
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->set('csv', UploadedFile::fake()->createWithContent('redirects.csv', $lines))
         ->call('import')
         ->assertHasErrors(['csv' => 'Import up to 5,000 redirects at a time.']);
@@ -158,7 +158,7 @@ it('lists not found addresses and turns one into a redirect', function (): void 
 
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->assertSeeInOrder(['/old-menu', 'From https://partner.example.com', '42', '/rarely'])
         ->call('redirectNotFound', $missing->id)
         ->assertSet('from', '/old-menu')
@@ -176,7 +176,7 @@ it('dismisses a not found address', function (): void {
 
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->call('dismiss', $missing->id)
         ->assertDontSee('/robots-noise');
 
@@ -188,7 +188,7 @@ it('shows redirects to someone who may only view settings without letting them c
 
     $this->actingAs(redirectsViewer());
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->assertSee('/old-team')
         ->assertDontSee('wire:click="add"', escape: false)
         ->assertDontSee('Import CSV')
@@ -199,7 +199,7 @@ it('shows redirects to someone who may only view settings without letting them c
 it('keeps every change behind the settings edit permission', function (string $method, array $arguments): void {
     $this->actingAs(redirectsViewer());
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->call($method, ...$arguments)
         ->assertForbidden();
 })->with([

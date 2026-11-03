@@ -271,7 +271,7 @@ it('logs roles added, changed and removed in the roles screen', function (): voi
 it('logs redirects saved, imported and deleted', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-redirects')
+    Livewire::test('pages::admin.redirects-index')
         ->call('add')
         ->set('from', '/old')
         ->set('to', '/new')

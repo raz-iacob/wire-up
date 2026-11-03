@@ -83,7 +83,7 @@ it('links each item that still exists to where it is managed', function (): void
         ->assertSee(route('admin.settings-roles'))
         ->assertSee(route('admin.orders-show', $order))
         ->assertSee(route('admin.inbox-show', $submission))
-        ->assertSee(route('admin.settings-redirects', ['q' => '/old-team']))
+        ->assertSee(route('admin.redirects-index', ['q' => '/old-team']))
         ->assertSee('photo.jpg')
         ->assertSee('Gone page');
 });

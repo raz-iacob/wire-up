@@ -205,7 +205,7 @@ return new class extends Component
 };
 ?>
 
-<x-admin.settings-layout>
+<div>
     <flux:tab.group>
         <flux:tabs wire:model="tab">
             <flux:tab name="redirects">{{ __('Redirects') }}</flux:tab>
@@ -446,21 +446,10 @@ return new class extends Component
             </div>
         </flux:modal>
     @endcan
-</x-admin.settings-layout>
+</div>
 
 @section('header-content')
-    <flux:breadcrumbs class="hidden md:flex">
-        <flux:breadcrumbs.item href="{{ route('admin.settings-general') }}" wire:navigate>
-            {{ __('Settings') }}
-        </flux:breadcrumbs.item>
-        <flux:breadcrumbs.item> {{ __('Redirects') }} </flux:breadcrumbs.item>
+    <flux:breadcrumbs>
+        <flux:breadcrumbs.item class="pl-3 md:pl-0">{{ __('Redirects') }}</flux:breadcrumbs.item>
     </flux:breadcrumbs>
-    <flux:dropdown class="md:hidden">
-        <flux:navbar.item icon-trailing="chevron-down">{{ __('Redirects') }}</flux:navbar.item>
-
-        <flux:navmenu>
-            <flux:navmenu.item href="{{ route('admin.settings-general') }}" wire:navigate>
-                {{ __('Settings') }}</flux:navmenu.item>
-        </flux:navmenu>
-    </flux:dropdown>
 @endsection

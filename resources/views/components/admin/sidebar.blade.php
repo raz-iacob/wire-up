@@ -79,6 +79,13 @@
         >
             {{ __('Media') }}</flux:sidebar.item>
         @can('settings.view')
+            <flux:sidebar.item
+                icon="arrow-uturn-right"
+                :href="route('admin.redirects-index')"
+                :current="request()->routeIs('admin.redirects-*')"
+                wire:navigate.hover
+            >
+                {{ __('Redirects') }}</flux:sidebar.item>
             <livewire:admin.sidebar-settings />
         @endcan
     </flux:sidebar.nav>
