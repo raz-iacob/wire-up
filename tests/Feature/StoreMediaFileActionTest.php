@@ -28,7 +28,7 @@ function storedScratchFile(string $name, string $contents): string
 
 function storedPixelPng(): string
 {
-    return (string) base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', true);
+    return base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', true);
 }
 
 it('stores an image with its dimensions and detected type', function (): void {

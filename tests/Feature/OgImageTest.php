@@ -48,7 +48,7 @@ function fakeOgBrowser(): void
 
         if (is_string($target)) {
             File::ensureDirectoryExists(dirname($target));
-            File::put($target, (string) base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', true));
+            File::put($target, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', true));
         }
 
         return Process::result('captured');
