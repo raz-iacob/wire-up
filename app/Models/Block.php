@@ -40,6 +40,11 @@ final class Block extends Model
     ];
 
     /**
+     * @var array<string, string>|null
+     */
+    private ?array $libraryAltTexts = null;
+
+    /**
      * @return array{provider: 'youtube'|'vimeo', id: string}|null
      */
     public static function parseVideoUrl(string $url): ?array
@@ -161,7 +166,11 @@ final class Block extends Model
             return $caption;
         }
 
-        return (string) (data_get($image, 'metadata.alt', $image['alt_text'] ?? ''));
+        if (is_array($image['metadata'] ?? null) && array_key_exists('alt', $image['metadata'])) {
+            return (string) $image['metadata']['alt'];
+        }
+
+        return $this->libraryAltTexts()[(string) ($image['source'] ?? '')] ?? (string) ($image['alt_text'] ?? '');
     }
 
     public function isVideo(string $field): bool
@@ -261,6 +270,35 @@ final class Block extends Model
     {
         return ($this->content[$field]['link']['type'] ?? null) === 'url'
             && (bool) ($this->content[$field]['link']['newTab'] ?? false);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $content
+     * @return list<string>
+     */
+    private static function mediaSources(array $content): array
+    {
+        $sources = is_string($content['source'] ?? null) ? [$content['source']] : [];
+
+        foreach ($content as $value) {
+            if (is_array($value)) {
+                $sources = [...$sources, ...self::mediaSources($value)];
+            }
+        }
+
+        return $sources;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function libraryAltTexts(): array
+    {
+        return $this->libraryAltTexts ??= Media::query()
+            ->whereIn('source', self::mediaSources($this->content ?? []))
+            ->pluck('alt_text', 'source')
+            ->map(fn (?string $alt): string => (string) $alt)
+            ->all();
     }
 
     private function asString(mixed $value, string $default = ''): string

@@ -19,7 +19,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
 #[Name('update-media')]
-#[Description('Change a file in the media library: its alt text, or whether a document is private. The library alt text is used wherever the file is attached to a record and as the default when it is placed in a block; a block\'s own "metadata.alt" overrides it there. A private document can only be opened by signed-in staff and never appears on the site; images, video and audio cannot be private.')]
+#[Description('Change a file in the media library: its alt text, or whether a document is private. The library alt text is used everywhere the file appears, in blocks and on records, and a change here reaches all of them — unless a block sets its own "metadata.alt". A private document can only be opened by signed-in staff and never appears on the site; images, video and audio cannot be private.')]
 final class UpdateMediaTool extends Tool
 {
     public function handle(Request $request): Response

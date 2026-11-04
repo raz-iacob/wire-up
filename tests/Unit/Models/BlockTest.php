@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Block;
+use App\Models\Media;
+use Illuminate\Support\Facades\DB;
 
 it('returns localized text with fallback to the default locale', function (): void {
     $block = Block::factory()->create([
@@ -104,6 +106,30 @@ it('resolves the image alt text, preferring caption then metadata then filename'
     expect($withCaption->imageAlt('image'))->toBe('A caption')
         ->and($withMeta->imageAlt('image'))->toBe('Preferred')
         ->and($withAltText->imageAlt('image'))->toBe('Fallback alt');
+});
+
+it('takes the alt text from the media library, so a change there reaches every block', function (): void {
+    $media = Media::factory()->create(['source' => 'media/potter.jpg', 'alt_text' => 'A potter']);
+    $content = ['image' => ['id' => $media->id, 'source' => 'media/potter.jpg', 'alt_text' => 'A potter']];
+    $placed = Block::factory()->create(['content' => $content]);
+    $overridden = Block::factory()->create(['content' => ['image' => [...$content['image'], 'metadata' => ['alt' => 'Chosen for this page']]]]);
+
+    $media->update(['alt_text' => 'A potter shaping a bowl at the wheel']);
+
+    expect($placed->refresh()->imageAlt('image'))->toBe('A potter shaping a bowl at the wheel')
+        ->and($overridden->refresh()->imageAlt('image'))->toBe('Chosen for this page');
+});
+
+it('looks up the library alt text once per block', function (): void {
+    Media::factory()->create(['source' => 'media/one.jpg', 'alt_text' => 'One']);
+    Media::factory()->create(['source' => 'media/two.jpg', 'alt_text' => null]);
+    $block = Block::factory()->create(['content' => ['media' => [['source' => 'media/one.jpg'], ['source' => 'media/two.jpg', 'alt_text' => 'Stale']]]]);
+
+    DB::enableQueryLog();
+
+    expect($block->imageAlt('media.0'))->toBe('One')
+        ->and($block->imageAlt('media.1'))->toBeEmpty()
+        ->and(DB::getQueryLog())->toHaveCount(1);
 });
 
 it('returns an empty alt when there is no image', function (): void {

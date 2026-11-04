@@ -9,6 +9,7 @@ Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater sh
 - AI agents can change a file's alt text, or make a document private, with the new `update-media` tool.
 - AI agents now get a clear error instead of a silent no-op: a feature card icon that doesn't exist is refused with the list of available icons, so is the same item id used twice in a block, and an argument a tool doesn't take is refused with the list of the arguments it does take. Missing-argument errors now name the argument.
 - Text for a block sent by an AI agent as plain words is now saved in the site's language, where before it showed nothing, and new cards, questions and other items get an id automatically.
+- Changing a file's alt text in the media library now updates it in every block that already shows the image. Before, a block kept the alt text the file had when it was placed.
 - Settings → Translations is now on every site, so the footer, cart and sign-in wording can be changed even when visitors can't create accounts. Before, it only appeared with sign-ups switched on.
 
 ## v0.6.1 — 2026-11-04
