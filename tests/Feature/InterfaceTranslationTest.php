@@ -130,12 +130,12 @@ it('filters out and counts already-translated strings', function (): void {
         ->assertSee('Log out');
 });
 
-it('shows the translations nav link on every site, with or without sign-ups', function (): void {
+it('offers the translations tab on every site, with or without sign-ups', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('admin.sidebar-settings')->assertSee(route('admin.settings-translations'));
+    $this->get(route('admin.settings-content-types'))->assertSee(route('admin.settings-translations'));
 
     config()->set('site.allow_registration', true);
 
-    Livewire::test('admin.sidebar-settings')->assertSee(route('admin.settings-translations'));
+    $this->get(route('admin.settings-content-types'))->assertSee(route('admin.settings-translations'));
 });

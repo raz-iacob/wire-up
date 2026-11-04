@@ -15,7 +15,7 @@ function errorLogDeveloper(): User
     return $developer;
 }
 
-it('opens only for developers, with the unresolved errors counted in the sidebar', function (): void {
+it('opens only for developers, with the unresolved errors counted in the sidebar and its tab', function (): void {
     ErrorLog::factory()->count(3)->create();
     ErrorLog::factory()->resolved()->create();
 
@@ -26,9 +26,9 @@ it('opens only for developers, with the unresolved errors counted in the sidebar
 
     errorLogDeveloper();
 
-    $this->get(route('admin.settings-errors'))->assertOk()->assertSee('Error log');
+    $this->get(route('admin.settings-errors'))->assertOk()->assertSeeInOrder([route('admin.settings-developer'), 'Error reports', route('admin.settings-errors'), 'Error log', '3']);
 
-    Livewire::test('admin.sidebar-settings')->assertSeeInOrder([route('admin.settings-errors'), '3', 'Error log']);
+    Livewire::test('admin.sidebar-settings')->assertSeeInOrder([route('admin.settings-developer'), '3', 'Developer']);
 });
 
 it('lists unresolved errors first by default, latest first, and filters and searches them', function (): void {

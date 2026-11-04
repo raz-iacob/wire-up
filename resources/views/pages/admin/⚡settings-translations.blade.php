@@ -147,72 +147,76 @@ return new class extends Component
 };
 ?>
 
-<div class="grid grid-cols-1 gap-10 md:grid-cols-5">
-    <div class="min-w-0 space-y-10 md:col-span-3">
-        @forelse ($this->rows as $group)
-            <div wire:key="group-{{ md5($group['group']) }}">
-                <flux:heading size="lg" class="mb-4">{{ __($group['group']) }}</flux:heading>
+<div>
+    <x-admin.settings-tabs />
 
-                <div class="space-y-6">
-                    @foreach ($group['strings'] as $string)
-                        @php($hash = md5($string))
-                        <div wire:key="tr-{{ $locale }}-{{ $hash }}" class="space-y-1.5">
-                            <label
-                                for="tr-{{ $locale }}-{{ $hash }}"
-                                class="block text-sm font-medium text-zinc-800 dark:text-white"
-                            >{{ $string }}</label>
-                            <textarea
-                                id="tr-{{ $locale }}-{{ $hash }}"
-                                x-data="{ original: '' }"
-                                x-init="
-                                    $el.style.height = 'auto';
-                                    $el.style.height = $el.scrollHeight + 'px';
-                                "
-                                x-on:input="
-                                    $el.style.height = 'auto';
-                                    $el.style.height = $el.scrollHeight + 'px';
-                                "
-                                x-on:focus="original = $el.value"
-                                x-on:blur="if ($el.value.trim() !== original.trim()) $wire.saveString(@js($hash), $el.value.trim())"
-                                rows="1"
-                                placeholder="{{ __('Write the :language translation here', ['language' => $this->localeNames[$locale]]) }}"
-                                class="focus:border-accent focus:ring-accent block w-full resize-none overflow-hidden rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-xs placeholder:text-zinc-400 focus:ring-1 focus:outline-none dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder:text-zinc-500"
-                            >{{ $translations[$locale][$hash] ?? '' }}</textarea>
-                        </div>
-                    @endforeach
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-5">
+        <div class="min-w-0 space-y-10 md:col-span-3">
+            @forelse ($this->rows as $group)
+                <div wire:key="group-{{ md5($group['group']) }}">
+                    <flux:heading size="lg" class="mb-4">{{ __($group['group']) }}</flux:heading>
+
+                    <div class="space-y-6">
+                        @foreach ($group['strings'] as $string)
+                            @php($hash = md5($string))
+                            <div wire:key="tr-{{ $locale }}-{{ $hash }}" class="space-y-1.5">
+                                <label
+                                    for="tr-{{ $locale }}-{{ $hash }}"
+                                    class="block text-sm font-medium text-zinc-800 dark:text-white"
+                                >{{ $string }}</label>
+                                <textarea
+                                    id="tr-{{ $locale }}-{{ $hash }}"
+                                    x-data="{ original: '' }"
+                                    x-init="
+                                        $el.style.height = 'auto';
+                                        $el.style.height = $el.scrollHeight + 'px';
+                                    "
+                                    x-on:input="
+                                        $el.style.height = 'auto';
+                                        $el.style.height = $el.scrollHeight + 'px';
+                                    "
+                                    x-on:focus="original = $el.value"
+                                    x-on:blur="if ($el.value.trim() !== original.trim()) $wire.saveString(@js($hash), $el.value.trim())"
+                                    rows="1"
+                                    placeholder="{{ __('Write the :language translation here', ['language' => $this->localeNames[$locale]]) }}"
+                                    class="focus:border-accent focus:ring-accent block w-full resize-none overflow-hidden rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-xs placeholder:text-zinc-400 focus:ring-1 focus:outline-none dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder:text-zinc-500"
+                                >{{ $translations[$locale][$hash] ?? '' }}</textarea>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-        @empty
-            <flux:callout icon="check-circle" variant="success">
-                <flux:callout.heading>{{ __('All done') }}</flux:callout.heading>
-                <flux:callout.text>{{ __('Everything is translated for this language.') }}</flux:callout.text>
-            </flux:callout>
-        @endforelse
-    </div>
+            @empty
+                <flux:callout icon="check-circle" variant="success">
+                    <flux:callout.heading>{{ __('All done') }}</flux:callout.heading>
+                    <flux:callout.text>{{ __('Everything is translated for this language.') }}</flux:callout.text>
+                </flux:callout>
+            @endforelse
+        </div>
 
-    <div class="order-first md:order-none md:col-span-2">
-        <flux:card class="flex flex-col gap-6 md:sticky md:top-24">
-            @if (count($locales) > 1)
-                <flux:select wire:model.live="locale" variant="listbox" :label="__('Translating into')">
-                    @foreach ($locales as $code)
-                        <flux:select.option value="{{ $code }}">{{ $this->localeNames[$code] }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @endif
+        <div class="order-first md:order-none md:col-span-2">
+            <flux:card class="flex flex-col gap-6 md:sticky md:top-24">
+                @if (count($locales) > 1)
+                    <flux:select wire:model.live="locale" variant="listbox" :label="__('Translating into')">
+                        @foreach ($locales as $code)
+                            <flux:select.option value="{{ $code }}">{{ $this->localeNames[$code] }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @endif
 
-            <flux:switch wire:model.live="hideTranslated" :label="__('Hide translated')" align="left" />
+                <flux:switch wire:model.live="hideTranslated" :label="__('Hide translated')" align="left" />
 
-            <flux:separator />
+                <flux:separator />
 
-            <div>
-                <flux:heading size="xl">{{ $this->untranslatedCount }}</flux:heading>
-                <flux:text>{{ __('left to translate') }}</flux:text>
-                <flux:text
-                    variant="subtle"
-                    class="mt-1"
-                >{{ __(':done of :total done', ['done' => $this->totalCount - $this->untranslatedCount, 'total' => $this->totalCount]) }}</flux:text>
-            </div>
-        </flux:card>
+                <div>
+                    <flux:heading size="xl">{{ $this->untranslatedCount }}</flux:heading>
+                    <flux:text>{{ __('left to translate') }}</flux:text>
+                    <flux:text
+                        variant="subtle"
+                        class="mt-1"
+                    >{{ __(':done of :total done', ['done' => $this->totalCount - $this->untranslatedCount, 'total' => $this->totalCount]) }}</flux:text>
+                </div>
+            </flux:card>
+        </div>
     </div>
 </div>
 

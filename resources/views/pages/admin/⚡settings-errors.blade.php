@@ -174,6 +174,8 @@ return new class extends Component
 ?>
 
 <div>
+    <x-admin.settings-tabs />
+
     <div class="space-y-6" x-data="bulkSelection($wire)">
         <div x-show="$wire.selected.length === 0" class="flex flex-wrap items-center gap-3">
             <flux:dropdown position="bottom" align="start">

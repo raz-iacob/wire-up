@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\ErrorLog;
-use App\Services\StripeService;
+use App\Services\SettingsNavigation;
 use App\Services\UpdateService;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -14,7 +13,7 @@ return new class extends Component
     #[On('updates-checked')]
     public function refresh(): void
     {
-        unset($this->updateAvailable);
+        unset($this->updateAvailable, $this->sections);
     }
 
     #[Computed]
@@ -23,22 +22,13 @@ return new class extends Component
         return resolve(UpdateService::class)->updateAvailable();
     }
 
+    /**
+     * @return list<array{key: string, label: string, route: string, current: bool, badge: ?string, tabs: list<array{label: string, route: string, current: bool, badge: ?string}>}>
+     */
     #[Computed]
-    public function showAssistant(): bool
+    public function sections(): array
     {
-        return filled(config('site.ai_api_key'));
-    }
-
-    #[Computed]
-    public function unresolvedErrors(): int
-    {
-        return ErrorLog::unresolvedCount();
-    }
-
-    #[Computed]
-    public function showShop(): bool
-    {
-        return resolve(StripeService::class)->configured();
+        return resolve(SettingsNavigation::class)->sections();
     }
 };
 ?>
@@ -53,119 +43,15 @@ return new class extends Component
                 @endif
             </div>
         </x-slot:icon>
-        <flux:sidebar.item
-            :href="route('admin.settings-general')"
-            :current="request()->routeIs('admin.settings-general')"
-            wire:navigate.hover
-        >
-            {{ __('General') }}</flux:sidebar.item>
-        <flux:sidebar.item
-            :href="route('admin.settings-identity')"
-            :current="request()->routeIs('admin.settings-identity')"
-            wire:navigate.hover
-        >
-            {{ __('Identity') }}</flux:sidebar.item>
-        <flux:sidebar.item
-            :href="route('admin.settings-design')"
-            :current="request()->routeIs('admin.settings-design')"
-            wire:navigate.hover
-        >
-            {{ __('Design') }}</flux:sidebar.item>
-        <flux:sidebar.item
-            :href="route('admin.settings-menus')"
-            :current="request()->routeIs('admin.settings-menus')"
-            wire:navigate.hover
-        >
-            {{ __('Menus') }}</flux:sidebar.item>
-        <flux:sidebar.item
-            :href="route('admin.settings-translations')"
-            :current="request()->routeIs('admin.settings-translations')"
-            wire:navigate.hover
-        >
-            {{ __('Translations') }}</flux:sidebar.item>
-        <flux:sidebar.item
-            :href="route('admin.settings-content-types')"
-            :current="request()->routeIs('admin.settings-content-types')"
-            wire:navigate.hover
-        >
-            {{ __('Content Types') }}</flux:sidebar.item>
-        <flux:sidebar.item
-            :href="route('admin.settings-social')"
-            :current="request()->routeIs('admin.settings-social')"
-            wire:navigate.hover
-        >
-            {{ __('Social') }}</flux:sidebar.item>
-        <flux:sidebar.item
-            :href="route('admin.settings-integrations')"
-            :current="request()->routeIs('admin.settings-integrations')"
-            wire:navigate.hover
-        >
-            {{ __('App Integrations') }}</flux:sidebar.item>
-        @if ($this->showAssistant)
+        @foreach ($this->sections as $section)
             <flux:sidebar.item
-                :href="route('admin.settings-assistant')"
-                :current="request()->routeIs('admin.settings-assistant')"
+                :href="route($section['route'])"
+                :current="$section['current']"
+                :badge="$section['badge']"
                 wire:navigate.hover
+                wire:key="settings-{{ $section['key'] }}"
             >
-                {{ __('AI Assistant') }}</flux:sidebar.item>
-        @endif
-        @if ($this->showShop)
-            <flux:sidebar.item
-                :href="route('admin.settings-shop')"
-                :current="request()->routeIs('admin.settings-shop')"
-                wire:navigate.hover
-            >
-                {{ __('Shop') }}</flux:sidebar.item>
-        @endif
-        @can('roles.view')
-            <flux:sidebar.item
-                :href="route('admin.settings-roles')"
-                :current="request()->routeIs('admin.settings-roles')"
-                wire:navigate.hover
-            >
-                {{ __('User Roles') }}</flux:sidebar.item>
-        @endcan
-        @can('activity.view')
-            <flux:sidebar.item
-                :href="route('admin.settings-activity')"
-                :current="request()->routeIs('admin.settings-activity')"
-                wire:navigate.hover
-            >
-                {{ __('Activity log') }}</flux:sidebar.item>
-        @endcan
-        <flux:sidebar.item
-            :href="route('admin.settings-updates')"
-            :current="request()->routeIs('admin.settings-updates')"
-            :badge="$this->updateAvailable ? '1' : null"
-            wire:navigate.hover
-        >
-            {{ __('Updates') }}</flux:sidebar.item>
-        <flux:sidebar.item
-            :href="route('admin.settings-export-import')"
-            :current="request()->routeIs('admin.settings-export-import')"
-            wire:navigate.hover
-        >
-            {{ __('Export / Import') }}</flux:sidebar.item>
-        <flux:sidebar.item
-            :href="route('admin.settings-backups')"
-            :current="request()->routeIs('admin.settings-backups')"
-            wire:navigate.hover
-        >
-            {{ __('Backups') }}</flux:sidebar.item>
-        @can('developer')
-            <flux:sidebar.item
-                :href="route('admin.settings-developer')"
-                :current="request()->routeIs('admin.settings-developer')"
-                wire:navigate.hover
-            >
-                {{ __('Developer') }}</flux:sidebar.item>
-            <flux:sidebar.item
-                :href="route('admin.settings-errors')"
-                :current="request()->routeIs('admin.settings-errors')"
-                :badge="$this->unresolvedErrors ?: null"
-                wire:navigate.hover
-            >
-                {{ __('Error log') }}</flux:sidebar.item>
-        @endcan
+                {{ $section['label'] }}</flux:sidebar.item>
+        @endforeach
     </flux:sidebar.group>
 </div>
