@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "wire-up-dev/wire-up",
     "type": "project",
-    "description": "A modern Laravel + Livewire framework for building dynamic content-driven websites.",
+    "description": "An open-source, self-updating CMS built on Laravel and Livewire.",
     "keywords": [
         "laravel",
         "livewire",

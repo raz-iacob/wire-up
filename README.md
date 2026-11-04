@@ -6,7 +6,7 @@
 
 <br>
 
-**Wire Up** is an opinionated, strict and fully tested Livewire Laravel Starter Kit.
+**Wire Up** is an open-source CMS built on Laravel and Livewire. You get a strict, fully tested app that updates itself. Your client gets an admin they can actually use — pages, products, members, languages — and stops calling you about copy changes.
 
 ### [wire-up.dev](https://wire-up.dev)
 
