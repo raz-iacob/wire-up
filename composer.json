@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "raz-iacob/wire-up",
+    "name": "wire-up-dev/wire-up",
     "type": "project",
     "description": "A modern Laravel + Livewire framework for building dynamic content-driven websites.",
     "keywords": [

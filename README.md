@@ -59,7 +59,7 @@ itself a Wire-Up site, built through the admin and the MCP server rather than by
 1. **Clone the repository**
 
     ```bash
-    git clone https://github.com/raz-iacob/wire-up.git
+    git clone https://github.com/wire-up-dev/wire-up.git
     cd wire-up
     ```
 
@@ -119,7 +119,7 @@ Requirements on the server: PHP 8.5, Composer, Node.js 22+, git. No database ser
 1. Add a **deploy key** (read-only SSH key) to the GitHub repository and clone it:
 
     ```bash
-    git clone git@github.com:raz-iacob/wire-up.git
+    git clone git@github.com:wire-up-dev/wire-up.git
     cd wire-up
     ```
 

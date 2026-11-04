@@ -17,7 +17,7 @@ it('renders the social settings screen with all platform fields and no js errors
 });
 
 it('enables the open-in-a-new-tab arrow on a url that was already saved', function (): void {
-    config(['site.social' => ['github' => 'https://github.com/raz-iacob/wire-up']]);
+    config(['site.social' => ['github' => 'https://github.com/wire-up-dev/wire-up']]);
 
     $this->actingAsAdmin();
 
