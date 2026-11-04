@@ -46,6 +46,24 @@ it('keeps a single media field that was stored with only a source path', functio
         ->and($kept['metadata'])->toBe(['alt' => 'Cover']);
 });
 
+it('fills in the file details of media saved with only its id and source', function (): void {
+    $media = Media::factory()->create(['type' => MediaType::IMAGE, 'filename' => 'favicon.png']);
+
+    $component = Livewire::test('admin.media-selector', [
+        'name' => 'favicon',
+        'multiple' => false,
+        'media' => ['id' => $media->id, 'source' => $media->source],
+    ]);
+
+    /** @var array<string, mixed> $kept */
+    $kept = $component->get('media');
+
+    expect($kept)->toMatchArray(['id' => $media->id, 'source' => $media->source, 'filename' => 'favicon.png'])
+        ->and($kept['preview'])->not->toBeNull();
+
+    $component->assertSee('favicon.png')->assertDontSee('Untitled media');
+});
+
 it('drops media whose source no longer resolves', function (): void {
     $media = Media::factory()->create(['type' => MediaType::IMAGE]);
 

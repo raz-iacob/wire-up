@@ -380,7 +380,7 @@ return new class extends Component
             return null;
         }
 
-        if (! $this->isMediaItem($item)) {
+        if (! $this->isMediaItem($item) || ! array_key_exists('preview', $item)) {
             $item = $this->resolveBySource($item);
         }
 

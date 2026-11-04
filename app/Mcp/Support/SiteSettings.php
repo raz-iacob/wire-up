@@ -22,6 +22,7 @@ final readonly class SiteSettings
             'description' => is_array($description) ? $description : [$default => (string) $description],
             'noindex' => (bool) config('site.noindex', false),
             'home_page_id' => SettingsService::current()->homePageId(),
+            'default_share_image' => data_get(config('site.default_og_image'), 'id'),
         ];
     }
 
@@ -73,6 +74,9 @@ final readonly class SiteSettings
             'custom_css' => is_string($meta['custom_css'] ?? null) ? $meta['custom_css'] : '',
             'logo_header' => data_get($meta, 'logo_header.id'),
             'logo_footer' => data_get($meta, 'logo_footer.id'),
+            'logo_header_dark' => data_get($meta, 'logo_header_dark.id'),
+            'logo_footer_dark' => data_get($meta, 'logo_footer_dark.id'),
+            'favicon' => data_get($meta, 'favicon.id'),
         ];
     }
 

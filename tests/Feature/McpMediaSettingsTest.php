@@ -14,6 +14,7 @@ use App\Mcp\Tools\UpdateIdentityTool;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Settings;
+use App\Services\SettingsService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -367,7 +368,8 @@ it('sets logos from media ids', function (): void {
 
     WireUpServer::tool(UpdateDesignTool::class, ['logo_header' => $logo->id])->assertOk();
 
-    expect(Settings::get('logo_header'))->toBe(['id' => $logo->id, 'source' => $logo->source]);
+    expect(Settings::get('logo_header'))->toMatchArray(['id' => $logo->id, 'source' => $logo->source, 'filename' => $logo->filename])
+        ->toHaveKeys(['preview', 'crop_src']);
 
     WireUpServer::tool(UpdateDesignTool::class, ['logo_footer' => 999999])
         ->assertHasErrors()
@@ -385,7 +387,10 @@ it('sets the dark logos and the favicon from media ids', function (string $key):
 
     WireUpServer::tool(UpdateDesignTool::class, [$key => $image->id])->assertOk();
 
-    expect(Settings::get($key))->toBe(['id' => $image->id, 'source' => $image->source]);
+    expect(Settings::get($key))->toMatchArray(['id' => $image->id, 'source' => $image->source, 'filename' => $image->filename])
+        ->toHaveKeys(['preview', 'crop_src']);
+
+    WireUpServer::tool(GetSettingsTool::class)->assertOk()->assertSee("\"{$key}\":{$image->id}");
 })->with(['logo_header_dark', 'logo_footer_dark', 'favicon']);
 
 it('refuses a non-image for the dark logos and the favicon', function (string $key): void {
@@ -427,6 +432,33 @@ it('sets the homepage by page id', function (): void {
     WireUpServer::tool(UpdateIdentityTool::class, ['home_page' => 999999])
         ->assertHasErrors()
         ->assertSee('No page with id 999999');
+});
+
+it('sets and clears the default share image', function (): void {
+    $image = Media::factory()->create(['type' => MediaType::IMAGE, 'thumbnail' => null, 'duration' => null]);
+
+    WireUpServer::tool(UpdateIdentityTool::class, ['default_share_image' => $image->id])
+        ->assertOk()
+        ->assertSee("\"default_share_image\":{$image->id}");
+
+    expect(Settings::get('default_og_image'))->toMatchArray(['id' => $image->id, 'source' => $image->source, 'filename' => $image->filename])
+        ->and(SettingsService::current()->defaultOgImageUrl())->toContain($image->source);
+
+    WireUpServer::tool(UpdateIdentityTool::class, ['default_share_image' => null])
+        ->assertOk()
+        ->assertSee('"default_share_image":null');
+
+    expect(Settings::get('default_og_image'))->toBeNull();
+});
+
+it('refuses a share image that is missing or not an image', function (): void {
+    $pdf = Media::factory()->create(['type' => MediaType::DOCUMENT, 'thumbnail' => null, 'duration' => null]);
+
+    WireUpServer::tool(UpdateIdentityTool::class, ['default_share_image' => 999999])
+        ->assertHasErrors(['No media with id 999999.']);
+
+    WireUpServer::tool(UpdateIdentityTool::class, ['default_share_image' => $pdf->id])
+        ->assertHasErrors(["Media {$pdf->id} is a document; the share image must be an image."]);
 });
 
 it('requires at least one identity field and validates the title length', function (): void {

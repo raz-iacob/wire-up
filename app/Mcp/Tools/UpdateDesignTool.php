@@ -9,6 +9,7 @@ use App\Enums\MediaType;
 use App\Mcp\Support\Pages;
 use App\Mcp\Support\SiteSettings;
 use App\Models\Media;
+use App\Services\MediaItem;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Validation\Rule;
@@ -215,7 +216,7 @@ final class UpdateDesignTool extends Tool
                 return "Media {$media->id} is a {$media->type->value}; logos and the favicon must be images.";
             }
 
-            $validated[$key] = ['id' => $media->id, 'source' => $media->source];
+            $validated[$key] = MediaItem::fromMedia($media);
         }
 
         return null;
