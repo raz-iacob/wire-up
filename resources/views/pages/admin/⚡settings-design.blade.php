@@ -682,7 +682,7 @@ return new class extends Component
                         class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 opacity-60"
                     >
                         <span>&copy; {{ now()->year }} {{ $brand }}, {{ __('All Rights Reserved') }}</span>
-                        <span>{{ __('Made with Wire-Up') }}</span>
+                        <span>{{ __('Made with Wire Up') }}</span>
                     </div>
                 </div>
                 <div
@@ -719,7 +719,7 @@ return new class extends Component
                         :style="`font-size:${copyrightSize}`"
                         class="border-t border-current/10 px-4 py-2.5 text-center opacity-60"
                     >
-                        &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
+                        &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire Up') }}
                     </div>
                 </div>
                 <div
@@ -767,7 +767,7 @@ return new class extends Component
                         class="flex items-center justify-between border-t border-current/10 px-4 py-2.5 opacity-60"
                     >
                         <span>&copy; {{ now()->year }} {{ $brand }}, {{ __('All Rights Reserved') }}</span>
-                        <span>{{ __('Made with Wire-Up') }}</span>
+                        <span>{{ __('Made with Wire Up') }}</span>
                     </div>
                 </div>
                 <div
@@ -781,7 +781,7 @@ return new class extends Component
                         fontSize: copyrightSize,
                     }"
                 >
-                    &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire-Up') }}
+                    &copy; {{ now()->year }} {{ $brand }} &nbsp;|&nbsp; {{ __('Made with Wire Up') }}
                 </div>
             </div>
         </div>

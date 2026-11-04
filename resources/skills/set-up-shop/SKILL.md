@@ -5,7 +5,7 @@ description: Use when the owner wants to sell products, services or subscription
 
 # Set up a shop
 
-Wire-Up sells the records of a content type through Stripe. Each record is either a one-off item, bought through a cart, or a monthly or yearly subscription.
+Wire Up sells the records of a content type through Stripe. Each record is either a one-off item, bought through a cart, or a monthly or yearly subscription.
 
 ## What you can do
 

@@ -71,10 +71,10 @@ it('clears a translation when saved empty', function (): void {
 it('rewords a string in the site\'s own language', function (): void {
     WireUpServer::tool(UpdateInterfaceTranslationsTool::class, [
         'locale' => 'en',
-        'translations' => ['Made with Wire-Up' => 'Designed & Developed by Raz'],
+        'translations' => ['Made with Wire Up' => 'Designed & Developed by Raz'],
     ])->assertOk();
 
-    expect(Settings::get('ui_translations'))->toBe(['en' => ['Made with Wire-Up' => 'Designed & Developed by Raz']]);
+    expect(Settings::get('ui_translations'))->toBe(['en' => ['Made with Wire Up' => 'Designed & Developed by Raz']]);
 });
 
 it('requires a locale', function (): void {

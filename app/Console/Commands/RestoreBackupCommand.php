@@ -34,7 +34,7 @@ final class RestoreBackupCommand extends Command
         $manifest = $zip->open($path) === true ? json_decode((string) $zip->getFromName('manifest.json'), true) : null;
 
         if (! is_array($manifest)) {
-            $this->components->error("{$file} is not a Wire-Up backup.");
+            $this->components->error("{$file} is not a Wire Up backup.");
 
             return self::FAILURE;
         }
@@ -86,7 +86,7 @@ final class RestoreBackupCommand extends Command
         }
 
         if (is_int($manifest['migrations'] ?? null) && $manifest['migrations'] > $bundle->appliedMigrations()) {
-            return 'This backup comes from a newer version of Wire-Up. Update this site first, then restore it.';
+            return 'This backup comes from a newer version of Wire Up. Update this site first, then restore it.';
         }
 
         if ($zip->locateName('database.'.$dumper->extension()) === false) {

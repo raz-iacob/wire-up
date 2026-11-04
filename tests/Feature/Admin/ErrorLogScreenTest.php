@@ -80,7 +80,7 @@ it('opens an error from a report link and shows everything about it', function (
             'POST https://example.com/checkout',
             'Mia Member',
             'App\\Actions\\CreateOrderAction->handle()',
-            'Wire-Up v0.6.0',
+            'Wire Up v0.6.0',
         ])
         ->set('showDetails', false)
         ->assertSet('viewingId', null)

@@ -1,6 +1,6 @@
 ---
 name: rebuild-site
-description: Use when the owner wants to rebuild, copy, recreate or migrate an existing website into Wire-Up, or gives you a URL to base the site on.
+description: Use when the owner wants to rebuild, copy, recreate or migrate an existing website into Wire Up, or gives you a URL to base the site on.
 ---
 
 # Rebuild an existing site

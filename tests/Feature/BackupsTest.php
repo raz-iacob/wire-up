@@ -455,7 +455,7 @@ it('asks before replacing anything', function (): void {
         ->assertExitCode(0);
 });
 
-it('refuses a file that is missing, not an archive or not a Wire-Up backup', function (): void {
+it('refuses a file that is missing, not an archive or not a Wire Up backup', function (): void {
     File::ensureDirectoryExists(config()->string('wireup.backup_path'));
     File::put(config()->string('wireup.backup_path').'/db-backup-2026-01-01-000000.sql', 'x');
     handmadeBackup('backup-2026-01-01-000000-manual.zip', [], ['readme.txt' => 'not a backup']);
@@ -469,7 +469,7 @@ it('refuses a file that is missing, not an archive or not a Wire-Up backup', fun
         ->assertExitCode(1);
 
     $this->artisan(RestoreBackupCommand::class, ['file' => 'backup-2026-01-01-000000-manual.zip', '--force' => true])
-        ->expectsOutputToContain('is not a Wire-Up backup')
+        ->expectsOutputToContain('is not a Wire Up backup')
         ->assertExitCode(1);
 });
 

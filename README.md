@@ -1,19 +1,19 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="resources/images/logo-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="resources/images/logo-light.svg">
-  <img alt="Wire-Up Logo" src="resources/images/logo.svg" width="257" height="32">
+  <img alt="Wire Up Logo" src="resources/images/logo.svg" width="257" height="32">
 </picture>
 
 <br>
 
-**Wire-Up** is an opinionated, strict and fully tested Livewire Laravel Starter Kit.
+**Wire Up** is an opinionated, strict and fully tested Livewire Laravel Starter Kit.
 
 ### [wire-up.dev](https://wire-up.dev)
 
 The live site is the fastest way to get a sense of what you are installing: a tour of the
 [features](https://wire-up.dev/features), the [block catalogue](https://wire-up.dev/blocks), and
 [twelve guides](https://wire-up.dev/guides) split between running a site and building one. It is
-itself a Wire-Up site, built through the admin and the MCP server rather than by editing templates.
+itself a Wire Up site, built through the admin and the MCP server rather than by editing templates.
 
 ---
 
@@ -84,7 +84,7 @@ itself a Wire-Up site, built through the admin and the MCP server rather than by
 
 ## Testing
 
-Wire-Up uses Pest v5 for testing, including browser testing capabilities:
+Wire Up uses Pest v5 for testing, including browser testing capabilities:
 
 ```bash
 # Run the full quality pipeline (type coverage, tests, lint, static analysis)
@@ -114,7 +114,7 @@ composer test:lint
 
 ### Server installation
 
-Requirements on the server: PHP 8.5, Composer, Node.js 22+, git. No database server is needed — Wire-Up uses SQLite by default (MySQL and PostgreSQL are supported alternatives).
+Requirements on the server: PHP 8.5, Composer, Node.js 22+, git. No database server is needed — Wire Up uses SQLite by default (MySQL and PostgreSQL are supported alternatives).
 
 1. Add a **deploy key** (read-only SSH key) to the GitHub repository and clone it:
 
@@ -189,7 +189,7 @@ Restore one with:
 php artisan wireup:backup:restore backup-<date>-automatic.zip
 ```
 
-It puts the site in maintenance mode, loads the database (MySQL needs the `mysql` client, PostgreSQL needs `psql`), writes the uploaded files back, runs `migrate --force`, clears the cache and brings the site back up. It refuses a backup taken by a newer version of Wire-Up or from a different database driver. If loading the database fails, the site stays in maintenance mode; fix the problem, then run `php artisan up`.
+It puts the site in maintenance mode, loads the database (MySQL needs the `mysql` client, PostgreSQL needs `psql`), writes the uploaded files back, runs `migrate --force`, clears the cache and brings the site back up. It refuses a backup taken by a newer version of Wire Up or from a different database driver. If loading the database fails, the site stays in maintenance mode; fix the problem, then run `php artisan up`.
 
 **Release routine:** add a `## vX.Y.Z` section to `CHANGELOG.md`, commit, tag (`git tag vX.Y.Z`), push with tags.
 
@@ -235,7 +235,7 @@ machine-readable resources for crawlers and AI agents:
 
 **MCP server for AI agents:**
 
-Wire-Up ships a local [MCP](https://modelcontextprotocol.io) server so AI agents (Claude Code,
+Wire Up ships a local [MCP](https://modelcontextprotocol.io) server so AI agents (Claude Code,
 Cursor, and other MCP clients) can build and edit the site programmatically:
 
 - Start it with `php artisan mcp:start wire-up`, or point your MCP client at that command; debug
@@ -272,7 +272,7 @@ Cursor, and other MCP clients) can build and edit the site programmatically:
 
 ## Documentation
 
-- [Wire-Up guides](https://wire-up.dev/guides) - Twelve guides covering both sides of the handover
+- [Wire Up guides](https://wire-up.dev/guides) - Twelve guides covering both sides of the handover
 - [Block catalogue](https://wire-up.dev/blocks) - Every block type, what it does and when to reach for it
 - [AI and agents](https://wire-up.dev/ai-and-agents) - The MCP server and the in-admin assistant
 - [Laravel Documentation](https://laravel.com/docs)
@@ -282,7 +282,7 @@ Cursor, and other MCP clients) can build and edit the site programmatically:
 
 ## Built by Raz Iacob
 
-Wire-Up is built and maintained by [Raz Iacob](https://raziacob.com), a full-stack developer with more than 20 years of experience. If you'd like a Wire-Up site built for you, an existing site moved off WordPress, or hosting and care for a site you already run, see [raziacob.com](https://raziacob.com).
+Wire Up is built and maintained by [Raz Iacob](https://raziacob.com), a full-stack developer with more than 20 years of experience. If you'd like a Wire Up site built for you, an existing site moved off WordPress, or hosting and care for a site you already run, see [raziacob.com](https://raziacob.com).
 
 ## License
 

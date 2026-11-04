@@ -211,8 +211,8 @@ it('logs uploading, hiding, sharing and deleting files', function (): void {
 });
 
 it('logs which settings changed, never their values', function (): void {
-    new UpdateSettingsAction()->handle(['site_name' => 'Wire-Up', 'mail_password' => 'hunter2-secret']);
-    new UpdateSettingsAction()->handle(['site_name' => 'Wire-Up', 'mail_password' => 'hunter2-secret']);
+    new UpdateSettingsAction()->handle(['site_name' => 'Wire Up', 'mail_password' => 'hunter2-secret']);
+    new UpdateSettingsAction()->handle(['site_name' => 'Wire Up', 'mail_password' => 'hunter2-secret']);
 
     $activity = Activity::query()->sole();
 

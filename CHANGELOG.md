@@ -1,6 +1,10 @@
 # Changelog
 
-Release notes for Wire-Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
+Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
+
+## Unreleased
+
+- The name is now written Wire Up, without the hyphen, in the admin, the site footer ("Made with Wire Up"), emails, update messages and the instructions AI agents read. If you reworded the footer line in Settings → Translations, your wording carries over.
 
 ## v0.6.0 — 2026-11-03
 

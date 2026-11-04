@@ -32,7 +32,7 @@ it('renders the header and footer on a public page', function (): void {
         ->assertOk()
         ->assertSee('data-site-header', false)
         ->assertSee('data-site-footer', false)
-        ->assertSee('Made with Wire-Up');
+        ->assertSee('Made with Wire Up');
 });
 
 it('toggles the dark class from the system preference unless dark mode is disabled', function (): void {

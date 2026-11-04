@@ -13,7 +13,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Resource;
 
 #[Name('block-types')]
-#[Description('Catalog of every Wire-Up block type: its key, purpose, default content shape, and the conventions for localized text, links, and media.')]
+#[Description('Catalog of every Wire Up block type: its key, purpose, default content shape, and the conventions for localized text, links, and media.')]
 final class BlockTypesResource extends Resource
 {
     protected string $uri = 'wire-up://block-types';

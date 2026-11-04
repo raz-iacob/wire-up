@@ -341,7 +341,7 @@ it('renders a related collection on a record page and leaves that record out', f
     $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides', 'fields' => []]);
     $category = Category::factory()->create();
 
-    $current = collectionRecord($type, 'Install Wire-Up');
+    $current = collectionRecord($type, 'Install Wire Up');
     $sibling = collectionRecord($type, 'Build a page');
     $current->categories()->attach($category);
     $sibling->categories()->attach($category);

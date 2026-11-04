@@ -50,7 +50,7 @@ final class HiddenAssistantResource extends Resource implements HiddenFromAssist
     }
 }
 
-it('instructs the assistant on the Wire-Up building workflow', function (): void {
+it('instructs the assistant on the Wire Up building workflow', function (): void {
     $instructions = (new SiteAssistant)->instructions();
 
     expect($instructions)->toContain('block-types')

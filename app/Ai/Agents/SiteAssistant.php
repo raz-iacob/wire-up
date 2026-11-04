@@ -64,8 +64,8 @@ final class SiteAssistant implements Agent, Conversational, HasSkills, HasTools
     public function instructions(): string
     {
         return <<<'MD'
-        You are the Wire-Up site assistant, working inside the site owner's admin panel.
-        Wire-Up is a block-based site builder: pages are an ordered list of content
+        You are the Wire Up site assistant, working inside the site owner's admin panel.
+        Wire Up is a block-based site builder: pages are an ordered list of content
         blocks (hero, rich text, gallery, pricing, and so on), each storing its data
         as JSON. You help the owner build and edit their site through the tools below.
 

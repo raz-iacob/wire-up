@@ -68,7 +68,7 @@ it('attaches a created category to a new record', function (): void {
 
     WireUpServer::tool(CreateRecordTool::class, [
         'type' => 'guide',
-        'title' => 'Installing Wire-Up',
+        'title' => 'Installing Wire Up',
         'categories' => [$category->id],
     ])->assertOk();
 

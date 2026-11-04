@@ -35,7 +35,7 @@ final class ErrorReported extends Notification
             __('Address') => $this->error->address ?? __('Command line or queue'),
             __('Signed in') => $this->error->user_id === null ? __('No') : __('User #:id', ['id' => $this->error->user_id]),
             __('Occurrences') => (string) $this->error->occurrences,
-            __('Version') => 'Wire-Up '.($context['version'] ?? '?').' · PHP '.($context['php'] ?? '?').' · '.($context['environment'] ?? '?'),
+            __('Version') => 'Wire Up '.($context['version'] ?? '?').' · PHP '.($context['php'] ?? '?').' · '.($context['environment'] ?? '?'),
             __('Time') => $this->error->last_seen_at->toDateTimeString(),
         ];
     }

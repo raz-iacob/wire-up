@@ -30,7 +30,7 @@ it('runs every install step in order', function (): void {
         ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
         ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'en')
         ->expectsOutputToContain('An admin user already exists, skipping.')
-        ->expectsOutputToContain('Wire-Up is installed.')
+        ->expectsOutputToContain('Wire Up is installed.')
         ->assertExitCode(0);
 
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'migrate', '--force']);

@@ -30,7 +30,7 @@ it('updates to the latest release', function (): void {
     resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
 
     $this->artisan(UpdateCommand::class)
-        ->expectsOutputToContain('Wire-Up is now on v1.0.0.')
+        ->expectsOutputToContain('Wire Up is now on v1.0.0.')
         ->assertExitCode(0);
 
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'down']);
@@ -62,7 +62,7 @@ it('updates to a pinned tag', function (): void {
     resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
 
     $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
-        ->expectsOutputToContain('Wire-Up is now on v1.0.0.')
+        ->expectsOutputToContain('Wire Up is now on v1.0.0.')
         ->assertExitCode(0);
 
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['git', '-c', 'advice.detachedHead=false', 'checkout', '--force', 'v1.0.0']);
@@ -91,7 +91,7 @@ it('reruns the update on the same version when forced', function (): void {
     resolve(UpdateService::class)->writeCurrentVersion('v1.0.0');
 
     $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0', '--force' => true])
-        ->expectsOutputToContain('Wire-Up is now on v1.0.0.')
+        ->expectsOutputToContain('Wire Up is now on v1.0.0.')
         ->assertExitCode(0);
 
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'down']);

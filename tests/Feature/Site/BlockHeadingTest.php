@@ -128,8 +128,8 @@ it('leaves the record title as the only h1 when a hero sits on a record', functi
 
     $record = Record::factory()->create([
         'record_type_id' => $type->id,
-        'title' => ['en' => 'Install Wire-Up'],
-        'data' => ['heading' => ['en' => 'Install Wire-Up']],
+        'title' => ['en' => 'Install Wire Up'],
+        'data' => ['heading' => ['en' => 'Install Wire Up']],
         'metadata' => ['published_locales' => ['en']],
         'status' => ContentStatus::PUBLISHED,
         'published_at' => now()->subDay(),

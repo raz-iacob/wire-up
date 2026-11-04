@@ -12,7 +12,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Process;
 
-#[Description('Update Wire-Up to the latest release')]
+#[Description('Update Wire Up to the latest release')]
 #[Signature('wireup:update {--tag= : The release tag to install} {--force : Run even when already on the target version}')]
 final class UpdateCommand extends Command
 {
@@ -32,7 +32,7 @@ final class UpdateCommand extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Update Wire-Up to {$tag}");
+        $this->info("Update Wire Up to {$tag}");
         $this->newLine();
 
         $steps = [
@@ -66,7 +66,7 @@ final class UpdateCommand extends Command
         ActivityLog::record(ActivityEvent::SYSTEM_UPDATED, $tag);
 
         $this->newLine();
-        $this->info("Wire-Up is now on {$tag}.");
+        $this->info("Wire Up is now on {$tag}.");
 
         return self::SUCCESS;
     }

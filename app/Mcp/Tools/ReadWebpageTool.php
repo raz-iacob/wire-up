@@ -17,7 +17,7 @@ use Laravel\Mcp\Server\Tool;
 
 #[Name('read-webpage')]
 #[Description(<<<'MD'
-Read an existing website so you can recreate it in Wire-Up. Fetches the given URL and the
+Read an existing website so you can recreate it in Wire Up. Fetches the given URL and the
 same-domain pages it links to (up to max_pages) and returns each page's title, meta
 description, readable content (as markdown), image URLs (with alt text), and navigation
 links. Typical flow: read-webpage → create-page with blocks for each page →

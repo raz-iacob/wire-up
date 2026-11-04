@@ -86,7 +86,7 @@ return new class extends Component
                         target="_blank"
                         rel="noopener noreferrer"
                         class="hover:underline"
-                    >{{ __('Made with Wire-Up') }}</a>
+                    >{{ __('Made with Wire Up') }}</a>
                 </div>
             </div>
             @break
@@ -134,7 +134,7 @@ return new class extends Component
                             target="_blank"
                             rel="noopener noreferrer"
                             class="hover:underline"
-                            >{{ __('Made with Wire-Up') }}</a
+                            >{{ __('Made with Wire Up') }}</a
                         ></span>
                 </div>
             </div>
@@ -147,7 +147,7 @@ return new class extends Component
                     target="_blank"
                     rel="noopener noreferrer"
                     class="hover:underline"
-                >{{ __('Made with Wire-Up') }}</a>
+                >{{ __('Made with Wire Up') }}</a>
             </div>
             @break
         @default
@@ -167,7 +167,7 @@ return new class extends Component
                             target="_blank"
                             rel="noopener noreferrer"
                             class="hover:underline"
-                            >{{ __('Made with Wire-Up') }}</a
+                            >{{ __('Made with Wire Up') }}</a
                         ></span>
                 </div>
             </div>

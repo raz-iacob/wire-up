@@ -26,7 +26,7 @@ function navRecord(RecordType $type, string $title): Record
 
 it('links to the neighbouring records from a prev/next block on a record', function (): void {
     $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides', 'fields' => []]);
-    $first = navRecord($type, 'Install Wire-Up');
+    $first = navRecord($type, 'Install Wire Up');
     $second = navRecord($type, 'Build a page');
     $third = navRecord($type, 'Publish the site');
 
@@ -42,7 +42,7 @@ it('links to the neighbouring records from a prev/next block on a record', funct
         ->assertOk()
         ->assertSee('Previous')
         ->assertSee('Next')
-        ->assertSee('Install Wire-Up')
+        ->assertSee('Install Wire Up')
         ->assertSee('Publish the site')
         ->assertSee($first->getUrl(), false)
         ->assertSee($third->getUrl(), false);
@@ -69,7 +69,7 @@ it('renders nothing for a prev/next block sitting on a page', function (): void 
 
 it('honours custom prev/next labels and hides the titles when asked', function (): void {
     $type = RecordType::factory()->create(['key' => 'guide', 'slug_prefix' => 'guides', 'fields' => []]);
-    $first = navRecord($type, 'Install Wire-Up');
+    $first = navRecord($type, 'Install Wire Up');
     $second = navRecord($type, 'Build a page');
     $first->update(['published_at' => now()->subDays(5)]);
     $second->update(['published_at' => now()->subDays(3)]);
@@ -84,5 +84,5 @@ it('honours custom prev/next labels and hides the titles when asked', function (
     $this->get($second->getUrl())
         ->assertOk()
         ->assertSee('Back')
-        ->assertDontSee('Install Wire-Up');
+        ->assertDontSee('Install Wire Up');
 });

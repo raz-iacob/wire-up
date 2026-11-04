@@ -57,10 +57,10 @@ use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
 
-#[Name('Wire-Up')]
+#[Name('Wire Up')]
 #[Version('1.0.0')]
 #[Instructions(<<<'MD'
-Wire-Up is a block-based site builder. Pages are composed of ordered content
+Wire Up is a block-based site builder. Pages are composed of ordered content
 blocks (hero, rich text, gallery, pricing, and so on), each storing its data as JSON.
 
 To rebuild an existing website end to end, start with the `replicate-site` prompt —

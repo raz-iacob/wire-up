@@ -46,7 +46,7 @@ it('renders the public header and footer without javascript errors', function ()
         ->assertPresent('[data-site-header]')
         ->assertPresent('[data-site-footer]')
         ->assertSee('Docs')
-        ->assertSee('Made with Wire-Up');
+        ->assertSee('Made with Wire Up');
 });
 
 it('signs a member out from the header logout item', function (): void {

@@ -10,7 +10,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Description('Check for a newer Wire-Up release')]
+#[Description('Check for a newer Wire Up release')]
 #[Signature('wireup:check')]
 final class CheckForUpdatesCommand extends Command
 {

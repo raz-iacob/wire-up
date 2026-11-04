@@ -94,7 +94,7 @@ final class UpdateInterfaceTranslationsTool extends Tool
                 ->required(),
 
             'translations' => $schema->object()
-                ->description('A map of the exact English source string to its replacement, e.g. {"Log in": "Inloggen"} to translate, or {"Made with Wire-Up": "Designed by us"} with locale "en" to reword. Only strings from get-interface-translations are stored; unknown ones are reported back. An empty value clears one.')
+                ->description('A map of the exact English source string to its replacement, e.g. {"Log in": "Inloggen"} to translate, or {"Made with Wire Up": "Designed by us"} with locale "en" to reword. Only strings from get-interface-translations are stored; unknown ones are reported back. An empty value clears one.')
                 ->required(),
         ];
     }

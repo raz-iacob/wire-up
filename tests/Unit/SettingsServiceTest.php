@@ -404,9 +404,9 @@ it('falls back to the default social icon variant when unset or unknown', functi
 });
 
 it('resolves the title and tagline for the current locale', function (): void {
-    Settings::set(['title' => ['en' => 'Wire-Up'], 'description' => ['en' => 'A tagline']]);
+    Settings::set(['title' => ['en' => 'Wire Up'], 'description' => ['en' => 'A tagline']]);
 
-    expect((new SettingsService)->title())->toBe('Wire-Up')
+    expect((new SettingsService)->title())->toBe('Wire Up')
         ->and((new SettingsService)->description())->toBe('A tagline');
 });
 

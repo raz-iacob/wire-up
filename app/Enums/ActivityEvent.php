@@ -113,7 +113,7 @@ enum ActivityEvent: string
             self::BACKUP_CREATED => __('Created backup'),
             self::BACKUP_FAILED => __('Backup failed'),
             self::BACKUP_DELETED => __('Deleted backup'),
-            self::SYSTEM_UPDATED => __('Updated Wire-Up'),
+            self::SYSTEM_UPDATED => __('Updated Wire Up'),
         };
     }
 

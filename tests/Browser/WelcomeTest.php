@@ -8,5 +8,5 @@ it('shows the welcome landing page without javascript errors', function (): void
     $page->assertNoJavascriptErrors()
         ->assertSee('Documentation')
         ->assertSee('Getting started')
-        ->assertDontSee('Made with Wire-Up');
+        ->assertDontSee('Made with Wire Up');
 });

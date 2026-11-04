@@ -373,7 +373,7 @@ return new class extends Component
                     <dd>{{ $error->last_seen_at->format('M d, Y H:i') }}</dd>
                     <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Version') }}</dt>
                     <dd>
-                        Wire-Up {{ $error->context['version'] ?? '?' }} · PHP {{ $error->context['php'] ?? '?' }} · {{ $error->context['environment'] ?? '?' }}
+                        Wire Up {{ $error->context['version'] ?? '?' }} · PHP {{ $error->context['php'] ?? '?' }} · {{ $error->context['environment'] ?? '?' }}
                     </dd>
                     @if ($error->isResolved())
                         <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Resolved') }}</dt>

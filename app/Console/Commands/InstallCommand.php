@@ -18,7 +18,7 @@ final class InstallCommand extends Command
 {
     public function handle(UpdateService $updates): int
     {
-        $this->info('Install Wire-Up');
+        $this->info('Install Wire Up');
         $this->newLine();
 
         if (config('app.env') !== 'production' && ! $this->confirm('The application environment is not production. Continue anyway?')) {
@@ -56,7 +56,7 @@ final class InstallCommand extends Command
         $updates->check();
 
         $this->newLine();
-        $this->info('Wire-Up is installed.');
+        $this->info('Wire Up is installed.');
 
         return 0;
     }

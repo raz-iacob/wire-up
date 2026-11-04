@@ -12,7 +12,7 @@ use Laravel\Mcp\Server\Prompt;
 use Laravel\Mcp\Server\Prompts\Argument;
 
 #[Name('replicate-site')]
-#[Description('Guide the agent to rebuild an existing website inside Wire-Up end to end: read the source, match the design, lay out the pages, recreate repeating content as records, and publish.')]
+#[Description('Guide the agent to rebuild an existing website inside Wire Up end to end: read the source, match the design, lay out the pages, recreate repeating content as records, and publish.')]
 final class ReplicateSitePrompt extends Prompt
 {
     public function handle(Request $request): Response
@@ -34,7 +34,7 @@ final class ReplicateSitePrompt extends Prompt
             : '';
 
         return Response::text(<<<MD
-        Rebuild the website at {$url} inside Wire-Up, an opinionated block-based site
+        Rebuild the website at {$url} inside Wire Up, an opinionated block-based site
         builder, as faithfully as the tools allow. Recreate its structure, layout, and
         design, but write your own original copy — do not copy text or reproduce assets
         you are not permitted to. Work autonomously through these steps.
@@ -50,7 +50,7 @@ final class ReplicateSitePrompt extends Prompt
 
         3. Set identity and look. Use `get-settings`, then `update-identity` (title,
            description) and `update-design` (theme, colours, fonts, shape) to match the
-           source's branding within Wire-Up's theme tokens.
+           source's branding within Wire Up's theme tokens.
 
         4. Bring in imagery. For images you may reuse, `import-media-from-url` with the
            source image URL; otherwise `search-pexels` then `import-pexels-media`. Use the

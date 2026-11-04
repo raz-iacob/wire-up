@@ -50,7 +50,7 @@ return new class extends Component
 
             ['category' => 'settings', 'question' => __('How do I connect Google Analytics?'), 'answer' => __('Add your credentials under Settings → Integrations. Once connected, visitor stats appear on the Analytics page in the sidebar.')],
             ['category' => 'settings', 'question' => __('Can I run my site in more than one language?'), 'answer' => __('Yes. Settings → Translations lets you manage locales and translate both your content and the interface labels your visitors see.')],
-            ['category' => 'settings', 'question' => __('How do I keep Wire-Up up to date?'), 'answer' => __('Settings → Updates shows your current version and any available release. You can review the changelog and apply updates from there.')],
+            ['category' => 'settings', 'question' => __('How do I keep Wire Up up to date?'), 'answer' => __('Settings → Updates shows your current version and any available release. You can review the changelog and apply updates from there.')],
             ['category' => 'settings', 'question' => __('Where do I update my own name, email, or password?'), 'answer' => __('Open the account menu at the top right and choose Account. From there you can edit your profile, and change your password under Account → Password.')],
         ];
     }
