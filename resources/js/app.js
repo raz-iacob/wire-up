@@ -45,4 +45,53 @@ document.addEventListener("alpine:init", () => {
             el.removeEventListener("touchend", onEnd);
         });
     });
+
+    Alpine.data("turnstile", (siteKey) => ({
+        widgetId: null,
+
+        init() {
+            loadTurnstile().then((turnstile) => {
+                this.widgetId = turnstile.render(this.$el, {
+                    sitekey: siteKey,
+                    callback: (token) =>
+                        this.$wire.set("turnstileToken", token, false),
+                    "expired-callback": () =>
+                        this.$wire.set("turnstileToken", "", false),
+                    "error-callback": () =>
+                        this.$wire.set("turnstileToken", "", false),
+                });
+            });
+        },
+
+        reset() {
+            if (this.widgetId !== null && window.turnstile) {
+                window.turnstile.reset(this.widgetId);
+            }
+        },
+
+        destroy() {
+            if (this.widgetId !== null && window.turnstile) {
+                window.turnstile.remove(this.widgetId);
+            }
+        },
+    }));
 });
+
+let turnstileLoader = null;
+
+function loadTurnstile() {
+    if (window.turnstile) {
+        return Promise.resolve(window.turnstile);
+    }
+
+    turnstileLoader ??= new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src =
+            "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        script.addEventListener("load", () => resolve(window.turnstile));
+        document.head.appendChild(script);
+    });
+
+    return turnstileLoader;
+}

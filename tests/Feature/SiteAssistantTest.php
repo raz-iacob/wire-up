@@ -176,7 +176,7 @@ it('keeps accounts, roles and integration credentials away from the assistant', 
     $forbidden = [
         User::class, Role::class,
         'ai_api_key', 'google_analytics_credentials', 'google_maps_api_key',
-        'mail_password', 'pexels_api_key', 'slack_webhook_url',
+        'mail_password', 'pexels_api_key', 'slack_webhook_url', 'turnstile_secret_key',
     ];
 
     $exposed = SiteAssistant::visible(WireUpServer::toolClasses())

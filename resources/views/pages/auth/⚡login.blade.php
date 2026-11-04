@@ -6,6 +6,7 @@ use App\Enums\ActivityEvent;
 use App\Models\User;
 use App\Services\ActivityLog;
 use App\Services\SettingsService;
+use App\Traits\VerifiesTurnstile;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,8 @@ use Livewire\Component;
 
 return new class extends Component
 {
+    use VerifiesTurnstile;
+
     public string $email = '';
 
     public string $password = '';
@@ -35,6 +38,8 @@ return new class extends Component
         ]);
 
         $this->ensureIsNotRateLimited();
+
+        $this->ensureHuman();
 
         $challenged = User::query()->where('email', $credentials['email'])->first();
 
@@ -142,6 +147,8 @@ return new class extends Component
         </div>
 
         <flux:checkbox wire:model="remember" :label="__('Remember me')" />
+
+        <x-site.turnstile />
 
         <div class="flex items-center justify-end">
             <flux:button variant="primary" type="submit" class="w-full">{{ __('Log in') }}</flux:button>

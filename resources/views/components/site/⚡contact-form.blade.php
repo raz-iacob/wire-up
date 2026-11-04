@@ -6,6 +6,7 @@ use App\Actions\CreateSubmissionAction;
 use App\Models\Block;
 use App\Services\PageCache;
 use App\Services\SettingsService;
+use App\Traits\VerifiesTurnstile;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
@@ -15,6 +16,8 @@ use Livewire\Component;
 
 return new class extends Component
 {
+    use VerifiesTurnstile;
+
     private const int MIN_SECONDS = 3;
 
     private const int MAX_ATTEMPTS = 5;
@@ -80,6 +83,8 @@ return new class extends Component
         }
 
         RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
+
+        $this->ensureHuman('form');
 
         $this->validate($this->validationRules(), [], $this->validationAttributes());
 
@@ -556,6 +561,8 @@ return new class extends Component
                     />
                 </label>
             </div>
+
+            <x-site.turnstile error="form" />
 
             @error('form')
                 <div class="rounded-(--wire-radius) bg-red-100 px-3 py-2 text-sm font-medium text-red-700">

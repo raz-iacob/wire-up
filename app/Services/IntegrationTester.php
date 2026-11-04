@@ -32,6 +32,26 @@ final readonly class IntegrationTester
         return IntegrationTestResult::passed(__('Test message posted to Slack.'));
     }
 
+    public function turnstile(string $secretKey): IntegrationTestResult
+    {
+        try {
+            $response = Http::asForm()->timeout(10)->post(Turnstile::VERIFY_URL, [
+                'secret' => $secretKey,
+                'response' => 'wire-up-connection-test',
+            ]);
+        } catch (Throwable $exception) {
+            return IntegrationTestResult::failed(__('Could not reach Cloudflare: :reason', ['reason' => $this->reason($exception)]));
+        }
+
+        $errors = $response->json('error-codes');
+
+        if (is_array($errors) && in_array('invalid-input-secret', $errors, true)) {
+            return IntegrationTestResult::failed(__('Cloudflare doesn’t recognise this secret key.'));
+        }
+
+        return IntegrationTestResult::passed(__('Cloudflare accepted the secret key.'));
+    }
+
     /**
      * @param  array{host: string, port: int, encryption: string, username: string, password: string, from_address: string, from_name: string}  $credentials
      */

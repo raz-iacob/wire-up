@@ -56,6 +56,8 @@ final class SiteBundle
         'stripe_webhook_endpoint_id',
         'error_report_email',
         'error_report_slack_webhook_url',
+        'turnstile_site_key',
+        'turnstile_secret_key',
     ];
 
     /**

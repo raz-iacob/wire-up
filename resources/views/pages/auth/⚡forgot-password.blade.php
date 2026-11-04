@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Services\SettingsService;
+use App\Traits\VerifiesTurnstile;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
@@ -12,6 +13,8 @@ use Livewire\Component;
 
 return new class extends Component
 {
+    use VerifiesTurnstile;
+
     public string $email = '';
 
     public function mount(): void {}
@@ -25,6 +28,8 @@ return new class extends Component
         $this->ensureIsNotRateLimited();
 
         RateLimiter::hit($this->throttleKey(), 300);
+
+        $this->ensureHuman();
 
         try {
             Password::sendResetLink($this->only('email'));
@@ -84,6 +89,8 @@ return new class extends Component
             autofocus
             placeholder="email@example.com"
         />
+
+        <x-site.turnstile />
 
         <flux:button variant="primary" type="submit" class="w-full">{{ __('Email password reset link') }}</flux:button>
     </form>

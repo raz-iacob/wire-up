@@ -44,6 +44,7 @@ final class Settings extends Model
         'stripe_secret_key',
         'stripe_webhook_secret',
         'error_report_slack_webhook_url',
+        'turnstile_secret_key',
     ];
 
     /**

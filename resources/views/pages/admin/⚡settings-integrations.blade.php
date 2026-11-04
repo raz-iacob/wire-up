@@ -11,6 +11,7 @@ use App\Livewire\Forms\MailIntegrationForm;
 use App\Livewire\Forms\PexelsIntegrationForm;
 use App\Livewire\Forms\SlackIntegrationForm;
 use App\Livewire\Forms\StripeIntegrationForm;
+use App\Livewire\Forms\TurnstileIntegrationForm;
 use App\Models\Settings;
 use App\Services\AiModelCatalog;
 use App\Services\IntegrationTester;
@@ -41,6 +42,8 @@ return new class extends Component
     public MailIntegrationForm $mailForm;
 
     public StripeIntegrationForm $stripeForm;
+
+    public TurnstileIntegrationForm $turnstileForm;
 
     public CustomCodeForm $customCodeForm;
 
@@ -78,6 +81,7 @@ return new class extends Component
         $this->assistantForm->ai_provider = array_key_exists((string) config('site.ai_provider'), AiModelCatalog::PROVIDERS) ? config()->string('site.ai_provider') : 'anthropic';
         $this->assistantForm->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : resolve(AiModelCatalog::class)->defaultFor($this->assistantForm->ai_provider);
         $this->stripeForm->stripe_publishable_key = $this->savedSetting('stripe_publishable_key');
+        $this->turnstileForm->turnstile_site_key = $this->savedSetting('turnstile_site_key');
         $this->customCodeForm->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
         $this->customCodeForm->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
 
@@ -195,6 +199,26 @@ return new class extends Component
 
         Flux::modal('integration-slack')->close();
         Flux::toast(__('Slack connected.'), variant: 'success');
+    }
+
+    public function connectTurnstile(UpdateSettingsAction $action): void
+    {
+        $this->authorize('settings.edit');
+
+        $this->turnstileForm->turnstile_site_key = mb_trim($this->turnstileForm->turnstile_site_key);
+        $this->turnstileForm->turnstile_secret_key = mb_trim($this->turnstileForm->turnstile_secret_key);
+
+        $validated = $this->turnstileForm->validate();
+
+        $action->handle([
+            'turnstile_site_key' => $validated['turnstile_site_key'],
+            'turnstile_secret_key' => $this->typedOrSaved($validated['turnstile_secret_key'], 'turnstile_secret_key'),
+        ]);
+
+        $this->turnstileForm->reset('turnstile_secret_key');
+
+        Flux::modal('integration-turnstile')->close();
+        Flux::toast(__('Cloudflare Turnstile connected.'), variant: 'success');
     }
 
     public function connectAssistant(UpdateSettingsAction $action): void
@@ -344,6 +368,21 @@ return new class extends Component
         $this->reportTest($tester->slack($this->typedOrSaved($validated['slack_webhook_url'], 'slack_webhook_url')));
     }
 
+    public function testTurnstile(IntegrationTester $tester): void
+    {
+        $this->authorize('settings.edit');
+
+        $this->turnstileForm->turnstile_secret_key = mb_trim($this->turnstileForm->turnstile_secret_key);
+
+        $validated = $this->turnstileForm->validateOnly('turnstile_secret_key');
+
+        if (! $this->allowsAnotherTest()) {
+            return;
+        }
+
+        $this->reportTest($tester->turnstile($this->typedOrSaved($validated['turnstile_secret_key'] ?? '', 'turnstile_secret_key')));
+    }
+
     public function testMail(IntegrationTester $tester): void
     {
         $this->authorize('settings.edit');
@@ -394,6 +433,7 @@ return new class extends Component
             'google-analytics' => ['google_analytics_id', 'google_analytics_property_id', 'google_analytics_credentials'],
             'google-maps' => ['google_maps_api_key'],
             'slack' => ['slack_webhook_url'],
+            'turnstile' => ['turnstile_site_key', 'turnstile_secret_key'],
             'assistant' => ['ai_api_key'],
             'mail' => ['mail_host', 'mail_username', 'mail_password', 'mail_from_address', 'mail_from_name'],
             default => [],
@@ -408,6 +448,7 @@ return new class extends Component
             'google-analytics' => $this->googleAnalyticsForm->reset('google_analytics_id', 'google_analytics_property_id', 'google_analytics_credentials'),
             'google-maps' => $this->googleMapsForm->reset('google_maps_api_key'),
             'slack' => $this->slackForm->reset('slack_webhook_url'),
+            'turnstile' => $this->turnstileForm->reset('turnstile_site_key', 'turnstile_secret_key'),
             'assistant' => $this->assistantForm->reset('ai_api_key'),
             'mail' => $this->mailForm->reset('mail_host', 'mail_username', 'mail_password', 'mail_from_address', 'mail_from_name'),
             default => null,
@@ -660,6 +701,29 @@ return new class extends Component
                 <div class="space-y-1">
                     <flux:heading size="lg">Slack</flux:heading>
                     <flux:text>{{ __('Get a Slack message when someone submits a form.') }}</flux:text>
+                </div>
+            </flux:card>
+
+            @php($turnstileConnected = $this->secretHints['turnstile_secret_key'] !== '')
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
+                        <flux:icon name="shield-check" class="text-accent size-6" />
+                    </div>
+                    <flux:modal.trigger name="integration-turnstile">
+                        <flux:button
+                            size="sm"
+                            :variant="$turnstileConnected ? 'primary' : 'outline'"
+                            :icon="$turnstileConnected ? 'check' : null"
+                        >
+                            {{ $turnstileConnected ? __('Connected') : __('Connect') }}
+                        </flux:button>
+                    </flux:modal.trigger>
+                </div>
+
+                <div class="space-y-1">
+                    <flux:heading size="lg">Cloudflare Turnstile</flux:heading>
+                    <flux:text>{{ __('Keep bots out of your forms and sign-in pages without a puzzle.') }}</flux:text>
                 </div>
             </flux:card>
 
@@ -994,6 +1058,49 @@ return new class extends Component
             </form>
         </flux:modal>
 
+        <flux:modal name="integration-turnstile" class="w-full md:max-w-lg">
+            <form wire:submit="connectTurnstile" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Connect Cloudflare Turnstile') }}</flux:heading>
+                    @php($turnstileLink = '<a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" rel="noopener noreferrer" class="underline">'.__('Turnstile dashboard').'</a>')
+                    <flux:text class="mt-2">{!! __('Checks that a person, not a bot, is sending the contact, newsletter, sign-in, sign-up and password reset forms. Add this site in the :dashboard and paste its keys.', ['dashboard' => $turnstileLink]) !!}</flux:text>
+                </div>
+
+                <flux:input
+                    wire:model="turnstileForm.turnstile_site_key"
+                    :label="__('Site key')"
+                    placeholder="0x4AAAAAAA…"
+                />
+
+                <flux:input
+                    wire:model="turnstileForm.turnstile_secret_key"
+                    type="password"
+                    viewable
+                    :label="__('Secret key')"
+                    :placeholder="$turnstileConnected ? $this->secretHints['turnstile_secret_key'] : '0x4AAAAAAA…'"
+                    :description="$turnstileConnected ? __('Leave blank to keep the saved key.') : null"
+                />
+
+                <div class="flex items-center justify-between gap-4">
+                    @if ($turnstileConnected)
+                        <flux:button
+                            variant="subtle"
+                            wire:click="disconnect('turnstile')"
+                        >{{ __('Disconnect') }}</flux:button>
+                    @else
+                        <span></span>
+                    @endif
+                    <div class="flex items-center gap-2">
+                        <flux:button
+                            wire:click="testTurnstile"
+                            :tooltip="__('Checks the secret key with Cloudflare')"
+                        >{{ __('Test') }}</flux:button>
+                        <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                    </div>
+                </div>
+            </form>
+        </flux:modal>
+
         <flux:modal name="integration-assistant" class="w-full md:max-w-lg">
             <form wire:submit="connectAssistant" class="space-y-6">
                 <div>
@@ -1059,7 +1166,7 @@ return new class extends Component
         <form
             wire:submit="updateCustomCode"
             wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
-            data-warn-dirty-ignore="stripe_publishable_key,stripe_secret_key,stripe_webhook_secret,pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key,slack_webhook_url"
+            data-warn-dirty-ignore="stripe_publishable_key,stripe_secret_key,stripe_webhook_secret,pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key,slack_webhook_url,turnstile_site_key,turnstile_secret_key"
             class="max-w-3xl space-y-6"
         >
             <div class="space-y-3">

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\CreateUserAction;
 use App\Models\User;
 use App\Services\SettingsService;
+use App\Traits\VerifiesTurnstile;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,8 @@ use Livewire\Component;
 
 return new class extends Component
 {
+    use VerifiesTurnstile;
+
     public string $name = '';
 
     public string $email = '';
@@ -38,6 +41,8 @@ return new class extends Component
         $this->ensureIsNotRateLimited();
 
         RateLimiter::hit($this->throttleKey(), 300);
+
+        $this->ensureHuman();
 
         /** @var array<string, mixed> $credentials */
         $credentials = $this->validate([
@@ -132,6 +137,8 @@ return new class extends Component
             :placeholder="__('Confirm password')"
             viewable
         />
+
+        <x-site.turnstile />
 
         <div class="flex items-center justify-end">
             <flux:button type="submit" variant="primary" class="w-full"> {{ __('Create account') }} </flux:button>
