@@ -13,6 +13,8 @@ use App\Mcp\Tools\PublishPageTool;
 use App\Mcp\Tools\UpdatePageBlocksTool;
 use App\Models\Page;
 use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
+use Laravel\Mcp\Server\Tool;
 
 it('advertises every tool with its name and input schema', function (): void {
     $advertised = collect([
@@ -104,8 +106,7 @@ it('returns a friendly error when getting an unknown page', function (): void {
 
 it('validates the page id when getting a page', function (): void {
     WireUpServer::tool(GetPageTool::class, ['page' => 'nope'])
-        ->assertHasErrors()
-        ->assertSee('The page id must be an integer.');
+        ->assertHasErrors(['"page" must be the page id, a whole number. Use list-pages to find it.']);
 });
 
 it('creates a draft page with blocks', function (): void {
@@ -248,7 +249,7 @@ it('requires the block list to be present when updating blocks', function (): vo
 
     WireUpServer::tool(UpdatePageBlocksTool::class, ['page' => $page->id])
         ->assertHasErrors()
-        ->assertSee('Pass the full list of blocks the page should have.');
+        ->assertSee('Pass "blocks": the full list of blocks the page should have.');
 });
 
 it('publishes and unpublishes a page', function (): void {
@@ -295,4 +296,26 @@ it('documents the escaping, collection source and collection fields conventions'
         ->and($conventions['escapedFields'])->toContain('stats')->toContain('feature-cards')
         ->and($conventions['collectionSource'])->toContain('latest')->toContain('manual')->toContain('recordIds')
         ->and($conventions['collectionFields'])->toContain('field-key strings');
+});
+
+it('refuses arguments a tool does not take, naming the ones it does', function (): void {
+    WireUpServer::tool(GetPageTool::class, ['id' => 3])
+        ->assertHasErrors(['get-page has no "id" argument. It takes: page (required), outline.']);
+
+    WireUpServer::tool(ListPagesTool::class, ['id' => 3, 'limit' => 5])
+        ->assertHasErrors(['list-pages has no "id", "limit" arguments. It takes no arguments.']);
+});
+
+it('leaves a tool the server does not serve to the package', function (): void {
+    $stray = new class extends Tool
+    {
+        protected string $name = 'stray-tool';
+
+        public function handle(): Response
+        {
+            return Response::text('never runs');
+        }
+    };
+
+    WireUpServer::tool($stray)->assertHasErrors(['Tool [stray-tool] not found.']);
 });

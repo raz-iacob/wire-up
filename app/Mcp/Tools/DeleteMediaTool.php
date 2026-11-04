@@ -28,7 +28,7 @@ final class DeleteMediaTool extends Tool implements RequiresConfirmation
                 'confirm' => ['accepted'],
             ],
             [
-                'media.required' => 'Pass the media id. Use list-media to find it.',
+                'media.required' => 'Pass "media": the media id. Use list-media to find it.',
                 'confirm.accepted' => 'Deleting a file is permanent and cannot be undone. Check with the site owner first, then call this again with "confirm": true.',
             ],
         );

@@ -57,7 +57,7 @@ it('adds redirects in one call and reports the ones it skipped', function (): vo
 
 it('explains what a batch of redirects is missing', function (): void {
     WireUpServer::tool(CreateRedirectsTool::class, [])
-        ->assertHasErrors(['Pass the redirects to add, such as [{"from": "/old-page", "to": "/new-page"}].']);
+        ->assertHasErrors(['Pass "redirects": the redirects to add, such as [{"from": "/old-page", "to": "/new-page"}].']);
 
     WireUpServer::tool(CreateRedirectsTool::class, ['redirects' => [['from' => '/old', 'to' => '/new', 'status' => 307]]])
         ->assertHasErrors(['status must be 301 (permanent) or 302 (temporary).']);

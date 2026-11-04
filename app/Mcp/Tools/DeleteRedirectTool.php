@@ -27,7 +27,7 @@ final class DeleteRedirectTool extends Tool implements RequiresConfirmation
                 'confirm' => ['accepted'],
             ],
             [
-                'redirect.required' => 'Pass the redirect id. Use list-redirects to find it.',
+                'redirect.required' => 'Pass "redirect": the redirect id. Use list-redirects to find it.',
                 'confirm.accepted' => 'Deleting a redirect is permanent and cannot be undone. Check with the site owner first, then call this again with "confirm": true.',
             ],
         );

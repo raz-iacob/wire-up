@@ -2,6 +2,15 @@
 
 Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
+## Unreleased
+
+- AI agents can change part of a page or record with the new `edit-blocks` tool: update, add, remove or move one block, or update, add or remove one card, question or other item, without resending everything else. All the changes in one call are saved together, or none are if one fails. `get-page` and `get-record` take `"outline": true` to list just the blocks' ids, headings and item ids.
+- AI agents can find text across every page and record with `search-content` and change it everywhere in one call with `replace-text`, in every language or just one. Only visible text changes, never HTML tags, links or media, and each changed page or record gets a revision you can restore. In the AI Assistant, a replace waits for the owner's approval.
+- AI agents can change a file's alt text, or make a document private, with the new `update-media` tool.
+- AI agents now get a clear error instead of a silent no-op: a feature card icon that doesn't exist is refused with the list of available icons, so is the same item id used twice in a block, and an argument a tool doesn't take is refused with the list of the arguments it does take. Missing-argument errors now name the argument.
+- Text for a block sent by an AI agent as plain words is now saved in the site's language, where before it showed nothing, and new cards, questions and other items get an id automatically.
+- Settings → Translations is now on every site, so the footer, cart and sign-in wording can be changed even when visitors can't create accounts. Before, it only appeared with sign-ups switched on.
+
 ## v0.6.1 — 2026-11-04
 
 - The name is now written Wire Up, without the hyphen, in the admin, the site footer ("Made with Wire Up"), emails, update messages and the instructions AI agents read. If you reworded the footer line in Settings → Translations, your wording carries over.

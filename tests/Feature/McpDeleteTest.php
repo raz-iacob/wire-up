@@ -51,7 +51,7 @@ it('reports an unknown page id', function (): void {
 
 it('requires a page id', function (): void {
     WireUpServer::tool(DeletePageTool::class, [])
-        ->assertHasErrors(['Pass the page id. Use list-pages to find it.']);
+        ->assertHasErrors(['Pass "page": the page id. Use list-pages to find it.']);
 });
 
 it('deletes a record', function (): void {
@@ -72,7 +72,7 @@ it('reports an unknown record id', function (): void {
 
 it('requires a record id', function (): void {
     WireUpServer::tool(DeleteRecordTool::class, [])
-        ->assertHasErrors(['Pass the record id. Use list-records to find it.']);
+        ->assertHasErrors(['Pass "record": the record id. Use list-records to find it.']);
 });
 
 it('deletes an unused media file', function (): void {
@@ -111,7 +111,7 @@ it('reports an unknown media id', function (): void {
 
 it('requires a media id', function (): void {
     WireUpServer::tool(DeleteMediaTool::class, [])
-        ->assertHasErrors(['Pass the media id. Use list-media to find it.']);
+        ->assertHasErrors(['Pass "media": the media id. Use list-media to find it.']);
 });
 
 it('gates every delete tool behind owner confirmation for the assistant', function (): void {

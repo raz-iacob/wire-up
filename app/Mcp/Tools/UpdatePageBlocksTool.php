@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Mcp\Support\Blocks;
 use App\Mcp\Support\Pages;
 use App\Models\Page;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -27,9 +28,9 @@ final class UpdatePageBlocksTool extends Tool
                 'blocks' => ['present', 'array'],
             ],
             [
-                'page.required' => 'Pass the page id. Use list-pages to find it.',
-                'page.integer' => 'The page id must be an integer. Use list-pages to find it.',
-                'blocks.present' => 'Pass the full list of blocks the page should have. An empty list removes every block.',
+                'page.required' => 'Pass "page": the page id. Use list-pages to find it.',
+                'page.integer' => '"page" must be the page id, a whole number. Use list-pages to find it.',
+                'blocks.present' => 'Pass "blocks": the full list of blocks the page should have. An empty list removes every block. To change only some blocks, use edit-blocks.',
                 ...Pages::blockMessages(),
             ],
         );
@@ -40,7 +41,14 @@ final class UpdatePageBlocksTool extends Tool
             return Response::error("No page with id {$validated['page']}. Use list-pages to see the available pages.");
         }
 
-        Pages::update($page, ['blocks' => Pages::orderedBlocks($validated['blocks'])]);
+        $blocks = Blocks::prepare($validated['blocks']);
+        $problem = Blocks::problem($blocks);
+
+        if ($problem !== null) {
+            return Response::error($problem);
+        }
+
+        Pages::update($page, ['blocks' => $blocks]);
 
         return Pages::json([
             'page' => Pages::summary($page),

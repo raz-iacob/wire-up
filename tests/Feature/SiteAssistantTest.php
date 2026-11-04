@@ -64,17 +64,18 @@ it('exposes every WireUp tool and the block-types resource to the assistant', fu
     $names = collect((new SiteAssistant)->tools())->map(fn (object $tool): string => $tool->name());
 
     expect($names->all())->toEqualCanonicalizing([
-        'list-pages', 'get-page', 'scaffold-site', 'create-page', 'update-page-blocks', 'update-page', 'publish-page', 'delete-page',
+        'list-pages', 'get-page', 'scaffold-site', 'create-page', 'update-page-blocks', 'edit-blocks', 'update-page', 'publish-page', 'delete-page',
         'list-content-types', 'create-content-type', 'update-content-type',
         'list-records', 'get-record', 'create-record', 'update-record', 'publish-record', 'delete-record',
         'list-categories', 'create-category',
-        'list-media', 'import-media-from-url', 'list-import-files', 'upload-media', 'delete-media',
+        'list-media', 'import-media-from-url', 'list-import-files', 'upload-media', 'update-media', 'delete-media',
         'render-page', 'read-webpage', 'search-pexels', 'import-pexels-media',
         'list-redirects', 'create-redirects', 'delete-redirect',
         'get-settings', 'update-design', 'update-identity',
         'get-menus', 'create-menu', 'update-menu', 'update-social',
         'get-interface-translations', 'update-interface-translations',
         'get-content-strings', 'update-content-strings',
+        'search-content', 'replace-text',
         'block-types',
     ]);
 });
@@ -92,7 +93,7 @@ it('wraps tools for the SDK by their assistant policy', function (): void {
 
 it('marks publishing and deleting as requiring confirmation', function (): void {
     expect(SiteAssistant::confirmableToolNames())
-        ->toEqualCanonicalizing(['publish-page', 'delete-page', 'publish-record', 'delete-record', 'delete-media', 'delete-redirect'])
+        ->toEqualCanonicalizing(['publish-page', 'delete-page', 'publish-record', 'delete-record', 'delete-media', 'delete-redirect', 'replace-text'])
         ->and(SiteAssistant::confirmableToolClass('publish-page'))->toBe(PublishPageTool::class)
         ->and(SiteAssistant::confirmableToolClass('publish-record'))->toBe(PublishRecordTool::class)
         ->and(SiteAssistant::confirmableToolClass('create-page'))->toBeNull();
@@ -160,13 +161,13 @@ it('exposes only the reviewed tool surface to the assistant', function (): void 
     expect($visible)->toBe([
         'create-category', 'create-content-type', 'create-menu', 'create-page',
         'create-record', 'create-redirects', 'delete-media', 'delete-page', 'delete-record',
-        'delete-redirect', 'get-content-strings', 'get-interface-translations', 'get-menus', 'get-page',
+        'delete-redirect', 'edit-blocks', 'get-content-strings', 'get-interface-translations', 'get-menus', 'get-page',
         'get-record', 'get-settings', 'import-media-from-url', 'import-pexels-media',
         'list-categories', 'list-content-types', 'list-import-files', 'list-media',
         'list-pages', 'list-records', 'list-redirects', 'publish-page', 'publish-record',
-        'read-webpage', 'render-page', 'scaffold-site', 'search-pexels',
+        'read-webpage', 'render-page', 'replace-text', 'scaffold-site', 'search-content', 'search-pexels',
         'update-content-strings', 'update-content-type', 'update-design', 'update-identity',
-        'update-interface-translations', 'update-menu', 'update-page', 'update-page-blocks',
+        'update-interface-translations', 'update-media', 'update-menu', 'update-page', 'update-page-blocks',
         'update-record', 'update-social', 'upload-media',
     ]);
 });

@@ -29,8 +29,8 @@ final class PublishRecordTool extends Tool implements RequiresConfirmation
                 'status' => ['nullable', 'string', 'in:published,draft'],
             ],
             [
-                'record.required' => 'Pass the record id. Use list-records to find it.',
-                'record.integer' => 'The record id must be an integer. Use list-records to find it.',
+                'record.required' => 'Pass "record": the record id. Use list-records to find it.',
+                'record.integer' => '"record" must be the record id, a whole number. Use list-records to find it.',
                 'status.in' => 'Status must be "published" or "draft".',
             ],
         );

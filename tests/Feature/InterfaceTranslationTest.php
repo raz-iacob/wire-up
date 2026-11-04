@@ -57,23 +57,13 @@ it('lists every active locale, with the site\'s own language last', function ():
     expect(SettingsService::current()->interfaceTranslationLocales())->toBe(['nl', 'en']);
 });
 
-it('enables interface translations whenever sign-ups are on, English-only included', function (): void {
-    expect(SettingsService::current()->showsInterfaceTranslations())->toBeFalse();
-
-    config()->set('site.allow_registration', true);
-    expect(SettingsService::current()->showsInterfaceTranslations())->toBeTrue();
-
-    activateTranslationLocale('nl');
-    expect(SettingsService::current()->showsInterfaceTranslations())->toBeTrue();
-
+it('opens the translations page on an English-only site with sign-ups off', function (): void {
     config()->set('site.allow_registration', false);
-    expect(SettingsService::current()->showsInterfaceTranslations())->toBeFalse();
-});
-
-it('returns 404 for the translations page when it does not apply', function (): void {
     $this->actingAsAdmin();
 
-    $this->get(route('admin.settings-translations'))->assertNotFound();
+    $this->get(route('admin.settings-translations'))
+        ->assertOk()
+        ->assertSee('Made with Wire Up');
 });
 
 it('shows and saves translations when applicable', function (): void {
@@ -140,13 +130,12 @@ it('filters out and counts already-translated strings', function (): void {
         ->assertSee('Log out');
 });
 
-it('shows the translations nav link only when applicable', function (): void {
+it('shows the translations nav link on every site, with or without sign-ups', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('admin.sidebar-settings')->assertDontSee(__('Translations'));
+    Livewire::test('admin.sidebar-settings')->assertSee(route('admin.settings-translations'));
 
     config()->set('site.allow_registration', true);
-    activateTranslationLocale('nl');
 
-    Livewire::test('admin.sidebar-settings')->assertSee(__('Translations'));
+    Livewire::test('admin.sidebar-settings')->assertSee(route('admin.settings-translations'));
 });

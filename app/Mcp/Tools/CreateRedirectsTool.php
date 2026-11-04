@@ -29,7 +29,7 @@ final class CreateRedirectsTool extends Tool
                 'redirects.*.status' => ['sometimes', 'integer', 'in:301,302'],
             ],
             [
-                'redirects.required' => 'Pass the redirects to add, such as [{"from": "/old-page", "to": "/new-page"}].',
+                'redirects.required' => 'Pass "redirects": the redirects to add, such as [{"from": "/old-page", "to": "/new-page"}].',
                 'redirects.max' => 'Add at most 500 redirects per call.',
                 'redirects.*.from.required' => 'Every redirect needs a "from" path.',
                 'redirects.*.to.required' => 'Every redirect needs a "to" path or address.',

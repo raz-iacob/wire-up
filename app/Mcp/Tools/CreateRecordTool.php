@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Actions\CreateRecordAction;
 use App\Actions\UpdateRecordAction;
+use App\Mcp\Support\Blocks;
 use App\Mcp\Support\Pages;
 use App\Mcp\Support\Records;
 use App\Models\RecordType;
@@ -38,7 +39,7 @@ final class CreateRecordTool extends Tool
                 ...Pages::blockRules(),
             ],
             [
-                'type.required' => 'Pass the content type key. Use list-content-types to find it.',
+                'type.required' => 'Pass "type": the content type key. Use list-content-types to find it.',
                 'title.required' => 'Give the record a title.',
                 'title.min' => 'The record title must be at least 3 characters.',
                 'title.max' => 'The record title may not be longer than 255 characters.',
@@ -61,6 +62,13 @@ final class CreateRecordTool extends Tool
             return Response::error($mediaError);
         }
 
+        $blocks = Blocks::prepare($validated['blocks'] ?? []);
+        $problem = Blocks::problem($blocks);
+
+        if ($problem !== null) {
+            return Response::error($problem);
+        }
+
         $locale = resolve('localization')->getDefaultLocale();
 
         $record = new CreateRecordAction()->handle($type, [
@@ -71,7 +79,7 @@ final class CreateRecordTool extends Tool
 
         new UpdateRecordAction()->handle($record, [
             'status' => Records::statusFor((bool) ($validated['publish'] ?? false)),
-            'blocks' => Pages::orderedBlocks($validated['blocks'] ?? []),
+            'blocks' => $blocks,
             'categories' => $validated['categories'] ?? [],
             'media' => Records::normalizeMedia($validated['media'] ?? [], $locale),
         ]);

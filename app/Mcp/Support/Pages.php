@@ -8,7 +8,6 @@ use App\Actions\UpdatePageAction;
 use App\Enums\BlockType;
 use App\Enums\ContentStatus;
 use App\Enums\MediaType;
-use App\Models\Block;
 use App\Models\Page;
 use App\Services\SettingsService;
 use Laravel\Mcp\Response;
@@ -62,20 +61,14 @@ final readonly class Pages
     /**
      * @return array<string, mixed>
      */
-    public static function detailed(Page $page): array
+    public static function detailed(Page $page, bool $outline = false): array
     {
         $page->loadMissing('blocks');
 
         return [
             ...self::meta($page),
             'layout' => $page->resolvedLayout(),
-            'blocks' => $page->blocks
-                ->map(fn (Block $block): array => [
-                    'id' => $block->id,
-                    'type' => $block->type->value,
-                    'content' => $block->content ?? [],
-                ])
-                ->all(),
+            'blocks' => $outline ? Blocks::outline($page->blocks) : Blocks::detailed($page->blocks),
         ];
     }
 

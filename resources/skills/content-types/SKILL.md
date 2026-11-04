@@ -23,7 +23,7 @@ Use a content type whenever there is more than one item of the same shape. Each 
 
 ## Show them on a page
 
-Add a collection block to a page with `update-page-blocks`:
+Add a collection block to an existing page with `edit-blocks` (an `add` change placed `after` the block it should follow), or include it when laying out the whole page with `update-page-blocks`:
 
 - `recordTypeId` is the content type's id.
 - `source` is `latest`, `manual` (with `recordIds`), `category` (with `categoryId`) or `related`. `related` only works on a record's own page.

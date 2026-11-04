@@ -73,7 +73,7 @@ it('reports the import folder when the file is missing', function (): void {
 
 it('requires a path', function (): void {
     WireUpServer::tool(UploadMediaTool::class, [])
-        ->assertHasErrors(['Pass the name of a file inside the import folder.']);
+        ->assertHasErrors(['Pass "path": the name of a file inside the import folder. Use list-import-files to see them.']);
 });
 
 it('returns the existing item when the same file is imported twice', function (): void {

@@ -281,11 +281,6 @@ final class SettingsService
             ->all();
     }
 
-    public function showsInterfaceTranslations(): bool
-    {
-        return $this->allowsRegistration() && $this->interfaceTranslationLocales() !== [];
-    }
-
     /**
      * @return array<string, string>
      */

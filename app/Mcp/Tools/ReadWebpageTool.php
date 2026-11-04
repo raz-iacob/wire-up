@@ -33,7 +33,7 @@ final class ReadWebpageTool extends Tool
                 'max_pages' => ['sometimes', 'integer', 'min:1', 'max:20'],
             ],
             [
-                'url.required' => 'Pass the URL of the site to read.',
+                'url.required' => 'Pass "url": the address of the site to read.',
                 'url.url' => 'The URL must be a valid http(s) URL.',
             ],
         );

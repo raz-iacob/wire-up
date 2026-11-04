@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Actions\UpdateRecordAction;
 use App\Enums\ContentStatus;
+use App\Mcp\Support\Blocks;
 use App\Mcp\Support\Pages;
 use App\Mcp\Support\Records;
 use App\Models\Record;
@@ -38,8 +39,8 @@ final class UpdateRecordTool extends Tool
                 ...Pages::blockRules(),
             ],
             [
-                'record.required' => 'Pass the record id. Use list-records to find it.',
-                'record.integer' => 'The record id must be an integer. Use list-records to find it.',
+                'record.required' => 'Pass "record": the record id. Use list-records to find it.',
+                'record.integer' => '"record" must be the record id, a whole number. Use list-records to find it.',
                 'title.min' => 'The record title must be at least 3 characters.',
                 'title.max' => 'The record title may not be longer than 255 characters.',
                 'description.max' => 'The description may not be longer than 160 characters — it is used as the meta description.',
@@ -66,6 +67,13 @@ final class UpdateRecordTool extends Tool
             return Response::error($mediaError);
         }
 
+        $blocks = array_key_exists('blocks', $validated) ? Blocks::prepare($validated['blocks']) : null;
+        $problem = $blocks === null ? null : Blocks::problem($blocks);
+
+        if ($problem !== null) {
+            return Response::error($problem);
+        }
+
         $locale = resolve('localization')->getDefaultLocale();
 
         $status = isset($validated['status']) ? ContentStatus::from($validated['status']) : $record->computed_status;
@@ -88,8 +96,8 @@ final class UpdateRecordTool extends Tool
             $attributes['data'] = Records::cleanData($type, $validated['data'], $locale, is_array($record->data) ? $record->data : []);
         }
 
-        if (array_key_exists('blocks', $validated)) {
-            $attributes['blocks'] = Pages::orderedBlocks($validated['blocks']);
+        if ($blocks !== null) {
+            $attributes['blocks'] = $blocks;
         }
 
         if (array_key_exists('categories', $validated)) {

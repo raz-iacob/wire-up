@@ -43,8 +43,8 @@ final class UpdatePageTool extends Tool
                 'layout.sidebar.menus.*' => ['string', 'max:255'],
             ],
             [
-                'page.required' => 'Pass the page id. Use list-pages to find it.',
-                'page.integer' => 'The page id must be an integer. Use list-pages to find it.',
+                'page.required' => 'Pass "page": the page id. Use list-pages to find it.',
+                'page.integer' => '"page" must be the page id, a whole number. Use list-pages to find it.',
                 'title.min' => 'The page title must be at least 3 characters.',
                 'title.max' => 'The page title may not be longer than 255 characters.',
                 'description.max' => 'The description may not be longer than 160 characters — it is used as the meta description.',

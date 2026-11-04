@@ -29,7 +29,7 @@ final class DeletePageTool extends Tool implements RequiresConfirmation
                 'confirm' => ['accepted'],
             ],
             [
-                'page.required' => 'Pass the page id. Use list-pages to find it.',
+                'page.required' => 'Pass "page": the page id. Use list-pages to find it.',
                 'confirm.accepted' => 'Deleting a page is permanent and cannot be undone. Check with the site owner first, then call this again with "confirm": true.',
             ],
         );

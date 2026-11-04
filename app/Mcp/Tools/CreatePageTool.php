@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Actions\CreatePageAction;
 use App\Actions\UpdatePageAction;
 use App\Enums\ContentStatus;
+use App\Mcp\Support\Blocks;
 use App\Mcp\Support\Pages;
 use App\Models\Page;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -52,17 +53,23 @@ final class CreatePageTool extends Tool
             return Response::error("A page titled \"{$validated['title']}\" already exists (id {$existing->id}). Update it with update-page-blocks instead of creating a duplicate, or choose a different title.");
         }
 
+        $blocks = Blocks::prepare($validated['blocks'] ?? []);
+        $problem = Blocks::problem($blocks);
+
+        if ($problem !== null) {
+            return Response::error($problem);
+        }
+
         $page = new CreatePageAction()->handle([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? '',
         ]);
 
         $publish = (bool) ($validated['publish'] ?? false);
-        $blocks = $validated['blocks'] ?? [];
 
         if ($blocks !== [] || $publish) {
             new UpdatePageAction()->handle($page, [
-                ...($blocks !== [] ? ['blocks' => Pages::orderedBlocks($blocks)] : []),
+                ...($blocks !== [] ? ['blocks' => $blocks] : []),
                 'status' => $publish ? ContentStatus::PUBLISHED : ContentStatus::DRAFT,
             ]);
         }

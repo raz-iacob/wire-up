@@ -28,7 +28,7 @@ final class DeleteRecordTool extends Tool implements RequiresConfirmation
                 'confirm' => ['accepted'],
             ],
             [
-                'record.required' => 'Pass the record id. Use list-records to find it.',
+                'record.required' => 'Pass "record": the record id. Use list-records to find it.',
                 'confirm.accepted' => 'Deleting a record is permanent and cannot be undone. Check with the site owner first, then call this again with "confirm": true.',
             ],
         );

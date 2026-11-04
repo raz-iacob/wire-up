@@ -38,8 +38,8 @@ final class UpdateMenuTool extends Tool
                 'display.mobile' => ['sometimes', 'string', 'in:collapse,hide,toggle'],
             ],
             [
-                'menu.required' => 'Pass the menu key. Use get-menus to see the available menus.',
-                'items.present' => 'Pass the full list of items the menu should have. An empty list clears the menu.',
+                'menu.required' => 'Pass "menu": the menu key. Use get-menus to see the available menus.',
+                'items.present' => 'Pass "items": the full list of items the menu should have. An empty list clears the menu.',
                 'items.max' => 'A menu may hold at most 20 items.',
                 'locale.in' => 'Unknown locale. Active locales: '.implode(', ', $activeLocales).'.',
             ],

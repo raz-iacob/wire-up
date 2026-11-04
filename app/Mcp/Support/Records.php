@@ -7,7 +7,6 @@ namespace App\Mcp\Support;
 use App\Enums\ContentStatus;
 use App\Enums\FieldPlacement;
 use App\Enums\FieldType;
-use App\Models\Block;
 use App\Models\Category;
 use App\Models\Record;
 use App\Models\RecordType;
@@ -102,7 +101,7 @@ final readonly class Records
     /**
      * @return array<string, mixed>
      */
-    public static function recordDetailed(Record $record): array
+    public static function recordDetailed(Record $record, bool $outline = false): array
     {
         $record->loadMissing('recordType', 'blocks', 'media', 'categories');
 
@@ -116,13 +115,7 @@ final readonly class Records
             'categories' => $record->categories
                 ->map(fn (Category $category): array => ['id' => $category->id, 'name' => $category->name])
                 ->all(),
-            'blocks' => $record->blocks
-                ->map(fn (Block $block): array => [
-                    'id' => $block->id,
-                    'type' => $block->type->value,
-                    'content' => $block->content ?? [],
-                ])
-                ->all(),
+            'blocks' => $outline ? Blocks::outline($record->blocks) : Blocks::detailed($record->blocks),
         ];
     }
 

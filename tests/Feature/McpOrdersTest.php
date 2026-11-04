@@ -50,7 +50,7 @@ it('returns one order with its items, totals and address', function (): void {
 
 it('explains when an order reference is missing or unknown', function (): void {
     WireUpServer::tool(GetOrderTool::class, [])
-        ->assertHasErrors(['Pass the order reference. Use list-orders to find it.']);
+        ->assertHasErrors(['Pass "reference": the order reference. Use list-orders to find it.']);
 
     WireUpServer::tool(GetOrderTool::class, ['reference' => 'NOPE0000'])
         ->assertHasErrors(['No order with reference "NOPE0000".']);

@@ -24,7 +24,7 @@ final class GetOrderTool extends Tool implements HiddenFromAssistant
     {
         $validated = $request->validate(
             ['reference' => ['required', 'string', 'max:255']],
-            ['reference.required' => 'Pass the order reference. Use list-orders to find it.'],
+            ['reference.required' => 'Pass "reference": the order reference. Use list-orders to find it.'],
         );
 
         $order = Order::query()->with('items')->where('reference', mb_strtoupper(mb_trim((string) $validated['reference'])))->first();

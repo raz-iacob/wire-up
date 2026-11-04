@@ -28,8 +28,6 @@ return new class extends Component
 
     public function mount(): void
     {
-        abort_unless(SettingsService::current()->showsInterfaceTranslations(), 404);
-
         $this->locales = SettingsService::current()->interfaceTranslationLocales();
         $this->locale = $this->locales[0];
 

@@ -37,7 +37,7 @@ final class UpdateContentTypeTool extends Tool
                 ...Records::fieldRules(),
             ],
             [
-                'type.required' => 'Pass the content type key. Use list-content-types to find it.',
+                'type.required' => 'Pass "type": the content type key. Use list-content-types to find it.',
                 'name.max' => 'The name may not be longer than 255 characters.',
                 'slug_prefix.regex' => 'The URL prefix may use lowercase letters, numbers and hyphens only.',
                 'slug_prefix.not_in' => 'That URL prefix is reserved. Choose another.',

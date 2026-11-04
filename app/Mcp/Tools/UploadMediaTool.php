@@ -29,7 +29,7 @@ final class UploadMediaTool extends Tool
                 'alt' => ['sometimes', 'string', 'max:255'],
                 'private' => ['sometimes', 'boolean'],
             ],
-            ['path.required' => 'Pass the name of a file inside the import folder.'],
+            ['path.required' => 'Pass "path": the name of a file inside the import folder. Use list-import-files to see them.'],
         );
 
         $root = $this->importRoot();

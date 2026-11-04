@@ -206,5 +206,5 @@ it('rejects a meta description longer than 160 characters', function (): void {
 it('validates the page id', function (): void {
     WireUpServer::tool(UpdatePageTool::class, ['page' => 'nope', 'title' => 'Whatever'])
         ->assertHasErrors()
-        ->assertSee('The page id must be an integer.');
+        ->assertSee('"page" must be the page id, a whole number.');
 });

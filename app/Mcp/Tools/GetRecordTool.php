@@ -15,16 +15,17 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
 #[Name('get-record')]
-#[Description('Get a record in full: its metadata, field values (data), attached media, categories, and ordered content blocks. Also includes the content type field blueprint so you know what each data key means.')]
+#[Description('Get a record: its metadata, field values (data), attached media, categories, and ordered content blocks. Also includes the content type field blueprint so you know what each data key means. Pass "outline": true to list its blocks as a short map — id, type, anchor, heading and item ids — instead of their full content.')]
 final class GetRecordTool extends Tool
 {
     public function handle(Request $request): Response
     {
         $validated = $request->validate(
-            ['record' => ['required', 'integer']],
+            ['record' => ['required', 'integer'], 'outline' => ['boolean']],
             [
-                'record.required' => 'Pass the record id. Use list-records to find it.',
-                'record.integer' => 'The record id must be an integer. Use list-records to find it.',
+                'record.required' => 'Pass "record": the record id. Use list-records to find it.',
+                'record.integer' => '"record" must be the record id, a whole number. Use list-records to find it.',
+                'outline.boolean' => '"outline" must be true or false.',
             ],
         );
 
@@ -36,7 +37,7 @@ final class GetRecordTool extends Tool
             return Response::error("No record with id {$validated['record']}. Use list-records to see the available records.");
         }
 
-        return Records::json(['record' => Records::recordDetailed($record)]);
+        return Records::json(['record' => Records::recordDetailed($record, (bool) ($validated['outline'] ?? false))]);
     }
 
     /**
@@ -48,6 +49,9 @@ final class GetRecordTool extends Tool
             'record' => $schema->integer()
                 ->description('The record id, as returned by list-records or create-record.')
                 ->required(),
+
+            'outline' => $schema->boolean()
+                ->description('true lists each block\'s id, type, anchor, heading and item ids and titles instead of its full content. Defaults to false.'),
         ];
     }
 }

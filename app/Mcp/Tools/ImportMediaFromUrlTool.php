@@ -29,7 +29,7 @@ final class ImportMediaFromUrlTool extends Tool
                 'url' => ['required', 'url:http,https'],
                 'alt' => ['sometimes', 'string', 'max:255'],
             ],
-            ['url.required' => 'Pass the public URL of the file to import.', 'url.url' => 'The URL must be a valid http(s) URL.'],
+            ['url.required' => 'Pass "url": the public URL of the file to import.', 'url.url' => 'The URL must be a valid http(s) URL.'],
         );
 
         try {

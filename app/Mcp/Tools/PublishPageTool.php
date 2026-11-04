@@ -29,8 +29,8 @@ final class PublishPageTool extends Tool implements RequiresConfirmation
                 'status' => ['nullable', 'string', 'in:published,draft'],
             ],
             [
-                'page.required' => 'Pass the page id. Use list-pages to find it.',
-                'page.integer' => 'The page id must be an integer. Use list-pages to find it.',
+                'page.required' => 'Pass "page": the page id. Use list-pages to find it.',
+                'page.integer' => '"page" must be the page id, a whole number. Use list-pages to find it.',
                 'status.in' => 'Status must be "published" or "draft".',
             ],
         );

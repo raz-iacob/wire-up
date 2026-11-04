@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Servers;
 
 use App\Enums\RevisionSource;
+use App\Mcp\Methods\CallTool;
 use App\Mcp\Prompts\ReplicateSitePrompt;
 use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Tools\CreateCategoryTool;
@@ -17,6 +18,7 @@ use App\Mcp\Tools\DeleteMediaTool;
 use App\Mcp\Tools\DeletePageTool;
 use App\Mcp\Tools\DeleteRecordTool;
 use App\Mcp\Tools\DeleteRedirectTool;
+use App\Mcp\Tools\EditBlocksTool;
 use App\Mcp\Tools\GetContentStringsTool;
 use App\Mcp\Tools\GetInterfaceTranslationsTool;
 use App\Mcp\Tools\GetMenusTool;
@@ -38,13 +40,16 @@ use App\Mcp\Tools\PublishPageTool;
 use App\Mcp\Tools\PublishRecordTool;
 use App\Mcp\Tools\ReadWebpageTool;
 use App\Mcp\Tools\RenderPageTool;
+use App\Mcp\Tools\ReplaceTextTool;
 use App\Mcp\Tools\ScaffoldSiteTool;
+use App\Mcp\Tools\SearchContentTool;
 use App\Mcp\Tools\SearchPexelsTool;
 use App\Mcp\Tools\UpdateContentStringsTool;
 use App\Mcp\Tools\UpdateContentTypeTool;
 use App\Mcp\Tools\UpdateDesignTool;
 use App\Mcp\Tools\UpdateIdentityTool;
 use App\Mcp\Tools\UpdateInterfaceTranslationsTool;
+use App\Mcp\Tools\UpdateMediaTool;
 use App\Mcp\Tools\UpdateMenuTool;
 use App\Mcp\Tools\UpdatePageBlocksTool;
 use App\Mcp\Tools\UpdatePageTool;
@@ -76,13 +81,18 @@ Typical workflow for building or replicating a site:
 3. Bring in imagery with `import-media-from-url`, `upload-media` for a file the
    owner has placed in the server's import folder (the only route for SVG, HEIC
    and video), or `search-pexels` + `import-pexels-media` for stock photos, then
-   reference the returned source paths in block content.
+   reference the returned source paths in block content. `update-media` sets
+   a file's alt text or makes a document private.
 4. Create pages as drafts with `create-page`, passing blocks in the same call
    or adding them later with `update-page-blocks`. To lay out a whole site at
    once, `scaffold-site` creates the pages, header/footer navigation and
    homepage in a single call — then fill each page's blocks with
    `update-page-blocks`. Change a page's title, meta description, web address
    or SEO settings afterwards with `update-page`.
+   To change part of an existing page or record, use `edit-blocks` instead of
+   resending every block: update, add, remove or move one block, or update,
+   add or remove one item (a card, a question, a stat). `get-page` and
+   `get-record` with `"outline": true` list the block and item ids it needs.
 5. Wire the pages into navigation with `get-menus` + `update-menu` (header and
    footer), and set social profile links with `update-social`. For a sidebar —
    a documentation nav, say — `create-menu` makes a new menu, `update-menu`
@@ -118,6 +128,11 @@ Typical workflow for building or replicating a site:
     `list-redirects` shows the existing redirects and the addresses visitors
     ask for that do not exist; `delete-redirect` removes one for good.
     Changing a page or record's web address adds a redirect by itself.
+12. To find or change wording everywhere, `search-content` lists every page
+    and record where some text appears, and `replace-text` with the same
+    arguments replaces it in one call (each changed page gets a revision).
+13. Arguments are checked by name: a call with an argument the tool does not
+    take is refused with the list of arguments it does take.
 MD)]
 final class WireUpServer extends Server
 {
@@ -130,6 +145,7 @@ final class WireUpServer extends Server
         ScaffoldSiteTool::class,
         CreatePageTool::class,
         UpdatePageBlocksTool::class,
+        EditBlocksTool::class,
         UpdatePageTool::class,
         PublishPageTool::class,
         DeletePageTool::class,
@@ -148,6 +164,7 @@ final class WireUpServer extends Server
         ImportMediaFromUrlTool::class,
         ListImportFilesTool::class,
         UploadMediaTool::class,
+        UpdateMediaTool::class,
         DeleteMediaTool::class,
         RenderPageTool::class,
         ReadWebpageTool::class,
@@ -167,6 +184,8 @@ final class WireUpServer extends Server
         UpdateInterfaceTranslationsTool::class,
         GetContentStringsTool::class,
         UpdateContentStringsTool::class,
+        SearchContentTool::class,
+        ReplaceTextTool::class,
         ListOrdersTool::class,
         GetOrderTool::class,
     ];
@@ -218,6 +237,8 @@ final class WireUpServer extends Server
 
     protected function boot(): void
     {
+        $this->addMethod('tools/call', CallTool::class);
+
         Context::add(RevisionSource::CONTEXT_KEY, RevisionSource::AGENT->value);
     }
 }

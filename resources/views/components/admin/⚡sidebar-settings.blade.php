@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\ErrorLog;
-use App\Services\SettingsService;
 use App\Services\StripeService;
 use App\Services\UpdateService;
 use Livewire\Attributes\Computed;
@@ -22,12 +21,6 @@ return new class extends Component
     public function updateAvailable(): bool
     {
         return resolve(UpdateService::class)->updateAvailable();
-    }
-
-    #[Computed]
-    public function showTranslations(): bool
-    {
-        return SettingsService::current()->showsInterfaceTranslations();
     }
 
     #[Computed]
@@ -84,14 +77,12 @@ return new class extends Component
             wire:navigate.hover
         >
             {{ __('Menus') }}</flux:sidebar.item>
-        @if ($this->showTranslations)
-            <flux:sidebar.item
-                :href="route('admin.settings-translations')"
-                :current="request()->routeIs('admin.settings-translations')"
-                wire:navigate.hover
-            >
-                {{ __('Translations') }}</flux:sidebar.item>
-        @endif
+        <flux:sidebar.item
+            :href="route('admin.settings-translations')"
+            :current="request()->routeIs('admin.settings-translations')"
+            wire:navigate.hover
+        >
+            {{ __('Translations') }}</flux:sidebar.item>
         <flux:sidebar.item
             :href="route('admin.settings-content-types')"
             :current="request()->routeIs('admin.settings-content-types')"

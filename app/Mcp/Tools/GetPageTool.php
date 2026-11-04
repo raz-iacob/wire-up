@@ -15,16 +15,17 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
 #[Name('get-page')]
-#[Description('Get a page in full: metadata, slugs, layout, and its ordered blocks with their ids, types, and content JSON.')]
+#[Description('Get a page: metadata, slugs, layout, and its ordered blocks with their ids, types, and content JSON. Pass "outline": true for a short map instead — each block\'s id, type, anchor, heading and item ids — to find what to change before fetching everything.')]
 final class GetPageTool extends Tool
 {
     public function handle(Request $request): Response
     {
         $validated = $request->validate(
-            ['page' => ['required', 'integer']],
+            ['page' => ['required', 'integer'], 'outline' => ['boolean']],
             [
-                'page.required' => 'Pass the page id. Use list-pages to find it.',
-                'page.integer' => 'The page id must be an integer. Use list-pages to find it.',
+                'page.required' => 'Pass "page": the page id. Use list-pages to find it.',
+                'page.integer' => '"page" must be the page id, a whole number. Use list-pages to find it.',
+                'outline.boolean' => '"outline" must be true or false.',
             ],
         );
 
@@ -34,7 +35,7 @@ final class GetPageTool extends Tool
             return Response::error("No page with id {$validated['page']}. Use list-pages to see the available pages.");
         }
 
-        return Pages::json(['page' => Pages::detailed($page)]);
+        return Pages::json(['page' => Pages::detailed($page, (bool) ($validated['outline'] ?? false))]);
     }
 
     /**
@@ -46,6 +47,9 @@ final class GetPageTool extends Tool
             'page' => $schema->integer()
                 ->description('The page id, as returned by list-pages or create-page.')
                 ->required(),
+
+            'outline' => $schema->boolean()
+                ->description('true returns each block\'s id, type, anchor, heading and item ids and titles instead of its full content. Defaults to false.'),
         ];
     }
 }

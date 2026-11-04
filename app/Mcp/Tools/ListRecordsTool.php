@@ -31,7 +31,7 @@ final class ListRecordsTool extends Tool
                 'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
             ],
             [
-                'type.required' => 'Pass the content type key. Use list-content-types to find it.',
+                'type.required' => 'Pass "type": the content type key. Use list-content-types to find it.',
                 'status.in' => 'Status must be one of: draft, published, scheduled, private.',
             ],
         );

@@ -111,6 +111,19 @@ final readonly class ContentStrings
     }
 
     /**
+     * @param  array<array-key, mixed>  $node
+     * @param  array<int, string>  $codes
+     */
+    public static function isLocaleMap(array $node, array $codes): bool
+    {
+        if ($node === []) {
+            return false;
+        }
+
+        return array_all($node, fn (mixed $value, int|string $key): bool => in_array((string) $key, $codes, true) && is_string($value));
+    }
+
+    /**
      * @param  array<string, string>  $titleMap
      * @param  array<string, string>  $descriptionMap
      * @param  array<int|string, array<string, mixed>>  $blocks
@@ -237,18 +250,5 @@ final readonly class ContentStrings
         foreach ($node as $key => $value) {
             self::walk($value, "{$path}.{$key}", $default, $locale, $codes, $out);
         }
-    }
-
-    /**
-     * @param  array<array-key, mixed>  $node
-     * @param  array<int, string>  $codes
-     */
-    private static function isLocaleMap(array $node, array $codes): bool
-    {
-        if ($node === []) {
-            return false;
-        }
-
-        return array_all($node, fn (mixed $value, int|string $key): bool => in_array((string) $key, $codes, true) && is_string($value));
     }
 }
