@@ -35,9 +35,11 @@ it('submits the contact form and shows the inline success state', function (): v
         ->fill('#cf-email', 'ada@example.com')
         ->fill('#cf-message', 'Hello from the browser test')
         ->wait(3.5)
-        ->press('Send')
-        ->waitForText('Got it, thanks!')
-        ->assertNoJavascriptErrors();
+        ->press('Send');
+
+    assertScriptEventually($browser, "document.body.innerText.includes('Got it, thanks!')", true);
+
+    $browser->assertNoJavascriptErrors();
 
     $this->assertDatabaseHas('submissions', [
         'type' => 'contact',

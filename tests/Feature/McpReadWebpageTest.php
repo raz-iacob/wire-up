@@ -111,7 +111,7 @@ it('follows a redirect and falls back to the h1 for the title', function (): voi
 it('skips crawled pages that are not html or fail to load', function (): void {
     Http::fake([
         'acme.example/data*' => Http::response('{}', 200, ['Content-Type' => 'application/json']),
-        'acme.example/boom*' => fn () => throw new ConnectionException('down'),
+        'acme.example/boom*' => fn (): never => throw new ConnectionException('down'),
         'acme.example*' => Http::response('<html><head><title>Home</title></head><body><a href="/data">Data</a><a href="/boom">Boom</a></body></html>', 200, ['Content-Type' => 'text/html']),
     ]);
 

@@ -66,7 +66,7 @@ it('returns null when the response is not an svg', function (): void {
 });
 
 it('returns null when the connection fails', function (): void {
-    Http::fake(fn () => throw new ConnectionException('offline'));
+    Http::fake(fn (): never => throw new ConnectionException('offline'));
 
     expect(resolve(LucideIconService::class)->svg('search'))->toBeNull();
 });

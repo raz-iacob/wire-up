@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 it('emails and messages Slack about an unexpected error, leaving out the query string', function (): void {
     Notification::fake();
     reportErrorsTo();
-    Route::post('/explode', fn () => throw new RuntimeException('The flux capacitor broke'));
+    Route::post('/explode', fn (): never => throw new RuntimeException('The flux capacitor broke'));
 
     $this->actingAs($user = User::factory()->create())
         ->post('/explode?token=secret-token')
