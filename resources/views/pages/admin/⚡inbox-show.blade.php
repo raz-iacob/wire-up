@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\DeleteSubmissionAction;
 use App\Actions\MarkSubmissionReadAction;
+use App\Jobs\SubscribeToNewsletter;
 use App\Models\Submission;
 use App\Services\NewsletterService;
 use Flux\Flux;
@@ -31,6 +32,35 @@ return new class extends Component
         Flux::toast(__('Message deleted.'), variant: 'success');
 
         $this->redirectRoute('admin.inbox-index', navigate: true);
+    }
+
+    public function retryNewsletter(NewsletterService $newsletter): void
+    {
+        $this->authorize('inbox.view');
+
+        if (data_get($this->submission->metadata, 'newsletter.status') !== 'failed') {
+            return;
+        }
+
+        $provider = $newsletter->provider();
+
+        if ($provider === null) {
+            Flux::toast(__('Connect a newsletter service first.'), variant: 'warning');
+
+            return;
+        }
+
+        $this->submission->update(['metadata' => [
+            ...(array) $this->submission->metadata,
+            'newsletter' => ['provider' => $provider, 'status' => 'pending', 'error' => null, 'at' => now()->toIso8601String()],
+        ]]);
+
+        dispatch(new SubscribeToNewsletter($this->submission->id));
+
+        $this->submission->refresh();
+        unset($this->newsletterStatus);
+
+        Flux::toast(__('Sent again.'), variant: 'success');
     }
 
     /**
@@ -77,7 +107,7 @@ return new class extends Component
     }
 
     /**
-     * @return array{color: string, icon: string, label: string, error: string}|null
+     * @return array{color: string, icon: string, label: string, error: string, failed: bool}|null
      */
     #[Computed]
     public function newsletterStatus(): ?array
@@ -92,9 +122,9 @@ return new class extends Component
         $error = is_string($status['error'] ?? null) ? $status['error'] : '';
 
         return match ($status['status'] ?? null) {
-            'synced' => ['color' => 'green', 'icon' => 'check', 'label' => __('Added to :service', ['service' => $service]), 'error' => ''],
-            'failed' => ['color' => 'red', 'icon' => 'x-mark', 'label' => __('Not added to :service', ['service' => $service]), 'error' => $error],
-            default => ['color' => 'amber', 'icon' => 'clock', 'label' => __('Waiting to be added to :service', ['service' => $service]), 'error' => $error],
+            'synced' => ['color' => 'green', 'icon' => 'check', 'label' => __('Added to :service', ['service' => $service]), 'error' => '', 'failed' => false],
+            'failed' => ['color' => 'red', 'icon' => 'x-mark', 'label' => __('Not added to :service', ['service' => $service]), 'error' => $error, 'failed' => true],
+            default => ['color' => 'amber', 'icon' => 'clock', 'label' => __('Waiting to be added to :service', ['service' => $service]), 'error' => $error, 'failed' => false],
         };
     }
 
@@ -120,15 +150,20 @@ return new class extends Component
                 <flux:description>{{ __('Received :date', ['date' => $submission->created_at?->format('M d, Y H:i')]) }}</flux:description>
 
                 @if ($this->newsletterStatus)
-                    <div class="mt-4 space-y-2" data-newsletter-status>
-                        <flux:badge
-                            size="sm"
-                            :color="$this->newsletterStatus['color']"
-                            :icon="$this->newsletterStatus['icon']"
-                        >
-                            {{ $this->newsletterStatus['label'] }}</flux:badge>
-                        @if ($this->newsletterStatus['error'] !== '')
-                            <flux:text size="sm">{{ $this->newsletterStatus['error'] }}</flux:text>
+                    <div class="mt-4 flex items-start justify-between gap-4" data-newsletter-status>
+                        <div class="space-y-2">
+                            <flux:badge
+                                size="sm"
+                                :color="$this->newsletterStatus['color']"
+                                :icon="$this->newsletterStatus['icon']"
+                            >
+                                {{ $this->newsletterStatus['label'] }}</flux:badge>
+                            @if ($this->newsletterStatus['error'] !== '')
+                                <flux:text size="sm">{{ $this->newsletterStatus['error'] }}</flux:text>
+                            @endif
+                        </div>
+                        @if ($this->newsletterStatus['failed'])
+                            <flux:button size="sm" wire:click="retryNewsletter">{{ __('Send again') }}</flux:button>
                         @endif
                     </div>
                 @endif

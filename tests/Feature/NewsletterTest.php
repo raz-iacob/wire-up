@@ -391,6 +391,44 @@ it('shows no newsletter status on other messages', function (): void {
         ->assertDontSeeHtml('data-newsletter-status');
 });
 
+it('sends a failed sign-up to the newsletter service again from the Inbox', function (): void {
+    connectNewsletter('kit');
+    Http::fake(['api.kit.com/*' => Http::response(['subscriber' => ['id' => 7]])]);
+    $submission = newsletterSubmission('failed');
+    $submission->update(['metadata' => ['newsletter' => [...$submission->metadata['newsletter'], 'error' => 'Invalid API key']]]);
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.inbox-show', ['submission' => $submission])
+        ->assertSee(['Not added to Mailchimp', 'Send again'])
+        ->call('retryNewsletter')
+        ->assertDispatched('toast-show', toastSays('Sent again.'))
+        ->assertSee('Added to Kit')
+        ->assertDontSee(['Invalid API key', 'Send again']);
+
+    expect($submission->refresh()->metadata['newsletter'])->toMatchArray(['provider' => 'kit', 'status' => 'synced', 'error' => null]);
+});
+
+it('sends a sign-up again only once it has failed and a service is connected', function (): void {
+    Queue::fake();
+    $pending = newsletterSubmission();
+    $failed = newsletterSubmission('failed');
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.inbox-show', ['submission' => $pending])
+        ->assertDontSee('Send again')
+        ->call('retryNewsletter');
+
+    Livewire::test('pages::admin.inbox-show', ['submission' => $failed])
+        ->call('retryNewsletter')
+        ->assertDispatched('toast-show', toastSays('Connect a newsletter service first.'));
+
+    Queue::assertNothingPushed();
+    expect($pending->refresh()->metadata['newsletter']['status'])->toBe('pending')
+        ->and($failed->refresh()->metadata['newsletter']['status'])->toBe('failed');
+});
+
 it('connects, tests and disconnects Mailchimp from the integrations screen', function (): void {
     $this->actingAsAdmin();
 
