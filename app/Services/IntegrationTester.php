@@ -8,12 +8,18 @@ use App\Ai\Agents\ConnectionCheck;
 use App\Mail\IntegrationTestMail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
+use RuntimeException;
+use Sentry\EventId;
+use Sentry\State\HubInterface;
 use Throwable;
+
+use function Illuminate\Support\php_binary;
 
 final readonly class IntegrationTester
 {
-    public function __construct(private SettingsService $settings, private NewsletterService $newsletter) {}
+    public function __construct(private SettingsService $settings, private NewsletterService $newsletter, private HubInterface $sentry) {}
 
     public function slack(string $webhookUrl): IntegrationTestResult
     {
@@ -127,6 +133,30 @@ final readonly class IntegrationTester
         }
 
         return IntegrationTestResult::passed(__('Connected to :model.', ['model' => $model]));
+    }
+
+    public function sentry(): IntegrationTestResult
+    {
+        $eventId = $this->sentry->captureException(new RuntimeException(__('Test event from :site. Sentry is receiving its errors.', ['site' => $this->settings->brandName()])));
+
+        if (! $eventId instanceof EventId) {
+            return IntegrationTestResult::failed(__('Sentry didn’t take the test event. Check the DSN and try again.'));
+        }
+
+        return IntegrationTestResult::passed(__('Test event sent to Sentry with the ID :id.', ['id' => (string) $eventId]));
+    }
+
+    public function nightwatch(): IntegrationTestResult
+    {
+        $result = Process::path(base_path())->timeout(15)->run([php_binary(), 'artisan', 'nightwatch:status']);
+
+        if ($result->successful()) {
+            return IntegrationTestResult::passed(__('The Nightwatch agent is running and accepting connections.'));
+        }
+
+        $reason = preg_replace(['/\e\[[\d;]*m/', '/^\s*ERROR\s+/', '/\s+/'], ['', '', ' '], mb_trim($result->output().' '.$result->errorOutput()));
+
+        return IntegrationTestResult::failed(__('The Nightwatch agent didn’t answer: :reason', ['reason' => Str::limit(mb_trim((string) $reason), 200)]));
     }
 
     private function reason(Throwable $exception): string

@@ -46,6 +46,8 @@ final class Settings extends Model
         'error_report_slack_webhook_url',
         'turnstile_secret_key',
         'newsletter_api_key',
+        'sentry_dsn',
+        'nightwatch_token',
     ];
 
     /**
@@ -68,6 +70,21 @@ final class Settings extends Model
                 self::CACHE_KEY,
                 fn (): array => self::query()->get(['key', 'value'])->pluck('value', 'key')->all()
             ));
+        } catch (QueryException) {
+            return [];
+        }
+    }
+
+    /**
+     * @param  list<string>  $keys
+     * @return array<string, mixed>
+     */
+    public static function uncached(array $keys): array
+    {
+        try {
+            return self::decrypted(DB::table('settings')->whereIn('key', $keys)->pluck('value', 'key')
+                ->mapWithKeys(fn (mixed $value, string $key): array => [$key => is_string($value) ? json_decode($value, true) : $value])
+                ->all());
         } catch (QueryException) {
             return [];
         }

@@ -21,12 +21,14 @@
         "laravel/fortify": "^1.41",
         "laravel/framework": "^13.40.0",
         "laravel/mcp": "^1.1.2",
+        "laravel/nightwatch": "^1.30.6",
         "league/html-to-markdown": "^5.2.3",
         "livewire/blaze": "^1.0.21",
         "livewire/flux": "^2.21.0",
         "livewire/flux-pro": "^2.21.0",
         "livewire/livewire": "^4.4.8",
-        "marcvanh/laravel-bot-block": "^1.0.9"
+        "marcvanh/laravel-bot-block": "^1.0.9",
+        "sentry/sentry-laravel": "^4.29"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^4.4.5",
@@ -127,7 +129,10 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "laravel/nightwatch",
+                "sentry/sentry-laravel"
+            ]
         }
     },
     "config": {

@@ -224,6 +224,7 @@ return new class extends Component
             $settings(__('Export and import'), 'settings-export-import', 'bundle migrate transfer move'),
             $settings(__('Backups'), 'settings-backups', 'backup restore download schedule automatic disk'),
             ['label' => __('Developer'), 'description' => __('Settings'), 'icon' => 'code-bracket', 'keywords' => 'error reports exceptions bugs crashes logs slack email', 'url' => route('admin.settings-developer'), 'can' => 'developer'],
+            ['label' => __('Monitoring'), 'description' => __('Settings'), 'icon' => 'signal', 'keywords' => 'sentry nightwatch monitoring performance traces apm errors', 'url' => route('admin.settings-monitoring'), 'can' => 'developer'],
             ['label' => __('Error log'), 'description' => __('Settings'), 'icon' => 'bug-ant', 'keywords' => 'errors exceptions bugs crashes resolved unresolved', 'url' => route('admin.settings-errors'), 'can' => 'developer'],
             ['label' => __('Help'), 'description' => '', 'icon' => 'question-mark-circle', 'keywords' => 'docs documentation guide support', 'url' => route('admin.help'), 'can' => null],
             ['label' => __('Your profile'), 'description' => __('Account'), 'icon' => 'user-circle', 'keywords' => 'name email avatar photo', 'url' => route('admin.account-profile'), 'can' => null],

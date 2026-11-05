@@ -62,6 +62,11 @@ final class SiteBundle
         'newsletter_api_key',
         'newsletter_list_id',
         'newsletter_double_opt_in',
+        'sentry_dsn',
+        'sentry_traces_sample_rate',
+        'nightwatch_token',
+        'nightwatch_ingest_uri',
+        'nightwatch_request_sample_rate',
     ];
 
     /**

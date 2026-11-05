@@ -62,3 +62,17 @@ it('treats a secret it can no longer decrypt as not set, and can still clear it'
         ->and(Settings::set(['ai_api_key' => '']))->toBe(['ai_api_key'])
         ->and(DB::table('settings')->where('key', 'ai_api_key')->value('value'))->toBe('""');
 });
+
+it('reads chosen settings straight from the database, decrypted, without touching the cache', function (): void {
+    Settings::set(['mail_password' => 'hunter2', 'site_name' => 'Acme', 'site_tagline' => 'Hello']);
+    cache()->forget(Settings::CACHE_KEY);
+
+    expect(Settings::uncached(['mail_password', 'site_name', 'missing']))->toBe(['mail_password' => 'hunter2', 'site_name' => 'Acme'])
+        ->and(cache()->has(Settings::CACHE_KEY))->toBeFalse();
+});
+
+it('reads no settings straight from the database before the settings table exists', function (): void {
+    Schema::drop('settings');
+
+    expect(Settings::uncached(['site_name']))->toBeEmpty();
+});
