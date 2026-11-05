@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Livewire\LivewireManager;
 
 it('can render the account profile screen', function (): void {
     $response = $this->actingAsAdmin()
@@ -17,6 +18,24 @@ it('can render the account profile screen', function (): void {
 
     $response->assertOk()
         ->assertSeeLivewire('pages::admin.account-profile');
+});
+
+it('keeps the open account tab selected while Livewire updates the page', function (): void {
+    $this->actingAsAdmin();
+    config()->set('app.url', 'http://localhost');
+
+    $this->partialMock(LivewireManager::class, function ($mock): void {
+        $mock->shouldReceive('isLivewireRequest')->andReturn(true);
+        $mock->shouldReceive('originalPath')->andReturn('admin/account/password');
+    });
+
+    $html = (string) $this->blade('<x-admin.account-layout>Password</x-admin.account-layout>');
+
+    preg_match('/<a\b[^>]*href="'.preg_quote(route('admin.account-password'), '/').'"[^>]*>/', $html, $passwordTab);
+    preg_match('/<a\b[^>]*href="'.preg_quote(route('admin.account-profile'), '/').'"[^>]*>/', $html, $profileTab);
+
+    expect($passwordTab[0] ?? '')->toContain('data-selected="data-selected"')
+        ->and($profileTab[0] ?? '')->not->toBeEmpty()->not->toContain('data-selected="data-selected"');
 });
 
 it('redirects authenticated non-admin users away from account profile', function (): void {

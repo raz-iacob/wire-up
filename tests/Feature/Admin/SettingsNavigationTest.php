@@ -59,6 +59,7 @@ it('hides the sections and tabs a person cannot use', function (): void {
 
 it('keeps track of the open screen while Livewire updates the page', function (): void {
     $this->actingAsAdmin();
+    config()->set('app.url', 'http://localhost');
 
     $this->partialMock(LivewireManager::class, function ($mock): void {
         $mock->shouldReceive('isLivewireRequest')->andReturn(true);

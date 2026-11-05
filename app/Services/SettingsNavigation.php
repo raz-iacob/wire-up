@@ -110,7 +110,7 @@ final readonly class SettingsNavigation
             return request()->routeIs($route);
         }
 
-        $path = mb_trim(str(route($route))->after(config()->string('app.url'))->toString(), '/') ?: '/';
+        $path = mb_trim(route($route, absolute: false), '/') ?: '/';
 
         return str()->is($path, $livewire->originalPath());
     }

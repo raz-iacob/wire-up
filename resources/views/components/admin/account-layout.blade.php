@@ -1,6 +1,6 @@
 @php
     $current = fn (string $name): bool => app('livewire')?->isLivewireRequest()
-        ? str()->is(mb_trim(str(route($name))->after(config('app.url'))->toString(), '/') ?: '/', app('livewire')->originalPath())
+        ? str()->is(mb_trim(route($name, absolute: false), '/') ?: '/', app('livewire')->originalPath())
         : request()->routeIs($name);
 @endphp
 
