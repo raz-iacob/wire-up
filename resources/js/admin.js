@@ -20,6 +20,19 @@ document.addEventListener("livewire:navigate", (event) => {
     }
 });
 
+document.addEventListener("livewire:navigating", (event) => {
+    const pauseTransitions = document.createElement("style");
+    pauseTransitions.textContent =
+        "*, *::before, *::after { transition: none !important; }";
+    document.head.appendChild(pauseTransitions);
+
+    event.detail.onSwap(() => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => pauseTransitions.remove());
+        });
+    });
+});
+
 Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
     const action = el.getAttribute("wire:submit");
     const message =

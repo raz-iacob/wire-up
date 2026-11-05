@@ -21,6 +21,7 @@ Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater sh
 - Settings → Translations is now on every site, so the footer, cart and sign-in wording can be changed even when visitors can't create accounts. Before, it only appeared with sign-ups switched on.
 - Disconnecting Slack, Stripe, your own email server, Pexels, Google Analytics or the AI Assistant in Settings → App Integrations now takes effect straight away. Before, the removed keys kept working until the site's next update.
 - The tabs on your account screens keep the open one highlighted after you save something. Before, the highlight disappeared on sites whose `APP_URL` didn't exactly match the site's address.
+- Moving between admin screens in dark mode no longer flashes some cards and borders white for a moment.
 
 ## v0.6.1 — 2026-11-04
 
