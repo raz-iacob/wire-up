@@ -48,13 +48,13 @@ it('hides the sections and tabs a person cannot use', function (): void {
 
     $integrations = collect(resolve(SettingsNavigation::class)->sections())->firstWhere('key', 'integrations');
 
-    expect(array_column($integrations['tabs'], 'label'))->toBe(['App Integrations']);
+    expect(array_column($integrations['tabs'], 'label'))->toBe(['App Integrations', 'Webhooks']);
 
     config()->set(['site.ai_api_key' => 'sk-test', 'cashier.key' => 'pk_test_x', 'cashier.secret' => 'sk_test_x', 'cashier.webhook.secret' => 'whsec_x']);
 
     $integrations = collect(resolve(SettingsNavigation::class)->sections())->firstWhere('key', 'integrations');
 
-    expect(array_column($integrations['tabs'], 'label'))->toBe(['App Integrations', 'AI Assistant', 'Shop']);
+    expect(array_column($integrations['tabs'], 'label'))->toBe(['App Integrations', 'Webhooks', 'AI Assistant', 'Shop']);
 });
 
 it('keeps track of the open screen while Livewire updates the page', function (): void {

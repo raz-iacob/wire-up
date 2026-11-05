@@ -15,6 +15,7 @@ Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater sh
 - The empty `/favicon.ico` file is gone, so a browser that asks for it gets a plain "not found" and uses the site's own favicon instead of caching a blank one.
 - Cloudflare Turnstile can now guard the contact and sign-up forms and the sign-in, register and password reset pages. Connect it in Settings → App Integrations with the site and secret keys from Cloudflare, and a Test button checks the secret. If Cloudflare can't be reached, forms still go through, protected by the existing spam checks.
 - The Settings menu is shorter: its screens are grouped into Site, Design, Content, Integrations, Team, System and Developer, with tabs at the top of each to move between related screens. Every screen keeps its address, and the update and error badges moved to System and Developer.
+- Webhooks, under Settings → Integrations, send form messages, newsletter sign-ups and orders (paid, fulfilled, refunded or cancelled) to Zapier, Make, n8n or your own app as they happen. Each request is signed so the receiving app can check it came from your site, failed deliveries are retried for about an hour and a half, and you can send a test, see recent deliveries and send a failed one again.
 - Settings → Translations is now on every site, so the footer, cart and sign-in wording can be changed even when visitors can't create accounts. Before, it only appeared with sign-ups switched on.
 
 ## v0.6.1 — 2026-11-04

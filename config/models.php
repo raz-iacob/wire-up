@@ -12,6 +12,7 @@ use App\Models\Redirect;
 use App\Models\Role;
 use App\Models\Submission;
 use App\Models\User;
+use App\Models\Webhook;
 
 return [
     /*
@@ -34,5 +35,6 @@ return [
         'order' => Order::class,
         'submission' => Submission::class,
         'redirect' => Redirect::class,
+        'webhook' => Webhook::class,
     ],
 ];

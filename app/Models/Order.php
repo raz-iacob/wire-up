@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Enums\WebhookEvent;
+use App\Services\Webhooks;
 use Carbon\CarbonInterface;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -106,5 +108,17 @@ final class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    protected static function booted(): void
+    {
+        self::updated(function (self $order): void {
+            $event = $order->wasChanged('status') ? WebhookEvent::forOrderStatus($order->status) : null;
+
+            if ($event instanceof WebhookEvent) {
+                $webhooks = resolve(Webhooks::class);
+                $webhooks->dispatch($event, $webhooks->orderData($order));
+            }
+        });
     }
 }

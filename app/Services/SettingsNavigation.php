@@ -31,6 +31,7 @@ final readonly class SettingsNavigation
             ]],
             'integrations' => [__('Integrations'), [
                 $this->tab(__('App Integrations'), 'admin.settings-integrations'),
+                $this->tab(__('Webhooks'), 'admin.settings-webhooks'),
                 filled(config('site.ai_api_key')) ? $this->tab(__('AI Assistant'), 'admin.settings-assistant') : null,
                 resolve(StripeService::class)->configured() ? $this->tab(__('Shop'), 'admin.settings-shop') : null,
             ]],

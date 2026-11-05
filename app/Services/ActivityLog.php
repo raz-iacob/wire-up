@@ -18,6 +18,7 @@ use App\Models\Redirect;
 use App\Models\Role;
 use App\Models\Submission;
 use App\Models\User;
+use App\Models\Webhook;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
@@ -78,6 +79,7 @@ final class ActivityLog
             $subject instanceof Order => $subject->reference,
             $subject instanceof Submission => (string) ($subject->name ?? $subject->email ?? $subject->form_name),
             $subject instanceof Redirect => $subject->from,
+            $subject instanceof Webhook => $subject->name,
             default => (string) $subject->getKey(),
         };
 

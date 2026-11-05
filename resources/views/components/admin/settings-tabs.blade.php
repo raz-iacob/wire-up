@@ -3,7 +3,12 @@
 @endphp
 
 @if ($section !== null && count($section['tabs']) > 1)
-    <flux:tabs variant="pills" scrollable class="mb-8">
+    <flux:tabs
+        variant="pills"
+        scrollable
+        class="mb-8"
+        wire:key="settings-tabs-{{ md5(implode('|', array_column($section['tabs'], 'route'))) }}"
+    >
         @foreach ($section['tabs'] as $tab)
             <flux:tab :href="route($tab['route'])" :selected="$tab['current']" wire:navigate>
                 {{ $tab['label'] }}

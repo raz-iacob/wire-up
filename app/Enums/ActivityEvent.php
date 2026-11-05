@@ -58,6 +58,7 @@ enum ActivityEvent: string
     case BACKUP_FAILED = 'system.backup_failed';
     case BACKUP_DELETED = 'system.backup_deleted';
     case SYSTEM_UPDATED = 'system.updated';
+    case WEBHOOK_FAILED = 'system.webhook_failed';
 
     public function label(): string
     {
@@ -114,6 +115,7 @@ enum ActivityEvent: string
             self::BACKUP_FAILED => __('Backup failed'),
             self::BACKUP_DELETED => __('Deleted backup'),
             self::SYSTEM_UPDATED => __('Updated Wire Up'),
+            self::WEBHOOK_FAILED => __('Webhook failed'),
         };
     }
 
