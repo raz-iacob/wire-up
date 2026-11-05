@@ -411,7 +411,7 @@ it('bridges the saved pexels key into the services config at boot', function ():
 
 it('falls back to the env pexels key when none is saved', function (): void {
     Settings::set(['pexels_api_key' => '']);
-    config()->set('services.pexels.key', 'env-pexels-key');
+    config()->set(['integrations.environment' => null, 'services.pexels.key' => 'env-pexels-key']);
 
     new AppServiceProvider(app())->boot();
 
@@ -428,7 +428,7 @@ it('bridges the saved slack webhook into the services config at boot', function 
 
 it('falls back to the env slack webhook when none is saved', function (): void {
     Settings::set(['slack_webhook_url' => '']);
-    config()->set('services.slack.webhook_url', 'https://hooks.slack.com/services/T0/B0/env');
+    config()->set(['integrations.environment' => null, 'services.slack.webhook_url' => 'https://hooks.slack.com/services/T0/B0/env']);
 
     new AppServiceProvider(app())->boot();
 
@@ -449,8 +449,7 @@ it('bridges the saved analytics credentials into the services config at boot', f
 
 it('falls back to the env analytics credentials when none are saved', function (): void {
     Settings::set(['google_analytics_property_id' => '', 'google_analytics_credentials' => '']);
-    config()->set('services.google_analytics.property_id', 'env-property');
-    config()->set('services.google_analytics.credentials', 'env-credentials');
+    config()->set(['integrations.environment' => null, 'services.google_analytics.property_id' => 'env-property', 'services.google_analytics.credentials' => 'env-credentials']);
 
     new AppServiceProvider(app())->boot();
 
@@ -627,7 +626,7 @@ it('bridges the saved AI provider key into the ai config at boot', function (): 
 
 it('does not touch the ai config when no assistant key is saved', function (): void {
     Settings::set(['ai_api_key' => '']);
-    config()->set('ai.default', 'openai');
+    config()->set(['integrations.environment' => null, 'ai.default' => 'openai']);
 
     new AppServiceProvider(app())->boot();
 
@@ -780,11 +779,52 @@ it('uses the smtps scheme for ssl and falls back to the app name for the from na
 
 it('does not touch the mail config when no email settings are saved', function (): void {
     Settings::set(['mail_host' => '', 'mail_password' => '']);
-    config()->set('mail.default', 'log');
+    config()->set(['integrations.environment' => null, 'mail.default' => 'log']);
 
     new AppServiceProvider(app())->boot();
 
     expect(config('mail.default'))->toBe('log');
+});
+
+it('turns a disconnected integration off even when the configuration is cached', function (): void {
+    config()->set([
+        'integrations.environment' => null,
+        'services.pexels.key' => null,
+        'services.slack.webhook_url' => null,
+        'ai.default' => 'openai',
+        'ai.providers.anthropic.key' => null,
+        'cashier.secret' => null,
+        'mail.default' => 'log',
+        'mail.mailers.smtp.host' => '127.0.0.1',
+    ]);
+    Settings::set([
+        'pexels_api_key' => 'db-pexels-key',
+        'slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/db',
+        'ai_provider' => 'anthropic',
+        'ai_api_key' => 'sk-ant-db',
+        'stripe_secret_key' => 'sk_test_db',
+        'mail_host' => 'smtp.example.com',
+        'mail_username' => 'user',
+        'mail_password' => 'secret',
+        'mail_from_address' => 'hi@example.com',
+    ]);
+    new AppServiceProvider(app())->boot();
+    $cached = config()->all();
+
+    expect(config('services.slack.webhook_url'))->toBe('https://hooks.slack.com/services/T0/B0/db')
+        ->and(config('mail.default'))->toBe('smtp');
+
+    config()->set($cached);
+    Settings::set(['pexels_api_key' => '', 'slack_webhook_url' => '', 'ai_api_key' => '', 'stripe_secret_key' => '', 'mail_host' => '']);
+    new AppServiceProvider(app())->boot();
+
+    expect(config('services.pexels.key'))->toBeNull()
+        ->and(config('services.slack.webhook_url'))->toBeNull()
+        ->and(config('ai.default'))->toBe('openai')
+        ->and(config('ai.providers.anthropic.key'))->toBeNull()
+        ->and(config('cashier.secret'))->toBeNull()
+        ->and(config('mail.default'))->toBe('log')
+        ->and(config('mail.mailers.smtp.host'))->toBe('127.0.0.1');
 });
 
 it('tests the typed slack webhook without saving it', function (): void {

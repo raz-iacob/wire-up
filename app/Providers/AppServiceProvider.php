@@ -86,6 +86,8 @@ final class AppServiceProvider extends ServiceProvider
 
     private function configureServiceCredentials(): void
     {
+        $this->restoreEnvironmentCredentials();
+
         $pexelsKey = config('site.pexels_api_key');
 
         if (is_string($pexelsKey) && $pexelsKey !== '') {
@@ -140,6 +142,49 @@ final class AppServiceProvider extends ServiceProvider
             config()->set('mail.from.address', config()->string('site.mail_from_address'));
             config()->set('mail.from.name', is_string($mailFromName) && $mailFromName !== '' ? $mailFromName : config()->string('app.name'));
         }
+    }
+
+    private function restoreEnvironmentCredentials(): void
+    {
+        $environment = config('integrations.environment');
+
+        if (! is_array($environment)) {
+            $environment = [];
+
+            foreach ($this->credentialConfigKeys() as $configKey) {
+                $environment[$configKey] = config($configKey);
+            }
+
+            config()->set('integrations.environment', $environment);
+        }
+
+        config()->set($environment);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function credentialConfigKeys(): array
+    {
+        return [
+            'services.pexels.key',
+            'services.google_analytics.property_id',
+            'services.google_analytics.credentials',
+            'services.slack.webhook_url',
+            'ai.default',
+            ...array_map(fn (string $provider): string => 'ai.providers.'.$provider.'.key', array_keys(AiModelCatalog::PROVIDERS)),
+            'cashier.key',
+            'cashier.secret',
+            'cashier.webhook.secret',
+            'mail.default',
+            'mail.mailers.smtp.host',
+            'mail.mailers.smtp.port',
+            'mail.mailers.smtp.username',
+            'mail.mailers.smtp.password',
+            'mail.mailers.smtp.scheme',
+            'mail.from.address',
+            'mail.from.name',
+        ];
     }
 
     private function configureModels(): void

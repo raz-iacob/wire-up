@@ -19,6 +19,7 @@ Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater sh
 - A new Newsletter block adds an email sign-up to any page, with an optional first-name field. Every sign-up is kept in the Inbox and, once you connect Mailchimp, Kit or Buttondown in Settings → App Integrations, added to your list too. Each Inbox message shows whether it reached the list, sign-ups that fail because the service is down are retried for about an hour and a half, and a sign-up that still failed can be sent again from its Inbox message. Mailchimp and Buttondown can ask people to confirm their email first. Sign-ups don't send an email or Slack message.
 - Developers can send a site's errors to Sentry and its requests, jobs, queries and errors to Laravel Nightwatch from the new Settings → Developer → Monitoring tab, without editing `.env`. A Sentry test event and a Nightwatch agent check confirm the setup, and the tab shows the agent command to keep running, with its own port for each site on a shared server. Values already in `.env` still work when nothing is saved, and Nightwatch stays off until it has a token.
 - Settings → Translations is now on every site, so the footer, cart and sign-in wording can be changed even when visitors can't create accounts. Before, it only appeared with sign-ups switched on.
+- Disconnecting Slack, Stripe, your own email server, Pexels, Google Analytics or the AI Assistant in Settings → App Integrations now takes effect straight away. Before, the removed keys kept working until the site's next update.
 
 ## v0.6.1 — 2026-11-04
 
