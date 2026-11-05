@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\DeleteSubmissionAction;
 use App\Actions\MarkSubmissionReadAction;
 use App\Models\Submission;
+use App\Services\NewsletterService;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
@@ -75,6 +76,28 @@ return new class extends Component
         return $rows;
     }
 
+    /**
+     * @return array{color: string, icon: string, label: string, error: string}|null
+     */
+    #[Computed]
+    public function newsletterStatus(): ?array
+    {
+        $status = data_get($this->submission->metadata, 'newsletter');
+
+        if (! is_array($status)) {
+            return null;
+        }
+
+        $service = NewsletterService::PROVIDERS[is_string($status['provider'] ?? null) ? $status['provider'] : ''] ?? __('your list');
+        $error = is_string($status['error'] ?? null) ? $status['error'] : '';
+
+        return match ($status['status'] ?? null) {
+            'synced' => ['color' => 'green', 'icon' => 'check', 'label' => __('Added to :service', ['service' => $service]), 'error' => ''],
+            'failed' => ['color' => 'red', 'icon' => 'x-mark', 'label' => __('Not added to :service', ['service' => $service]), 'error' => $error],
+            default => ['color' => 'amber', 'icon' => 'clock', 'label' => __('Waiting to be added to :service', ['service' => $service]), 'error' => $error],
+        };
+    }
+
     public function render(): View
     {
         return $this->view()
@@ -95,6 +118,20 @@ return new class extends Component
                     @endif
                 </div>
                 <flux:description>{{ __('Received :date', ['date' => $submission->created_at?->format('M d, Y H:i')]) }}</flux:description>
+
+                @if ($this->newsletterStatus)
+                    <div class="mt-4 space-y-2" data-newsletter-status>
+                        <flux:badge
+                            size="sm"
+                            :color="$this->newsletterStatus['color']"
+                            :icon="$this->newsletterStatus['icon']"
+                        >
+                            {{ $this->newsletterStatus['label'] }}</flux:badge>
+                        @if ($this->newsletterStatus['error'] !== '')
+                            <flux:text size="sm">{{ $this->newsletterStatus['error'] }}</flux:text>
+                        @endif
+                    </div>
+                @endif
 
                 @if ($this->details !== [])
                     <dl class="mt-6 grid gap-x-6 gap-y-4 sm:grid-cols-[8rem_1fr]">

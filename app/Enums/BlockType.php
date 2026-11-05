@@ -29,6 +29,7 @@ enum BlockType: string
     case TEAM = 'team';
     case PRICING = 'pricing';
     case CONTACT_FORM = 'contact-form';
+    case NEWSLETTER = 'newsletter';
     case BREADCRUMB = 'breadcrumb';
     case RECORD_NAV = 'record-nav';
     case SPACER = 'spacer';
@@ -77,6 +78,7 @@ enum BlockType: string
             self::TEAM => __('Team'),
             self::PRICING => __('Pricing'),
             self::CONTACT_FORM => __('Contact Form'),
+            self::NEWSLETTER => __('Newsletter'),
             self::BREADCRUMB => __('Breadcrumb'),
             self::RECORD_NAV => __('Previous / Next'),
             self::SPACER => __('Spacer'),
@@ -108,6 +110,7 @@ enum BlockType: string
             self::TEAM => 'users',
             self::PRICING => 'currency-dollar',
             self::CONTACT_FORM => 'mail',
+            self::NEWSLETTER => 'newspaper',
             self::BREADCRUMB => 'chevron-right',
             self::SPACER => 'arrows-up-down',
             self::DIVIDER => 'minus',
@@ -144,6 +147,7 @@ enum BlockType: string
             self::TEAM => __('A grid of team members with a photo, role, bio and social links.'),
             self::PRICING => __('Pricing plans shown side by side, each with features and a button.'),
             self::CONTACT_FORM => __('A contact form that emails you and stores each submission.'),
+            self::NEWSLETTER => __('An email sign-up that adds people to your newsletter list and keeps each sign-up in the Inbox.'),
             self::BREADCRUMB => __('The trail back to the home page, built automatically from where this page sits.'),
             self::RECORD_NAV => __('Links to the record published before and after this one, for reading a series in order. Shows nothing on a page.'),
             self::SPACER => __('Adjustable vertical spacing between blocks.'),
@@ -456,6 +460,20 @@ enum BlockType: string
                     'message' => ['required' => true, 'label' => [], 'placeholder' => [], 'column' => 'right'],
                 ],
                 'customFields' => [],
+            ],
+            self::NEWSLETTER => [
+                'heading' => [],
+                'headingLevel' => '',
+                'intro' => [],
+                'askName' => false,
+                'namePlaceholder' => [],
+                'emailPlaceholder' => [],
+                'buttonText' => [],
+                'successMessage' => [],
+                'privacyNote' => [],
+                'layout' => 'inline',
+                'align' => 'center',
+                'hasBackground' => false,
             ],
             self::BREADCRUMB => [
                 'align' => 'center',

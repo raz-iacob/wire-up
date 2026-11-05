@@ -40,7 +40,7 @@ final readonly class CreateSubmissionAction
 
             $webhookUrl = config('services.slack.webhook_url');
 
-            if (is_string($webhookUrl) && $webhookUrl !== '') {
+            if ($submission->type !== 'newsletter' && is_string($webhookUrl) && $webhookUrl !== '') {
                 Notification::route(SlackWebhookChannel::class, $webhookUrl)->notify(new SubmissionReceived($submission));
             }
 

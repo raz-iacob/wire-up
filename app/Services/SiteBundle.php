@@ -58,6 +58,10 @@ final class SiteBundle
         'error_report_slack_webhook_url',
         'turnstile_site_key',
         'turnstile_secret_key',
+        'newsletter_provider',
+        'newsletter_api_key',
+        'newsletter_list_id',
+        'newsletter_double_opt_in',
     ];
 
     /**

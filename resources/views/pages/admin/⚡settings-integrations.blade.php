@@ -8,6 +8,7 @@ use App\Livewire\Forms\CustomCodeForm;
 use App\Livewire\Forms\GoogleAnalyticsIntegrationForm;
 use App\Livewire\Forms\GoogleMapsIntegrationForm;
 use App\Livewire\Forms\MailIntegrationForm;
+use App\Livewire\Forms\NewsletterIntegrationForm;
 use App\Livewire\Forms\PexelsIntegrationForm;
 use App\Livewire\Forms\SlackIntegrationForm;
 use App\Livewire\Forms\StripeIntegrationForm;
@@ -16,6 +17,7 @@ use App\Models\Settings;
 use App\Services\AiModelCatalog;
 use App\Services\IntegrationTester;
 use App\Services\IntegrationTestResult;
+use App\Services\NewsletterService;
 use App\Services\PublicUrlGuard;
 use App\Services\SettingsService;
 use App\Services\StripeService;
@@ -44,6 +46,8 @@ return new class extends Component
     public StripeIntegrationForm $stripeForm;
 
     public TurnstileIntegrationForm $turnstileForm;
+
+    public NewsletterIntegrationForm $newsletterForm;
 
     public CustomCodeForm $customCodeForm;
 
@@ -82,6 +86,9 @@ return new class extends Component
         $this->assistantForm->ai_model = is_string(config('site.ai_model')) && config('site.ai_model') !== '' ? config()->string('site.ai_model') : resolve(AiModelCatalog::class)->defaultFor($this->assistantForm->ai_provider);
         $this->stripeForm->stripe_publishable_key = $this->savedSetting('stripe_publishable_key');
         $this->turnstileForm->turnstile_site_key = $this->savedSetting('turnstile_site_key');
+        $this->newsletterForm->newsletter_provider = array_key_exists($this->savedSetting('newsletter_provider'), NewsletterService::PROVIDERS) ? $this->savedSetting('newsletter_provider') : 'mailchimp';
+        $this->newsletterForm->newsletter_list_id = $this->savedSetting('newsletter_list_id');
+        $this->newsletterForm->newsletter_double_opt_in = (bool) config('site.newsletter_double_opt_in', true);
         $this->customCodeForm->head_scripts = is_string(config('site.head_scripts')) ? config()->string('site.head_scripts') : '';
         $this->customCodeForm->body_scripts = is_string(config('site.body_scripts')) ? config()->string('site.body_scripts') : '';
 
@@ -221,6 +228,25 @@ return new class extends Component
         Flux::toast(__('Cloudflare Turnstile connected.'), variant: 'success');
     }
 
+    public function connectNewsletter(UpdateSettingsAction $action): void
+    {
+        $this->authorize('settings.edit');
+
+        $validated = $this->validatedNewsletterForm();
+
+        $action->handle([
+            'newsletter_provider' => $validated['newsletter_provider'],
+            'newsletter_api_key' => $this->newsletterApiKey(),
+            'newsletter_list_id' => $this->newsletterForm->usesList() ? (string) $validated['newsletter_list_id'] : '',
+            'newsletter_double_opt_in' => (bool) $validated['newsletter_double_opt_in'],
+        ]);
+
+        $this->newsletterForm->reset('newsletter_api_key');
+
+        Flux::modal('integration-newsletter')->close();
+        Flux::toast(__(':service connected.', ['service' => NewsletterService::PROVIDERS[$validated['newsletter_provider']]]), variant: 'success');
+    }
+
     public function connectAssistant(UpdateSettingsAction $action): void
     {
         $this->authorize('settings.edit');
@@ -334,6 +360,12 @@ return new class extends Component
     }
 
     #[Computed]
+    public function newsletterProviderName(): ?string
+    {
+        return resolve(NewsletterService::class)->providerName();
+    }
+
+    #[Computed]
     public function stripeWebhookIsAutomatic(): bool
     {
         return $this->savedSetting('stripe_webhook_endpoint_id') !== '';
@@ -381,6 +413,19 @@ return new class extends Component
         }
 
         $this->reportTest($tester->turnstile($this->typedOrSaved($validated['turnstile_secret_key'] ?? '', 'turnstile_secret_key')));
+    }
+
+    public function testNewsletter(IntegrationTester $tester): void
+    {
+        $this->authorize('settings.edit');
+
+        $validated = $this->validatedNewsletterForm();
+
+        if (! $this->allowsAnotherTest()) {
+            return;
+        }
+
+        $this->reportTest($tester->newsletter($validated['newsletter_provider'], $this->newsletterApiKey(), (string) $validated['newsletter_list_id']));
     }
 
     public function testMail(IntegrationTester $tester): void
@@ -434,6 +479,7 @@ return new class extends Component
             'google-maps' => ['google_maps_api_key'],
             'slack' => ['slack_webhook_url'],
             'turnstile' => ['turnstile_site_key', 'turnstile_secret_key'],
+            'newsletter' => ['newsletter_provider', 'newsletter_api_key', 'newsletter_list_id'],
             'assistant' => ['ai_api_key'],
             'mail' => ['mail_host', 'mail_username', 'mail_password', 'mail_from_address', 'mail_from_name'],
             default => [],
@@ -449,6 +495,7 @@ return new class extends Component
             'google-maps' => $this->googleMapsForm->reset('google_maps_api_key'),
             'slack' => $this->slackForm->reset('slack_webhook_url'),
             'turnstile' => $this->turnstileForm->reset('turnstile_site_key', 'turnstile_secret_key'),
+            'newsletter' => $this->newsletterForm->reset('newsletter_api_key', 'newsletter_list_id'),
             'assistant' => $this->assistantForm->reset('ai_api_key'),
             'mail' => $this->mailForm->reset('mail_host', 'mail_username', 'mail_password', 'mail_from_address', 'mail_from_name'),
             default => null,
@@ -516,6 +563,27 @@ return new class extends Component
         $typed = mb_trim((string) $typed);
 
         return $typed !== '' ? $typed : $this->savedSetting($key);
+    }
+
+    /**
+     * @return array{newsletter_provider: string, newsletter_api_key: ?string, newsletter_list_id: ?string, newsletter_double_opt_in: bool}
+     */
+    private function validatedNewsletterForm(): array
+    {
+        $this->newsletterForm->newsletter_api_key = mb_trim($this->newsletterForm->newsletter_api_key);
+        $this->newsletterForm->newsletter_list_id = mb_trim($this->newsletterForm->newsletter_list_id);
+
+        /** @var array{newsletter_provider: string, newsletter_api_key: ?string, newsletter_list_id: ?string, newsletter_double_opt_in: bool} $validated */
+        $validated = $this->newsletterForm->validate();
+
+        return $validated;
+    }
+
+    private function newsletterApiKey(): string
+    {
+        $typed = $this->newsletterForm->newsletter_api_key;
+
+        return $typed !== '' || ! $this->newsletterForm->keepsSavedKey() ? $typed : $this->savedSetting('newsletter_api_key');
     }
 
     private function assistantApiKey(): string
@@ -724,6 +792,34 @@ return new class extends Component
                 <div class="space-y-1">
                     <flux:heading size="lg">Cloudflare Turnstile</flux:heading>
                     <flux:text>{{ __('Keep bots out of your forms and sign-in pages without a puzzle.') }}</flux:text>
+                </div>
+            </flux:card>
+
+            @php($newsletterConnected = $this->newsletterProviderName !== null)
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-950/5 dark:bg-white/5 dark:ring-white/10">
+                        <flux:icon name="newspaper" class="text-accent size-6" />
+                    </div>
+                    <flux:modal.trigger name="integration-newsletter">
+                        <flux:button
+                            size="sm"
+                            :variant="$newsletterConnected ? 'primary' : 'outline'"
+                            :icon="$newsletterConnected ? 'check' : null"
+                        >
+                            {{ $newsletterConnected ? __('Connected') : __('Connect') }}
+                        </flux:button>
+                    </flux:modal.trigger>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <flux:heading size="lg">{{ __('Newsletter') }}</flux:heading>
+                        @if ($newsletterConnected)
+                            <flux:badge size="sm" color="zinc">{{ $this->newsletterProviderName }}</flux:badge>
+                        @endif
+                    </div>
+                    <flux:text>{{ __('Add newsletter block sign-ups to Mailchimp, Kit or Buttondown.') }}</flux:text>
                 </div>
             </flux:card>
 
@@ -1101,6 +1197,65 @@ return new class extends Component
             </form>
         </flux:modal>
 
+        <flux:modal name="integration-newsletter" class="w-full md:max-w-lg">
+            <form wire:submit="connectNewsletter" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Connect a newsletter') }}</flux:heading>
+                    <flux:text class="mt-2">{{ __('Sign-ups stay in the Inbox and are added to your list too.') }}</flux:text>
+                </div>
+
+                <flux:select wire:model.live="newsletterForm.newsletter_provider" :label="__('Service')">
+                    @foreach (\App\Services\NewsletterService::PROVIDERS as $value => $label)
+                        <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                @php($newsletterKeySaved = $this->newsletterForm->keepsSavedKey())
+                <flux:input
+                    wire:model="newsletterForm.newsletter_api_key"
+                    type="password"
+                    viewable
+                    :label="__('API key')"
+                    :placeholder="$newsletterKeySaved ? $this->secretHints['newsletter_api_key'] : __('Paste your API key…')"
+                    :description="$newsletterKeySaved ? __('Leave blank to keep the saved key.') : $this->newsletterForm->apiKeyHelp()"
+                />
+
+                @if ($this->newsletterForm->usesList())
+                    <flux:input
+                        wire:model="newsletterForm.newsletter_list_id"
+                        :label="$this->newsletterForm->newsletter_provider === 'kit' ? __('Form ID') : __('Audience ID')"
+                        :description="$this->newsletterForm->listHelp()"
+                    />
+                @endif
+
+                @if ($this->newsletterForm->offersDoubleOptIn())
+                    <flux:switch
+                        wire:model="newsletterForm.newsletter_double_opt_in"
+                        :label="__('Ask people to confirm their email')"
+                        align="left"
+                    />
+                @endif
+
+                <div class="flex items-center justify-between gap-4">
+                    @if ($newsletterConnected)
+                        <flux:button
+                            variant="subtle"
+                            wire:click="disconnect('newsletter')"
+                        >{{ __('Disconnect') }}</flux:button>
+                    @else
+                        <span></span>
+                    @endif
+                    <div class="flex items-center gap-2">
+                        <flux:button
+                            wire:click="testNewsletter"
+                            :tooltip="__('Checks the key and list with the service')"
+                        >{{ __('Test') }}</flux:button>
+                        <flux:button type="submit" variant="primary" icon="check">{{ __('Save') }}</flux:button>
+                    </div>
+                </div>
+            </form>
+        </flux:modal>
+
         <flux:modal name="integration-assistant" class="w-full md:max-w-lg">
             <form wire:submit="connectAssistant" class="space-y-6">
                 <div>
@@ -1166,7 +1321,7 @@ return new class extends Component
         <form
             wire:submit="updateCustomCode"
             wire:warn-dirty="{{ __('Leaving? Changes you made may not be saved.') }}"
-            data-warn-dirty-ignore="stripe_publishable_key,stripe_secret_key,stripe_webhook_secret,pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key,slack_webhook_url,turnstile_site_key,turnstile_secret_key"
+            data-warn-dirty-ignore="stripe_publishable_key,stripe_secret_key,stripe_webhook_secret,pexels_api_key,google_analytics_id,google_analytics_property_id,google_analytics_credentials,google_maps_api_key,slack_webhook_url,turnstile_site_key,turnstile_secret_key,newsletter_provider,newsletter_api_key,newsletter_list_id,newsletter_double_opt_in"
             class="max-w-3xl space-y-6"
         >
             <div class="space-y-3">

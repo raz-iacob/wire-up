@@ -113,6 +113,7 @@ it('keeps the saved secret when its field is left blank', function (string $meth
     'pexels' => ['connectPexels', ['pexels_api_key' => 'saved-pexels'], [], 'pexels_api_key'],
     'google maps' => ['connectGoogleMaps', ['google_maps_api_key' => 'saved-maps'], [], 'google_maps_api_key'],
     'slack' => ['connectSlack', ['slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/saved'], [], 'slack_webhook_url'],
+    'newsletter' => ['connectNewsletter', ['newsletter_provider' => 'kit', 'newsletter_api_key' => 'saved-kit', 'newsletter_list_id' => '311'], [], 'newsletter_api_key'],
     'cloudflare turnstile' => ['connectTurnstile', ['turnstile_site_key' => 'site-key', 'turnstile_secret_key' => 'saved-turnstile'], ['turnstileForm.turnstile_site_key' => 'site-key'], 'turnstile_secret_key'],
     'google analytics reports' => ['connectGoogleAnalytics', ['google_analytics_id' => 'G-SAVED01', 'google_analytics_property_id' => '987654321', 'google_analytics_credentials' => '{"client_email":"a@b.c","private_key":"k"}'], [], 'google_analytics_credentials'],
     'ai assistant' => ['connectAssistant', ['ai_provider' => 'anthropic', 'ai_api_key' => 'sk-ant-saved', 'ai_model' => 'claude-opus-5-5'], [], 'ai_api_key'],

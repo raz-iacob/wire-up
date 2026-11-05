@@ -13,7 +13,7 @@ use Throwable;
 
 final readonly class IntegrationTester
 {
-    public function __construct(private SettingsService $settings) {}
+    public function __construct(private SettingsService $settings, private NewsletterService $newsletter) {}
 
     public function slack(string $webhookUrl): IntegrationTestResult
     {
@@ -50,6 +50,38 @@ final readonly class IntegrationTester
         }
 
         return IntegrationTestResult::passed(__('Cloudflare accepted the secret key.'));
+    }
+
+    public function newsletter(string $provider, string $apiKey, string $listId): IntegrationTestResult
+    {
+        $service = NewsletterService::PROVIDERS[$provider] ?? $provider;
+        $client = $this->newsletter->client($provider, $apiKey);
+
+        try {
+            $response = match ($provider) {
+                'mailchimp' => $client->get("lists/{$listId}", ['fields' => 'name']),
+                'kit' => $client->get('forms', ['per_page' => 1000]),
+                default => $client->get('newsletters'),
+            };
+        } catch (Throwable $exception) {
+            return IntegrationTestResult::failed(__('Could not reach :service: :reason', ['service' => $service, 'reason' => $this->reason($exception)]));
+        }
+
+        if (! $response->successful()) {
+            return IntegrationTestResult::failed(__(':service said: :reason', ['service' => $service, 'reason' => $this->newsletter->errorMessage($response)]));
+        }
+
+        $name = match ($provider) {
+            'mailchimp' => $response->json('name'),
+            'kit' => data_get($response->collect('forms')->firstWhere('id', (int) $listId), 'name'),
+            default => $response->json('results.0.name'),
+        };
+
+        if (! is_string($name)) {
+            return IntegrationTestResult::failed(__(':service has no form with the ID :id.', ['service' => $service, 'id' => $listId]));
+        }
+
+        return IntegrationTestResult::passed(__('Connected to :name on :service.', ['name' => $name, 'service' => $service]));
     }
 
     /**
