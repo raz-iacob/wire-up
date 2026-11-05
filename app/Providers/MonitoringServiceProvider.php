@@ -27,14 +27,35 @@ final class MonitoringServiceProvider extends ServiceProvider
 
     public function applySavedSettings(): void
     {
+        $environment = $this->environmentValues();
         $settings = Settings::uncached(array_keys(self::CONFIG_KEYS));
 
         foreach (self::CONFIG_KEYS as $setting => $configKey) {
-            if (filled($settings[$setting] ?? null)) {
-                config()->set($configKey, $settings[$setting]);
-            }
+            config()->set($configKey, filled($settings[$setting] ?? null) ? $settings[$setting] : $environment[$configKey]);
         }
 
-        config()->set('nightwatch.enabled', (bool) config('nightwatch.enabled') && filled(config('nightwatch.token')));
+        config()->set('nightwatch.enabled', (bool) $environment['nightwatch.enabled'] && filled(config('nightwatch.token')));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function environmentValues(): array
+    {
+        $saved = config('monitoring.environment');
+
+        if (is_array($saved)) {
+            return $saved;
+        }
+
+        $environment = [];
+
+        foreach ([...self::CONFIG_KEYS, 'nightwatch.enabled'] as $configKey) {
+            $environment[$configKey] = config($configKey);
+        }
+
+        config()->set('monitoring.environment', $environment);
+
+        return $environment;
     }
 }

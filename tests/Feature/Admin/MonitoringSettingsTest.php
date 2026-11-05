@@ -213,7 +213,7 @@ it('stops running tests after five a minute', function (): void {
 });
 
 it('points Sentry and Nightwatch at the saved settings and turns Nightwatch on once a token is saved', function (): void {
-    config()->set('nightwatch.enabled', true);
+    config()->set(['monitoring.environment' => null, 'nightwatch.enabled' => true]);
     Settings::set([
         'sentry_dsn' => 'https://saved@o1.ingest.sentry.io/1',
         'sentry_traces_sample_rate' => 0.2,
@@ -235,7 +235,7 @@ it('points Sentry and Nightwatch at the saved settings and turns Nightwatch on o
 });
 
 it('falls back to the environment when nothing is saved and keeps Nightwatch off without a token', function (?string $environmentToken, bool $environmentEnabled, bool $enabled): void {
-    config()->set(['sentry.dsn' => 'https://env@o1.ingest.sentry.io/1', 'nightwatch.enabled' => $environmentEnabled, 'nightwatch.token' => $environmentToken]);
+    config()->set(['monitoring.environment' => null, 'sentry.dsn' => 'https://env@o1.ingest.sentry.io/1', 'nightwatch.enabled' => $environmentEnabled, 'nightwatch.token' => $environmentToken]);
 
     new MonitoringServiceProvider(app())->applySavedSettings();
 
@@ -247,3 +247,21 @@ it('falls back to the environment when nothing is saved and keeps Nightwatch off
     'token in the environment' => ['env-token', true, true],
     'turned off in the environment' => ['env-token', false, false],
 ]);
+
+it('applies saved changes on top of a cached configuration', function (): void {
+    config()->set(['monitoring.environment' => null, 'sentry.dsn' => null, 'nightwatch.enabled' => true, 'nightwatch.token' => null]);
+    Settings::set(['sentry_dsn' => 'https://saved@o1.ingest.sentry.io/1']);
+    new MonitoringServiceProvider(app())->applySavedSettings();
+    $cached = config()->all();
+
+    expect(config('sentry.dsn'))->toBe('https://saved@o1.ingest.sentry.io/1')
+        ->and(config('nightwatch.enabled'))->toBeFalse();
+
+    config()->set($cached);
+    Settings::set(['sentry_dsn' => '', 'nightwatch_token' => 'new-token']);
+    new MonitoringServiceProvider(app())->applySavedSettings();
+
+    expect(config('sentry.dsn'))->toBeNull()
+        ->and(config('nightwatch.token'))->toBe('new-token')
+        ->and(config('nightwatch.enabled'))->toBeTrue();
+});
