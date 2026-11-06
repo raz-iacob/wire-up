@@ -2,6 +2,10 @@
 
 Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater shows the sections newer than the installed version on **Settings → Updates**.
 
+## Unreleased
+
+- A site that already finished updating no longer emails an "update failed" warning when the server restarts afterwards. Before, the queue picked up a leftover copy of the finished update and reported it as failed, saying the site was left in maintenance mode when it wasn't.
+
 ## v0.7.0 — 2026-11-05
 
 - A new Newsletter block adds an email sign-up to any page, with an optional first-name field. Every sign-up is kept in the Inbox and, once you connect Mailchimp, Kit or Buttondown in Settings → App Integrations, added to your list too. Each Inbox message shows whether it reached the list, sign-ups that fail because the service is down are retried for about an hour and a half, and a sign-up that still failed can be sent again from its Inbox message. Mailchimp and Buttondown can ask people to confirm their email first. Sign-ups don't send an email or Slack message.

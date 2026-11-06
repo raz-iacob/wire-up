@@ -3,12 +3,26 @@
 declare(strict_types=1);
 
 use App\Jobs\RunSystemUpdate;
+use App\Models\Settings;
+use App\Notifications\SystemUpdateCompleted;
 use App\Services\UpdateService;
 use Illuminate\Process\FakeProcessResult;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Queue\Attributes\Timeout;
 use Illuminate\Queue\Attributes\Tries;
+use Illuminate\Queue\MaxAttemptsExceededException;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Str;
+
+beforeEach(function (): void {
+    config()->set('wireup.version_file', storage_path('framework/testing/wireup-'.Str::random(8).'/version'));
+});
+
+afterEach(function (): void {
+    File::deleteDirectory(dirname((string) config('wireup.version_file')));
+});
 
 it('runs the update command when its tag is pending', function (): void {
     Process::fake();
@@ -76,6 +90,32 @@ it('records a failure when the job itself fails', function (): void {
 
     expect($service->state()['status'])->toBe('failed')
         ->and($service->state()['output'])->toBe('kaboom');
+});
+
+it('stays quiet when a leftover retry fails after the update already installed', function (): void {
+    Notification::fake();
+    Settings::set(['contact_email' => 'owner@example.com']);
+
+    $service = resolve(UpdateService::class);
+    $service->writeCurrentVersion('v1.0.0');
+
+    new RunSystemUpdate('v1.0.0')->failed(new MaxAttemptsExceededException('App\Jobs\RunSystemUpdate has been attempted too many times.'));
+
+    expect($service->state()['status'])->toBe('idle');
+    Notification::assertNothingSent();
+});
+
+it('reports a retry that fails before the update installed', function (): void {
+    Notification::fake();
+    Settings::set(['contact_email' => 'owner@example.com']);
+
+    $service = resolve(UpdateService::class);
+    $service->writeCurrentVersion('v0.9.0');
+
+    new RunSystemUpdate('v1.0.0')->failed(new MaxAttemptsExceededException('App\Jobs\RunSystemUpdate has been attempted too many times.'));
+
+    expect($service->state()['status'])->toBe('failed');
+    Notification::assertSentOnDemandTimes(SystemUpdateCompleted::class, 1);
 });
 
 it('keeps an existing failure when the job fails afterwards', function (): void {

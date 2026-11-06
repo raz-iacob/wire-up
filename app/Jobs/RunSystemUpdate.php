@@ -47,8 +47,10 @@ final class RunSystemUpdate implements ShouldBeUnique, ShouldQueue
     {
         $updates = resolve(UpdateService::class);
 
-        if ($updates->state()['status'] !== 'failed') {
-            $updates->markFailed($this->tag, 'update', (string) $exception?->getMessage());
+        if ($updates->currentVersion() === $this->tag || $updates->state()['status'] === 'failed') {
+            return;
         }
+
+        $updates->markFailed($this->tag, 'update', (string) $exception?->getMessage());
     }
 }
