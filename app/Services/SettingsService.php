@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Integrations\Mail;
 use App\Models\Page;
 use App\Models\Settings;
 use Illuminate\Database\Eloquent\Builder;
@@ -186,15 +187,9 @@ final class SettingsService
 
     public function smtpSettingsComplete(): bool
     {
-        foreach (['mail_host', 'mail_username', 'mail_password', 'mail_from_address'] as $key) {
-            $value = config("site.{$key}");
+        $site = config('site');
 
-            if (! is_string($value) || $value === '') {
-                return false;
-            }
-        }
-
-        return true;
+        return new Mail()->complete(is_array($site) ? $site : []);
     }
 
     /**

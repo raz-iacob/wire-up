@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
+use App\Integrations\IntegrationRegistry;
 use App\Livewire\Forms\AssistantIntegrationForm;
 use App\Livewire\Forms\CustomCodeForm;
 use App\Livewire\Forms\GoogleAnalyticsIntegrationForm;
@@ -13,7 +14,6 @@ use App\Livewire\Forms\PexelsIntegrationForm;
 use App\Livewire\Forms\SlackIntegrationForm;
 use App\Livewire\Forms\StripeIntegrationForm;
 use App\Livewire\Forms\TurnstileIntegrationForm;
-use App\Models\Settings;
 use App\Services\AiModelCatalog;
 use App\Services\IntegrationTester;
 use App\Services\IntegrationTestResult;
@@ -345,15 +345,10 @@ return new class extends Component
     {
         $hints = [];
 
-        foreach (Settings::ENCRYPTED_KEYS as $key) {
-            $saved = $this->savedSetting($key);
-
-            $hints[$key] = match (true) {
-                $saved === '' => '',
-                $key === 'stripe_secret_key' => Str::before($saved, '_').'_'.Str::betweenFirst($saved, '_', '_').'_…'.Str::substr($saved, -4),
-                $key === 'google_analytics_credentials' => $this->serviceAccountEmail($saved),
-                default => '…'.Str::substr($saved, -4),
-            };
+        foreach (IntegrationRegistry::cards() as $integration) {
+            foreach ($integration->secrets() as $key) {
+                $hints[$key] = $integration->hint($key, $this->savedSetting($key));
+            }
         }
 
         return $hints;
@@ -473,17 +468,7 @@ return new class extends Component
     {
         $this->authorize('settings.edit');
 
-        $fields = match ($integration) {
-            'pexels' => ['pexels_api_key'],
-            'google-analytics' => ['google_analytics_id', 'google_analytics_property_id', 'google_analytics_credentials'],
-            'google-maps' => ['google_maps_api_key'],
-            'slack' => ['slack_webhook_url'],
-            'turnstile' => ['turnstile_site_key', 'turnstile_secret_key'],
-            'newsletter' => ['newsletter_provider', 'newsletter_api_key', 'newsletter_list_id'],
-            'assistant' => ['ai_api_key'],
-            'mail' => ['mail_host', 'mail_username', 'mail_password', 'mail_from_address', 'mail_from_name'],
-            default => [],
-        };
+        $fields = $integration === 'stripe' ? [] : IntegrationRegistry::find($integration)?->disconnects() ?? [];
 
         if ($fields === []) {
             return;
@@ -595,13 +580,6 @@ return new class extends Component
         }
 
         return $this->savedSetting('ai_api_key');
-    }
-
-    private function serviceAccountEmail(string $credentials): string
-    {
-        $email = data_get(json_decode($credentials, true), 'client_email');
-
-        return is_string($email) && $email !== '' ? $email : '…';
     }
 
     private function allowsAnotherTest(): bool
@@ -1130,7 +1108,7 @@ return new class extends Component
                     type="password"
                     viewable
                     :label="__('Slack webhook URL')"
-                    :placeholder="$slackConnected ? 'https://hooks.slack.com/services/'.$this->secretHints['slack_webhook_url'] : 'https://hooks.slack.com/services/…'"
+                    :placeholder="$slackConnected ? $this->secretHints['slack_webhook_url'] : 'https://hooks.slack.com/services/…'"
                     :description="$slackConnected ? __('Leave blank to keep the saved webhook.') : null"
                 />
 

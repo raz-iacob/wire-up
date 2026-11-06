@@ -8,6 +8,7 @@ use App\Ai\Tools\ConfirmationTool;
 use App\Ai\Tools\DraftOnlyTool;
 use App\Ai\Tools\McpResourceTool;
 use App\Enums\ContentStatus;
+use App\Integrations\IntegrationRegistry;
 use App\Mcp\Resources\BlockTypesResource;
 use App\Mcp\Servers\WireUpServer;
 use App\Mcp\Tools\CreatePageTool;
@@ -173,11 +174,7 @@ it('exposes only the reviewed tool surface to the assistant', function (): void 
 });
 
 it('keeps accounts, roles and integration credentials away from the assistant', function (): void {
-    $forbidden = [
-        User::class, Role::class,
-        'ai_api_key', 'google_analytics_credentials', 'google_maps_api_key',
-        'mail_password', 'pexels_api_key', 'slack_webhook_url', 'turnstile_secret_key', 'newsletter_api_key', 'sentry_dsn', 'nightwatch_token',
-    ];
+    $forbidden = [User::class, Role::class, ...IntegrationRegistry::secretKeys()];
 
     $exposed = SiteAssistant::visible(WireUpServer::toolClasses())
         ->mapWithKeys(function (string $class) use ($forbidden): array {

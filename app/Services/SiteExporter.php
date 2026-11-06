@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Integrations\IntegrationRegistry;
 use App\Models\Settings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -85,7 +86,7 @@ final class SiteExporter
 
         return array_values(array_filter(
             $rows,
-            fn (array $row): bool => ! in_array($row['key'] ?? null, SiteBundle::SECRET_SETTINGS, true),
+            fn (array $row): bool => ! in_array($row['key'] ?? null, IntegrationRegistry::unexportedKeys(), true),
         ));
     }
 
@@ -97,7 +98,7 @@ final class SiteExporter
     {
         $key = (string) ($row['key'] ?? '');
 
-        if (in_array($key, Settings::ENCRYPTED_KEYS, true) && is_string($row['value'] ?? null)) {
+        if (in_array($key, IntegrationRegistry::secretKeys(), true) && is_string($row['value'] ?? null)) {
             $row['value'] = json_encode(Settings::decryptValue($key, json_decode($row['value'], true)));
         }
 

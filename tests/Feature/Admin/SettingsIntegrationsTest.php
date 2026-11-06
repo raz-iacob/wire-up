@@ -6,7 +6,7 @@ use App\Ai\Agents\ConnectionCheck;
 use App\Mail\IntegrationTestMail;
 use App\Models\Settings;
 use App\Models\User;
-use App\Providers\AppServiceProvider;
+use App\Providers\IntegrationServiceProvider;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -401,62 +401,6 @@ it('validates the google analytics id format', function (): void {
         ->assertSee('Enter a valid Google Analytics measurement ID, like G-XXXXXXXXXX.');
 });
 
-it('bridges the saved pexels key into the services config at boot', function (): void {
-    Settings::set(['pexels_api_key' => 'db-pexels-key']);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('services.pexels.key'))->toBe('db-pexels-key');
-});
-
-it('falls back to the env pexels key when none is saved', function (): void {
-    Settings::set(['pexels_api_key' => '']);
-    config()->set(['integrations.environment' => null, 'services.pexels.key' => 'env-pexels-key']);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('services.pexels.key'))->toBe('env-pexels-key');
-});
-
-it('bridges the saved slack webhook into the services config at boot', function (): void {
-    Settings::set(['slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/db']);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('services.slack.webhook_url'))->toBe('https://hooks.slack.com/services/T0/B0/db');
-});
-
-it('falls back to the env slack webhook when none is saved', function (): void {
-    Settings::set(['slack_webhook_url' => '']);
-    config()->set(['integrations.environment' => null, 'services.slack.webhook_url' => 'https://hooks.slack.com/services/T0/B0/env']);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('services.slack.webhook_url'))->toBe('https://hooks.slack.com/services/T0/B0/env');
-});
-
-it('bridges the saved analytics credentials into the services config at boot', function (): void {
-    Settings::set([
-        'google_analytics_property_id' => '123456789',
-        'google_analytics_credentials' => '{"client_email":"a@b.c","private_key":"k"}',
-    ]);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('services.google_analytics.property_id'))->toBe('123456789')
-        ->and(config('services.google_analytics.credentials'))->toBe('{"client_email":"a@b.c","private_key":"k"}');
-});
-
-it('falls back to the env analytics credentials when none are saved', function (): void {
-    Settings::set(['google_analytics_property_id' => '', 'google_analytics_credentials' => '']);
-    config()->set(['integrations.environment' => null, 'services.google_analytics.property_id' => 'env-property', 'services.google_analytics.credentials' => 'env-credentials']);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('services.google_analytics.property_id'))->toBe('env-property')
-        ->and(config('services.google_analytics.credentials'))->toBe('env-credentials');
-});
-
 it('injects the custom head and body code into the public site', function (): void {
     Settings::set([
         'head_scripts' => '<script>window.headMarker=1</script>',
@@ -546,7 +490,7 @@ it('connects the AI Assistant through openrouter', function (): void {
     expect(Settings::get('ai_provider'))->toBe('openrouter')
         ->and(Settings::get('ai_model'))->toBe('anthropic/claude-fable-5.1');
 
-    new AppServiceProvider(app())->boot();
+    new IntegrationServiceProvider(app())->applySavedSettings();
 
     expect(config('ai.default'))->toBe('openrouter')
         ->and(config('ai.providers.openrouter.key'))->toBe('sk-or-key');
@@ -592,15 +536,6 @@ it('connects the AI Assistant with the gemini provider', function (): void {
         ->and(Settings::get('ai_model'))->toBe('gemini-model-name');
 });
 
-it('bridges the saved gemini key into the ai config at boot', function (): void {
-    Settings::set(['ai_provider' => 'gemini', 'ai_api_key' => 'gemini-db-key']);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('ai.default'))->toBe('gemini')
-        ->and(config('ai.providers.gemini.key'))->toBe('gemini-db-key');
-});
-
 it('disconnects the AI Assistant by clearing only the api key', function (): void {
     Settings::set(['ai_provider' => 'anthropic', 'ai_api_key' => 'sk-ant-x', 'ai_model' => 'claude-opus-4-8']);
 
@@ -613,24 +548,6 @@ it('disconnects the AI Assistant by clearing only the api key', function (): voi
 
     expect(Settings::get('ai_api_key'))->toBe('')
         ->and(Settings::get('ai_model'))->toBe('claude-opus-4-8');
-});
-
-it('bridges the saved AI provider key into the ai config at boot', function (): void {
-    Settings::set(['ai_provider' => 'anthropic', 'ai_api_key' => 'sk-ant-db']);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('ai.default'))->toBe('anthropic')
-        ->and(config('ai.providers.anthropic.key'))->toBe('sk-ant-db');
-});
-
-it('does not touch the ai config when no assistant key is saved', function (): void {
-    Settings::set(['ai_api_key' => '']);
-    config()->set(['integrations.environment' => null, 'ai.default' => 'openai']);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('ai.default'))->toBe('openai');
 });
 
 it('connects email over custom smtp by persisting the settings', function (): void {
@@ -735,96 +652,6 @@ it('hydrates the saved email settings on mount', function (): void {
         ->assertSet('mailForm.mail_host', 'smtp.sendgrid.net')
         ->assertSet('mailForm.mail_password', '')
         ->assertSet('mailForm.mail_encryption', 'tls');
-});
-
-it('bridges the saved email settings into the mail config at boot', function (): void {
-    Settings::set([
-        'mail_host' => 'smtp.example.com',
-        'mail_port' => 587,
-        'mail_username' => 'user',
-        'mail_password' => 'secret',
-        'mail_encryption' => 'tls',
-        'mail_from_address' => 'hi@example.com',
-        'mail_from_name' => 'Example Site',
-    ]);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('mail.default'))->toBe('smtp')
-        ->and(config('mail.mailers.smtp.host'))->toBe('smtp.example.com')
-        ->and(config('mail.mailers.smtp.port'))->toBe(587)
-        ->and(config('mail.mailers.smtp.username'))->toBe('user')
-        ->and(config('mail.mailers.smtp.password'))->toBe('secret')
-        ->and(config('mail.mailers.smtp.scheme'))->toBeNull()
-        ->and(config('mail.from.address'))->toBe('hi@example.com')
-        ->and(config('mail.from.name'))->toBe('Example Site');
-});
-
-it('uses the smtps scheme for ssl and falls back to the app name for the from name', function (): void {
-    Settings::set([
-        'mail_host' => 'smtp.resend.com',
-        'mail_port' => 465,
-        'mail_username' => 'resend',
-        'mail_password' => 'secret',
-        'mail_encryption' => 'ssl',
-        'mail_from_address' => 'hi@example.com',
-        'mail_from_name' => '',
-    ]);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('mail.mailers.smtp.scheme'))->toBe('smtps')
-        ->and(config('mail.from.name'))->toBe(config('app.name'));
-});
-
-it('does not touch the mail config when no email settings are saved', function (): void {
-    Settings::set(['mail_host' => '', 'mail_password' => '']);
-    config()->set(['integrations.environment' => null, 'mail.default' => 'log']);
-
-    new AppServiceProvider(app())->boot();
-
-    expect(config('mail.default'))->toBe('log');
-});
-
-it('turns a disconnected integration off even when the configuration is cached', function (): void {
-    config()->set([
-        'integrations.environment' => null,
-        'services.pexels.key' => null,
-        'services.slack.webhook_url' => null,
-        'ai.default' => 'openai',
-        'ai.providers.anthropic.key' => null,
-        'cashier.secret' => null,
-        'mail.default' => 'log',
-        'mail.mailers.smtp.host' => '127.0.0.1',
-    ]);
-    Settings::set([
-        'pexels_api_key' => 'db-pexels-key',
-        'slack_webhook_url' => 'https://hooks.slack.com/services/T0/B0/db',
-        'ai_provider' => 'anthropic',
-        'ai_api_key' => 'sk-ant-db',
-        'stripe_secret_key' => 'sk_test_db',
-        'mail_host' => 'smtp.example.com',
-        'mail_username' => 'user',
-        'mail_password' => 'secret',
-        'mail_from_address' => 'hi@example.com',
-    ]);
-    new AppServiceProvider(app())->boot();
-    $cached = config()->all();
-
-    expect(config('services.slack.webhook_url'))->toBe('https://hooks.slack.com/services/T0/B0/db')
-        ->and(config('mail.default'))->toBe('smtp');
-
-    config()->set($cached);
-    Settings::set(['pexels_api_key' => '', 'slack_webhook_url' => '', 'ai_api_key' => '', 'stripe_secret_key' => '', 'mail_host' => '']);
-    new AppServiceProvider(app())->boot();
-
-    expect(config('services.pexels.key'))->toBeNull()
-        ->and(config('services.slack.webhook_url'))->toBeNull()
-        ->and(config('ai.default'))->toBe('openai')
-        ->and(config('ai.providers.anthropic.key'))->toBeNull()
-        ->and(config('cashier.secret'))->toBeNull()
-        ->and(config('mail.default'))->toBe('log')
-        ->and(config('mail.mailers.smtp.host'))->toBe('127.0.0.1');
 });
 
 it('tests the typed slack webhook without saving it', function (): void {

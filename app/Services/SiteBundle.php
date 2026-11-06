@@ -36,42 +36,6 @@ final class SiteBundle
     /**
      * @var array<int, string>
      */
-    public const array SECRET_SETTINGS = [
-        'pexels_api_key',
-        'google_analytics_credentials',
-        'google_analytics_property_id',
-        'slack_webhook_url',
-        'ai_provider',
-        'ai_api_key',
-        'mail_host',
-        'mail_username',
-        'mail_password',
-        'mail_from_address',
-        'mail_from_name',
-        'mail_encryption',
-        'google_maps_api_key',
-        'stripe_publishable_key',
-        'stripe_secret_key',
-        'stripe_webhook_secret',
-        'stripe_webhook_endpoint_id',
-        'error_report_email',
-        'error_report_slack_webhook_url',
-        'turnstile_site_key',
-        'turnstile_secret_key',
-        'newsletter_provider',
-        'newsletter_api_key',
-        'newsletter_list_id',
-        'newsletter_double_opt_in',
-        'sentry_dsn',
-        'sentry_traces_sample_rate',
-        'nightwatch_token',
-        'nightwatch_ingest_uri',
-        'nightwatch_request_sample_rate',
-    ];
-
-    /**
-     * @var array<int, string>
-     */
     public const array DERIVED_MEDIA_KEYS = ['preview', 'crop_src'];
 
     /**

@@ -7,7 +7,6 @@ namespace App\Providers;
 use App\Models\Role;
 use App\Models\Settings;
 use App\Models\User;
-use App\Services\AiModelCatalog;
 use App\Services\DatabaseTranslationLoader;
 use App\Services\LocalizationService;
 use App\Services\PageCache;
@@ -80,111 +79,7 @@ final class AppServiceProvider extends ServiceProvider
     private function configureSettings(): void
     {
         config()->set('site', Settings::cached());
-
-        $this->configureServiceCredentials();
-    }
-
-    private function configureServiceCredentials(): void
-    {
-        $this->restoreEnvironmentCredentials();
-
-        $pexelsKey = config('site.pexels_api_key');
-
-        if (is_string($pexelsKey) && $pexelsKey !== '') {
-            config()->set('services.pexels.key', $pexelsKey);
-        }
-
-        $analyticsPropertyId = config('site.google_analytics_property_id');
-
-        if (is_string($analyticsPropertyId) && $analyticsPropertyId !== '') {
-            config()->set('services.google_analytics.property_id', $analyticsPropertyId);
-        }
-
-        $analyticsCredentials = config('site.google_analytics_credentials');
-
-        if (is_string($analyticsCredentials) && $analyticsCredentials !== '') {
-            config()->set('services.google_analytics.credentials', $analyticsCredentials);
-        }
-
-        $slackWebhookUrl = config('site.slack_webhook_url');
-
-        if (is_string($slackWebhookUrl) && $slackWebhookUrl !== '') {
-            config()->set('services.slack.webhook_url', $slackWebhookUrl);
-        }
-
-        $aiProvider = config('site.ai_provider');
-        $aiApiKey = config('site.ai_api_key');
-
-        if (is_string($aiProvider) && array_key_exists($aiProvider, AiModelCatalog::PROVIDERS) && is_string($aiApiKey) && $aiApiKey !== '') {
-            config()->set('ai.default', $aiProvider);
-            config()->set('ai.providers.'.$aiProvider.'.key', $aiApiKey);
-        }
-
-        foreach (['key' => 'stripe_publishable_key', 'secret' => 'stripe_secret_key', 'webhook.secret' => 'stripe_webhook_secret'] as $cashierKey => $settingKey) {
-            $value = config('site.'.$settingKey);
-
-            if (is_string($value) && $value !== '') {
-                config()->set('cashier.'.$cashierKey, $value);
-            }
-        }
-
         config()->set('cashier.currency', Str::lower(SettingsService::current()->currency()));
-
-        if (SettingsService::current()->smtpSettingsComplete()) {
-            $mailFromName = config('site.mail_from_name');
-
-            config()->set('mail.default', 'smtp');
-            config()->set('mail.mailers.smtp.host', config()->string('site.mail_host'));
-            config()->set('mail.mailers.smtp.port', (int) config('site.mail_port', 587));
-            config()->set('mail.mailers.smtp.username', config()->string('site.mail_username'));
-            config()->set('mail.mailers.smtp.password', config()->string('site.mail_password'));
-            config()->set('mail.mailers.smtp.scheme', config('site.mail_encryption') === 'ssl' ? 'smtps' : null);
-            config()->set('mail.from.address', config()->string('site.mail_from_address'));
-            config()->set('mail.from.name', is_string($mailFromName) && $mailFromName !== '' ? $mailFromName : config()->string('app.name'));
-        }
-    }
-
-    private function restoreEnvironmentCredentials(): void
-    {
-        $environment = config('integrations.environment');
-
-        if (! is_array($environment)) {
-            $environment = [];
-
-            foreach ($this->credentialConfigKeys() as $configKey) {
-                $environment[$configKey] = config($configKey);
-            }
-
-            config()->set('integrations.environment', $environment);
-        }
-
-        config()->set($environment);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function credentialConfigKeys(): array
-    {
-        return [
-            'services.pexels.key',
-            'services.google_analytics.property_id',
-            'services.google_analytics.credentials',
-            'services.slack.webhook_url',
-            'ai.default',
-            ...array_map(fn (string $provider): string => 'ai.providers.'.$provider.'.key', array_keys(AiModelCatalog::PROVIDERS)),
-            'cashier.key',
-            'cashier.secret',
-            'cashier.webhook.secret',
-            'mail.default',
-            'mail.mailers.smtp.host',
-            'mail.mailers.smtp.port',
-            'mail.mailers.smtp.username',
-            'mail.mailers.smtp.password',
-            'mail.mailers.smtp.scheme',
-            'mail.from.address',
-            'mail.from.name',
-        ];
     }
 
     private function configureModels(): void

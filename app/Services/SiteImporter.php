@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Actions\GrantRecordTypeAbilitiesAction;
+use App\Integrations\IntegrationRegistry;
 use App\Models\Media;
 use App\Models\RecordType;
 use App\Models\Settings;
@@ -172,7 +173,7 @@ final class SiteImporter
 
         $key = (string) ($row['key'] ?? '');
 
-        if ($table === 'settings' && in_array($key, Settings::ENCRYPTED_KEYS, true) && is_string($row['value'] ?? null)) {
+        if ($table === 'settings' && in_array($key, IntegrationRegistry::secretKeys(), true) && is_string($row['value'] ?? null)) {
             $row['value'] = json_encode(Settings::encryptValue($key, json_decode($row['value'], true)));
         }
 

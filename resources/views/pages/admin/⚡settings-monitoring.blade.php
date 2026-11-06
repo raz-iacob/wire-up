@@ -3,13 +3,14 @@
 declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
+use App\Integrations\Nightwatch;
+use App\Integrations\Sentry;
 use App\Models\Role;
 use App\Services\IntegrationTester;
 use App\Services\IntegrationTestResult;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Sentry\Dsn;
@@ -36,17 +37,13 @@ return new class extends Component
     #[Computed]
     public function sentryDsnHint(): string
     {
-        $saved = $this->savedSetting('sentry_dsn');
-
-        return $saved === '' ? '' : 'https://…@'.Str::after($saved, '@');
+        return new Sentry()->hint('sentry_dsn', $this->savedSetting('sentry_dsn'));
     }
 
     #[Computed]
     public function nightwatchTokenHint(): string
     {
-        $saved = $this->savedSetting('nightwatch_token');
-
-        return $saved === '' ? '' : '…'.Str::substr($saved, -4);
+        return new Nightwatch()->hint('nightwatch_token', $this->savedSetting('nightwatch_token'));
     }
 
     #[Computed]

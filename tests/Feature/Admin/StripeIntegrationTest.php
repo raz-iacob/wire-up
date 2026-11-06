@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Settings;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
+use App\Providers\IntegrationServiceProvider;
 use App\Services\StripeService;
 use Illuminate\Support\Facades\URL;
 use Laravel\Cashier\Cashier;
@@ -251,6 +252,7 @@ it('bridges the saved stripe keys and the site currency into the cashier config 
         'currency' => 'EUR',
     ]);
 
+    new IntegrationServiceProvider(app())->applySavedSettings();
     new AppServiceProvider(app())->boot();
 
     expect(config('cashier.key'))->toBe('pk_test_db')

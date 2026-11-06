@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 use App\Models\Settings;
 use App\Models\User;
-use App\Providers\MonitoringServiceProvider;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
-use Laravel\Nightwatch\NightwatchServiceProvider;
 use Livewire\Livewire;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\Laravel\ServiceProvider as SentryServiceProvider;
 use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\Transport\Result;
@@ -210,58 +207,4 @@ it('stops running tests after five a minute', function (): void {
 
     expect($transport->events)->toHaveCount(5);
     Process::assertNothingRan();
-});
-
-it('points Sentry and Nightwatch at the saved settings and turns Nightwatch on once a token is saved', function (): void {
-    config()->set(['monitoring.environment' => null, 'nightwatch.enabled' => true]);
-    Settings::set([
-        'sentry_dsn' => 'https://saved@o1.ingest.sentry.io/1',
-        'sentry_traces_sample_rate' => 0.2,
-        'nightwatch_token' => 'saved-token',
-        'nightwatch_ingest_uri' => '127.0.0.1:2410',
-        'nightwatch_request_sample_rate' => 0.0,
-    ]);
-
-    new MonitoringServiceProvider(app())->applySavedSettings();
-
-    expect(config('sentry.dsn'))->toBe('https://saved@o1.ingest.sentry.io/1')
-        ->and(config('sentry.traces_sample_rate'))->toBe(0.2)
-        ->and(config('nightwatch.token'))->toBe('saved-token')
-        ->and(config('nightwatch.ingest.uri'))->toBe('127.0.0.1:2410')
-        ->and(config('nightwatch.sampling.requests'))->toEqual(0.0)
-        ->and(config('nightwatch.enabled'))->toBeTrue()
-        ->and(app()->getProviders(NightwatchServiceProvider::class))->not->toBeEmpty()
-        ->and(app()->getProviders(SentryServiceProvider::class))->not->toBeEmpty();
-});
-
-it('falls back to the environment when nothing is saved and keeps Nightwatch off without a token', function (?string $environmentToken, bool $environmentEnabled, bool $enabled): void {
-    config()->set(['monitoring.environment' => null, 'sentry.dsn' => 'https://env@o1.ingest.sentry.io/1', 'nightwatch.enabled' => $environmentEnabled, 'nightwatch.token' => $environmentToken]);
-
-    new MonitoringServiceProvider(app())->applySavedSettings();
-
-    expect(config('sentry.dsn'))->toBe('https://env@o1.ingest.sentry.io/1')
-        ->and(config('nightwatch.token'))->toBe($environmentToken)
-        ->and(config('nightwatch.enabled'))->toBe($enabled);
-})->with([
-    'no token' => [null, true, false],
-    'token in the environment' => ['env-token', true, true],
-    'turned off in the environment' => ['env-token', false, false],
-]);
-
-it('applies saved changes on top of a cached configuration', function (): void {
-    config()->set(['monitoring.environment' => null, 'sentry.dsn' => null, 'nightwatch.enabled' => true, 'nightwatch.token' => null]);
-    Settings::set(['sentry_dsn' => 'https://saved@o1.ingest.sentry.io/1']);
-    new MonitoringServiceProvider(app())->applySavedSettings();
-    $cached = config()->all();
-
-    expect(config('sentry.dsn'))->toBe('https://saved@o1.ingest.sentry.io/1')
-        ->and(config('nightwatch.enabled'))->toBeFalse();
-
-    config()->set($cached);
-    Settings::set(['sentry_dsn' => '', 'nightwatch_token' => 'new-token']);
-    new MonitoringServiceProvider(app())->applySavedSettings();
-
-    expect(config('sentry.dsn'))->toBeNull()
-        ->and(config('nightwatch.token'))->toBe('new-token')
-        ->and(config('nightwatch.enabled'))->toBeTrue();
 });

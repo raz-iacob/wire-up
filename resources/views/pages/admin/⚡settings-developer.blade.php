@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
+use App\Integrations\ErrorReports;
 use App\Models\Role;
 use App\Services\ErrorReporter;
 use Flux\Flux;
@@ -26,9 +27,7 @@ return new class extends Component
     #[Computed]
     public function slackWebhookHint(): string
     {
-        $saved = $this->savedSetting('error_report_slack_webhook_url');
-
-        return $saved === '' ? '' : 'https://hooks.slack.com/services/…'.Str::substr($saved, -4);
+        return new ErrorReports()->hint('error_report_slack_webhook_url', $this->savedSetting('error_report_slack_webhook_url'));
     }
 
     public function update(UpdateSettingsAction $action): void

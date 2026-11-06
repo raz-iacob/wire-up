@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Integrations\IntegrationRegistry;
 use App\Services\PageCache;
 use Carbon\CarbonInterface;
 use Database\Factories\SettingsFactory;
@@ -30,25 +31,6 @@ final class Settings extends Model
     use HasFactory;
 
     public const string CACHE_KEY = 'site-config';
-
-    /**
-     * @var array<int, string>
-     */
-    public const array ENCRYPTED_KEYS = [
-        'pexels_api_key',
-        'google_analytics_credentials',
-        'google_maps_api_key',
-        'slack_webhook_url',
-        'ai_api_key',
-        'mail_password',
-        'stripe_secret_key',
-        'stripe_webhook_secret',
-        'error_report_slack_webhook_url',
-        'turnstile_secret_key',
-        'newsletter_api_key',
-        'sentry_dsn',
-        'nightwatch_token',
-    ];
 
     /**
      * @return array<string, mixed>
@@ -125,12 +107,12 @@ final class Settings extends Model
 
     public static function encryptValue(string $key, mixed $value): mixed
     {
-        return in_array($key, self::ENCRYPTED_KEYS, true) && is_string($value) && $value !== '' ? Crypt::encryptString($value) : $value;
+        return in_array($key, IntegrationRegistry::secretKeys(), true) && is_string($value) && $value !== '' ? Crypt::encryptString($value) : $value;
     }
 
     public static function decryptValue(string $key, mixed $value): mixed
     {
-        if (! in_array($key, self::ENCRYPTED_KEYS, true) || ! is_string($value) || $value === '') {
+        if (! in_array($key, IntegrationRegistry::secretKeys(), true) || ! is_string($value) || $value === '') {
             return $value;
         }
 
@@ -167,7 +149,7 @@ final class Settings extends Model
      */
     private static function decrypted(array $values): array
     {
-        foreach (array_intersect_key($values, array_flip(self::ENCRYPTED_KEYS)) as $key => $value) {
+        foreach (array_intersect_key($values, array_flip(IntegrationRegistry::secretKeys())) as $key => $value) {
             $values[$key] = self::decryptValue($key, $value);
         }
 
