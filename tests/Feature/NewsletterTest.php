@@ -432,14 +432,14 @@ it('sends a sign-up again only once it has failed and a service is connected', f
 it('connects, tests and disconnects Mailchimp from the integrations screen', function (): void {
     $this->actingAsAdmin();
 
-    $component = Livewire::test('pages::admin.settings-integrations')
-        ->set('newsletterForm.newsletter_provider', 'mailchimp')
-        ->set('newsletterForm.newsletter_api_key', ' '.mailchimpKey().' ')
-        ->set('newsletterForm.newsletter_list_id', ' aud123 ')
-        ->set('newsletterForm.newsletter_double_opt_in', false)
-        ->call('connectNewsletter')
+    $component = Livewire::test('admin.integrations.newsletter')
+        ->set('form.newsletter_provider', 'mailchimp')
+        ->set('form.newsletter_api_key', ' '.mailchimpKey().' ')
+        ->set('form.newsletter_list_id', ' aud123 ')
+        ->set('form.newsletter_double_opt_in', false)
+        ->call('connect')
         ->assertHasNoErrors()
-        ->assertSet('newsletterForm.newsletter_api_key', '')
+        ->assertSet('form.newsletter_api_key', '')
         ->assertDispatched('toast-show', toastSays('Mailchimp connected.'));
 
     expect(Settings::get('newsletter_provider'))->toBe('mailchimp')
@@ -456,13 +456,13 @@ it('connects, tests and disconnects Mailchimp from the integrations screen', fun
         ->push(['detail' => 'Your API key may be invalid.'], 401)
         ->pushFailedConnection('offline')]);
 
-    $component->call('testNewsletter')->assertDispatched('toast-show', toastSays('Connected to Readers on Mailchimp.'));
-    $component->call('testNewsletter')->assertDispatched('toast-show', toastSays('Mailchimp said: Your API key may be invalid.'));
-    $component->call('testNewsletter')->assertDispatched('toast-show', toastSays('Could not reach Mailchimp: offline'));
+    $component->call('test')->assertDispatched('toast-show', toastSays('Connected to Readers on Mailchimp.'));
+    $component->call('test')->assertDispatched('toast-show', toastSays('Mailchimp said: Your API key may be invalid.'));
+    $component->call('test')->assertDispatched('toast-show', toastSays('Could not reach Mailchimp: offline'));
 
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://us21.api.mailchimp.com/3.0/lists/aud123?fields=name');
 
-    $component->call('disconnect', 'newsletter');
+    $component->call('disconnect');
 
     expect(Settings::get('newsletter_api_key'))->toBe('')
         ->and(resolve(NewsletterService::class)->provider())->toBeNull();
@@ -472,15 +472,15 @@ it('checks that the Kit form exists when testing', function (): void {
     $this->actingAsAdmin();
     Http::fake(['api.kit.com/v4/forms*' => Http::response(['forms' => [['id' => 311, 'name' => 'Footer form']]])]);
 
-    $component = Livewire::test('pages::admin.settings-integrations')
-        ->set('newsletterForm.newsletter_provider', 'kit')
-        ->set('newsletterForm.newsletter_api_key', 'kit_live_key')
-        ->set('newsletterForm.newsletter_list_id', '311')
-        ->call('testNewsletter')
+    $component = Livewire::test('admin.integrations.newsletter')
+        ->set('form.newsletter_provider', 'kit')
+        ->set('form.newsletter_api_key', 'kit_live_key')
+        ->set('form.newsletter_list_id', '311')
+        ->call('test')
         ->assertDispatched('toast-show', toastSays('Connected to Footer form on Kit.'));
 
-    $component->set('newsletterForm.newsletter_list_id', '999')
-        ->call('testNewsletter')
+    $component->set('form.newsletter_list_id', '999')
+        ->call('test')
         ->assertDispatched('toast-show', toastSays('Kit has no form with the ID 999.'));
 });
 
@@ -488,13 +488,13 @@ it('connects Buttondown without a list ID', function (): void {
     $this->actingAsAdmin();
     Http::fake(['api.buttondown.com/v1/newsletters' => Http::response(['results' => [['name' => 'Weekly notes']]])]);
 
-    Livewire::test('pages::admin.settings-integrations')
-        ->set('newsletterForm.newsletter_provider', 'buttondown')
-        ->set('newsletterForm.newsletter_api_key', 'bd-key')
-        ->set('newsletterForm.newsletter_list_id', 'leftover')
-        ->call('testNewsletter')
+    Livewire::test('admin.integrations.newsletter')
+        ->set('form.newsletter_provider', 'buttondown')
+        ->set('form.newsletter_api_key', 'bd-key')
+        ->set('form.newsletter_list_id', 'leftover')
+        ->call('test')
         ->assertDispatched('toast-show', toastSays('Connected to Weekly notes on Buttondown.'))
-        ->call('connectNewsletter')
+        ->call('connect')
         ->assertHasNoErrors();
 
     expect(Settings::get('newsletter_list_id'))->toBe('')
@@ -505,18 +505,18 @@ it('checks the newsletter key and list ID before saving', function (): void {
     connectNewsletter('mailchimp');
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-integrations')
-        ->set('newsletterForm.newsletter_api_key', 'abcdef0123456789abcdef0123456789')
-        ->call('connectNewsletter')
-        ->assertHasErrors(['newsletterForm.newsletter_api_key' => 'regex'])
-        ->set('newsletterForm.newsletter_provider', 'kit')
-        ->set('newsletterForm.newsletter_api_key', '')
-        ->set('newsletterForm.newsletter_list_id', 'not an id')
-        ->call('connectNewsletter')
-        ->assertHasErrors(['newsletterForm.newsletter_api_key' => 'required', 'newsletterForm.newsletter_list_id' => 'regex'])
-        ->set('newsletterForm.newsletter_api_key', 'has spaces in it')
-        ->call('connectNewsletter')
-        ->assertHasErrors(['newsletterForm.newsletter_api_key' => 'regex']);
+    Livewire::test('admin.integrations.newsletter')
+        ->set('form.newsletter_api_key', 'abcdef0123456789abcdef0123456789')
+        ->call('connect')
+        ->assertHasErrors(['form.newsletter_api_key' => 'regex'])
+        ->set('form.newsletter_provider', 'kit')
+        ->set('form.newsletter_api_key', '')
+        ->set('form.newsletter_list_id', 'not an id')
+        ->call('connect')
+        ->assertHasErrors(['form.newsletter_api_key' => 'required', 'form.newsletter_list_id' => 'regex'])
+        ->set('form.newsletter_api_key', 'has spaces in it')
+        ->call('connect')
+        ->assertHasErrors(['form.newsletter_api_key' => 'regex']);
 
     expect(Settings::get('newsletter_provider'))->toBe('mailchimp');
 });
@@ -524,15 +524,15 @@ it('checks the newsletter key and list ID before saving', function (): void {
 it('explains where to find the key and list for each service', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-integrations')
+    Livewire::test('admin.integrations.newsletter')
         ->assertSee('In Mailchimp under Profile → Extras → API keys.')
         ->assertSee('Audience ID')
         ->assertSee('Ask people to confirm their email')
-        ->set('newsletterForm.newsletter_provider', 'kit')
+        ->set('form.newsletter_provider', 'kit')
         ->assertSee('A V4 key, in Kit under Settings → Developer.')
         ->assertSee('The number in the form’s address in Kit.')
         ->assertDontSee('Ask people to confirm their email')
-        ->set('newsletterForm.newsletter_provider', 'buttondown')
+        ->set('form.newsletter_provider', 'buttondown')
         ->assertSee('In Buttondown under Settings → API.')
         ->assertDontSee('Audience ID');
 });

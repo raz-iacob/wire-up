@@ -4,6 +4,7 @@ Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
+- Closing an integration's window on Settings → App Integrations without saving no longer makes the page warn about unsaved changes when you leave it. The Stripe and Google Analytics cards also only show Connected once their keys are saved, not while you are still typing them.
 - Admin screens in dark mode no longer flicker on slower computers when you move to another screen. The earlier fix could stop holding back the colour changes before the new screen had finished setting itself up.
 - A failed update now puts the site back the way it was instead of leaving it in maintenance mode. Wire Up returns to the version it was on, restores the database backup taken just before the update if the database had already been changed, puts the previous frontend files back and brings the site up again. The email and Settings → Updates say which step failed and that the site is live. Changes made in the admin while the update ran are lost. Only if putting things back fails as well does the site stay in maintenance mode.
 - Restoring a SQLite database from a backup is now done through SQLite itself, so it can't be damaged by people using the site at the same moment.

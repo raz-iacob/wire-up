@@ -22,3 +22,34 @@ it('saves a model name typed into the assistant model box', function (): void {
 
     expect(Settings::get('ai_model'))->toBe('claude-custom-9');
 });
+
+it('connects an integration from its own card and window', function (): void {
+    $this->actingAsAdmin();
+
+    $page = visit(route('admin.settings-integrations'));
+
+    $page->assertNoJavascriptErrors()
+        ->click('[x-on\:click*="integration-pexels"] button')
+        ->type('[data-modal="integration-pexels"] input[type="password"]', 'pexels-typed-key')
+        ->click('[data-modal="integration-pexels"] button[type="submit"]')
+        ->assertSee('Pexels connected.')
+        ->assertSee('Connected')
+        ->assertNoJavascriptErrors();
+
+    expect(Settings::get('pexels_api_key'))->toBe('pexels-typed-key');
+});
+
+it('does not warn about unsaved custom code after closing an integration window without saving', function (): void {
+    $this->actingAsAdmin();
+
+    $page = visit(route('admin.settings-integrations'));
+
+    $page->click('[x-on\:click*="integration-pexels"] button')
+        ->type('[data-modal="integration-pexels"] input[type="password"]', 'typed-but-not-saved');
+
+    $page->script("Flux.modal('integration-pexels').close(); window.leaveWarnings = []; window.confirm = (message) => { window.leaveWarnings.push(message); return false; }; window.Livewire.navigate('/admin'); void 0");
+
+    $page->assertSee('Unread messages')
+        ->assertScript('window.leaveWarnings.length', 0)
+        ->assertNoJavascriptErrors();
+});

@@ -159,12 +159,12 @@ it('signs in once Cloudflare accepts the token', function (): void {
 it('connects, tests and disconnects Turnstile from the integrations screen', function (): void {
     $this->actingAsAdmin();
 
-    $component = Livewire::test('pages::admin.settings-integrations')
-        ->set('turnstileForm.turnstile_site_key', ' 0x4AAAAAAA-site ')
-        ->set('turnstileForm.turnstile_secret_key', '0x4AAAAAAA-secret-TS02')
-        ->call('connectTurnstile')
+    $component = Livewire::test('admin.integrations.turnstile')
+        ->set('form.turnstile_site_key', ' 0x4AAAAAAA-site ')
+        ->set('form.turnstile_secret_key', '0x4AAAAAAA-secret-TS02')
+        ->call('connect')
         ->assertHasNoErrors()
-        ->assertSet('turnstileForm.turnstile_secret_key', '');
+        ->assertSet('form.turnstile_secret_key', '');
 
     expect(Settings::get('turnstile_site_key'))->toBe('0x4AAAAAAA-site')
         ->and(Settings::get('turnstile_secret_key'))->toBe('0x4AAAAAAA-secret-TS02');
@@ -178,11 +178,11 @@ it('connects, tests and disconnects Turnstile from the integrations screen', fun
         ->push(['success' => false, 'error-codes' => ['invalid-input-secret']])
         ->pushFailedConnection('offline')]);
 
-    $component->call('testTurnstile')->assertDispatched('toast-show', toastSays('Cloudflare accepted the secret key.'));
-    $component->call('testTurnstile')->assertDispatched('toast-show', toastSays('Cloudflare doesn’t recognise this secret key.'));
-    $component->call('testTurnstile')->assertDispatched('toast-show', toastSays('Could not reach Cloudflare: offline'));
+    $component->call('test')->assertDispatched('toast-show', toastSays('Cloudflare accepted the secret key.'));
+    $component->call('test')->assertDispatched('toast-show', toastSays('Cloudflare doesn’t recognise this secret key.'));
+    $component->call('test')->assertDispatched('toast-show', toastSays('Could not reach Cloudflare: offline'));
 
-    $component->call('disconnect', 'turnstile');
+    $component->call('disconnect');
 
     expect(Settings::get('turnstile_site_key'))->toBe('')
         ->and(Settings::get('turnstile_secret_key'))->toBe('')
@@ -192,12 +192,12 @@ it('connects, tests and disconnects Turnstile from the integrations screen', fun
 it('requires both keys and checks their format', function (): void {
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-integrations')
-        ->call('connectTurnstile')
-        ->assertHasErrors(['turnstileForm.turnstile_site_key' => 'required', 'turnstileForm.turnstile_secret_key' => 'required'])
-        ->set('turnstileForm.turnstile_site_key', 'not a key!')
-        ->set('turnstileForm.turnstile_secret_key', 'valid_secret')
-        ->call('connectTurnstile')
-        ->assertHasErrors(['turnstileForm.turnstile_site_key' => 'regex'])
+    Livewire::test('admin.integrations.turnstile')
+        ->call('connect')
+        ->assertHasErrors(['form.turnstile_site_key' => 'required', 'form.turnstile_secret_key' => 'required'])
+        ->set('form.turnstile_site_key', 'not a key!')
+        ->set('form.turnstile_secret_key', 'valid_secret')
+        ->call('connect')
+        ->assertHasErrors(['form.turnstile_site_key' => 'regex'])
         ->assertSee('Paste the site key exactly as Cloudflare shows it.');
 });
