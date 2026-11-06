@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Media;
+use Closure;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Response;
 use Illuminate\Image\Image as ProcessedImage;
@@ -59,6 +60,31 @@ final class ImageService
         }
 
         return self::url(implode(',', $options), $media->source);
+    }
+
+    /**
+     * @param  list<int>  $widths
+     * @param  Closure(int): string  $url
+     */
+    public static function srcset(array $widths, Closure $url, ?int $maxWidth = null): string
+    {
+        sort($widths);
+
+        if ($maxWidth !== null && $maxWidth > 0 && $maxWidth < end($widths)) {
+            $widths = [...array_filter($widths, fn (int $width): bool => $width < $maxWidth), $maxWidth];
+        }
+
+        return implode(', ', array_map(fn (int $width): string => $url($width).' '.$width.'w', array_values(array_unique($widths))));
+    }
+
+    /**
+     * @param  list<int>  $widths
+     */
+    public static function mediaSrcset(Media $media, array $widths): string
+    {
+        $crop = data_get($media->getRelationValue('pivot'), 'crop.default.crop_w');
+
+        return self::srcset($widths, fn (int $width): string => self::mediaUrl($media, $width), is_numeric($crop) && $crop > 0 ? (int) $crop : $media->width);
     }
 
     public static function formatFor(string $path): string

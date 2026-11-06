@@ -15,6 +15,8 @@
     >
         <img
             src="{{ \App\Services\ImageService::mediaUrl($photo, $sidebar ? 900 : 1600) }}"
+            srcset="{{ \App\Services\ImageService::mediaSrcset($photo, $sidebar ? [480, 900] : [480, 800, 1200, 1600]) }}"
+            sizes="{{ $sidebar ? '(min-width: 1024px) 33vw, 100vw' : '(min-width: 1024px) 66vw, 100vw' }}"
             alt="{{ $photo->alt_text ?? $record->displayHeading() }}"
             loading="lazy"
             @class(['w-full', 'h-full object-cover' => $sidebar, 'h-auto' => ! $sidebar])

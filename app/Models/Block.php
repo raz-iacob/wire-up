@@ -179,6 +179,32 @@ final class Block extends Model
     }
 
     /**
+     * @param  list<int>  $widths
+     * @param  array<string, int|string>  $params
+     */
+    public function imageSrcset(string $field, array $widths, array $params = [], string $cropKey = 'default'): ?string
+    {
+        $image = data_get($this->content, $field);
+
+        if (! is_array($image) || empty($image['source'])) {
+            return null;
+        }
+
+        $cropWidth = data_get($image, "crop.{$cropKey}.crop_w");
+        $baseWidth = (int) ($params['w'] ?? max($widths));
+
+        return ImageService::srcset(
+            $widths,
+            fn (int $width): string => (string) $this->imageUrl($field, [
+                ...$params,
+                'w' => $width,
+                ...(isset($params['h']) ? ['h' => (int) round((int) $params['h'] * $width / $baseWidth)] : []),
+            ], $cropKey),
+            is_numeric($cropWidth) && $cropWidth > 0 ? (int) $cropWidth : (is_numeric($image['width'] ?? null) ? (int) $image['width'] : null),
+        );
+    }
+
+    /**
      * @param  array<string, int|string>  $params
      */
     public function posterUrl(string $field, array $params = []): ?string

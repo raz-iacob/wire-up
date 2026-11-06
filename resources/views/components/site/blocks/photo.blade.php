@@ -7,9 +7,12 @@
     $intro = $block->text('intro');
     $image = $block->imageUrl('image', ['w' => 1600], 'desktop');
     $imageMobile = $block->imageUrl('image', ['w' => 1080, 'h' => 1350], 'mobile');
+    $imageSrcset = $block->imageSrcset('image', [800, 1200, 1600], ['w' => 1600], 'desktop');
+    $imageMobileSrcset = $block->imageSrcset('image', [540, 810, 1080], ['w' => 1080, 'h' => 1350], 'mobile');
     $alt = $block->imageAlt('image');
     $hasBg = (bool) ($content['hasBackground'] ?? false);
     $full = ($content['width'] ?? 'normal') === 'full';
+    $imageSizes = $full ? '100vw' : '(min-width: 1280px) 1280px, 100vw';
     $linkUrl = $block->ctaUrl('imageLink');
     $newTab = $block->ctaOpensNewTab('imageLink');
 
@@ -56,17 +59,31 @@
                     >
                         <picture class="contents">
                             @if ($imageMobile)
-                                <source media="(max-width: 767px)" srcset="{{ $imageMobile }}" />
+                                <source media="(max-width: 767px)" srcset="{{ $imageMobileSrcset }}" sizes="100vw" />
                             @endif
-                            <img src="{{ $image }}" alt="{{ $alt }}" loading="lazy" class="{{ $imgClass }}" />
+                            <img
+                                src="{{ $image }}"
+                                srcset="{{ $imageSrcset }}"
+                                sizes="{{ $imageSizes }}"
+                                alt="{{ $alt }}"
+                                loading="lazy"
+                                class="{{ $imgClass }}"
+                            />
                         </picture>
                     </a>
                 @else
                     <picture class="contents">
                         @if ($imageMobile)
-                            <source media="(max-width: 767px)" srcset="{{ $imageMobile }}" />
+                            <source media="(max-width: 767px)" srcset="{{ $imageMobileSrcset }}" sizes="100vw" />
                         @endif
-                        <img src="{{ $image }}" alt="{{ $alt }}" loading="lazy" class="{{ $imgClass }}" />
+                        <img
+                            src="{{ $image }}"
+                            srcset="{{ $imageSrcset }}"
+                            sizes="{{ $imageSizes }}"
+                            alt="{{ $alt }}"
+                            loading="lazy"
+                            class="{{ $imgClass }}"
+                        />
                     </picture>
                 @endif
             </figure>

@@ -19,6 +19,11 @@
         4 => 'sm:grid-cols-2 lg:grid-cols-4',
         default => 'sm:grid-cols-2 lg:grid-cols-3',
     };
+    $imageSizes = match ((int) $columns) {
+        2 => '(min-width: 640px) 50vw, 100vw',
+        4 => '(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw',
+        default => '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw',
+    };
 @endphp
 
 @if ($layout === 'list')
@@ -52,6 +57,7 @@
                 :field-position="$fieldPosition"
                 :image-shape="$imageShape"
                 :image-fit="$imageFit"
+                :image-sizes="$imageSizes"
                 layout="grid"
                 wire:key="collection-{{ $blockId }}-{{ $record->id }}"
             />

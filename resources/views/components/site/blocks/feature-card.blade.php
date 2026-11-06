@@ -23,6 +23,8 @@
     @elseif ($item['image'] && $shapedImage)
         <x-site.blocks.card-image
             :src="$item['image']"
+            :srcset="$item['srcset'] ?? null"
+            :sizes="$item['sizes'] ?? '100vw'"
             :alt="$item['alt']"
             :shape="$imageShape"
             :fit="$imageFit"
@@ -31,6 +33,7 @@
     @elseif ($item['image'])
         <img
             src="{{ $item['image'] }}"
+            @if ($item['srcset'] ?? null) srcset="{{ $item['srcset'] }}" sizes="{{ $item['sizes'] ?? '100vw' }}" @endif
             alt="{{ $item['alt'] }}"
             loading="lazy"
             @class([

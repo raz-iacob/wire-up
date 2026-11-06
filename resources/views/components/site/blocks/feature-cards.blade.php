@@ -35,6 +35,7 @@
             'media' => data_get($item, 'media') === 'icon' ? 'icon' : 'image',
             'icon' => in_array(data_get($item, 'icon'), $allowedIcons, true) ? (string) data_get($item, 'icon') : '',
             'image' => $block->imageUrl("items.{$i}.image", ['w' => 800]),
+            'srcset' => $block->imageSrcset("items.{$i}.image", [400, 800], ['w' => 800]),
             'alt' => $block->imageAlt("items.{$i}.image") ?: $block->text("items.{$i}.title"),
             'title' => $block->text("items.{$i}.title"),
             'body' => $block->text("items.{$i}.body"),
@@ -62,6 +63,14 @@
     $cardText = ($content['cardText'] ?? null) ?: ($hasBg ? 'var(--wire-body-text)' : 'var(--wire-card-text)');
 
     $layout = in_array($content['layout'] ?? 'grid', ['grid', 'list', 'carousel'], true) ? ($content['layout'] ?? 'grid') : 'grid';
+    $imageSizes = match (true) {
+        $layout === 'carousel' => '(min-width: 1024px) 320px, (min-width: 640px) 288px, 80vw',
+        $layout === 'list' => '(min-width: 1024px) 75vw, 100vw',
+        $columns === 2 => '(min-width: 640px) 50vw, 100vw',
+        $columns === 4 => '(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw',
+        default => '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw',
+    };
+    $items = $items->map(fn (array $item): array => [...$item, 'sizes' => $imageSizes]);
 
     $buttonEnabled = (bool) data_get($content, 'button.enabled', false);
     $buttonText = $block->text('button.text');

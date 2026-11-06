@@ -143,6 +143,7 @@
                                     :field-position="$fieldPosition"
                                     :image-shape="$imageShape"
                                     :image-fit="$imageFit"
+                                    image-sizes="(min-width: 1024px) 320px, (min-width: 640px) 288px, 80vw"
                                     layout="grid"
                                 />
                             </div>

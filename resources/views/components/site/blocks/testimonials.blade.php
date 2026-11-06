@@ -17,6 +17,7 @@
             'author' => $block->text("items.{$i}.author"),
             'role' => $block->text("items.{$i}.role"),
             'avatar' => $block->imageUrl("items.{$i}.avatar", ['w' => 200, 'h' => 200]),
+            'avatarSrcset' => $block->imageSrcset("items.{$i}.avatar", [100, 200], ['w' => 200, 'h' => 200]),
             'alt' => $block->imageAlt("items.{$i}.avatar") ?: $block->text("items.{$i}.author"),
             'rating' => max(0, min(5, (int) data_get($item, 'rating', 0))),
         ])
@@ -132,6 +133,8 @@
                                     @if ($item['avatar'])
                                         <img
                                             src="{{ $item['avatar'] }}"
+                                            srcset="{{ $item['avatarSrcset'] }}"
+                                            sizes="56px"
                                             alt="{{ $item['alt'] }}"
                                             loading="lazy"
                                             class="size-10 shrink-0 rounded-full object-cover"
@@ -182,6 +185,8 @@
                                     @if ($item['avatar'])
                                         <img
                                             src="{{ $item['avatar'] }}"
+                                            srcset="{{ $item['avatarSrcset'] }}"
+                                            sizes="56px"
                                             alt="{{ $item['alt'] }}"
                                             loading="lazy"
                                             class="size-14 shrink-0 rounded-full object-cover"
@@ -261,6 +266,8 @@
                                             @if ($item['avatar'])
                                                 <img
                                                     src="{{ $item['avatar'] }}"
+                                                    srcset="{{ $item['avatarSrcset'] }}"
+                                                    sizes="56px"
                                                     alt="{{ $item['alt'] }}"
                                                     loading="lazy"
                                                     class="size-12 shrink-0 rounded-full object-cover"
@@ -312,6 +319,8 @@
                                             @if ($item['avatar'])
                                                 <img
                                                     src="{{ $item['avatar'] }}"
+                                                    srcset="{{ $item['avatarSrcset'] }}"
+                                                    sizes="56px"
                                                     alt="{{ $item['alt'] }}"
                                                     loading="lazy"
                                                     class="size-10 shrink-0 rounded-full object-cover"

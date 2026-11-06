@@ -40,6 +40,7 @@
 
             return [
                 'photo' => $block->imageUrl("items.{$i}.photo", ['w' => 400, 'h' => 400]),
+                'srcset' => $block->imageSrcset("items.{$i}.photo", [200, 400, 800], ['w' => 400, 'h' => 400]),
                 'alt' => $block->imageAlt("items.{$i}.photo") ?: $block->text("items.{$i}.name"),
                 'name' => $block->text("items.{$i}.name"),
                 'role' => $block->text("items.{$i}.role"),
@@ -54,6 +55,13 @@
 
     $layout = $content['layout'] ?? 'circle';
     $layout = in_array($layout, ['circle', 'card', 'overlay', 'portrait'], true) ? $layout : 'circle';
+    $photoSizes = match (true) {
+        $layout === 'circle' => '112px',
+        $columns === 2 => '(min-width: 640px) 50vw, 100vw',
+        $columns === 4 => '(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw',
+        default => '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw',
+    };
+    $members = $members->map(fn (array $member): array => [...$member, 'sizes' => $photoSizes]);
 
     $gridCols = match ($columns) {
         2 => 'sm:grid-cols-2',

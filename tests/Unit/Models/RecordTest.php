@@ -414,3 +414,17 @@ it('gives full field values for a spreadsheet export', function (): void {
         ->and($fresh->exportValue(['key' => 'sequels', 'type' => 'relationship', 'record_type' => 'book']))->toBe('Unreleased sequel')
         ->and($fresh->exportValue(['key' => 'gallery', 'type' => 'media-gallery']))->toBe('cover.jpg; back-page.jpg');
 });
+
+it('builds a primary image srcset that stops at the stored crop, and none without an image', function (): void {
+    $type = RecordType::factory()->create([
+        'fields' => [['key' => 'photo', 'type' => 'photo', 'translatable' => false]],
+    ]);
+    $record = Record::factory()->create(['record_type_id' => $type->id]);
+    $image = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'media/pic.jpg']);
+    $record->media()->attach($image->id, ['role' => 'photo', 'locale' => 'en', 'position' => 0, 'crop' => ['default' => ['crop_w' => 400, 'crop_h' => 300, 'crop_x' => 0, 'crop_y' => 0]]]);
+    $record->load('media', 'recordType');
+    $empty = Record::factory()->create(['record_type_id' => $type->id])->load('media', 'recordType');
+
+    expect($record->primaryImageSrcset([400, 600, 900]))->toContain('media/pic.jpg')->toContain('400w')->not->toContain('600w')
+        ->and($empty->primaryImageSrcset([400]))->toBeNull();
+});

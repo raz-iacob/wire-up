@@ -13,6 +13,7 @@
         ->map(fn (mixed $item, int|string $i): array => [
             'isVideo' => $block->isVideo("media.{$i}"),
             'poster' => $block->posterUrl("media.{$i}", ['w' => 800, 'h' => 800]),
+            'srcset' => $block->isVideo("media.{$i}") ? null : $block->imageSrcset("media.{$i}", [400, 800], ['w' => 800, 'h' => 800]),
             'full' => $block->isVideo("media.{$i}") ? $block->fileUrl("media.{$i}") : $block->imageUrl("media.{$i}", ['w' => 1600]),
             'alt' => $block->imageAlt("media.{$i}"),
             'caption' => $block->plain("media.{$i}.metadata.caption"),
@@ -26,6 +27,13 @@
         5 => 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5',
         6 => 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
         default => 'grid-cols-2 sm:grid-cols-3',
+    };
+    $thumbSizes = match ($columns) {
+        2 => '50vw',
+        4 => '(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw',
+        5 => '(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw',
+        6 => '(min-width: 1024px) 17vw, (min-width: 640px) 33vw, 50vw',
+        default => '(min-width: 640px) 33vw, 50vw',
     };
 @endphp
 
@@ -71,6 +79,7 @@
                                     @if ($item['poster'])
                                         <img
                                             src="{{ $item['poster'] }}"
+                                            @if ($item['srcset']) srcset="{{ $item['srcset'] }}" sizes="{{ $thumbSizes }}" @endif
                                             alt="{{ $item['alt'] }}"
                                             loading="lazy"
                                             class="size-full object-cover transition group-hover:scale-105"

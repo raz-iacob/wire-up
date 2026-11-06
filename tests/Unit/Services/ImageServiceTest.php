@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\MediaType;
+use App\Models\Media;
 use App\Services\ImageService;
 use Illuminate\Support\Facades\Storage;
 
@@ -161,4 +163,22 @@ it('still encodes a png source as jpeg when jpeg is requested', function (): voi
     [, $mime] = ImageService::make('transparent.png')->applyOptions(['fm' => 'jpg'])->encoded();
 
     expect($mime)->toBe('image/jpeg');
+});
+
+it('lists each srcset width once, smallest first', function (): void {
+    expect(ImageService::srcset([800, 400, 800], fn (int $width): string => "img-{$width}"))->toBe('img-400 400w, img-800 800w');
+});
+
+it('stops a srcset at the width of the image itself', function (): void {
+    expect(ImageService::srcset([400, 800, 1200], fn (int $width): string => "img-{$width}", 700))->toBe('img-400 400w, img-700 700w')
+        ->and(ImageService::srcset([400, 800], fn (int $width): string => "img-{$width}", 2000))->toBe('img-400 400w, img-800 800w');
+});
+
+it('builds a srcset for a library image, stopping at its original width', function (): void {
+    $media = Media::factory()->create(['type' => MediaType::IMAGE, 'source' => 'media/pic.jpg', 'width' => 1000]);
+
+    expect(ImageService::mediaSrcset($media, [480, 800, 1600]))
+        ->toContain('480w')
+        ->toContain('1000w')
+        ->not->toContain('1600w');
 });

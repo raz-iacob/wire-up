@@ -6,6 +6,7 @@
     $heading = $block->text('heading');
     $body = $block->text('body');
     $image = $block->imageUrl('image', ['w' => 1200]);
+    $imageSrcset = $block->imageSrcset('image', [480, 800, 1200], ['w' => 1200]);
     $reverse = (bool) ($content['reverseLayout'] ?? false);
     $hasBg = (bool) ($content['hasBackground'] ?? false);
 
@@ -103,6 +104,8 @@
                 <div @class(['mt-6 md:mt-0', 'md:order-first' => ! $reverse])>
                     <img
                         src="{{ $image }}"
+                        srcset="{{ $imageSrcset }}"
+                        sizes="(min-width: 768px) 50vw, 100vw"
                         alt="{{ $block->imageAlt('image') }}"
                         loading="lazy"
                         @class(['w-full object-cover', $ratioClass, $imageRadiusClass])

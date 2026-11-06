@@ -12,6 +12,7 @@
             @if ($member['photo'])
                 <img
                     src="{{ $member['photo'] }}"
+                    @if ($member['srcset'] ?? null) srcset="{{ $member['srcset'] }}" sizes="{{ $member['sizes'] ?? '100vw' }}" @endif
                     alt="{{ $member['alt'] }}"
                     loading="lazy"
                     class="aspect-square w-full object-cover"
@@ -39,6 +40,7 @@
             @if ($member['photo'])
                 <img
                     src="{{ $member['photo'] }}"
+                    @if ($member['srcset'] ?? null) srcset="{{ $member['srcset'] }}" sizes="{{ $member['sizes'] ?? '100vw' }}" @endif
                     alt="{{ $member['alt'] }}"
                     loading="lazy"
                     class="absolute inset-0 size-full object-cover"
@@ -77,6 +79,7 @@
             @if ($member['photo'])
                 <img
                     src="{{ $member['photo'] }}"
+                    @if ($member['srcset'] ?? null) srcset="{{ $member['srcset'] }}" sizes="{{ $member['sizes'] ?? '100vw' }}" @endif
                     alt="{{ $member['alt'] }}"
                     loading="lazy"
                     class="aspect-square w-full rounded-(--wire-radius) object-cover shadow-sm"
@@ -99,6 +102,7 @@
             @if ($member['photo'])
                 <img
                     src="{{ $member['photo'] }}"
+                    @if ($member['srcset'] ?? null) srcset="{{ $member['srcset'] }}" sizes="{{ $member['sizes'] ?? '100vw' }}" @endif
                     alt="{{ $member['alt'] }}"
                     loading="lazy"
                     class="size-28 rounded-full object-cover"

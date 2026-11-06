@@ -354,37 +354,19 @@ final class Record extends Model
 
     public function primaryImageUrl(int $width = 800): ?string
     {
-        $this->loadMissing('recordType', 'media');
+        $media = $this->primaryImage();
 
-        foreach ($this->recordType->fields as $field) {
-            $type = FieldType::tryFrom((string) ($field['type'] ?? ''));
+        return $media instanceof Media ? ImageService::mediaUrl($media, $width) : null;
+    }
 
-            if ($type === null) {
-                continue;
-            }
+    /**
+     * @param  list<int>  $widths
+     */
+    public function primaryImageSrcset(array $widths): ?string
+    {
+        $media = $this->primaryImage();
 
-            if (! in_array(MediaType::IMAGE->value, $type->acceptsMedia(), true)) {
-                continue;
-            }
-
-            foreach ($this->fieldMedia((string) ($field['key'] ?? ''), (bool) ($field['translatable'] ?? false)) as $media) {
-                if ($media->type !== MediaType::IMAGE) {
-                    continue;
-                }
-
-                $cropSet = is_array($media->pivot->crop ?? null) ? $media->pivot->crop : [];
-                $crop = is_array($cropSet['default'] ?? null) ? $cropSet['default'] : [];
-                $options = ["w={$width}"];
-
-                if (($crop['crop_w'] ?? 0) > 0 && ($crop['crop_h'] ?? 0) > 0) {
-                    $options[] = sprintf('crop=%d-%d-%d-%d', $crop['crop_w'], $crop['crop_h'], $crop['crop_x'] ?? 0, $crop['crop_y'] ?? 0);
-                }
-
-                return ImageService::url(implode(',', $options), $media->source);
-            }
-        }
-
-        return null;
+        return $media instanceof Media ? ImageService::mediaSrcset($media, $widths) : null;
     }
 
     /**
@@ -434,5 +416,26 @@ final class Record extends Model
         $this->loadMissing('recordType');
 
         return $this->recordType->slug_prefix;
+    }
+
+    private function primaryImage(): ?Media
+    {
+        $this->loadMissing('recordType', 'media');
+
+        foreach ($this->recordType->fields as $field) {
+            $type = FieldType::tryFrom((string) ($field['type'] ?? ''));
+
+            if ($type === null || ! in_array(MediaType::IMAGE->value, $type->acceptsMedia(), true)) {
+                continue;
+            }
+
+            foreach ($this->fieldMedia((string) ($field['key'] ?? ''), (bool) ($field['translatable'] ?? false)) as $media) {
+                if ($media->type === MediaType::IMAGE) {
+                    return $media;
+                }
+            }
+        }
+
+        return null;
     }
 }

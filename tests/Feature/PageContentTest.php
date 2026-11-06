@@ -244,6 +244,8 @@ it('renders an image when a block has one', function (): void {
         ->assertOk()
         ->assertSee('<img', false)
         ->assertSee('uploads/photo.jpg', false)
+        ->assertSee('480w', false)
+        ->assertSee('sizes="(min-width: 768px) 50vw, 100vw"', false)
         ->assertSee('A photo', false);
 });
 

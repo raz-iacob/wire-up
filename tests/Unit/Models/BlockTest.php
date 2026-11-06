@@ -249,3 +249,37 @@ it('harvests the address into the block plain text', function (): void {
 
     expect($block->plainText('en'))->toBe('Find us 123 Main St Springfield');
 });
+
+it('builds a srcset that keeps the height in proportion and the stored crop', function (): void {
+    $block = Block::factory()->create([
+        'content' => ['image' => ['source' => 'a.jpg', 'crop' => [
+            'desktop' => ['crop_w' => 1920, 'crop_h' => 1080, 'crop_x' => 0, 'crop_y' => 0],
+        ]]],
+    ]);
+
+    $srcset = urldecode((string) $block->imageSrcset('image', [960, 1920], ['w' => 1920, 'h' => 1080], 'desktop'));
+
+    expect($srcset)
+        ->toContain('w=960')
+        ->toContain('h=540')
+        ->toContain('960w')
+        ->toContain('h=1080')
+        ->toContain('1920w')
+        ->toContain('crop=1920-1080-0-0');
+});
+
+it('stops a block srcset at the cropped or original width of the image', function (): void {
+    $cropped = Block::factory()->create([
+        'content' => ['image' => ['source' => 'a.jpg', 'crop' => ['default' => ['crop_w' => 700, 'crop_h' => 700, 'crop_x' => 0, 'crop_y' => 0]]]],
+    ]);
+    $small = Block::factory()->create([
+        'content' => ['image' => ['source' => 'b.jpg', 'width' => 500, 'crop' => []]],
+    ]);
+
+    expect($cropped->imageSrcset('image', [480, 800, 1200]))->toContain('700w')->not->toContain('800w')
+        ->and($small->imageSrcset('image', [480, 800]))->toContain('500w')->not->toContain('800w');
+});
+
+it('has no srcset when there is no image', function (): void {
+    expect(Block::factory()->create(['content' => []])->imageSrcset('image', [400]))->toBeNull();
+});

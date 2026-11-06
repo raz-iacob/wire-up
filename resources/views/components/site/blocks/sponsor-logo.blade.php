@@ -18,10 +18,22 @@
             class="flex items-center justify-center"
             @if ($item['name'] !== '') title="{{ $item['name'] }}" @endif
         >
-            <img src="{{ $item['logo'] }}" alt="{{ $item['alt'] }}" loading="lazy" class="{{ $imgClass }}" />
+            <img
+                src="{{ $item['logo'] }}"
+                @if ($item['logoSrcset'] ?? null) srcset="{{ $item['logoSrcset'] }}" sizes="200px" @endif
+                alt="{{ $item['alt'] }}"
+                loading="lazy"
+                class="{{ $imgClass }}"
+            />
         </a>
     @else
-        <img src="{{ $item['logo'] }}" alt="{{ $item['alt'] }}" loading="lazy" class="{{ $imgClass }}" />
+        <img
+            src="{{ $item['logo'] }}"
+            @if ($item['logoSrcset'] ?? null) srcset="{{ $item['logoSrcset'] }}" sizes="200px" @endif
+            alt="{{ $item['alt'] }}"
+            loading="lazy"
+            class="{{ $imgClass }}"
+        />
     @endif
 
     @if ($showName && $item['name'] !== '')

@@ -1,4 +1,4 @@
-@props(['src', 'alt' => '', 'shape' => 'landscape', 'fit' => 'cover'])
+@props(['src', 'alt' => '', 'shape' => 'landscape', 'fit' => 'cover', 'srcset' => null, 'sizes' => '100vw'])
 
 @php
     $shapeClass = match ($shape) {
@@ -12,6 +12,7 @@
 
 <img
     src="{{ $src }}"
+    @if ($srcset) srcset="{{ $srcset }}" sizes="{{ $sizes }}" @endif
     alt="{{ $alt }}"
     loading="lazy"
     {{

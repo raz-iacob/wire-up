@@ -16,6 +16,7 @@
     $items = collect($rawItems)
         ->map(fn (mixed $item, int|string $i): array => [
             'logo' => $block->imageUrl("items.{$i}.logo", ['w' => 400]),
+            'logoSrcset' => $block->imageSrcset("items.{$i}.logo", [200, 400], ['w' => 400]),
             'name' => $block->text("items.{$i}.name"),
             'alt' => $block->text("items.{$i}.name") ?: $block->imageAlt("items.{$i}.logo"),
             'link' => mb_trim($block->plain("items.{$i}.link")),

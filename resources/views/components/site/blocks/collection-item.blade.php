@@ -9,6 +9,7 @@
     'fieldPosition' => 'footer',
     'imageShape' => 'landscape',
     'imageFit' => 'cover',
+    'imageSizes' => '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw',
 ])
 
 @php
@@ -17,6 +18,7 @@
     $heading = $record->displayHeading();
     $excerpt = $record->displayExcerpt();
     $image = $showImage ? $record->primaryImageUrl($layout === 'list' ? 400 : 900) : null;
+    $imageSrcset = $image !== null ? $record->primaryImageSrcset($layout === 'list' ? [200, 400] : [400, 600, 900]) : null;
 
     $meta = [];
     $badges = [];
@@ -52,6 +54,8 @@
         @if ($image)
             <x-site.blocks.card-image
                 :src="$image"
+                :srcset="$imageSrcset"
+                sizes="(min-width: 640px) 176px, 128px"
                 :alt="$heading"
                 shape="none"
                 :fit="$imageFit"
@@ -87,6 +91,8 @@
         @if ($image)
             <x-site.blocks.card-image
                 :src="$image"
+                :srcset="$imageSrcset"
+                :sizes="$imageSizes"
                 :alt="$heading"
                 :shape="$imageShape"
                 :fit="$imageFit"

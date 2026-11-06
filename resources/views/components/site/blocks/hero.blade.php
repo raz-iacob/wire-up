@@ -13,6 +13,8 @@
     $type = $bg['type'] ?? 'image';
     $imageDesktop = $type === 'image' ? $block->imageUrl('background.image', ['w' => 1920, 'h' => 1080], 'desktop') : null;
     $imageMobile = $type === 'image' ? $block->imageUrl('background.image', ['w' => 1080, 'h' => 1350], 'mobile') : null;
+    $imageDesktopSrcset = $type === 'image' ? $block->imageSrcset('background.image', [960, 1280, 1600, 1920], ['w' => 1920, 'h' => 1080], 'desktop') : null;
+    $imageMobileSrcset = $type === 'image' ? $block->imageSrcset('background.image', [540, 810, 1080], ['w' => 1080, 'h' => 1350], 'mobile') : null;
     $bgVideo = $type === 'video' ? $block->fileUrl('background.video') : null;
     $bgVideoPoster = $type === 'video' ? $block->posterUrl('background.video', ['w' => 1920, 'h' => 1080]) : null;
 
@@ -101,10 +103,12 @@
     @if ($imageDesktop)
         <picture class="contents">
             @if ($imageMobile)
-                <source media="(max-width: 767px)" srcset="{{ $imageMobile }}" />
+                <source media="(max-width: 767px)" srcset="{{ $imageMobileSrcset }}" sizes="100vw" />
             @endif
             <img
                 src="{{ $imageDesktop }}"
+                srcset="{{ $imageDesktopSrcset }}"
+                sizes="100vw"
                 alt="{{ $block->imageAlt('background.image') }}"
                 fetchpriority="high"
                 @class([

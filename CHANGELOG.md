@@ -4,6 +4,7 @@ Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
+- Pictures in every block now come in several sizes, so phones download a smaller file and large or sharp screens get a crisper one. This covers text and image, gallery, feature cards, team, testimonials, sponsors, collections, product photos and the desktop and phone versions of hero and photo blocks. A picture is never offered larger than it really is.
 - Photos on the site are now sent as WebP instead of JPEG. In a test with real photos they came out about a third smaller at the same quality, so pages with pictures load faster. Images for social media shares stay JPEG, because some platforms don't show WebP.
 - Updates, backups and site imports started from the admin, and automatic updates, now run from the scheduler instead of the queue worker. Each starts within a minute in a fresh process, so an update always runs the newest code, and the queue worker no longer needs a one-hour timeout or `DB_QUEUE_RETRY_AFTER=3700` (existing settings do no harm). If the scheduler's cron entry isn't running, Settings → Updates, Backups and Export / Import say so after ten minutes.
 - The public site's stylesheet is about 40% smaller (33 KB instead of 56 KB once compressed), so pages load a little faster. It now holds only the styles the site itself uses; the admin keeps its own stylesheet and is unchanged.
