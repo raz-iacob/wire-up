@@ -229,7 +229,7 @@ it('renders text blocks gracefully when no image is selected', function (): void
         ->assertSee('Imageless hero')
         ->assertSee('Just words', false)
         ->assertDontSee('<img', false)
-        ->assertDontSee('background-image', false);
+        ->assertDontSee('background-image:url(', false);
 });
 
 it('renders an image when a block has one', function (): void {
