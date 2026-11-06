@@ -303,7 +303,7 @@ it('drops non-string note lines from the cached changelog', function (): void {
 it('starts with an idle state', function (): void {
     $service = new UpdateService();
 
-    expect($service->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null, 'site_down' => false])
+    expect($service->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null, 'site_down' => false, 'rolled_back_to' => null])
         ->and($service->updating())->toBeFalse();
 });
 
@@ -373,7 +373,7 @@ it('marks a silent running update as stalled', function (): void {
 it('ignores a malformed cached state', function (): void {
     Cache::forever('wireup:update:state', ['status' => 123, 'tag' => 5, 'step' => [], 'output' => 9, 'at' => 456]);
 
-    expect(new UpdateService()->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null, 'site_down' => false]);
+    expect(new UpdateService()->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null, 'site_down' => false, 'rolled_back_to' => null]);
 });
 
 it('emails the contact address when an update finishes', function (): void {

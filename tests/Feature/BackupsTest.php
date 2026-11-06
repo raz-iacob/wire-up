@@ -305,6 +305,12 @@ it('loads a dump back into each kind of database', function (): void {
     expect(new DatabaseDumper()->load($dump))->toContain('Restore the database manually');
 });
 
+it('reports a sqlite backup that cannot be opened', function (): void {
+    backupSourceDatabase();
+
+    expect(new DatabaseDumper()->load(config()->string('wireup.backup_path').'/missing.sqlite'))->toContain('Unable to open database');
+});
+
 it('reports what the database tool says when loading fails', function (string $driver, string $tool): void {
     config()->set('database.default', $driver);
     Process::fake(["*{$tool}*" => Process::result(errorOutput: 'syntax error', exitCode: 1)]);

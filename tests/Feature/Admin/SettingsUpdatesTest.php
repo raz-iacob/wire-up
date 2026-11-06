@@ -250,6 +250,16 @@ it('shows that the site stayed live when an update failed before maintenance mod
         ->assertDontSee('php artisan up');
 });
 
+it('shows that the site was put back on the previous version after a rollback', function (): void {
+    $this->actingAsAdmin();
+    resolve(UpdateService::class)->markFailed('v1.0.0', 'Run database migrations', 'migration exploded', siteIsDown: false, rolledBackTo: 'v0.9.0');
+
+    Livewire::test('pages::admin.settings-updates')
+        ->assertSee('Update to v1.0.0 failed at: Run database migrations')
+        ->assertSee('The site was put back on v0.9.0 and is live again.')
+        ->assertDontSee('php artisan up');
+});
+
 it('warns when an update stalls', function (): void {
     $this->actingAsAdmin();
     seedAvailableUpdate();

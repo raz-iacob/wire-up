@@ -168,19 +168,21 @@ Releases are git tags (`v0.x.y`) with matching sections in `CHANGELOG.md`. The s
 - **From the CLI:** `php artisan wireup:update` (options: `--tag=vX.Y.Z`, `--force`).
 - **Automatic:** enable *Automatic updates* on Settings → Updates; the daily check then installs new releases unattended.
 
-An update first downloads the release's prebuilt frontend assets (`build.tar.gz` on the GitHub Release) and checks them against their published checksum. Then it puts the public site into maintenance mode (the admin stays reachable) and runs: fetch + check out the tag, `composer install --no-dev`, **database backup** (`php artisan wireup:backup` → `storage/app/backups`, last 5 kept; MySQL needs `mysqldump` on the server, PostgreSQL needs `pg_dump`), `migrate --force`, swap in the new frontend assets, cache rebuild, `queue:restart`. A release without prebuilt assets is built on the server with `npm ci` + `npm run build` instead, and the update checks for Node.js before the site goes down. A new release is offered once its assets are published, a few minutes after the tag is pushed. If the download or the Node.js check fails, the site stays live. **If a later step fails, the site stays in maintenance mode** — review the error on Settings → Updates (or the console), fix it, then run `php artisan up`. Roll back with:
+An update first downloads the release's prebuilt frontend assets (`build.tar.gz` on the GitHub Release), checks them against their published checksum and keeps a copy of the current ones. Then it puts the public site into maintenance mode (the admin stays reachable) and runs: **database backup** (`php artisan wireup:backup` → `storage/app/backups/db-backup-<date>-before-<tag>`, last 5 kept; MySQL needs `mysqldump` and `mysql` on the server, PostgreSQL needs `pg_dump` and `psql`), fetch + check out the tag, `composer install --no-dev`, `migrate --force`, swap in the new frontend assets, cache rebuild, `queue:restart`. A release without prebuilt assets is built on the server with `npm ci` + `npm run build` instead, and the update checks for Node.js before the site goes down. A new release is offered once its assets are published, a few minutes after the tag is pushed. If the download or the Node.js check fails, the site stays live.
+
+**If a later step fails, the update rolls back on its own:** it checks out the commit it started from, reinstalls that version's PHP dependencies, restores the pre-update database backup when the migrations had started, puts the previous frontend assets back, rebuilds the caches, restarts the queue workers and brings the site back up. Settings → Updates and the email say which step failed. Anything changed in the admin while the update ran is lost when the database is restored. **If the rollback fails too, the site stays in maintenance mode** — review the error on Settings → Updates (or the console), fix it, then run `php artisan up`. To roll back by hand:
 
 ```bash
 git checkout vPREVIOUS
 composer install --no-dev
-# restore the pre-update backup if the migrations already ran:
-#   MySQL:      mysql -u USER -p DATABASE < storage/app/backups/db-backup-<date>.sql
-#   PostgreSQL: psql -U USER -d DATABASE -f storage/app/backups/db-backup-<date>.sql
-#   SQLite:     cp storage/app/backups/db-backup-<date>.sqlite database/database.sqlite
+# restore the pre-update database backup if the migrations already ran:
+php artisan wireup:backup:restore-database db-backup-<date>-before-vNEW.sqlite
 # releases before v0.8.0 have no prebuilt assets: run npm ci && npm run build instead
 rm -rf public/build && curl -fsSL https://github.com/wire-up-dev/wire-up/releases/download/vPREVIOUS/build.tar.gz | tar -xz -C public
 php artisan optimize && php artisan up
 ```
+
+`wireup:backup:restore-database` replaces the whole database with a `db-backup-*` file from `storage/app/backups` (`.sql` for MySQL and PostgreSQL, which it clears first, `.sqlite` for SQLite).
 
 ### Backups
 

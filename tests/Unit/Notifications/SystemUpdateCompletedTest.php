@@ -51,3 +51,13 @@ it('tells the owner the site stayed live when the update stopped before maintena
         ->and($body)->toContain('start the update again')
         ->and($body)->not->toContain('php artisan up');
 });
+
+it('tells the owner the site was put back on the previous version after a rollback', function (): void {
+    $mail = new SystemUpdateCompleted('v1.2.0', successful: false, step: 'Run database migrations', siteIsDown: false, rolledBackTo: 'v1.1.0')
+        ->toMail(new AnonymousNotifiable);
+
+    $body = implode(' ', $mail->introLines);
+
+    expect($body)->toContain('put back on v1.1.0 and is live again')
+        ->and($body)->not->toContain('php artisan up');
+});

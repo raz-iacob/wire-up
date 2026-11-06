@@ -16,6 +16,7 @@ final class SystemUpdateCompleted extends Notification
         private readonly string $step = '',
         private readonly string $output = '',
         private readonly bool $siteIsDown = true,
+        private readonly ?string $rolledBackTo = null,
     ) {}
 
     /**
@@ -44,9 +45,11 @@ final class SystemUpdateCompleted extends Notification
         $mail = $mail
             ->error()
             ->subject(__(':app update to :tag failed', ['app' => $brand, 'tag' => $this->tag]))
-            ->line($this->siteIsDown
-                ? __('The update stopped at the step ":step" and your site was left in maintenance mode.', ['step' => $this->step])
-                : __('The update stopped at the step ":step" before your site went into maintenance mode, so it is still live.', ['step' => $this->step]));
+            ->line(match (true) {
+                $this->siteIsDown => __('The update stopped at the step ":step" and your site was left in maintenance mode.', ['step' => $this->step]),
+                $this->rolledBackTo !== null => __('The update stopped at the step ":step", so your site was put back on :version and is live again.', ['step' => $this->step, 'version' => $this->rolledBackTo]),
+                default => __('The update stopped at the step ":step" before your site went into maintenance mode, so it is still live.', ['step' => $this->step]),
+            });
 
         if ($this->output !== '') {
             $mail->line(__('Last output:'))->line(mb_substr($this->output, -600));

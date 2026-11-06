@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use PDO;
 use PDOException;
+use SQLite3;
+use Throwable;
 
 final class DatabaseDumper
 {
@@ -43,6 +45,29 @@ final class DatabaseDumper
         }
 
         return $error;
+    }
+
+    public function restore(string $path): ?string
+    {
+        $client = match ($this->driver()) {
+            'mysql', 'mariadb' => 'mysql',
+            'pgsql' => 'psql',
+            default => null,
+        };
+
+        if ($client !== null) {
+            if (Process::run([$client, '--version'])->failed()) {
+                return "Restoring the database needs the {$client} command on the server.";
+            }
+
+            $wipe = Process::path(base_path())->timeout(600)->run([PHP_BINARY, 'artisan', 'db:wipe', '--force', '--drop-views']);
+
+            if ($wipe->failed()) {
+                return mb_trim($wipe->output()."\n".$wipe->errorOutput());
+            }
+        }
+
+        return $this->load($path);
     }
 
     public function load(string $path): ?string
@@ -119,7 +144,20 @@ final class DatabaseDumper
 
         DB::purge($this->connection());
 
-        return File::copy($path, $database) ? null : "The backup could not be copied over {$database}.";
+        try {
+            $backup = new SQLite3($path, SQLITE3_OPEN_READONLY);
+            $live = new SQLite3($database);
+            $live->busyTimeout(5000);
+
+            $copied = $backup->backup($live);
+
+            $backup->close();
+            $live->close();
+        } catch (Throwable $throwable) {
+            return $throwable->getMessage();
+        }
+
+        return $copied ? null : "The backup could not be copied over {$database}.";
     }
 
     private function loadMysql(string $path): ?string

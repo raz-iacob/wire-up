@@ -47,6 +47,15 @@ it('backs up a sqlite database into the backup directory', function (): void {
     expect($copy->query('select count(*) from samples')->fetchColumn())->toEqual(1);
 });
 
+it('backs up under the file name it is given, inside the backup directory', function (): void {
+    fileBackedSqliteDatabase();
+
+    $this->artisan(BackupDatabaseCommand::class, ['--name' => '../db-backup-2026-11-06-120000-before-v1.0.0.sqlite'])
+        ->assertExitCode(0);
+
+    expect(File::exists(config()->string('wireup.backup_path').'/db-backup-2026-11-06-120000-before-v1.0.0.sqlite'))->toBeTrue();
+});
+
 it('refuses to back up an in-memory sqlite database', function (): void {
     $this->artisan(BackupDatabaseCommand::class)
         ->expectsOutputToContain('in-memory')

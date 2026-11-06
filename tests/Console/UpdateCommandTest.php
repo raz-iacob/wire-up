@@ -20,7 +20,15 @@ beforeEach(function (): void {
     config()->set('wireup.version_file', $root.'/version');
     config()->set('wireup.updates_path', $root.'/updates');
     config()->set('wireup.build_path', $root.'/build');
+    config()->set('wireup.backup_path', $root.'/backups');
+
+    Process::fake(['*rev-parse*' => Process::result(output: "abc1234def\n")]);
 });
+
+function preUpdateBackup(string $tag): string
+{
+    return 'db-backup-'.now()->format('Y-m-d-His')."-before-{$tag}.sqlite";
+}
 
 afterEach(function (): void {
     File::deleteDirectory(dirname((string) config('wireup.version_file')));
@@ -43,7 +51,7 @@ it('updates to the latest release', function (): void {
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['git', 'fetch', '--tags', '--force', 'origin']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['git', '-c', 'advice.detachedHead=false', 'checkout', '--force', 'v1.0.0']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['composer', 'install', '--no-dev', '--no-interaction', '--prefer-dist']);
-    Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'wireup:backup']);
+    Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'wireup:backup', '--name='.preUpdateBackup('v1.0.0')]);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'migrate', '--force']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['npm', '--version']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['npm', 'ci']);
@@ -140,7 +148,7 @@ it('records the failure when disabling maintenance mode fails', function (): voi
         ->and($service->currentVersion())->toBe('v1.0.0');
 });
 
-it('does not migrate when the database backup fails', function (): void {
+it('brings the site back up without touching the code when the database backup fails', function (): void {
     Process::fake([
         '*wireup:backup*' => Process::result(errorOutput: 'backup boom', exitCode: 1),
         '*' => Process::result(),
@@ -150,18 +158,22 @@ it('does not migrate when the database backup fails', function (): void {
 
     $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
         ->expectsOutputToContain('backup boom')
+        ->expectsOutputToContain('Wire Up was put back on v0.9.0')
         ->assertExitCode(1);
 
     Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'migrate', '--force']);
-    Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'up']);
+    Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === ['git', '-c', 'advice.detachedHead=false', 'checkout', '--force', 'abc1234def']);
+    Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'up']);
 
-    $service = resolve(UpdateService::class);
+    $state = resolve(UpdateService::class)->state();
 
-    expect($service->state()['status'])->toBe('failed')
-        ->and($service->state()['step'])->toBe('Back up database');
+    expect($state['status'])->toBe('failed')
+        ->and($state['step'])->toBe('Back up database')
+        ->and($state['site_down'])->toBeFalse()
+        ->and($state['rolled_back_to'])->toBe('v0.9.0');
 });
 
-it('leaves the site in maintenance mode when a step fails', function (): void {
+it('rolls back to the previous version when a migration fails', function (): void {
     Process::fake([
         '*migrate*' => Process::result(output: 'migration exploded', exitCode: 1),
         '*' => Process::result(),
@@ -171,17 +183,114 @@ it('leaves the site in maintenance mode when a step fails', function (): void {
 
     $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
         ->expectsOutputToContain('migration exploded')
+        ->expectsOutputToContain('Wire Up was put back on v0.9.0. The site is live again.')
+        ->doesntExpectOutputToContain('php artisan up')
+        ->assertExitCode(1);
+
+    Process::assertRanInOrder([
+        ['git', 'rev-parse', 'HEAD'],
+        ['git', 'remote', 'get-url', 'origin'],
+        ['npm', '--version'],
+        [PHP_BINARY, 'artisan', 'down'],
+        [PHP_BINARY, 'artisan', 'wireup:backup', '--name='.preUpdateBackup('v1.0.0')],
+        ['git', 'fetch', '--tags', '--force', 'origin'],
+        ['git', '-c', 'advice.detachedHead=false', 'checkout', '--force', 'v1.0.0'],
+        ['composer', 'install', '--no-dev', '--no-interaction', '--prefer-dist'],
+        [PHP_BINARY, 'artisan', 'migrate', '--force'],
+        ['git', '-c', 'advice.detachedHead=false', 'checkout', '--force', 'abc1234def'],
+        ['composer', 'install', '--no-dev', '--no-interaction', '--prefer-dist'],
+        [PHP_BINARY, 'artisan', 'wireup:backup:restore-database', preUpdateBackup('v1.0.0'), '--force'],
+        [PHP_BINARY, 'artisan', 'optimize'],
+        [PHP_BINARY, 'artisan', 'queue:restart'],
+        [PHP_BINARY, 'artisan', 'up'],
+    ]);
+
+    $service = resolve(UpdateService::class);
+    $state = $service->state();
+
+    expect($service->currentVersion())->toBe('v0.9.0')
+        ->and($state['status'])->toBe('failed')
+        ->and($state['step'])->toBe('Run database migrations')
+        ->and($state['output'])->toBe('migration exploded')
+        ->and($state['site_down'])->toBeFalse()
+        ->and($state['rolled_back_to'])->toBe('v0.9.0');
+});
+
+it('leaves the site in maintenance mode when rolling back fails', function (): void {
+    Process::fake([
+        '*migrate*' => Process::result(output: 'migration exploded', exitCode: 1),
+        '*restore-database*' => Process::result(errorOutput: 'restore boom', exitCode: 1),
+        '*' => Process::result(),
+    ]);
+
+    resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
+
+    $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
+        ->expectsOutputToContain('restore boom')
         ->expectsOutputToContain('php artisan up')
         ->assertExitCode(1);
 
     Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'up']);
 
     $service = resolve(UpdateService::class);
+    $state = $service->state();
 
     expect($service->currentVersion())->toBe('v0.9.0')
-        ->and($service->state()['status'])->toBe('failed')
-        ->and($service->state()['step'])->toBe('Run database migrations')
-        ->and($service->state()['output'])->toContain('migration exploded');
+        ->and($state['step'])->toBe('Run database migrations')
+        ->and($state['output'])->toContain('migration exploded')
+        ->and($state['output'])->toContain('Rolling back stopped at "Restore database"')
+        ->and($state['output'])->toContain('restore boom')
+        ->and($state['site_down'])->toBeTrue()
+        ->and($state['rolled_back_to'])->toBeNull();
+});
+
+it('puts the previous frontend assets back when the update fails after replacing them', function (): void {
+    $archive = ReleaseArchive::make(['build/manifest.json' => '{"release":"v1.0.0"}']);
+    $build = (string) config('wireup.build_path');
+    File::ensureDirectoryExists($build);
+    File::put($build.'/manifest.json', '{"release":"v0.9.0"}');
+    Process::fake([
+        '*get-url*' => Process::result(output: ReleaseArchive::REMOTE),
+        '*optimize*' => Process::sequence()
+            ->push(Process::result(errorOutput: 'optimize boom', exitCode: 1))
+            ->push(Process::result()),
+        '*' => Process::result(),
+    ]);
+    Http::fake([
+        ReleaseArchive::url('v1.0.0', 'build.tar.gz.sha256') => Http::response(hash('sha256', $archive)),
+        ReleaseArchive::url('v1.0.0') => Http::response($archive),
+    ]);
+
+    resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
+
+    $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
+        ->expectsOutputToContain('optimize boom')
+        ->expectsOutputToContain('Wire Up was put back on v0.9.0')
+        ->assertExitCode(1);
+
+    expect(File::get($build.'/manifest.json'))->toBe('{"release":"v0.9.0"}')
+        ->and(File::exists($build.'-rollback'))->toBeFalse()
+        ->and(resolve(UpdateService::class)->state()['step'])->toBe('Cache configuration');
+});
+
+it('does not start when the current commit cannot be read', function (): void {
+    Process::fake([
+        '*rev-parse*' => Process::result(errorOutput: 'not a git repository', exitCode: 128),
+        '*' => Process::result(),
+    ]);
+
+    resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
+
+    $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
+        ->expectsOutputToContain('the update did not start')
+        ->assertExitCode(1);
+
+    Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'down']);
+
+    $state = resolve(UpdateService::class)->state();
+
+    expect($state['status'])->toBe('failed')
+        ->and($state['site_down'])->toBeFalse();
 });
 
 it('installs the prebuilt frontend assets instead of building them on the server', function (): void {

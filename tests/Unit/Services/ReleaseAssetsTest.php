@@ -138,3 +138,43 @@ it('keeps the current frontend assets when the download has no manifest', functi
         ->and(File::get($build.'/manifest.json'))->toBe('{"old":true}')
         ->and(File::exists($build.'-next'))->toBeFalse();
 });
+
+it('keeps a copy of the current frontend assets and can put it back', function (): void {
+    $build = (string) config('wireup.build_path');
+    File::ensureDirectoryExists($build);
+    File::put($build.'/manifest.json', '{"release":"v0.9.0"}');
+
+    $assets = new ReleaseAssets();
+    $assets->snapshotBuild();
+
+    File::put($build.'/manifest.json', '{"release":"v1.0.0"}');
+
+    $assets->restoreSnapshot();
+
+    expect(File::get($build.'/manifest.json'))->toBe('{"release":"v0.9.0"}')
+        ->and(File::exists($build.'-rollback'))->toBeFalse();
+});
+
+it('has nothing to keep or put back when there are no frontend assets yet', function (): void {
+    $build = (string) config('wireup.build_path');
+
+    $assets = new ReleaseAssets();
+    $assets->snapshotBuild();
+    $assets->restoreSnapshot();
+
+    expect(File::exists($build))->toBeFalse()
+        ->and(File::exists($build.'-rollback'))->toBeFalse();
+});
+
+it('drops the kept copy once the update has finished', function (): void {
+    $build = (string) config('wireup.build_path');
+    File::ensureDirectoryExists($build);
+    File::put($build.'/manifest.json', '{}');
+
+    $assets = new ReleaseAssets();
+    $assets->snapshotBuild();
+    $assets->discardSnapshot();
+
+    expect(File::exists($build.'-rollback'))->toBeFalse()
+        ->and(File::exists($build.'/manifest.json'))->toBeTrue();
+});

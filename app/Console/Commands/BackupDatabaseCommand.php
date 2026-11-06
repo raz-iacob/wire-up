@@ -11,7 +11,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
 #[Description('Back up the database to storage/app/backups')]
-#[Signature('wireup:backup')]
+#[Signature('wireup:backup {--name= : The file name for the backup, e.g. db-backup-2026-11-06-120000.sqlite}')]
 final class BackupDatabaseCommand extends Command
 {
     public function handle(DatabaseDumper $dumper): int
@@ -19,7 +19,8 @@ final class BackupDatabaseCommand extends Command
         $directory = config()->string('wireup.backup_path');
         File::ensureDirectoryExists($directory);
 
-        $path = $directory.'/db-backup-'.now()->format('Y-m-d-His').'.'.$dumper->extension();
+        $name = $this->option('name');
+        $path = $directory.'/'.(is_string($name) && $name !== '' ? basename($name) : 'db-backup-'.now()->format('Y-m-d-His').'.'.$dumper->extension());
 
         $error = $dumper->dump($path);
 

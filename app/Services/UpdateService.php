@@ -60,6 +60,15 @@ final readonly class UpdateService
         return $version;
     }
 
+    public function checkedOutCommit(): ?string
+    {
+        $result = Process::path(base_path())->run(['git', 'rev-parse', 'HEAD']);
+
+        $commit = mb_trim($result->output());
+
+        return $result->successful() && $commit !== '' ? $commit : null;
+    }
+
     public function checkedOutTag(): ?string
     {
         $result = Process::path(base_path())->run(['git', 'describe', '--tags', '--exact-match', 'HEAD']);
@@ -147,14 +156,14 @@ final readonly class UpdateService
     }
 
     /**
-     * @return array{status: string, tag: ?string, step: ?string, output: ?string, at: ?CarbonImmutable, site_down: bool}
+     * @return array{status: string, tag: ?string, step: ?string, output: ?string, at: ?CarbonImmutable, site_down: bool, rolled_back_to: ?string}
      */
     public function state(): array
     {
         $raw = Cache::get(self::CACHE_STATE);
 
         if (! is_array($raw)) {
-            return ['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null, 'site_down' => false];
+            return ['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null, 'site_down' => false, 'rolled_back_to' => null];
         }
 
         $status = is_string($raw['status'] ?? null) ? $raw['status'] : 'idle';
@@ -174,6 +183,7 @@ final readonly class UpdateService
             'output' => is_string($raw['output'] ?? null) ? $raw['output'] : null,
             'at' => $at,
             'site_down' => is_bool($raw['site_down'] ?? null) ? $raw['site_down'] : $status === 'failed',
+            'rolled_back_to' => is_string($raw['rolled_back_to'] ?? null) ? $raw['rolled_back_to'] : null,
         ];
     }
 
@@ -199,11 +209,11 @@ final readonly class UpdateService
         $this->notifyOutcome(new SystemUpdateCompleted($tag, successful: true));
     }
 
-    public function markFailed(string $tag, string $step, string $output, bool $siteIsDown = true): void
+    public function markFailed(string $tag, string $step, string $output, bool $siteIsDown = true, ?string $rolledBackTo = null): void
     {
-        $this->writeState('failed', $tag, $step, mb_substr($output, -2000), $siteIsDown);
+        $this->writeState('failed', $tag, $step, mb_substr($output, -2000), $siteIsDown, $rolledBackTo);
 
-        $this->notifyOutcome(new SystemUpdateCompleted($tag, successful: false, step: $step, output: mb_substr($output, -2000), siteIsDown: $siteIsDown));
+        $this->notifyOutcome(new SystemUpdateCompleted($tag, successful: false, step: $step, output: mb_substr($output, -2000), siteIsDown: $siteIsDown, rolledBackTo: $rolledBackTo));
     }
 
     public function clearState(): void
@@ -283,7 +293,7 @@ final readonly class UpdateService
         return $sections;
     }
 
-    private function writeState(string $status, string $tag, ?string $step = null, ?string $output = null, bool $siteIsDown = false): void
+    private function writeState(string $status, string $tag, ?string $step = null, ?string $output = null, bool $siteIsDown = false, ?string $rolledBackTo = null): void
     {
         Cache::forever(self::CACHE_STATE, [
             'status' => $status,
@@ -292,6 +302,7 @@ final readonly class UpdateService
             'output' => $output,
             'at' => now()->toIso8601String(),
             'site_down' => $siteIsDown,
+            'rolled_back_to' => $rolledBackTo,
         ]);
     }
 

@@ -76,6 +76,40 @@ final class ReleaseAssets
         File::deleteDirectory($this->directory());
     }
 
+    public function snapshotBuild(): void
+    {
+        $build = (string) config('wireup.build_path');
+
+        File::deleteDirectory($this->snapshot());
+
+        if (File::isDirectory($build)) {
+            throw_unless(File::copyDirectory($build, $this->snapshot()), RuntimeException::class, 'The current frontend assets could not be copied.');
+        }
+    }
+
+    public function restoreSnapshot(): void
+    {
+        if (! File::isDirectory($this->snapshot())) {
+            return;
+        }
+
+        $build = (string) config('wireup.build_path');
+
+        File::deleteDirectory($build);
+
+        throw_unless(File::moveDirectory($this->snapshot(), $build), RuntimeException::class, 'The previous frontend assets could not be moved back.');
+    }
+
+    public function discardSnapshot(): void
+    {
+        File::deleteDirectory($this->snapshot());
+    }
+
+    private function snapshot(): string
+    {
+        return config('wireup.build_path').'-rollback';
+    }
+
     private function checksum(string $tag): ?string
     {
         $url = $this->url($tag, self::ARCHIVE.'.sha256');

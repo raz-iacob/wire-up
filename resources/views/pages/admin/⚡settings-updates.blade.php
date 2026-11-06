@@ -47,7 +47,7 @@ return new class extends Component
     }
 
     /**
-     * @return array{status: string, tag: ?string, step: ?string, output: ?string, at: ?CarbonImmutable, site_down: bool}
+     * @return array{status: string, tag: ?string, step: ?string, output: ?string, at: ?CarbonImmutable, site_down: bool, rolled_back_to: ?string}
      */
     public function state(): array
     {
@@ -187,7 +187,13 @@ return new class extends Component
                     <flux:callout.heading>
                         {{ __('Update to :tag failed at: :step', ['tag' => (string) $state['tag'], 'step' => (string) $state['step']]) }}</flux:callout.heading>
                     <flux:callout.text>
-                        {{ $state['site_down'] ? __('The public site is in maintenance mode. Fix the issue on the server, then run: php artisan up') : __('The public site stayed live. Fix the issue on the server, then update again.') }}
+                        @if ($state['site_down'])
+                            {{ __('The public site is in maintenance mode. Fix the issue on the server, then run: php artisan up') }}
+                        @elseif ($state['rolled_back_to'] !== null)
+                            {{ __('The site was put back on :version and is live again.', ['version' => $state['rolled_back_to']]) }}
+                        @else
+                            {{ __('The public site stayed live. Fix the issue on the server, then update again.') }}
+                        @endif
                         @if ($state['output'] !== null && $state['output'] !== '')
                             <pre class="mt-3 max-h-64 overflow-auto rounded-lg bg-zinc-900 p-3 text-xs text-zinc-100">{{ $state['output'] }}</pre>
                         @endif
