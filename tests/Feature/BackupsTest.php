@@ -493,21 +493,31 @@ it('refuses a backup from another database, a newer version or without a databas
     'no database' => [['database' => 'sqlite', 'migrations' => 1], [], 'has no database in it'],
 ]);
 
-it('keeps the site in maintenance mode when the database cannot be loaded', function (): void {
-    config()->set('database.default', 'mysql');
-    Process::fake(['*mysql*' => Process::result(errorOutput: 'access denied', exitCode: 1)]);
+it('clears a mysql or postgres database before loading the backup, and stays in maintenance mode when loading fails', function (string $driver, string $client): void {
+    config()->set('database.default', $driver);
+    Process::fake([
+        '*--version*' => Process::result(),
+        '*db:wipe*' => Process::result(),
+        "*{$client}*" => Process::result(errorOutput: 'access denied', exitCode: 1),
+    ]);
     File::ensureDirectoryExists(config()->string('wireup.backup_path'));
-    handmadeBackup('backup-2026-01-01-000000-manual.zip', ['database' => 'mysql'], ['database.sql' => 'select 1;']);
+    handmadeBackup('backup-2026-01-01-000000-manual.zip', ['database' => $driver], ['database.sql' => 'select 1;']);
 
     $this->artisan(RestoreBackupCommand::class, ['file' => 'backup-2026-01-01-000000-manual.zip', '--force' => true])
         ->expectsOutputToContain('access denied')
         ->expectsOutputToContain('still in maintenance mode')
         ->assertExitCode(1);
 
+    Process::assertRanInOrder([
+        [$client, '--version'],
+        [PHP_BINARY, 'artisan', 'db:wipe', '--force', '--drop-views'],
+        fn (PendingProcess $process): bool => is_array($process->command) && $process->command[0] === $client,
+    ]);
+
     expect(app()->isDownForMaintenance())->toBeTrue();
 
     $this->artisan('up');
-});
+})->with([['mysql', 'mysql'], ['pgsql', 'psql']]);
 
 it('keeps the site in maintenance mode when the database cannot be unpacked', function (): void {
     backupSourceDatabase();

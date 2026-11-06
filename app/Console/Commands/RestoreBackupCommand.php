@@ -103,7 +103,7 @@ final class RestoreBackupCommand extends Command
         try {
             File::put($database, $zip->getStream('database.'.$dumper->extension()) ?: '');
 
-            return $dumper->load($database);
+            return $dumper->restore($database);
         } catch (Throwable $exception) {
             return $exception->getMessage();
         } finally {
