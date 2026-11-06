@@ -2,11 +2,21 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\RequireTwoFactor;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 return new class extends Component
 {
+    public bool $twoFactorMissing = false;
+
+    public function mount(#[CurrentUser] User $user): void
+    {
+        $this->twoFactorMissing = ! RequireTwoFactor::isSatisfiedFor($user);
+    }
+
     public function render(): View
     {
         return $this->view()
@@ -17,5 +27,19 @@ return new class extends Component
 ?>
 
 <x-admin.account-layout>
-    <livewire:shared.two-factor />
+    <div class="space-y-10">
+        @if ($twoFactorMissing)
+            <flux:callout icon="shield-exclamation" variant="warning">
+                <flux:callout.text>
+                    {{ __('Staff need two-factor authentication. Turn it on below, or sign in with a passkey.') }}
+                </flux:callout.text>
+            </flux:callout>
+        @endif
+
+        <livewire:shared.two-factor />
+
+        <flux:separator />
+
+        <livewire:shared.passkeys />
+    </div>
 </x-admin.account-layout>

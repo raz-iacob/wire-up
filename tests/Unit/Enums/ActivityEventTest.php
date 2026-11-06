@@ -35,7 +35,7 @@ it('files each event under the area it belongs to', function (ActivityEvent $eve
 it('labels each area with its own icon and lists the events in it', function (): void {
     expect(array_map(fn (ActivityArea $area): string => $area->label(), ActivityArea::cases()))->toBe(['Content', 'People', 'Sign-ins', 'Settings', 'Shop', 'Inbox', 'System'])
         ->and(array_unique(array_map(fn (ActivityArea $area): string => $area->icon(), ActivityArea::cases())))->toHaveCount(7)
-        ->and(ActivityArea::SIGN_INS->events())->toBe(['auth.signed_in', 'auth.signed_out', 'auth.failed', 'auth.locked_out', 'auth.two_factor_failed'])
+        ->and(ActivityArea::SIGN_INS->events())->toBe(['auth.signed_in', 'auth.signed_out', 'auth.failed', 'auth.locked_out', 'auth.two_factor_failed', 'auth.passkey_added', 'auth.passkey_removed'])
         ->and(array_merge(...array_map(fn (ActivityArea $area): array => $area->events(), ActivityArea::cases())))->toHaveSameSize(ActivityEvent::cases());
 });
 

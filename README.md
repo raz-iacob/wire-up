@@ -24,7 +24,7 @@ itself a Wire Up site, built through the admin and the MCP server rather than by
 - **Media library** - Crops, SVG sanitising, HEIC conversion, Pexels import, signed image URLs with a transform cache
 - **Design settings** - Colour tokens, light/dark schemes with per-theme logos, fonts, and site-wide custom CSS
 - **Multi-language** - Per-locale publishing, owner-editable interface translations
-- **Users, roles & members** - Per-action abilities, two-factor authentication, member accounts and members-only content
+- **Users, roles & members** - Per-action abilities, two-factor authentication, passkeys, member accounts and members-only content
 - **AI-native** - An in-admin AI assistant plus an MCP server, so agents can build and edit the site programmatically
 - **SEO & AI discoverability** - Meta, JSON-LD, sitemap, `llms.txt`, and Markdown responses for agents
 - **Self-updating** - Install and update from git tags, with a database backup before every migration

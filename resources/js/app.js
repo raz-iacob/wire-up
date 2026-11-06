@@ -1,3 +1,5 @@
+import "./passkeys";
+
 import.meta.glob(["../images/**/*"], {
     eager: true,
     query: "?url",

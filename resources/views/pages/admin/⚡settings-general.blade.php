@@ -216,7 +216,7 @@ return new class extends Component
                 wire:model="require_two_factor"
                 align="left"
                 :label="__('Require two-factor authentication for staff')"
-                :description="__('Anyone with admin access must set up an authenticator app before they can use the admin panel.')"
+                :description="__('Anyone with admin access must use an authenticator app or sign in with a passkey before they can use the admin panel.')"
             />
 
             <flux:separator />

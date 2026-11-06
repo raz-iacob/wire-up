@@ -300,6 +300,10 @@ return new class extends Component
 
     <flux:separator />
 
+    <livewire:shared.passkeys />
+
+    <flux:separator />
+
     @if ($justSubscribed || $this->subscriptions !== [])
         <section class="space-y-4">
             <flux:heading size="lg">{{ __('Subscriptions') }}</flux:heading>

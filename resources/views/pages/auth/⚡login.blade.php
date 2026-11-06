@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Actions\SignInWithPasskeyAction;
+use App\Actions\StartPasskeySignInAction;
 use App\Enums\ActivityEvent;
 use App\Models\User;
 use App\Services\ActivityLog;
@@ -80,6 +82,32 @@ return new class extends Component
         $this->redirectIntended(default: route('home', absolute: false), navigate: true);
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function passkeyOptions(StartPasskeySignInAction $action): array
+    {
+        $this->resetErrorBag('credential');
+
+        return $action->handle();
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $credential
+     */
+    public function signInWithPasskey(array $credential, SignInWithPasskeyAction $action): void
+    {
+        $user = $action->handle($credential, $this->remember);
+
+        if ($user->canAccessAdmin()) {
+            $this->redirectIntended(default: route('admin.dashboard', absolute: false));
+
+            return;
+        }
+
+        $this->redirectIntended(default: route('home', absolute: false), navigate: true);
+    }
+
     public function render(): View
     {
         return $this->view()
@@ -124,7 +152,7 @@ return new class extends Component
             type="email"
             required
             autofocus
-            autocomplete="email"
+            autocomplete="email webauthn"
             placeholder="email@example.com"
         />
 
@@ -154,6 +182,29 @@ return new class extends Component
             <flux:button variant="primary" type="submit" class="w-full">{{ __('Log in') }}</flux:button>
         </div>
     </form>
+
+    <div
+        x-data="passkeySignIn({ failed: @js(__("That passkey didn't work. Please try again.")) })"
+        x-show="supported"
+        x-cloak
+        class="flex flex-col gap-3"
+    >
+        <flux:separator :text="__('or')" />
+
+        <flux:button type="button" icon="finger-print" class="w-full" x-on:click="signIn" x-bind:disabled="busy">
+            {{ __('Sign in with a passkey') }}
+        </flux:button>
+
+        <flux:error name="credential" />
+
+        <div
+            x-show="error"
+            x-text="error"
+            role="alert"
+            class="text-sm font-medium text-red-500 dark:text-red-400"
+            x-cloak
+        ></div>
+    </div>
 
     @if (config('site.allow_registration'))
         <div class="space-x-1 text-center text-sm text-zinc-600 rtl:space-x-reverse dark:text-zinc-400">

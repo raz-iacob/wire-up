@@ -31,7 +31,7 @@ final class UiStrings
     private static function areas(): array
     {
         return [
-            'Account' => [resource_path('views/pages/⚡account.blade.php')],
+            'Account' => [resource_path('views/pages/⚡account.blade.php'), resource_path('views/components/shared')],
             'Cart' => [resource_path('views/pages/⚡cart.blade.php'), resource_path('views/pages/⚡checkout-success.blade.php')],
             'Sign in' => [resource_path('views/pages/auth')],
             'Site' => [resource_path('views/components/site')],

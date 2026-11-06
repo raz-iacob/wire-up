@@ -49,6 +49,8 @@ enum ActivityEvent: string
     case SIGN_IN_FAILED = 'auth.failed';
     case LOCKED_OUT = 'auth.locked_out';
     case TWO_FACTOR_FAILED = 'auth.two_factor_failed';
+    case PASSKEY_ADDED = 'auth.passkey_added';
+    case PASSKEY_REMOVED = 'auth.passkey_removed';
     case ORDER_FULFILLED = 'order.fulfilled';
     case ORDER_REFUNDED = 'order.refunded';
     case ORDER_CANCELLED = 'order.cancelled';
@@ -106,6 +108,8 @@ enum ActivityEvent: string
             self::SIGN_IN_FAILED => __('Failed sign-in'),
             self::LOCKED_OUT => __('Locked out'),
             self::TWO_FACTOR_FAILED => __('Wrong two-factor code'),
+            self::PASSKEY_ADDED => __('Added passkey'),
+            self::PASSKEY_REMOVED => __('Removed passkey'),
             self::ORDER_FULFILLED => __('Fulfilled order'),
             self::ORDER_REFUNDED => __('Refunded order'),
             self::ORDER_CANCELLED => __('Cancelled order'),
