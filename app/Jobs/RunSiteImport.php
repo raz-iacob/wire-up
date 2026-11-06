@@ -11,11 +11,13 @@ use App\Services\TransferService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Attributes\Queue;
 use Illuminate\Queue\Attributes\Timeout;
 use Illuminate\Queue\Attributes\Tries;
 use Illuminate\Support\Facades\File;
 use Throwable;
 
+#[Queue('system')]
 #[Timeout(3600)]
 #[Tries(1)]
 final class RunSiteImport implements ShouldBeUnique, ShouldQueue

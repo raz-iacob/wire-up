@@ -158,7 +158,7 @@ it('queues the import and marks it pending', function (): void {
         ->call('startImport')
         ->assertSet('inspection', null);
 
-    Queue::assertPushed(RunSiteImport::class, fn (RunSiteImport $job): bool => $job->ownerId === $admin->id
+    Queue::assertPushedOn('system', RunSiteImport::class, fn (RunSiteImport $job): bool => $job->ownerId === $admin->id
         && $job->deleteBundle
         && str_contains($job->path, 'import-'));
 
@@ -244,7 +244,7 @@ it('shows the waiting message before the worker picks the import up', function (
     $this->actingAsAdmin();
 
     Livewire::test('pages::admin.settings-export-import')
-        ->assertSee('Waiting for the queue worker');
+        ->assertSee('Waiting for the scheduler to start the import');
 });
 
 it('shows the outcome of a finished import and dismisses it', function (): void {

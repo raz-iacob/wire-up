@@ -363,3 +363,14 @@ it('stops before maintenance mode when the release has to be built and Node.js i
     expect($state['step'])->toBe('Check Node.js')
         ->and($state['site_down'])->toBeFalse();
 });
+
+it('finds composer and git in the usual places when started by cron', function (): void {
+    Process::fake(['*' => Process::result()]);
+
+    resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
+
+    $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])->assertExitCode(0);
+
+    Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['composer', 'install', '--no-dev', '--no-interaction', '--prefer-dist']
+        && in_array('/usr/local/bin', explode(':', (string) ($process->environment['PATH'] ?? '')), true));
+});

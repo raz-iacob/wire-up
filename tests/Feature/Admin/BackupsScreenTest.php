@@ -100,11 +100,11 @@ it('queues a backup on request and refuses a second one while it runs', function
 
     Livewire::test('pages::admin.settings-backups')
         ->call('backUpNow')
-        ->assertSee('Waiting for the queue worker')
+        ->assertSee('Waiting for the scheduler to start the backup')
         ->call('backUpNow')
         ->assertDispatched('toast-show');
 
-    Queue::assertPushed(RunBackup::class, fn (RunBackup $job): bool => $job->userId === auth()->id());
+    Queue::assertPushedOn('system', RunBackup::class, fn (RunBackup $job): bool => $job->userId === auth()->id());
     expect(resolve(BackupService::class)->state()['status'])->toBe('pending');
 });
 

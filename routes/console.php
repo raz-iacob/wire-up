@@ -25,6 +25,11 @@ Schedule::command(CheckForUpdatesCommand::class)
     ->daily()
     ->withoutOverlapping();
 
+Schedule::command('queue:work --queue=system --stop-when-empty --tries=1')
+    ->everyMinute()
+    ->withoutOverlapping(70)
+    ->runInBackground();
+
 Schedule::command(ReconcileOrdersCommand::class)
     ->everyFiveMinutes()
     ->withoutOverlapping();

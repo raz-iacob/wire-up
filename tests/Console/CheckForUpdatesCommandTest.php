@@ -73,7 +73,7 @@ it('queues an automatic update when enabled', function (): void {
         ->expectsOutputToContain('Auto-update to v1.0.0 queued.')
         ->assertExitCode(0);
 
-    Queue::assertPushed(RunSystemUpdate::class, fn (RunSystemUpdate $job): bool => $job->tag === 'v1.0.0');
+    Queue::assertPushedOn('system', RunSystemUpdate::class, fn (RunSystemUpdate $job): bool => $job->tag === 'v1.0.0');
 
     expect(resolve(UpdateService::class)->state()['status'])->toBe('pending');
 });

@@ -165,7 +165,7 @@ return new class extends Component
                         <flux:callout.heading>
                             {{ __('Updating to :tag…', ['tag' => (string) $state['tag']]) }}</flux:callout.heading>
                         <flux:callout.text>
-                            {{ $state['step'] ?? __('Waiting for the queue worker to start the update…') }}</flux:callout.text>
+                            {{ $state['step'] ?? __('Waiting for the scheduler to start the update. This takes up to a minute.') }}</flux:callout.text>
                     </flux:callout>
                 </div>
             @elseif ($state['status'] === 'finished')
@@ -210,7 +210,7 @@ return new class extends Component
                 <flux:callout icon="exclamation-triangle" variant="warning">
                     <flux:callout.heading>{{ __('The update has not reported progress.') }}</flux:callout.heading>
                     <flux:callout.text>
-                        {{ __('Check that a queue worker is running on the server.') }}
+                        {{ __('Check that the scheduler’s cron entry is running on the server.') }}
                         @can('settings.edit')
                             <flux:button
                                 wire:click="dismissState"

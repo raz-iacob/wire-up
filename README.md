@@ -148,23 +148,23 @@ Requirements on the server: PHP 8.5, Composer, git. No database server is needed
 
     The installer generates the app key if missing, asks for the default site language, creates the SQLite database when needed, migrates, links storage, downloads the release's prebuilt frontend assets (or builds them with Node.js when the checkout is not a release), caches the app, and creates the first admin user.
 
-5. Add the scheduler cron entry and a supervised queue worker (required for e-mail/Slack notifications and admin-triggered updates):
+5. Add the scheduler cron entry and a supervised queue worker:
 
     ```cron
     * * * * * cd /path/to/wire-up && php artisan schedule:run >> /dev/null 2>&1
     ```
 
     ```bash
-    php artisan queue:work --tries=3 --timeout=3600
+    php artisan queue:work --tries=3
     ```
 
-    Keep `DB_QUEUE_RETRY_AFTER=3700` in `.env` (it must exceed the worker `--timeout`, or a long-running update job gets re-dispatched mid-run).
+    The scheduler runs the daily checks and starts updates, backups and imports from the admin within a minute, each in a fresh process on the `system` queue. The queue worker sends e-mail and Slack notifications, webhooks, newsletter sign-ups and share images, all short jobs, so it needs no long timeout.
 
 ### Updating
 
 Releases are git tags (`v0.x.y`) with matching sections in `CHANGELOG.md`. The scheduler checks for new releases daily (`php artisan wireup:check`); when one is available, the admin shows a badge on **Settings → Updates** with the release notes.
 
-- **From the admin:** Settings → Updates → *Update now* (runs as a queued job — requires the queue worker above).
+- **From the admin:** Settings → Updates → *Update now* (the scheduler starts it within a minute).
 - **From the CLI:** `php artisan wireup:update` (options: `--tag=vX.Y.Z`, `--force`).
 - **Automatic:** enable *Automatic updates* on Settings → Updates; the daily check then installs new releases unattended.
 

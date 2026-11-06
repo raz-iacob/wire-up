@@ -126,7 +126,7 @@ it('queues the update from the admin', function (): void {
     Livewire::test('pages::admin.settings-updates')
         ->call('startUpdate');
 
-    Queue::assertPushed(RunSystemUpdate::class, fn (RunSystemUpdate $job): bool => $job->tag === 'v1.0.0');
+    Queue::assertPushedOn('system', RunSystemUpdate::class, fn (RunSystemUpdate $job): bool => $job->tag === 'v1.0.0');
 
     expect(resolve(UpdateService::class)->state()['status'])->toBe('pending');
 });
@@ -207,7 +207,7 @@ it('shows progress while an update is underway', function (): void {
 
     Livewire::test('pages::admin.settings-updates')
         ->assertSee('Updating to v1.0.0')
-        ->assertSee('Waiting for the queue worker to start the update')
+        ->assertSee('Waiting for the scheduler to start the update')
         ->assertSeeHtml('wire:poll.3s');
 });
 
@@ -268,7 +268,7 @@ it('warns when an update stalls', function (): void {
     $this->travel(11)->minutes();
 
     Livewire::test('pages::admin.settings-updates')
-        ->assertSee('queue worker is running');
+        ->assertSee('cron entry is running on the server');
 });
 
 it('dismisses a finished update state', function (): void {

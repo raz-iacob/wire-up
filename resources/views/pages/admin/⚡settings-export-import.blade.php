@@ -213,7 +213,7 @@ return new class extends Component
                             <flux:callout.heading>
                                 {{ __('Importing :bundle…', ['bundle' => (string) $state['bundle']]) }}</flux:callout.heading>
                             <flux:callout.text>
-                                {{ $state['step'] ?? __('Waiting for the queue worker to start the import…') }}</flux:callout.text>
+                                {{ $state['step'] ?? __('Waiting for the scheduler to start the import. This takes up to a minute.') }}</flux:callout.text>
                         </flux:callout>
                     </div>
                 @elseif ($state['status'] === 'finished')
@@ -236,7 +236,7 @@ return new class extends Component
                         <flux:callout.heading>
                             {{
                                 $state['status'] === 'stalled'
-                                ? __('The import stopped responding. Is the queue worker running?')
+                                ? __('The import stopped responding. Is the scheduler’s cron entry running?')
                                 : __('Importing :bundle failed', ['bundle' => (string) $state['bundle']])
                             }}</flux:callout.heading>
                         <flux:callout.text>

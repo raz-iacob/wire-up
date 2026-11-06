@@ -220,7 +220,7 @@ return new class extends Component
                         <flux:callout icon="arrow-path" variant="secondary">
                             <flux:callout.heading>{{ __('Backing up…') }}</flux:callout.heading>
                             <flux:callout.text>
-                                {{ $state['status'] === 'pending' ? __('Waiting for the queue worker to start the backup…') : __('This can take a few minutes on a large site.') }}</flux:callout.text>
+                                {{ $state['status'] === 'pending' ? __('Waiting for the scheduler to start the backup. This takes up to a minute.') : __('This can take a few minutes on a large site.') }}</flux:callout.text>
                         </flux:callout>
                     </div>
                 @elseif ($state['status'] === 'finished')
@@ -237,7 +237,7 @@ return new class extends Component
                 @elseif ($state['status'] === 'failed' || $state['status'] === 'stalled')
                     <flux:callout icon="exclamation-triangle" variant="danger">
                         <flux:callout.heading>
-                            {{ $state['status'] === 'stalled' ? __('The backup stopped responding. Is the queue worker running?') : __('The backup failed') }}</flux:callout.heading>
+                            {{ $state['status'] === 'stalled' ? __('The backup stopped responding. Is the scheduler’s cron entry running?') : __('The backup failed') }}</flux:callout.heading>
                         <flux:callout.text>
                             @if ($state['output'] !== null && $state['output'] !== '')
                                 <pre class="mt-3 max-h-64 overflow-auto rounded-lg bg-zinc-900 p-3 text-xs whitespace-pre-wrap text-zinc-100">{{ $state['output'] }}</pre>
