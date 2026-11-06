@@ -4,6 +4,7 @@ Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
+- Admin screens in dark mode no longer flicker on slower computers when you move to another screen. The earlier fix could stop holding back the colour changes before the new screen had finished setting itself up.
 - Updates are faster and keep the public site down for less time. Each release now comes with its frontend files ready-made, so an update downloads them before the site goes into maintenance mode instead of building them on the server, and Node.js is no longer needed on the server. If the download fails, or a release has to be built and Node.js is missing, the update stops while the site is still live, and the email and Settings → Updates say so. A new release is offered a few minutes after it is published, once its files are ready.
 - A site that already finished updating no longer emails an "update failed" warning when the server restarts afterwards. Before, the queue picked up a leftover copy of the finished update and reported it as failed, saying the site was left in maintenance mode when it wasn't.
 - Bots that try to upload files to parts of the site that don't take any, such as the header, search or sign-in form, no longer fill the error log or set off error emails and Slack messages. The site already turned these requests away; they were just being reported as errors.

@@ -20,17 +20,22 @@ document.addEventListener("livewire:navigate", (event) => {
     }
 });
 
-document.addEventListener("livewire:navigating", (event) => {
+document.addEventListener("livewire:navigating", () => {
     const pauseTransitions = document.createElement("style");
     pauseTransitions.textContent =
         "*, *::before, *::after { transition: none !important; }";
     document.head.appendChild(pauseTransitions);
 
-    event.detail.onSwap(() => {
+    const resumeTransitions = () => {
         requestAnimationFrame(() => {
             requestAnimationFrame(() => pauseTransitions.remove());
         });
+    };
+
+    document.addEventListener("livewire:navigated", resumeTransitions, {
+        once: true,
     });
+    setTimeout(() => pauseTransitions.remove(), 3000);
 });
 
 Livewire.directive("warn-dirty", ({ el, directive, component, cleanup }) => {
