@@ -5,6 +5,7 @@ Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater sh
 ## Unreleased
 
 - A site that already finished updating no longer emails an "update failed" warning when the server restarts afterwards. Before, the queue picked up a leftover copy of the finished update and reported it as failed, saying the site was left in maintenance mode when it wasn't.
+- Bots that try to upload files to parts of the site that don't take any, such as the header, search or sign-in form, no longer fill the error log or set off error emails and Slack messages. The site already turned these requests away; they were just being reported as errors.
 
 ## v0.7.0 — 2026-11-05
 

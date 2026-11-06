@@ -16,6 +16,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Cashier\Http\Controllers\PaymentController;
+use Livewire\Features\SupportFileUploads\MissingFileUploadsTraitException;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Sentry\Laravel\Integration;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -61,7 +62,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         Integration::handles($exceptions);
         $exceptions->dontReportDuplicates();
-        $exceptions->dontReport(CannotUpdateLockedPropertyException::class);
+        $exceptions->dontReport([CannotUpdateLockedPropertyException::class, MissingFileUploadsTraitException::class]);
         $exceptions->report(function (Throwable $exception): void {
             resolve(ErrorReporter::class)->report($exception);
         });

@@ -7,12 +7,15 @@ use App\Models\User;
 use App\Notifications\ErrorReported;
 use App\Services\ErrorReporter;
 use App\Services\SlackWebhookChannel;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
+use Livewire\Features\SupportFileUploads\MissingFileUploadsTraitException;
+use Livewire\Livewire;
 
 it('emails and messages Slack about an unexpected error, leaving out the query string', function (): void {
     Notification::fake();
@@ -106,6 +109,12 @@ it('never reports a visitor asking for a page that does not exist', function ():
     $this->get('/no-such-page')->assertNotFound();
 
     Notification::assertNothingSent();
+});
+
+it('never reports a scripted file upload sent to a part of the site that takes no files', function (): void {
+    expect(fn () => Livewire::test('site.header')->call('_startUpload', 'photo', [], false))
+        ->toThrow(MissingFileUploadsTraitException::class)
+        ->and(resolve(ExceptionHandler::class)->shouldReport(new MissingFileUploadsTraitException(Livewire::test('site.header')->instance())))->toBeFalse();
 });
 
 it('still messages Slack when email fails, and never reports its own failures', function (): void {
