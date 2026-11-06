@@ -7,11 +7,17 @@ use App\Models\User;
 use App\Services\UpdateService;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
+use Tests\Support\ReleaseArchive;
 
 beforeEach(function (): void {
-    config()->set('wireup.version_file', storage_path('framework/testing/wireup-'.Str::random(8).'/version'));
+    $root = storage_path('framework/testing/wireup-'.Str::random(8));
+
+    config()->set('wireup.version_file', $root.'/version');
+    config()->set('wireup.updates_path', $root.'/updates');
+    config()->set('wireup.build_path', $root.'/build');
     config()->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
 });
 
@@ -44,6 +50,31 @@ it('runs every install step in order', function (): void {
     Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'key:generate', '--force']);
 
     expect(resolve(UpdateService::class)->currentVersion())->toBe('v1.0.0');
+});
+
+it('installs the prebuilt frontend assets when the checkout is a release', function (): void {
+    $archive = ReleaseArchive::make();
+    Process::fake([
+        '*get-url*' => Process::result(output: ReleaseArchive::REMOTE),
+        '*describe*' => Process::result(output: "v1.0.0\n"),
+        '*' => Process::result(),
+    ]);
+    Http::fake([
+        ReleaseArchive::url('v1.0.0', 'build.tar.gz.sha256') => Http::response(hash('sha256', $archive)),
+        ReleaseArchive::url('v1.0.0') => Http::response($archive),
+    ]);
+    User::factory()->create();
+
+    $this->artisan(InstallCommand::class)
+        ->expectsConfirmation('The application environment is not production. Continue anyway?', 'yes')
+        ->expectsQuestion('Default site language (BCP 47 code, e.g. en, de, fr)', 'en')
+        ->expectsOutputToContain('Wire Up is installed.')
+        ->assertExitCode(0);
+
+    Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['git', 'describe', '--tags', '--exact-match', 'HEAD']);
+    Process::assertDidntRun(fn (PendingProcess $process): bool => is_array($process->command) && $process->command[0] === 'npm');
+
+    expect(File::exists(config('wireup.build_path').'/manifest.json'))->toBeTrue();
 });
 
 it('generates the application key when it is missing', function (): void {

@@ -95,6 +95,7 @@ it('hides the update action from users without the edit permission', function ()
 it('checks for updates on demand', function (): void {
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(output: "## v1.0.0\n\n- Fresh notes"),
     ]);
@@ -237,6 +238,16 @@ it('shows the failure details of a failed update', function (): void {
         ->assertSee('Update to v1.0.0 failed at: Run database migrations')
         ->assertSee('migration exploded')
         ->assertSee('php artisan up');
+});
+
+it('shows that the site stayed live when an update failed before maintenance mode', function (): void {
+    $this->actingAsAdmin();
+    resolve(UpdateService::class)->markFailed('v1.0.0', 'Download frontend assets', 'checksum mismatch', siteIsDown: false);
+
+    Livewire::test('pages::admin.settings-updates')
+        ->assertSee('Update to v1.0.0 failed at: Download frontend assets')
+        ->assertSee('The public site stayed live.')
+        ->assertDontSee('php artisan up');
 });
 
 it('warns when an update stalls', function (): void {

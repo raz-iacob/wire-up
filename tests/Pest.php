@@ -38,7 +38,11 @@ pest()->extend(TestCase::class)
         Sleep::fake();
         $this->app->instance(FakeStripe::class, FakeStripe::install());
 
-        config(['media.cache_path' => storage_path('framework/images/test-'.(ParallelTesting::token() ?: 'single'))]);
+        config([
+            'media.cache_path' => storage_path('framework/images/test-'.(ParallelTesting::token() ?: 'single')),
+            'wireup.build_path' => storage_path('framework/testing/build-'.(ParallelTesting::token() ?: 'single')),
+            'wireup.updates_path' => storage_path('framework/testing/updates-'.(ParallelTesting::token() ?: 'single')),
+        ]);
 
         $this->freezeTime();
     })

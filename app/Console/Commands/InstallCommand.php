@@ -5,18 +5,22 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Services\ReleaseAssets;
 use App\Services\UpdateService;
+use App\Traits\RunsSteps;
+use Closure;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 
 #[Description('Prepare a server install after cloning the repository')]
 #[Signature('wireup:install')]
 final class InstallCommand extends Command
 {
-    public function handle(UpdateService $updates): int
+    use RunsSteps;
+
+    public function handle(UpdateService $updates, ReleaseAssets $assets): int
     {
         $this->info('Install Wire Up');
         $this->newLine();
@@ -32,16 +36,21 @@ final class InstallCommand extends Command
         $this->configureDefaultLocale();
         $this->ensureSqliteDatabaseExists();
 
+        $release = $this->prebuiltRelease($updates, $assets);
+
+        $frontend = $release !== null
+            ? ['Download frontend assets' => fn (): string => $assets->download($release), 'Install frontend assets' => $assets->install(...)]
+            : ['Install frontend dependencies' => ['npm', 'ci'], 'Build frontend assets' => ['npm', 'run', 'build']];
+
         $steps = [
             'Run database migrations' => [PHP_BINARY, 'artisan', 'migrate', '--force'],
             'Link public storage' => [PHP_BINARY, 'artisan', 'storage:link', '--force'],
-            'Install frontend dependencies' => ['npm', 'ci'],
-            'Build frontend assets' => ['npm', 'run', 'build'],
+            ...$frontend,
             'Cache configuration' => [PHP_BINARY, 'artisan', 'optimize'],
         ];
 
-        foreach ($steps as $label => $command) {
-            if (! $this->runStep($label, $command)) {
+        foreach ($steps as $label => $step) {
+            if (! $this->runStep($label, $step)) {
                 return 1;
             }
         }
@@ -59,6 +68,13 @@ final class InstallCommand extends Command
         $this->info('Wire Up is installed.');
 
         return 0;
+    }
+
+    private function prebuiltRelease(UpdateService $updates, ReleaseAssets $assets): ?string
+    {
+        $tag = $updates->checkedOutTag();
+
+        return $tag !== null && $assets->published($tag) ? $tag : null;
     }
 
     private function ensureSqliteDatabaseExists(): void
@@ -107,19 +123,17 @@ final class InstallCommand extends Command
     }
 
     /**
-     * @param  list<string>  $command
+     * @param  list<string>|Closure(): mixed  $step
      */
-    private function runStep(string $label, array $command): bool
+    private function runStep(string $label, array|Closure $step): bool
     {
-        $result = Process::path(base_path())->timeout(600)->run($command);
+        [$successful, $output] = $this->performStep($step);
 
-        $this->components->task($label, fn (): bool => $result->successful());
+        $this->components->task($label, fn (): bool => $successful);
 
-        if ($result->successful()) {
+        if ($successful) {
             return true;
         }
-
-        $output = mb_trim($result->output()."\n".$result->errorOutput());
 
         if ($output !== '') {
             $this->components->error(mb_substr($output, -2000));

@@ -8,9 +8,11 @@ use App\Services\UpdateService;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
+use Tests\Support\ReleaseArchive;
 
 beforeEach(function (): void {
     config()->set('wireup.version_file', storage_path('framework/testing/wireup-'.Str::random(8).'/version'));
@@ -131,6 +133,7 @@ it('ignores a malformed cached check result', function (): void {
 it('reports whether an update is available', function (string $current, string $latest, bool $expected): void {
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/{$latest}"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(output: ''),
     ]);
@@ -145,6 +148,24 @@ it('reports whether an update is available', function (string $current, string $
     'same version' => ['v1.0.0', 'v1.0.0', false],
     'older remote' => ['v1.1.0', 'v1.0.0', false],
 ]);
+
+it('holds back a release until its prebuilt frontend assets are published', function (): void {
+    Process::fake([
+        '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(output: ReleaseArchive::REMOTE),
+    ]);
+    Http::fake([
+        ReleaseArchive::url('v1.0.0', 'build.tar.gz.sha256') => Http::response('Not Found', 404),
+        ReleaseArchive::url('v0.9.0', 'build.tar.gz.sha256') => Http::response(str_repeat('a', 64)),
+    ]);
+
+    $service = new UpdateService();
+    $service->writeCurrentVersion('v0.9.0');
+
+    expect($service->check())->toBe('v0.9.0')
+        ->and($service->updateAvailable())->toBeFalse()
+        ->and($service->changelog())->toBeEmpty();
+});
 
 it('reports no update when either version is unknown', function (): void {
     Process::fake([
@@ -165,6 +186,7 @@ it('reports no update when either version is unknown', function (): void {
 it('stamps the current version from git when the version file is missing', function (): void {
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*describe*' => Process::result(output: "v0.9.0\n"),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(output: "## v1.0.0\n\n- Newer release"),
@@ -185,6 +207,7 @@ it('stamps the current version from git when the version file is missing', funct
 it('stores release notes from the changelog when an update is available', function (): void {
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(output: implode("\n", [
             '# Changelog',
@@ -214,6 +237,7 @@ it('stores release notes from the changelog when an update is available', functi
 it('stores no release notes when the changelog fetch fails', function (): void {
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(exitCode: 1),
     ]);
 
@@ -227,6 +251,7 @@ it('stores no release notes when the changelog fetch fails', function (): void {
 it('stores no release notes when the tag has no changelog', function (): void {
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(exitCode: 1),
     ]);
@@ -241,6 +266,7 @@ it('stores no release notes when the tag has no changelog', function (): void {
 it('stores no release notes when the changelog has no newer sections', function (): void {
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(output: "## v0.9.0\n\n- Old news"),
     ]);
@@ -277,7 +303,7 @@ it('drops non-string note lines from the cached changelog', function (): void {
 it('starts with an idle state', function (): void {
     $service = new UpdateService();
 
-    expect($service->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null])
+    expect($service->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null, 'site_down' => false])
         ->and($service->updating())->toBeFalse();
 });
 
@@ -347,7 +373,7 @@ it('marks a silent running update as stalled', function (): void {
 it('ignores a malformed cached state', function (): void {
     Cache::forever('wireup:update:state', ['status' => 123, 'tag' => 5, 'step' => [], 'output' => 9, 'at' => 456]);
 
-    expect(new UpdateService()->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null]);
+    expect(new UpdateService()->state())->toBe(['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null, 'site_down' => false]);
 });
 
 it('emails the contact address when an update finishes', function (): void {

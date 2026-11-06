@@ -6,6 +6,10 @@ return [
 
     'version_file' => storage_path('app/version'),
 
+    'updates_path' => storage_path('app/updates'),
+
+    'build_path' => public_path('build'),
+
     'backup_path' => storage_path('app/backups'),
 
     'transfer_path' => storage_path('app/transfers'),

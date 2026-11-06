@@ -40,3 +40,14 @@ it('omits the output line when there is none', function (): void {
 
     expect(implode(' ', $mail->introLines))->not->toContain('Last output');
 });
+
+it('tells the owner the site stayed live when the update stopped before maintenance mode', function (): void {
+    $mail = new SystemUpdateCompleted('v1.2.0', successful: false, step: 'Download frontend assets', siteIsDown: false)
+        ->toMail(new AnonymousNotifiable);
+
+    $body = implode(' ', $mail->introLines);
+
+    expect($body)->toContain('so it is still live')
+        ->and($body)->toContain('start the update again')
+        ->and($body)->not->toContain('php artisan up');
+});

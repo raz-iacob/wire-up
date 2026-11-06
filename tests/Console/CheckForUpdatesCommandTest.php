@@ -22,6 +22,7 @@ afterEach(function (): void {
 it('reports an available update', function (): void {
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(output: ''),
     ]);
@@ -61,6 +62,7 @@ it('queues an automatic update when enabled', function (): void {
     Queue::fake();
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(output: ''),
     ]);
@@ -80,6 +82,7 @@ it('does not queue an automatic update when disabled', function (): void {
     Queue::fake();
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(output: ''),
     ]);
@@ -105,6 +108,7 @@ it('does not queue an automatic update while one is pending or failed', function
     Queue::fake();
     Process::fake([
         '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*get-url*' => Process::result(),
         '*fetch*' => Process::result(),
         '*show*' => Process::result(output: ''),
     ]);

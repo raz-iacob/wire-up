@@ -12,11 +12,13 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Process;
 use Throwable;
 
-final class UpdateService
+final readonly class UpdateService
 {
     private const string CACHE_LATEST = 'wireup:update:latest';
 
     private const string CACHE_STATE = 'wireup:update:state';
+
+    public function __construct(private ReleaseAssets $assets = new ReleaseAssets()) {}
 
     public function currentVersion(): ?string
     {
@@ -58,6 +60,15 @@ final class UpdateService
         return $version;
     }
 
+    public function checkedOutTag(): ?string
+    {
+        $result = Process::path(base_path())->run(['git', 'describe', '--tags', '--exact-match', 'HEAD']);
+
+        $tag = mb_trim($result->output());
+
+        return $result->successful() && $tag !== '' ? $tag : null;
+    }
+
     public function check(): ?string
     {
         $result = Process::path(base_path())->run(['git', 'ls-remote', '--tags', 'origin']);
@@ -65,7 +76,11 @@ final class UpdateService
         $latest = $result->failed() ? null : $this->highestTag($result->output());
         $current = $this->currentVersion() ?? $this->stampVersionFromFetchedTags();
 
-        $notes = $latest !== null && $current !== null && version_compare(mb_ltrim($latest, 'v'), mb_ltrim($current, 'v'), '>')
+        if ($latest !== null && $current !== null && $this->isNewer($latest, $current) && $this->assets->stillBuilding($latest, $current)) {
+            $latest = $current;
+        }
+
+        $notes = $latest !== null && $current !== null && $this->isNewer($latest, $current)
             ? $this->releaseNotes($current, $latest)
             : [];
 
@@ -99,7 +114,7 @@ final class UpdateService
 
         return $current !== null
             && $latest !== null
-            && version_compare(mb_ltrim($latest, 'v'), mb_ltrim($current, 'v'), '>');
+            && $this->isNewer($latest, $current);
     }
 
     /**
@@ -132,14 +147,14 @@ final class UpdateService
     }
 
     /**
-     * @return array{status: string, tag: ?string, step: ?string, output: ?string, at: ?CarbonImmutable}
+     * @return array{status: string, tag: ?string, step: ?string, output: ?string, at: ?CarbonImmutable, site_down: bool}
      */
     public function state(): array
     {
         $raw = Cache::get(self::CACHE_STATE);
 
         if (! is_array($raw)) {
-            return ['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null];
+            return ['status' => 'idle', 'tag' => null, 'step' => null, 'output' => null, 'at' => null, 'site_down' => false];
         }
 
         $status = is_string($raw['status'] ?? null) ? $raw['status'] : 'idle';
@@ -158,6 +173,7 @@ final class UpdateService
             'step' => is_string($raw['step'] ?? null) ? $raw['step'] : null,
             'output' => is_string($raw['output'] ?? null) ? $raw['output'] : null,
             'at' => $at,
+            'site_down' => is_bool($raw['site_down'] ?? null) ? $raw['site_down'] : $status === 'failed',
         ];
     }
 
@@ -183,11 +199,11 @@ final class UpdateService
         $this->notifyOutcome(new SystemUpdateCompleted($tag, successful: true));
     }
 
-    public function markFailed(string $tag, string $step, string $output): void
+    public function markFailed(string $tag, string $step, string $output, bool $siteIsDown = true): void
     {
-        $this->writeState('failed', $tag, $step, mb_substr($output, -2000));
+        $this->writeState('failed', $tag, $step, mb_substr($output, -2000), $siteIsDown);
 
-        $this->notifyOutcome(new SystemUpdateCompleted($tag, successful: false, step: $step, output: mb_substr($output, -2000)));
+        $this->notifyOutcome(new SystemUpdateCompleted($tag, successful: false, step: $step, output: mb_substr($output, -2000), siteIsDown: $siteIsDown));
     }
 
     public function clearState(): void
@@ -267,7 +283,7 @@ final class UpdateService
         return $sections;
     }
 
-    private function writeState(string $status, string $tag, ?string $step = null, ?string $output = null): void
+    private function writeState(string $status, string $tag, ?string $step = null, ?string $output = null, bool $siteIsDown = false): void
     {
         Cache::forever(self::CACHE_STATE, [
             'status' => $status,
@@ -275,6 +291,7 @@ final class UpdateService
             'step' => $step,
             'output' => $output,
             'at' => now()->toIso8601String(),
+            'site_down' => $siteIsDown,
         ]);
     }
 
@@ -291,6 +308,11 @@ final class UpdateService
         usort($tags, fn (string $a, string $b): int => version_compare(mb_ltrim($a, 'v'), mb_ltrim($b, 'v')));
 
         return end($tags);
+    }
+
+    private function isNewer(string $tag, string $than): bool
+    {
+        return version_compare(mb_ltrim($tag, 'v'), mb_ltrim($than, 'v'), '>');
     }
 
     private function versionFile(): string

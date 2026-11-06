@@ -9,11 +9,17 @@ use App\Models\Activity;
 use App\Services\UpdateService;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
+use Tests\Support\ReleaseArchive;
 
 beforeEach(function (): void {
-    config()->set('wireup.version_file', storage_path('framework/testing/wireup-'.Str::random(8).'/version'));
+    $root = storage_path('framework/testing/wireup-'.Str::random(8));
+
+    config()->set('wireup.version_file', $root.'/version');
+    config()->set('wireup.updates_path', $root.'/updates');
+    config()->set('wireup.build_path', $root.'/build');
 });
 
 afterEach(function (): void {
@@ -39,6 +45,7 @@ it('updates to the latest release', function (): void {
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['composer', 'install', '--no-dev', '--no-interaction', '--prefer-dist']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'wireup:backup']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'migrate', '--force']);
+    Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['npm', '--version']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['npm', 'ci']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === ['npm', 'run', 'build']);
     Process::assertRan(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'optimize']);
@@ -175,4 +182,75 @@ it('leaves the site in maintenance mode when a step fails', function (): void {
         ->and($service->state()['status'])->toBe('failed')
         ->and($service->state()['step'])->toBe('Run database migrations')
         ->and($service->state()['output'])->toContain('migration exploded');
+});
+
+it('installs the prebuilt frontend assets instead of building them on the server', function (): void {
+    $archive = ReleaseArchive::make(['build/manifest.json' => '{"release":"v1.0.0"}']);
+    Process::fake([
+        '*get-url*' => Process::result(output: ReleaseArchive::REMOTE),
+        '*ls-remote*' => Process::result(output: "aaa\trefs/tags/v1.0.0"),
+        '*' => Process::result(),
+    ]);
+    Http::fake([
+        ReleaseArchive::url('v1.0.0', 'build.tar.gz.sha256') => Http::response(hash('sha256', $archive)),
+        ReleaseArchive::url('v1.0.0') => Http::response($archive),
+    ]);
+
+    resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
+
+    $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
+        ->expectsOutputToContain('Wire Up is now on v1.0.0.')
+        ->assertExitCode(0);
+
+    Process::assertDidntRun(fn (PendingProcess $process): bool => is_array($process->command) && $process->command[0] === 'npm');
+
+    expect(File::get(config('wireup.build_path').'/manifest.json'))->toBe('{"release":"v1.0.0"}')
+        ->and(resolve(UpdateService::class)->state()['status'])->toBe('finished');
+});
+
+it('stops before maintenance mode when the prebuilt assets fail verification', function (): void {
+    Process::fake([
+        '*get-url*' => Process::result(output: ReleaseArchive::REMOTE),
+        '*' => Process::result(),
+    ]);
+    Http::fake([
+        ReleaseArchive::url('v1.0.0', 'build.tar.gz.sha256') => Http::response(str_repeat('a', 64)),
+        ReleaseArchive::url('v1.0.0') => Http::response('tampered'),
+    ]);
+
+    resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
+
+    $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
+        ->expectsOutputToContain('did not match their checksum')
+        ->doesntExpectOutputToContain('maintenance mode')
+        ->assertExitCode(1);
+
+    Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'down']);
+
+    $state = resolve(UpdateService::class)->state();
+
+    expect($state['status'])->toBe('failed')
+        ->and($state['step'])->toBe('Download frontend assets')
+        ->and($state['site_down'])->toBeFalse();
+});
+
+it('stops before maintenance mode when the release has to be built and Node.js is missing', function (): void {
+    Process::fake([
+        '*--version*' => Process::result(errorOutput: 'npm: not found', exitCode: 127),
+        '*' => Process::result(),
+    ]);
+
+    resolve(UpdateService::class)->writeCurrentVersion('v0.9.0');
+
+    $this->artisan(UpdateCommand::class, ['--tag' => 'v1.0.0'])
+        ->expectsOutputToContain('npm: not found')
+        ->doesntExpectOutputToContain('maintenance mode')
+        ->assertExitCode(1);
+
+    Process::assertDidntRun(fn (PendingProcess $process): bool => $process->command === [PHP_BINARY, 'artisan', 'down']);
+
+    $state = resolve(UpdateService::class)->state();
+
+    expect($state['step'])->toBe('Check Node.js')
+        ->and($state['site_down'])->toBeFalse();
 });

@@ -114,13 +114,14 @@ composer test:lint
 
 ### Server installation
 
-Requirements on the server: PHP 8.5, Composer, Node.js 22+, git. No database server is needed — Wire Up uses SQLite by default (MySQL and PostgreSQL are supported alternatives).
+Requirements on the server: PHP 8.5, Composer, git. No database server is needed — Wire Up uses SQLite by default (MySQL and PostgreSQL are supported alternatives). Node.js 22+ is only needed when the frontend has to be built on the server: an install from a branch instead of a release, a release older than v0.8.0, or a fork that does not publish its own frontend assets.
 
 1. Add a **deploy key** (read-only SSH key) to the GitHub repository and clone it:
 
     ```bash
     git clone git@github.com:wire-up-dev/wire-up.git
     cd wire-up
+    git checkout "$(git describe --tags --abbrev=0)"
     ```
 
 2. Place your Flux UI Pro credentials in `auth.json` (gitignored):
@@ -145,7 +146,7 @@ Requirements on the server: PHP 8.5, Composer, Node.js 22+, git. No database ser
     php artisan wireup:install
     ```
 
-    The installer generates the app key if missing, asks for the default site language, creates the SQLite database when needed, migrates, links storage, builds the frontend, caches the app, and creates the first admin user.
+    The installer generates the app key if missing, asks for the default site language, creates the SQLite database when needed, migrates, links storage, downloads the release's prebuilt frontend assets (or builds them with Node.js when the checkout is not a release), caches the app, and creates the first admin user.
 
 5. Add the scheduler cron entry and a supervised queue worker (required for e-mail/Slack notifications and admin-triggered updates):
 
@@ -167,7 +168,7 @@ Releases are git tags (`v0.x.y`) with matching sections in `CHANGELOG.md`. The s
 - **From the CLI:** `php artisan wireup:update` (options: `--tag=vX.Y.Z`, `--force`).
 - **Automatic:** enable *Automatic updates* on Settings → Updates; the daily check then installs new releases unattended.
 
-An update puts the public site into maintenance mode (the admin stays reachable), then: fetch + check out the tag, `composer install --no-dev`, **database backup** (`php artisan wireup:backup` → `storage/app/backups`, last 5 kept; MySQL needs `mysqldump` on the server, PostgreSQL needs `pg_dump`), `migrate --force`, `npm ci` + build, cache rebuild, `queue:restart`. **If a step fails, the site stays in maintenance mode** — review the error on Settings → Updates (or the console), fix it, then run `php artisan up`. Roll back with:
+An update first downloads the release's prebuilt frontend assets (`build.tar.gz` on the GitHub Release) and checks them against their published checksum. Then it puts the public site into maintenance mode (the admin stays reachable) and runs: fetch + check out the tag, `composer install --no-dev`, **database backup** (`php artisan wireup:backup` → `storage/app/backups`, last 5 kept; MySQL needs `mysqldump` on the server, PostgreSQL needs `pg_dump`), `migrate --force`, swap in the new frontend assets, cache rebuild, `queue:restart`. A release without prebuilt assets is built on the server with `npm ci` + `npm run build` instead, and the update checks for Node.js before the site goes down. A new release is offered once its assets are published, a few minutes after the tag is pushed. If the download or the Node.js check fails, the site stays live. **If a later step fails, the site stays in maintenance mode** — review the error on Settings → Updates (or the console), fix it, then run `php artisan up`. Roll back with:
 
 ```bash
 git checkout vPREVIOUS
@@ -176,7 +177,9 @@ composer install --no-dev
 #   MySQL:      mysql -u USER -p DATABASE < storage/app/backups/db-backup-<date>.sql
 #   PostgreSQL: psql -U USER -d DATABASE -f storage/app/backups/db-backup-<date>.sql
 #   SQLite:     cp storage/app/backups/db-backup-<date>.sqlite database/database.sqlite
-npm ci && npm run build && php artisan optimize && php artisan up
+# releases before v0.8.0 have no prebuilt assets: run npm ci && npm run build instead
+rm -rf public/build && curl -fsSL https://github.com/wire-up-dev/wire-up/releases/download/vPREVIOUS/build.tar.gz | tar -xz -C public
+php artisan optimize && php artisan up
 ```
 
 ### Backups
@@ -191,7 +194,7 @@ php artisan wireup:backup:restore backup-<date>-automatic.zip
 
 It puts the site in maintenance mode, loads the database (MySQL needs the `mysql` client, PostgreSQL needs `psql`), writes the uploaded files back, runs `migrate --force`, clears the cache and brings the site back up. It refuses a backup taken by a newer version of Wire Up or from a different database driver. If loading the database fails, the site stays in maintenance mode; fix the problem, then run `php artisan up`.
 
-**Release routine:** add a `## vX.Y.Z` section to `CHANGELOG.md`, commit, tag (`git tag vX.Y.Z`), push with tags.
+**Release routine:** add a `## vX.Y.Z` section to `CHANGELOG.md`, commit, tag (`git tag -a vX.Y.Z -m vX.Y.Z`), push with tags (`git push --follow-tags`). The `release` workflow then builds the frontend and publishes the GitHub Release with `build.tar.gz`, its checksum and that changelog section as the notes. Sites are offered the release once it is published.
 
 ### Moving a site
 

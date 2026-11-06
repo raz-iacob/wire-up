@@ -15,6 +15,7 @@ final class SystemUpdateCompleted extends Notification
         private readonly bool $successful,
         private readonly string $step = '',
         private readonly string $output = '',
+        private readonly bool $siteIsDown = true,
     ) {}
 
     /**
@@ -43,14 +44,18 @@ final class SystemUpdateCompleted extends Notification
         $mail = $mail
             ->error()
             ->subject(__(':app update to :tag failed', ['app' => $brand, 'tag' => $this->tag]))
-            ->line(__('The update stopped at the step ":step" and your site was left in maintenance mode.', ['step' => $this->step]));
+            ->line($this->siteIsDown
+                ? __('The update stopped at the step ":step" and your site was left in maintenance mode.', ['step' => $this->step])
+                : __('The update stopped at the step ":step" before your site went into maintenance mode, so it is still live.', ['step' => $this->step]));
 
         if ($this->output !== '') {
             $mail->line(__('Last output:'))->line(mb_substr($this->output, -600));
         }
 
         return $mail
-            ->line(__('Review the error, fix the issue, then bring the site back with: php artisan up'))
+            ->line($this->siteIsDown
+                ? __('Review the error, fix the issue, then bring the site back with: php artisan up')
+                : __('Review the error and fix the issue, then start the update again.'))
             ->action(__('Open Settings → Updates'), route('admin.settings-updates'));
     }
 }

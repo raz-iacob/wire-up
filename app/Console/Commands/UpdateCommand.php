@@ -6,17 +6,21 @@ namespace App\Console\Commands;
 
 use App\Enums\ActivityEvent;
 use App\Services\ActivityLog;
+use App\Services\ReleaseAssets;
 use App\Services\UpdateService;
+use App\Traits\RunsSteps;
+use Closure;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Process;
 
 #[Description('Update Wire Up to the latest release')]
 #[Signature('wireup:update {--tag= : The release tag to install} {--force : Run even when already on the target version}')]
 final class UpdateCommand extends Command
 {
-    public function handle(UpdateService $updates): int
+    use RunsSteps;
+
+    public function handle(UpdateService $updates, ReleaseAssets $assets): int
     {
         $tag = $this->targetTag($updates);
 
@@ -35,6 +39,22 @@ final class UpdateCommand extends Command
         $this->info("Update Wire Up to {$tag}");
         $this->newLine();
 
+        $prebuilt = $assets->published($tag);
+
+        $preparation = $prebuilt
+            ? ['Download frontend assets' => fn (): string => $assets->download($tag)]
+            : ['Check Node.js' => ['npm', '--version']];
+
+        $frontend = $prebuilt
+            ? ['Install frontend assets' => $assets->install(...)]
+            : ['Install frontend dependencies' => ['npm', 'ci'], 'Build frontend assets' => ['npm', 'run', 'build']];
+
+        foreach ($preparation as $label => $step) {
+            if (! $this->runStep($updates, $tag, $label, $step, siteIsDown: false)) {
+                return self::FAILURE;
+            }
+        }
+
         $steps = [
             'Enable maintenance mode' => [PHP_BINARY, 'artisan', 'down'],
             'Fetch releases' => ['git', 'fetch', '--tags', '--force', 'origin'],
@@ -42,15 +62,14 @@ final class UpdateCommand extends Command
             'Install PHP dependencies' => ['composer', 'install', '--no-dev', '--no-interaction', '--prefer-dist'],
             'Back up database' => [PHP_BINARY, 'artisan', 'wireup:backup'],
             'Run database migrations' => [PHP_BINARY, 'artisan', 'migrate', '--force'],
-            'Install frontend dependencies' => ['npm', 'ci'],
-            'Build frontend assets' => ['npm', 'run', 'build'],
+            ...$frontend,
             'Cache configuration' => [PHP_BINARY, 'artisan', 'optimize'],
             'Restart queue workers' => [PHP_BINARY, 'artisan', 'queue:restart'],
         ];
 
-        foreach ($steps as $label => $command) {
-            if (! $this->runStep($updates, $tag, $label, $command)) {
-                return self::FAILURE;
+        foreach ($steps as $label => $step) {
+            if (! $this->runStep($updates, $tag, $label, $step)) {
+                return $this->failInMaintenanceMode();
             }
         }
 
@@ -58,7 +77,7 @@ final class UpdateCommand extends Command
         $updates->check();
 
         if (! $this->runStep($updates, $tag, 'Disable maintenance mode', [PHP_BINARY, 'artisan', 'up'])) {
-            return self::FAILURE;
+            return $this->failInMaintenanceMode();
         }
 
         $updates->markFinished($tag);
@@ -83,30 +102,33 @@ final class UpdateCommand extends Command
     }
 
     /**
-     * @param  list<string>  $command
+     * @param  list<string>|Closure(): mixed  $step
      */
-    private function runStep(UpdateService $updates, string $tag, string $label, array $command): bool
+    private function runStep(UpdateService $updates, string $tag, string $label, array|Closure $step, bool $siteIsDown = true): bool
     {
         $updates->markRunning($tag, $label);
 
-        $result = Process::path(base_path())->timeout(600)->run($command);
+        [$successful, $output] = $this->performStep($step);
 
-        $this->components->task($label, fn (): bool => $result->successful());
+        $this->components->task($label, fn (): bool => $successful);
 
-        if ($result->successful()) {
+        if ($successful) {
             return true;
         }
 
-        $output = mb_trim($result->output()."\n".$result->errorOutput());
-
-        $updates->markFailed($tag, $label, $output);
+        $updates->markFailed($tag, $label, $output, $siteIsDown);
 
         if ($output !== '') {
             $this->components->error(mb_substr($output, -2000));
         }
 
+        return false;
+    }
+
+    private function failInMaintenanceMode(): int
+    {
         $this->components->warn('The site is in maintenance mode. Fix the issue, then run: php artisan up');
 
-        return false;
+        return self::FAILURE;
     }
 }
