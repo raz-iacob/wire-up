@@ -198,7 +198,7 @@ final class Block extends Model
             $params['w'] ?? 1200,
             $params['h'] ?? 800,
             $params['q'] ?? 80,
-            $params['fm'] ?? 'jpg',
+            $params['fm'] ?? ImageService::formatFor($thumbnail),
         );
 
         return ImageService::url($options, $thumbnail);

@@ -105,12 +105,13 @@ it('reports an indexable robots directive by default', function (): void {
     expect(SeoService::current()->robots($page))->toBe('index, follow, max-image-preview:large');
 });
 
-it('falls back to the site default share image when a page has none', function (): void {
+it('falls back to the site default share image, as a jpeg, when a page has none', function (): void {
     Settings::set(['default_og_image' => ['source' => 'share.jpg', 'crop' => ['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]]]);
 
     $page = seoUnitPage();
 
-    expect(SeoService::current()->ogImageUrl($page))->toContain('share.jpg');
+    expect(SeoService::current()->ogImageUrl($page))->toContain('share.jpg')
+        ->and(urldecode((string) SeoService::current()->ogImageUrl($page)))->toContain('fm=jpg');
 });
 
 it('returns no share image when neither the page nor the site provides one', function (): void {
@@ -119,7 +120,7 @@ it('returns no share image when neither the page nor the site provides one', fun
     expect(SeoService::current()->ogImageUrl($page))->toBeNull();
 });
 
-it('prefers the page own og_image over the site default', function (): void {
+it('prefers the page own og_image over the site default and keeps it a jpeg', function (): void {
     Settings::set(['default_og_image' => ['source' => 'fallback.jpg', 'crop' => ['default' => ['crop_w' => 1200, 'crop_h' => 630, 'crop_x' => 0, 'crop_y' => 0]]]]);
 
     $page = seoUnitPage();
@@ -134,7 +135,8 @@ it('prefers the page own og_image over the site default', function (): void {
 
     expect(SeoService::current()->ogImageUrl($page))
         ->toContain($media->source)
-        ->not->toContain('fallback.jpg');
+        ->not->toContain('fallback.jpg')
+        ->and(urldecode((string) SeoService::current()->ogImageUrl($page)))->toContain('fm=jpg');
 });
 
 it('includes the organization logo in the json-ld graph', function (): void {

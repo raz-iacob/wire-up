@@ -314,7 +314,7 @@ final class SettingsService
     {
         $item = config('site.auth_image');
 
-        return $this->imageUrl(is_array($item) ? $item : null, $crop, ['w' => 1200, 'q' => 80]);
+        return $this->imageUrl(is_array($item) ? $item : null, $crop, ['w' => 1200, 'q' => 80, 'fm' => 'webp']);
     }
 
     public function authImageSide(): string

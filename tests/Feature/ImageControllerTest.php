@@ -52,7 +52,7 @@ it('serves unsigned admin previews from the admin image route', function (): voi
 
     $this->get(route('admin.image-preview', ['options' => 'w=50', 'path' => 'test-image.jpg']))
         ->assertOk()
-        ->assertHeader('Content-Type', 'image/jpeg');
+        ->assertHeader('Content-Type', 'image/webp');
 });
 
 it('keeps the admin image route away from guests', function (): void {

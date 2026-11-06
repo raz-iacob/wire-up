@@ -4,6 +4,7 @@ Release notes for Wire Up. Each release is a `## vX.Y.Z` section; the updater sh
 
 ## Unreleased
 
+- Photos on the site are now sent as WebP instead of JPEG. In a test with real photos they came out about a third smaller at the same quality, so pages with pictures load faster. Images for social media shares stay JPEG, because some platforms don't show WebP.
 - Updates, backups and site imports started from the admin, and automatic updates, now run from the scheduler instead of the queue worker. Each starts within a minute in a fresh process, so an update always runs the newest code, and the queue worker no longer needs a one-hour timeout or `DB_QUEUE_RETRY_AFTER=3700` (existing settings do no harm). If the scheduler's cron entry isn't running, Settings → Updates, Backups and Export / Import say so after ten minutes.
 - The public site's stylesheet is about 40% smaller (33 KB instead of 56 KB once compressed), so pages load a little faster. It now holds only the styles the site itself uses; the admin keeps its own stylesheet and is unchanged.
 - Closing an integration's window on Settings → App Integrations without saving no longer makes the page warn about unsaved changes when you leave it. The Stripe and Google Analytics cards also only show Connected once their keys are saved, not while you are still typing them.

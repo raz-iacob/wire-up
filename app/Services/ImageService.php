@@ -63,7 +63,7 @@ final class ImageService
 
     public static function formatFor(string $path): string
     {
-        return in_array(mb_strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['png', 'webp'], true) ? 'webp' : 'jpg';
+        return in_array(mb_strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp'], true) ? 'webp' : 'jpg';
     }
 
     public static function cached(string $options, string $path): ?BinaryFileResponse

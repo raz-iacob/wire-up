@@ -114,10 +114,10 @@ it('clamps an oversized crop to the image bounds without distortion', function (
     expect($contents)->not->toBeEmpty();
 });
 
-it('encodes as jpeg for an unknown format', function (): void {
+it('falls back to the format picked from the source when the requested one is unknown', function (): void {
     [, $mime] = ImageService::make('test-image.jpg')->applyOptions(['fm' => 'foo'])->encoded();
 
-    expect($mime)->toBe('image/jpeg');
+    expect($mime)->toBe('image/webp');
 });
 
 it('encodes as gif for the gif format', function (): void {
@@ -132,14 +132,15 @@ it('encodes as webp for the webp format', function (): void {
     expect($mime)->toBe('image/webp');
 });
 
-it('picks webp for sources that can be transparent and jpeg for the rest', function (string $path, string $expected): void {
+it('picks webp for photos and transparent sources and jpeg for anything else', function (string $path, string $expected): void {
     expect(ImageService::formatFor($path))->toBe($expected);
 })->with([
     'png' => ['media/logo.png', 'webp'],
     'uppercase png' => ['media/LOGO.PNG', 'webp'],
     'webp' => ['media/cutout.webp', 'webp'],
-    'jpeg' => ['media/photo.jpg', 'jpg'],
-    'jpeg long extension' => ['media/photo.jpeg', 'jpg'],
+    'jpeg' => ['media/photo.jpg', 'webp'],
+    'jpeg long extension' => ['media/photo.jpeg', 'webp'],
+    'gif' => ['media/animation.gif', 'jpg'],
     'no extension' => ['media/photo', 'jpg'],
 ]);
 
