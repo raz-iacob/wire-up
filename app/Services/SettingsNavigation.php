@@ -47,6 +47,7 @@ final readonly class SettingsNavigation
             'developer' => [__('Developer'), Gate::allows('developer') ? [
                 $this->tab(__('Error reports'), 'admin.settings-developer'),
                 $this->tab(__('Monitoring'), 'admin.settings-monitoring'),
+                $this->tab(__('Remote MCP'), 'admin.settings-remote-mcp'),
                 $this->tab(__('Error log'), 'admin.settings-errors', $this->countBadge(ErrorLog::unresolvedCount())),
             ] : []],
         ];

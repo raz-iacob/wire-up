@@ -257,6 +257,15 @@ Cursor, and other MCP clients) can build and edit the site programmatically:
   `search-pexels`, `import-pexels-media`), site settings (`get-settings`, `update-design`,
   `update-identity`, `update-social`), and navigation (`get-menus`, `update-menu`). Agents can
   verify their work by fetching page URLs with an `Accept: text/markdown` header (see above).
+- **Remote MCP:** the same server answers at `https://your-site/mcp` once a developer turns on
+  *Allow remote MCP* under **Settings → Developer → Remote MCP**. Each person makes a token under
+  **Account → Security** (their role needs the *Remote MCP* ability; owners and developers always
+  have it). A token is read only, edit or full access (full adds publishing, deleting and
+  `replace-text`), expires after 30 days, 90 days or a year, and is shown once. Every call also
+  checks the person's role, so a token never does more than they can in the admin, and orders are
+  never available remotely. Add it to Claude Code with
+  `claude mcp add --transport http my-site https://your-site/mcp --header "Authorization: Bearer <token>"`,
+  or to Cursor with a `url` and an `Authorization` entry under `headers` in `mcp.json`.
 
 **Controlling indexing:**
 

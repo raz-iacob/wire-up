@@ -35,6 +35,7 @@ final class IntegrationRegistry
             new Mail,
             new OffsiteBackups,
             new ErrorReports,
+            new RemoteMcp,
             new Sentry,
             new Nightwatch,
         ];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\RequireTwoFactor;
 use App\Models\User;
+use App\Services\SettingsService;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -12,9 +13,12 @@ return new class extends Component
 {
     public bool $twoFactorMissing = false;
 
+    public bool $showsTokens = false;
+
     public function mount(#[CurrentUser] User $user): void
     {
         $this->twoFactorMissing = ! RequireTwoFactor::isSatisfiedFor($user);
+        $this->showsTokens = SettingsService::current()->remoteMcpEnabled() && $user->can('mcp.use');
     }
 
     public function render(): View
@@ -41,5 +45,11 @@ return new class extends Component
         <flux:separator />
 
         <livewire:shared.passkeys />
+
+        @if ($showsTokens)
+            <flux:separator />
+
+            <livewire:admin.access-tokens />
+        @endif
     </div>
 </x-admin.account-layout>

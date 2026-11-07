@@ -25,6 +25,7 @@ return [
         'cart',
         'checkout',
         'stripe',
+        'mcp',
     ],
 
     /*

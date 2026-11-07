@@ -65,6 +65,7 @@ final class PermissionRegistry
             ['key' => 'settings', 'label' => __('Settings'), 'group' => self::GROUP_ADMINISTRATION, 'actions' => [PermissionAction::View->value, PermissionAction::Edit->value]],
             ['key' => 'roles', 'label' => __('Roles'), 'group' => self::GROUP_ADMINISTRATION, 'actions' => $crud],
             ['key' => 'assistant', 'label' => __('AI Assistant'), 'group' => self::GROUP_ADMINISTRATION, 'actions' => ['use']],
+            ['key' => 'mcp', 'label' => __('Remote MCP'), 'group' => self::GROUP_ADMINISTRATION, 'actions' => ['use']],
             ['key' => 'orders', 'label' => __('Orders'), 'group' => self::GROUP_SHOP, 'actions' => [PermissionAction::View->value, PermissionAction::Edit->value]],
             ['key' => 'activity', 'label' => __('Activity log'), 'group' => self::GROUP_ADMINISTRATION, 'actions' => [PermissionAction::View->value]],
         ];

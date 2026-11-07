@@ -241,6 +241,11 @@ final class SettingsService
         return (bool) config('site.backups_enabled', false);
     }
 
+    public function remoteMcpEnabled(): bool
+    {
+        return (bool) config('site.remote_mcp_enabled', false);
+    }
+
     public function backupFrequency(): string
     {
         return config('site.backup_frequency') === 'weekly' ? 'weekly' : 'daily';

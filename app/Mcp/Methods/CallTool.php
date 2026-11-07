@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Methods;
 
+use App\Mcp\Support\RemoteAccess;
 use Generator;
 use Laravel\Mcp\Exceptions\JsonRpcException;
 use Laravel\Mcp\Response;
@@ -24,13 +25,16 @@ final class CallTool extends ToolInvoker implements Method
      */
     public function handle(JsonRpcRequest $request, ServerContext $context): Generator|JsonRpcResponse
     {
-        $tool = $context->tools()->first(fn (Tool $tool): bool => $tool->name() === $request->get('name'));
+        $remote = RemoteAccess::current();
+        $tool = $context->tools()->first(fn (Tool $tool): bool => $tool->name() === $request->get('name'))
+            ?? $remote?->hiddenTool((string) $request->get('name'));
 
         if (! $tool instanceof Tool) {
             return new BaseCallTool()->handle($request, $context);
         }
 
-        $problem = $this->unknownArguments($tool, $request->get('arguments', []));
+        $arguments = $request->get('arguments', []);
+        $problem = $remote?->problem($tool, is_array($arguments) ? $arguments : []) ?? $this->unknownArguments($tool, $arguments);
 
         return $problem === null
             ? $this->invoke($tool, $request)

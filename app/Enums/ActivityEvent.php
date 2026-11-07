@@ -51,6 +51,8 @@ enum ActivityEvent: string
     case TWO_FACTOR_FAILED = 'auth.two_factor_failed';
     case PASSKEY_ADDED = 'auth.passkey_added';
     case PASSKEY_REMOVED = 'auth.passkey_removed';
+    case ACCESS_TOKEN_CREATED = 'auth.token_created';
+    case ACCESS_TOKEN_REVOKED = 'auth.token_revoked';
     case ORDER_FULFILLED = 'order.fulfilled';
     case ORDER_REFUNDED = 'order.refunded';
     case ORDER_CANCELLED = 'order.cancelled';
@@ -111,6 +113,8 @@ enum ActivityEvent: string
             self::TWO_FACTOR_FAILED => __('Wrong two-factor code'),
             self::PASSKEY_ADDED => __('Added passkey'),
             self::PASSKEY_REMOVED => __('Removed passkey'),
+            self::ACCESS_TOKEN_CREATED => __('Created MCP token'),
+            self::ACCESS_TOKEN_REVOKED => __('Revoked MCP token'),
             self::ORDER_FULFILLED => __('Fulfilled order'),
             self::ORDER_REFUNDED => __('Refunded order'),
             self::ORDER_CANCELLED => __('Cancelled order'),

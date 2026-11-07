@@ -8,6 +8,7 @@ use App\Enums\RevisionSource;
 use App\Mcp\Methods\CallTool;
 use App\Mcp\Prompts\ReplicateSitePrompt;
 use App\Mcp\Resources\BlockTypesResource;
+use App\Mcp\Support\RemoteAccess;
 use App\Mcp\Tools\CreateCategoryTool;
 use App\Mcp\Tools\CreateContentTypeTool;
 use App\Mcp\Tools\CreateMenuTool;
@@ -238,6 +239,12 @@ final class WireUpServer extends Server
     protected function boot(): void
     {
         $this->addMethod('tools/call', CallTool::class);
+
+        $remote = RemoteAccess::current();
+
+        if ($remote instanceof RemoteAccess) {
+            $this->tools = $remote->visibleTools(self::TOOLS);
+        }
 
         Context::add(RevisionSource::CONTEXT_KEY, RevisionSource::AGENT->value);
     }

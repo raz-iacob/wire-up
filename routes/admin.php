@@ -58,6 +58,7 @@ Route::middleware('can:roles.view')->group(function (): void {
 Route::middleware('can:developer')->group(function (): void {
     Route::livewire('settings/developer', 'pages::admin.settings-developer')->name('settings-developer');
     Route::livewire('settings/monitoring', 'pages::admin.settings-monitoring')->name('settings-monitoring');
+    Route::livewire('settings/remote-mcp', 'pages::admin.settings-remote-mcp')->name('settings-remote-mcp');
     Route::livewire('settings/errors', 'pages::admin.settings-errors')->name('settings-errors');
 });
 
