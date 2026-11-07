@@ -57,7 +57,7 @@ final class IntegrationRegistry
      */
     public static function cards(): array
     {
-        return array_values(array_filter(self::all(), fn (Integration $integration): bool => $integration instanceof CardIntegration));
+        return array_values(array_filter(self::all(), fn (Integration $integration): bool => $integration instanceof CardIntegration && $integration->showsOnIntegrationsPage()));
     }
 
     /**

@@ -12,7 +12,6 @@ use App\Models\User;
 use App\Services\BackupService;
 use App\Services\DatabaseDumper;
 use App\Services\OffsiteBackupService;
-use App\Services\SettingsService;
 use App\Services\SiteBundle;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
@@ -203,13 +202,19 @@ it('runs a queued backup and records the result', function (): void {
         ->and(new RunBackup()->uniqueId())->toBe('wireup-backup');
 });
 
-it('points to off-site backups until they are connected', function (): void {
+it('shows off-site copies once storage is connected from the same screen', function (): void {
+    backupFile('backup-2026-10-29-101500-manual.zip');
     $this->actingAsAdmin();
 
-    Livewire::test('pages::admin.settings-backups')
-        ->assertSee('connect off-site backups')
-        ->assertSee(route('admin.settings-integrations'))
-        ->assertDontSee('Off-site copies to keep');
+    $component = Livewire::test('pages::admin.settings-backups')
+        ->assertDontSee('Off-site only')
+        ->assertDontSee('wireup:backup:fetch');
+
+    FakeOffsiteStorage::connect()->put('example.com/backup-2026-10-20-030000-automatic.zip', 'zip');
+
+    $component->dispatch('integrations-updated')
+        ->assertSee('Off-site only')
+        ->assertSee('wireup:backup:fetch');
 });
 
 it('shows which backups are also off-site and lists copies that are only off-site', function (): void {
@@ -228,23 +233,6 @@ it('shows which backups are also off-site and lists copies that are only off-sit
         ->assertSee(route('admin.backups-offsite-download', ['file' => 'backup-2026-10-20-030000-automatic.zip']))
         ->assertDontSee(route('admin.backups-download', ['file' => 'backup-2026-10-20-030000-automatic.zip']))
         ->assertSee('wireup:backup:fetch');
-});
-
-it('saves how many off-site copies to keep', function (): void {
-    FakeOffsiteStorage::connect();
-    $this->actingAsAdmin();
-
-    Livewire::test('pages::admin.settings-backups')
-        ->assertSet('offsiteKeep', 14)
-        ->set('offsiteKeep', 101)
-        ->call('update')
-        ->assertHasErrors('offsiteKeep')
-        ->set('offsiteKeep', 30)
-        ->call('update')
-        ->assertHasNoErrors();
-
-    expect(Settings::get('offsite_backups_to_keep'))->toBe(30)
-        ->and(resolve(SettingsService::class)->offsiteBackupsToKeep())->toBe(30);
 });
 
 it('says when off-site storage cannot be reached', function (): void {

@@ -11,12 +11,19 @@ abstract class CardIntegration extends Integration
      */
     protected ?array $disconnects = null;
 
+    protected bool $listed = true;
+
     abstract public function key(): string;
 
     /**
      * @param  array<string, mixed>  $saved
      */
     abstract public function connected(array $saved): bool;
+
+    final public function showsOnIntegrationsPage(): bool
+    {
+        return $this->listed;
+    }
 
     /**
      * @return list<string>

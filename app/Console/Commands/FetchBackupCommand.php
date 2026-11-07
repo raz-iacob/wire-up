@@ -18,7 +18,7 @@ final class FetchBackupCommand extends Command
     public function handle(OffsiteBackupService $offsite, BackupService $backups): int
     {
         if (! $offsite->configured()) {
-            $this->components->error('Off-site backups are not connected. Connect them in Settings → App Integrations first.');
+            $this->components->error('Off-site backups are not connected. Turn on off-site copies in Settings → Backups first.');
 
             return self::FAILURE;
         }

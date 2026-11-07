@@ -8,6 +8,8 @@ use App\Enums\SettingKind;
 
 final class OffsiteBackups extends CardIntegration
 {
+    protected bool $listed = false;
+
     public function key(): string
     {
         return 'offsite-backups';

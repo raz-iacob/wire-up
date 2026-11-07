@@ -15,6 +15,7 @@ use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Number;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 return new class extends Component
@@ -27,8 +28,6 @@ return new class extends Component
 
     public bool $includeFiles = true;
 
-    public int $offsiteKeep = 14;
-
     public ?string $deleteFile = null;
 
     public function mount(): void
@@ -39,7 +38,6 @@ return new class extends Component
         $this->frequency = $settings->backupFrequency();
         $this->keep = $settings->backupsToKeep();
         $this->includeFiles = $settings->backupIncludesFiles();
-        $this->offsiteKeep = $settings->offsiteBackupsToKeep();
     }
 
     #[Computed]
@@ -153,11 +151,9 @@ return new class extends Component
             'frequency' => ['required', 'in:daily,weekly'],
             'keep' => ['required', 'integer', 'min:1', 'max:30'],
             'includeFiles' => ['boolean'],
-            'offsiteKeep' => ['required', 'integer', 'min:1', 'max:100'],
         ], [], [
             'frequency' => __('how often'),
             'keep' => __('backups to keep'),
-            'offsiteKeep' => __('off-site copies to keep'),
         ]);
 
         $action->handle([
@@ -165,7 +161,6 @@ return new class extends Component
             'backup_frequency' => $validated['frequency'],
             'backups_to_keep' => $validated['keep'],
             'backup_include_files' => $validated['includeFiles'],
-            'offsite_backups_to_keep' => $validated['offsiteKeep'],
         ]);
 
         Flux::toast(__('Backup settings saved.'), variant: 'success');
@@ -191,6 +186,12 @@ return new class extends Component
     public function refreshState(): void
     {
         unset($this->backups, $this->offsiteFiles, $this->rows);
+    }
+
+    #[On('integrations-updated')]
+    public function refreshOffsite(): void
+    {
+        unset($this->offsiteConnected, $this->offsiteFiles, $this->rows);
     }
 
     public function dismissState(): void
@@ -271,30 +272,16 @@ return new class extends Component
                     />
                 @endif
 
-                @if ($this->offsiteConnected)
-                    <flux:input
-                        type="number"
-                        min="1"
-                        max="100"
-                        wire:model="offsiteKeep"
-                        :label="__('Off-site copies to keep')"
-                        :description="__('Every backup is also copied to :location.', ['location' => resolve(\App\Services\OffsiteBackupService::class)->location()])"
-                        class="sm:max-w-xs"
-                    />
-                @else
-                    <flux:text>
-                        {{ __('Keep a copy off this server in case it is lost:') }}
-                        <flux:link :href="route('admin.settings-integrations')" wire:navigate>
-                            {{ __('connect off-site backups') }}</flux:link>
-                    </flux:text>
-                @endif
-
                 <flux:text>{{ $this->diskSummary() }}</flux:text>
 
                 @can('settings.edit')
                     <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
                 @endcan
             </form>
+
+            <flux:separator variant="subtle" />
+
+            <livewire:admin.offsite-backups />
 
             <flux:separator variant="subtle" />
 
