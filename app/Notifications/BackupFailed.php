@@ -11,7 +11,7 @@ use Illuminate\Notifications\Notification;
 
 final class BackupFailed extends Notification
 {
-    public function __construct(public readonly string $reason) {}
+    public function __construct(public readonly string $reason, public readonly bool $savedLocally = false) {}
 
     /**
      * @return array<int, string>
@@ -34,7 +34,9 @@ final class BackupFailed extends Notification
             ->error()
             ->subject($this->subject())
             ->greeting(__('Hello,'))
-            ->line(__('The automatic backup of :app did not finish, so no new backup was made.', ['app' => $brand]))
+            ->line($this->savedLocally
+                ? __('The automatic backup of :app was saved on the server, but copying it off-site failed.', ['app' => $brand])
+                : __('The automatic backup of :app did not finish, so no new backup was made.', ['app' => $brand]))
             ->line(__('Reason: :reason', ['reason' => mb_substr($this->reason, -600)]))
             ->action(__('Open Settings → Backups'), route('admin.settings-backups'));
     }
@@ -60,6 +62,10 @@ final class BackupFailed extends Notification
 
     private function subject(): string
     {
-        return __('The automatic backup of :app failed', ['app' => resolve(SettingsService::class)->brandName()]);
+        $brand = resolve(SettingsService::class)->brandName();
+
+        return $this->savedLocally
+            ? __('The off-site copy of the :app backup failed', ['app' => $brand])
+            : __('The automatic backup of :app failed', ['app' => $brand]);
     }
 }

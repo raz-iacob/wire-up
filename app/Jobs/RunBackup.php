@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Enums\ActivityEvent;
 use App\Services\ActivityLog;
 use App\Services\BackupService;
+use App\Services\OffsiteBackupService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -29,7 +30,7 @@ final class RunBackup implements ShouldBeUnique, ShouldQueue
         return 'wireup-backup';
     }
 
-    public function handle(BackupService $backups): void
+    public function handle(BackupService $backups, OffsiteBackupService $offsite): void
     {
         if ($backups->state()['status'] !== 'pending') {
             return;
@@ -37,11 +38,13 @@ final class RunBackup implements ShouldBeUnique, ShouldQueue
 
         $backups->markRunning();
 
-        $file = basename($backups->create(automatic: false));
+        $archive = $backups->create(automatic: false);
 
-        $backups->markFinished($file);
+        ActivityLog::record(ActivityEvent::BACKUP_CREATED, basename($archive), userId: $this->userId);
 
-        ActivityLog::record(ActivityEvent::BACKUP_CREATED, $file, userId: $this->userId);
+        $offsite->copyNewBackup($archive);
+
+        $backups->markFinished(basename($archive));
     }
 
     public function failed(?Throwable $exception): void

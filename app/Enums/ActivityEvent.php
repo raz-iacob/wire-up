@@ -59,6 +59,7 @@ enum ActivityEvent: string
     case BACKUP_CREATED = 'system.backup_created';
     case BACKUP_FAILED = 'system.backup_failed';
     case BACKUP_DELETED = 'system.backup_deleted';
+    case BACKUP_OFFSITE_FAILED = 'system.backup_offsite_failed';
     case SYSTEM_UPDATED = 'system.updated';
     case WEBHOOK_FAILED = 'system.webhook_failed';
 
@@ -118,6 +119,7 @@ enum ActivityEvent: string
             self::BACKUP_CREATED => __('Created backup'),
             self::BACKUP_FAILED => __('Backup failed'),
             self::BACKUP_DELETED => __('Deleted backup'),
+            self::BACKUP_OFFSITE_FAILED => __('Off-site copy failed'),
             self::SYSTEM_UPDATED => __('Updated Wire Up'),
             self::WEBHOOK_FAILED => __('Webhook failed'),
         };

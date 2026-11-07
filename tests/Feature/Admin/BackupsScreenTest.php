@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\ActivityEvent;
+use App\Jobs\CopyBackupOffsite;
 use App\Jobs\RunBackup;
 use App\Models\Activity;
 use App\Models\Role;
@@ -10,12 +11,15 @@ use App\Models\Settings;
 use App\Models\User;
 use App\Services\BackupService;
 use App\Services\DatabaseDumper;
+use App\Services\OffsiteBackupService;
+use App\Services\SettingsService;
 use App\Services\SiteBundle;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Tests\Support\FakeOffsiteStorage;
 
 beforeEach(function (): void {
     config()->set('wireup.backup_path', storage_path('framework/testing/backup-screen-'.Str::random(8)));
@@ -190,11 +194,90 @@ it('runs a queued backup and records the result', function (): void {
     expect($backups->state())->toMatchArray(['status' => 'failed', 'output' => 'worker died']);
 
     $backups->clearState();
-    new RunBackup()->handle($backups);
+    new RunBackup()->handle($backups, resolve(OffsiteBackupService::class));
     expect($backups->state()['status'])->toBe('idle');
 
     $backups->markPending();
-    expect(fn () => new RunBackup()->handle($backups))->toThrow(RuntimeException::class, 'The database dump came out empty')
+    expect(fn () => new RunBackup()->handle($backups, resolve(OffsiteBackupService::class)))->toThrow(RuntimeException::class, 'The database dump came out empty')
         ->and($backups->state()['status'])->toBe('running')
         ->and(new RunBackup()->uniqueId())->toBe('wireup-backup');
+});
+
+it('points to off-site backups until they are connected', function (): void {
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-backups')
+        ->assertSee('connect off-site backups')
+        ->assertSee(route('admin.settings-integrations'))
+        ->assertDontSee('Off-site copies to keep');
+});
+
+it('shows which backups are also off-site and lists copies that are only off-site', function (): void {
+    $disk = FakeOffsiteStorage::connect();
+    $disk->put('example.com/backup-2026-10-29-101500-manual.zip', 'zip');
+    $disk->put('example.com/backup-2026-10-20-030000-automatic.zip', 'older zip');
+    backupFile('backup-2026-10-29-101500-manual.zip');
+    backupFile('backup-2026-10-30-030000-automatic.zip');
+
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-backups')
+        ->assertSee('Every backup is also copied to site-backups/example.com.')
+        ->assertSee('Also copied off-site')
+        ->assertSeeInOrder(['Oct 30, 2026 03:00', 'Oct 29, 2026 10:15', 'Oct 20, 2026 03:00', 'Off-site only'])
+        ->assertSee(route('admin.backups-offsite-download', ['file' => 'backup-2026-10-20-030000-automatic.zip']))
+        ->assertDontSee(route('admin.backups-download', ['file' => 'backup-2026-10-20-030000-automatic.zip']))
+        ->assertSee('wireup:backup:fetch');
+});
+
+it('saves how many off-site copies to keep', function (): void {
+    FakeOffsiteStorage::connect();
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-backups')
+        ->assertSet('offsiteKeep', 14)
+        ->set('offsiteKeep', 101)
+        ->call('update')
+        ->assertHasErrors('offsiteKeep')
+        ->set('offsiteKeep', 30)
+        ->call('update')
+        ->assertHasNoErrors();
+
+    expect(Settings::get('offsite_backups_to_keep'))->toBe(30)
+        ->and(resolve(SettingsService::class)->offsiteBackupsToKeep())->toBe(30);
+});
+
+it('says when off-site storage cannot be reached', function (): void {
+    FakeOffsiteStorage::connectRefusing();
+    backupFile('backup-2026-10-29-101500-manual.zip');
+    $this->actingAsAdmin();
+
+    Livewire::test('pages::admin.settings-backups')
+        ->assertSee('Off-site storage could not be reached')
+        ->assertSee('Oct 29, 2026 10:15')
+        ->assertDontSee('Also copied off-site');
+});
+
+it('shows a failed off-site copy and copies it again on request', function (): void {
+    Queue::fake();
+    FakeOffsiteStorage::connect();
+    resolve(OffsiteBackupService::class)->markFailed('backup-2026-10-29-101500-manual.zip', 'AccessDenied: Access Denied');
+    $this->actingAsAdmin();
+
+    $component = Livewire::test('pages::admin.settings-backups')
+        ->assertSee('Copying backup-2026-10-29-101500-manual.zip off-site failed')
+        ->assertSee('AccessDenied: Access Denied')
+        ->call('retryOffsite')
+        ->assertSee('Copying backup-2026-10-29-101500-manual.zip off-site…');
+
+    Queue::assertPushedOn('system', CopyBackupOffsite::class, fn (CopyBackupOffsite $job): bool => $job->file === 'backup-2026-10-29-101500-manual.zip');
+
+    resolve(OffsiteBackupService::class)->markFailed('backup-2026-10-29-101500-manual.zip', 'Still denied');
+    $component->call('refreshState')->call('dismissOffsite')->assertDontSee('Still denied');
+
+    expect(resolve(OffsiteBackupService::class)->state())->toBeNull();
+
+    $component->call('retryOffsite');
+
+    Queue::assertPushed(CopyBackupOffsite::class, 1);
 });

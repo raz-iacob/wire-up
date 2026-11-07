@@ -8,6 +8,7 @@ use App\Enums\ActivityEvent;
 use App\Notifications\BackupFailed;
 use App\Services\ActivityLog;
 use App\Services\BackupService;
+use App\Services\OffsiteBackupService;
 use App\Services\SettingsService;
 use App\Services\SlackWebhookChannel;
 use Carbon\CarbonImmutable;
@@ -18,11 +19,11 @@ use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
 
-#[Description('Back up the database and uploaded files to storage/app/backups')]
+#[Description('Back up the database and uploaded files to storage/app/backups, and off-site when that is connected')]
 #[Signature('wireup:backup:create {--scheduled : Run as the automatic backup, only when automatic backups are switched on}')]
 final class CreateBackupCommand extends Command
 {
-    public function handle(BackupService $backups): int
+    public function handle(BackupService $backups, OffsiteBackupService $offsite): int
     {
         $scheduled = (bool) $this->option('scheduled');
         $settings = SettingsService::current();
@@ -55,10 +56,28 @@ final class CreateBackupCommand extends Command
 
         $this->components->info("Backed up to {$archive}");
 
+        if (! $offsite->configured()) {
+            return self::SUCCESS;
+        }
+
+        $reason = $offsite->copyNewBackup($archive);
+
+        if ($reason === null) {
+            $this->components->info('Copied off-site to '.$offsite->location());
+
+            return self::SUCCESS;
+        }
+
+        $this->components->warn('The off-site copy failed: '.$reason);
+
+        if ($scheduled) {
+            $this->notifyFailure($reason, savedLocally: true);
+        }
+
         return self::SUCCESS;
     }
 
-    private function notifyFailure(string $reason): void
+    private function notifyFailure(string $reason, bool $savedLocally = false): void
     {
         $routes = array_filter([
             'mail' => SettingsService::current()->contactEmail(),
@@ -76,7 +95,7 @@ final class CreateBackupCommand extends Command
         }
 
         try {
-            Notification::sendNow($notifiable, new BackupFailed($reason));
+            Notification::sendNow($notifiable, new BackupFailed($reason, $savedLocally));
         } catch (Throwable $exception) {
             report($exception);
         }

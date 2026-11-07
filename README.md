@@ -186,7 +186,7 @@ php artisan optimize && php artisan up
 
 ### Backups
 
-`php artisan wireup:backup:create` writes `storage/app/backups/backup-<date>-manual.zip`: a dump of the database (`database.sql` or `database.sqlite`), the uploaded files from the media disk (`files/…`, when it is a local disk) and a `manifest.json`. Automatic backups are **off by default**; once switched on, the scheduler runs the same command with `--scheduled` at 03:00 (UTC) daily or weekly, keeps the newest automatic backups only (manual ones stay until deleted), refuses to start when the disk lacks room for another backup, and emails the contact address (and posts to Slack, if connected) when a run fails. Backups stay on the server, so download them to keep a copy elsewhere. They hold everything, including users and saved API keys, but not `.env` — keep your `APP_KEY` safe separately.
+`php artisan wireup:backup:create` writes `storage/app/backups/backup-<date>-manual.zip`: a dump of the database (`database.sql` or `database.sqlite`), the uploaded files from the media disk (`files/…`, when it is a local disk) and a `manifest.json`. Automatic backups are **off by default**; once switched on, the scheduler runs the same command with `--scheduled` at 03:00 (UTC) daily or weekly, keeps the newest automatic backups only (manual ones stay until deleted), refuses to start when the disk lacks room for another backup, and emails the contact address (and posts to Slack, if connected) when a run fails. Backups stay on the server unless you connect **off-site backups** (Settings → App Integrations): then every backup, manual or automatic, is also copied to an S3-compatible bucket (Cloudflare R2, Backblaze B2, Amazon S3, Wasabi, DigitalOcean Spaces, MinIO), into a folder named after the site by default. The bucket keeps its own count of copies (14 by default, set on Settings → Backups), so deleting a backup on the server to free disk space leaves its off-site copy alone. A failed copy never fails the backup; it is shown on Settings → Backups with a Try again button, and a scheduled run emails the contact address (and posts to Slack). Use an access key that can only reach that bucket. Backups hold everything, including users and saved API keys, but not `.env` — keep your `APP_KEY` safe separately, because saved API keys only work with the key they were saved under.
 
 Restore one with:
 
@@ -194,7 +194,13 @@ Restore one with:
 php artisan wireup:backup:restore backup-<date>-automatic.zip
 ```
 
-It puts the site in maintenance mode, loads the database (MySQL needs the `mysql` client, PostgreSQL needs `psql`), writes the uploaded files back, runs `migrate --force`, clears the cache and brings the site back up. It refuses a backup taken by a newer version of Wire Up or from a different database driver. If loading the database fails, the site stays in maintenance mode; fix the problem, then run `php artisan up`.
+If the server is gone, install Wire Up on a new one with the same `APP_KEY`, connect off-site backups again and download a copy first (the newest when no file is given):
+
+```bash
+php artisan wireup:backup:fetch backup-<date>-automatic.zip
+```
+
+Restoring puts the site in maintenance mode, loads the database (MySQL needs the `mysql` client, PostgreSQL needs `psql`), writes the uploaded files back, runs `migrate --force`, clears the cache and brings the site back up. It refuses a backup taken by a newer version of Wire Up or from a different database driver. If loading the database fails, the site stays in maintenance mode; fix the problem, then run `php artisan up`.
 
 **Release routine:** add a `## vX.Y.Z` section to `CHANGELOG.md`, commit, tag (`git tag -a vX.Y.Z -m vX.Y.Z`), push with tags (`git push --follow-tags`). The `release` workflow then builds the frontend and publishes the GitHub Release with `build.tar.gz`, its checksum and that changelog section as the notes. Sites are offered the release once it is published.
 

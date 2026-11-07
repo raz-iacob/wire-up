@@ -253,6 +253,13 @@ final class SettingsService
         return is_numeric($keep) ? max(1, min(30, (int) $keep)) : 5;
     }
 
+    public function offsiteBackupsToKeep(): int
+    {
+        $keep = config('site.offsite_backups_to_keep');
+
+        return is_numeric($keep) ? max(1, min(100, (int) $keep)) : 14;
+    }
+
     public function backupIncludesFiles(): bool
     {
         return (bool) config('site.backup_include_files', true);

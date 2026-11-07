@@ -10,6 +10,8 @@ use App\Models\Activity;
 use App\Notifications\BackupFailed;
 use App\Services\BackupService;
 use App\Services\DatabaseDumper;
+use App\Services\OffsiteBackupService;
+use App\Services\SettingsService;
 use App\Services\SiteBundle;
 use App\Services\SlackWebhookChannel;
 use Carbon\CarbonImmutable;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Tests\Support\FakeOffsiteStorage;
 
 function backupSourceDatabase(): string
 {
@@ -541,10 +544,72 @@ it('runs a queued backup through to a finished archive', function (): void {
     $backups = resolve(BackupService::class);
     $backups->markPending();
 
-    new RunBackup(42)->handle($backups);
+    new RunBackup(42)->handle($backups, resolve(OffsiteBackupService::class));
 
     expect($backups->state()['status'])->toBe('finished')
         ->and($backups->state()['file'])->toBe($backups->all()[0]['file'])
         ->and($backups->all()[0]['kind'])->toBe('manual')
         ->and(Activity::query()->sole()->only(['event', 'user_id', 'subject_label']))->toBe(['event' => ActivityEvent::BACKUP_CREATED, 'user_id' => 42, 'subject_label' => $backups->all()[0]['file']]);
+});
+
+it('copies a backup made from the admin off-site', function (): void {
+    backupSourceDatabase();
+    $disk = FakeOffsiteStorage::connect();
+    $backups = resolve(BackupService::class);
+    $backups->markPending();
+
+    new RunBackup(42)->handle($backups, resolve(OffsiteBackupService::class));
+
+    expect($backups->state()['status'])->toBe('finished')
+        ->and($disk->allFiles())->toBe(['example.com/'.$backups->all()[0]['file']]);
+});
+
+it('copies a scheduled backup off-site and says where it went', function (): void {
+    backupSourceDatabase();
+    $disk = FakeOffsiteStorage::connect();
+    config()->set('site.backups_enabled', true);
+
+    $this->artisan(CreateBackupCommand::class, ['--scheduled' => true])
+        ->expectsOutputToContain('Copied off-site to site-backups/example.com')
+        ->assertExitCode(0);
+
+    expect($disk->allFiles())->toBe(['example.com/'.resolve(BackupService::class)->all()[0]['file']]);
+});
+
+it('keeps a scheduled backup whose off-site copy failed and tells the owner', function (): void {
+    backupSourceDatabase();
+    Notification::fake();
+    FakeOffsiteStorage::connectRefusing('AccessDenied', 'Access Denied');
+    config()->set('site.backups_enabled', true);
+    config()->set('site.contact_email', 'owner@example.com');
+
+    $this->artisan(CreateBackupCommand::class, ['--scheduled' => true])
+        ->expectsOutputToContain('The off-site copy failed: AccessDenied: Access Denied')
+        ->assertExitCode(0);
+
+    expect(resolve(BackupService::class)->all())->toHaveCount(1);
+
+    $brand = resolve(SettingsService::class)->brandName();
+
+    Notification::assertSentOnDemand(BackupFailed::class, function (BackupFailed $notification, array $channels, AnonymousNotifiable $notifiable) use ($brand): bool {
+        $mail = $notification->toMail($notifiable);
+
+        return $notification->savedLocally
+            && $mail->subject === "The off-site copy of the {$brand} backup failed"
+            && in_array("The automatic backup of {$brand} was saved on the server, but copying it off-site failed.", $mail->introLines, true)
+            && $notification->toSlackWebhook()['text'] === "The off-site copy of the {$brand} backup failed";
+    });
+});
+
+it('sends no alert when the off-site copy of a manual command-line backup fails', function (): void {
+    backupSourceDatabase();
+    Notification::fake();
+    FakeOffsiteStorage::connectRefusing();
+    config()->set('site.contact_email', 'owner@example.com');
+
+    $this->artisan(CreateBackupCommand::class)
+        ->expectsOutputToContain('The off-site copy failed')
+        ->assertExitCode(0);
+
+    Notification::assertNothingSent();
 });

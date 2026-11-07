@@ -22,6 +22,7 @@
         "laravel/framework": "^13.40.0",
         "laravel/mcp": "^1.1.2",
         "laravel/nightwatch": "^1.30.6",
+        "league/flysystem-aws-s3-v3": "^3.35.3",
         "league/html-to-markdown": "^5.2.3",
         "livewire/blaze": "^1.0.21",
         "livewire/flux": "^2.21.0",
@@ -78,7 +79,8 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "pre-autoload-dump": [
-            "@php -r \"is_dir('database') || mkdir('database', 0755, true); file_exists('database/database.sqlite') || touch('database/database.sqlite');\""
+            "@php -r \"is_dir('database') || mkdir('database', 0755, true); file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "Aws\\Script\\Composer\\Composer::removeUnusedServices"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -128,6 +130,9 @@
         ]
     },
     "extra": {
+        "aws/aws-sdk-php": [
+            "S3"
+        ],
         "laravel": {
             "dont-discover": [
                 "laravel/nightwatch",

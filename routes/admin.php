@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\BackupDownloadController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\MediaFileController;
+use App\Http\Controllers\OffsiteBackupDownloadController;
 use Illuminate\Support\Facades\Route;
 
 Route::livewire('/', 'pages::admin.dashboard')->name('dashboard');
@@ -85,4 +86,8 @@ Route::middleware('can:settings.view')->group(function (): void {
         ->where('file', '[A-Za-z0-9._-]+')
         ->middleware('can:settings.edit')
         ->name('backups-download');
+    Route::get('settings/backups/offsite/{file}', OffsiteBackupDownloadController::class)
+        ->where('file', '[A-Za-z0-9._-]+')
+        ->middleware('can:settings.edit')
+        ->name('backups-offsite-download');
 });

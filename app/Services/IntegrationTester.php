@@ -19,7 +19,7 @@ use function Illuminate\Support\php_binary;
 
 final readonly class IntegrationTester
 {
-    public function __construct(private SettingsService $settings, private NewsletterService $newsletter, private HubInterface $sentry) {}
+    public function __construct(private SettingsService $settings, private NewsletterService $newsletter, private HubInterface $sentry, private OffsiteBackupService $offsite) {}
 
     public function slack(string $webhookUrl): IntegrationTestResult
     {
@@ -56,6 +56,26 @@ final readonly class IntegrationTester
         }
 
         return IntegrationTestResult::passed(__('Cloudflare accepted the secret key.'));
+    }
+
+    /**
+     * @param  array<string, mixed>  $settings
+     */
+    public function offsiteBackups(array $settings): IntegrationTestResult
+    {
+        $folder = $this->offsite->folder($settings);
+        $probe = mb_ltrim($folder.'/.wire-up-connection-test', '/');
+
+        try {
+            $disk = $this->offsite->disk($settings);
+            $disk->put($probe, 'Wire Up connection test');
+            $disk->files($folder);
+            $disk->delete($probe);
+        } catch (Throwable $exception) {
+            return IntegrationTestResult::failed(__('The storage refused the test: :reason', ['reason' => OffsiteBackupService::reason($exception)]));
+        }
+
+        return IntegrationTestResult::passed(__('Connected. Backups will be copied to :location.', ['location' => $this->offsite->location($settings)]));
     }
 
     public function newsletter(string $provider, string $apiKey, string $listId): IntegrationTestResult

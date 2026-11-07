@@ -113,22 +113,30 @@ final readonly class BackupService
 
         return collect(File::files($this->directory()))
             ->map(function (SplFileInfo $file): ?array {
-                $name = $file->getFilename();
+                $described = $this->describe($file->getFilename());
 
-                if (preg_match(self::ARCHIVE_PATTERN, $name, $match) === 1) {
-                    return ['file' => $name, 'kind' => $match[2], 'bytes' => (int) $file->getSize(), 'created_at' => CarbonImmutable::createFromFormat('Y-m-d-His', $match[1]) ?: CarbonImmutable::now()];
-                }
-
-                if (preg_match(self::UPDATE_PATTERN, $name, $match) === 1) {
-                    return ['file' => $name, 'kind' => self::BEFORE_UPDATE, 'bytes' => (int) $file->getSize(), 'created_at' => CarbonImmutable::createFromFormat('Y-m-d-His', $match[1]) ?: CarbonImmutable::now()];
-                }
-
-                return null;
+                return $described === null ? null : ['file' => $file->getFilename(), 'kind' => $described['kind'], 'bytes' => (int) $file->getSize(), 'created_at' => $described['created_at']];
             })
             ->filter()
             ->sortByDesc(fn (array $backup): string => $backup['created_at']->toIso8601String().$backup['file'])
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array{kind: string, created_at: CarbonImmutable}|null
+     */
+    public function describe(string $name): ?array
+    {
+        if (preg_match(self::ARCHIVE_PATTERN, $name, $match) === 1) {
+            return ['kind' => $match[2], 'created_at' => CarbonImmutable::createFromFormat('Y-m-d-His', $match[1]) ?: CarbonImmutable::now()];
+        }
+
+        if (preg_match(self::UPDATE_PATTERN, $name, $match) === 1) {
+            return ['kind' => self::BEFORE_UPDATE, 'created_at' => CarbonImmutable::createFromFormat('Y-m-d-His', $match[1]) ?: CarbonImmutable::now()];
+        }
+
+        return null;
     }
 
     public function find(string $file): ?string

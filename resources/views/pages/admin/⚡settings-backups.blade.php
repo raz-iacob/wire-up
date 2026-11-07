@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Actions\UpdateSettingsAction;
 use App\Enums\ActivityEvent;
+use App\Jobs\CopyBackupOffsite;
 use App\Jobs\RunBackup;
 use App\Services\ActivityLog;
 use App\Services\BackupService;
+use App\Services\OffsiteBackupService;
 use App\Services\SettingsService;
 use Carbon\CarbonImmutable;
 use Flux\Flux;
@@ -25,6 +27,8 @@ return new class extends Component
 
     public bool $includeFiles = true;
 
+    public int $offsiteKeep = 14;
+
     public ?string $deleteFile = null;
 
     public function mount(): void
@@ -35,6 +39,81 @@ return new class extends Component
         $this->frequency = $settings->backupFrequency();
         $this->keep = $settings->backupsToKeep();
         $this->includeFiles = $settings->backupIncludesFiles();
+        $this->offsiteKeep = $settings->offsiteBackupsToKeep();
+    }
+
+    #[Computed]
+    public function offsiteConnected(): bool
+    {
+        return resolve(OffsiteBackupService::class)->configured();
+    }
+
+    /**
+     * @return list<array{file: string, kind: string, bytes: int, created_at: CarbonImmutable}>|null
+     */
+    #[Computed]
+    public function offsiteFiles(): ?array
+    {
+        return resolve(OffsiteBackupService::class)->files();
+    }
+
+    /**
+     * @return list<array{file: string, kind: string, bytes: int, created_at: CarbonImmutable, local: bool, offsite: bool}>
+     */
+    #[Computed]
+    public function rows(): array
+    {
+        $offsite = [];
+
+        foreach ($this->offsiteFiles() ?? [] as $backup) {
+            $offsite[$backup['file']] = $backup;
+        }
+
+        $rows = [];
+
+        foreach (resolve(BackupService::class)->all() as $backup) {
+            $rows[] = [...$backup, 'local' => true, 'offsite' => isset($offsite[$backup['file']])];
+            unset($offsite[$backup['file']]);
+        }
+
+        foreach ($offsite as $backup) {
+            $rows[] = [...$backup, 'local' => false, 'offsite' => true];
+        }
+
+        usort($rows, fn (array $a, array $b): int => strcmp($b['created_at']->toIso8601String().$b['file'], $a['created_at']->toIso8601String().$a['file']));
+
+        return $rows;
+    }
+
+    /**
+     * @return array{status: string, file: ?string, output: ?string}|null
+     */
+    public function offsiteState(): ?array
+    {
+        return resolve(OffsiteBackupService::class)->state();
+    }
+
+    public function retryOffsite(): void
+    {
+        $this->authorize('settings.edit');
+
+        $offsite = resolve(OffsiteBackupService::class);
+        $file = $offsite->state()['file'] ?? null;
+
+        if ($file === null) {
+            return;
+        }
+
+        $offsite->markCopying($file);
+
+        dispatch(new CopyBackupOffsite($file));
+    }
+
+    public function dismissOffsite(): void
+    {
+        $this->authorize('settings.edit');
+
+        resolve(OffsiteBackupService::class)->clearState();
     }
 
     /**
@@ -74,9 +153,11 @@ return new class extends Component
             'frequency' => ['required', 'in:daily,weekly'],
             'keep' => ['required', 'integer', 'min:1', 'max:30'],
             'includeFiles' => ['boolean'],
+            'offsiteKeep' => ['required', 'integer', 'min:1', 'max:100'],
         ], [], [
             'frequency' => __('how often'),
             'keep' => __('backups to keep'),
+            'offsiteKeep' => __('off-site copies to keep'),
         ]);
 
         $action->handle([
@@ -84,6 +165,7 @@ return new class extends Component
             'backup_frequency' => $validated['frequency'],
             'backups_to_keep' => $validated['keep'],
             'backup_include_files' => $validated['includeFiles'],
+            'offsite_backups_to_keep' => $validated['offsiteKeep'],
         ]);
 
         Flux::toast(__('Backup settings saved.'), variant: 'success');
@@ -108,7 +190,7 @@ return new class extends Component
 
     public function refreshState(): void
     {
-        unset($this->backups);
+        unset($this->backups, $this->offsiteFiles, $this->rows);
     }
 
     public function dismissState(): void
@@ -138,7 +220,7 @@ return new class extends Component
         }
 
         $this->deleteFile = null;
-        unset($this->backups);
+        unset($this->backups, $this->rows);
 
         Flux::modal('delete-backup')->close();
 
@@ -187,6 +269,24 @@ return new class extends Component
                         :label="__('Include uploaded files')"
                         :description="__('Images, videos and documents from the media library.')"
                     />
+                @endif
+
+                @if ($this->offsiteConnected)
+                    <flux:input
+                        type="number"
+                        min="1"
+                        max="100"
+                        wire:model="offsiteKeep"
+                        :label="__('Off-site copies to keep')"
+                        :description="__('Every backup is also copied to :location.', ['location' => resolve(\App\Services\OffsiteBackupService::class)->location()])"
+                        class="sm:max-w-xs"
+                    />
+                @else
+                    <flux:text>
+                        {{ __('Keep a copy off this server in case it is lost:') }}
+                        <flux:link :href="route('admin.settings-integrations')" wire:navigate>
+                            {{ __('connect off-site backups') }}</flux:link>
+                    </flux:text>
                 @endif
 
                 <flux:text>{{ $this->diskSummary() }}</flux:text>
@@ -250,7 +350,41 @@ return new class extends Component
                     </flux:callout>
                 @endif
 
-                @if ($this->backups === [])
+                @php($offsiteState = $this->offsiteState())
+
+                @if ($offsiteState !== null && $offsiteState['status'] === 'copying')
+                    <div wire:poll.3s="refreshState">
+                        <flux:callout icon="cloud-arrow-up" variant="secondary">
+                            <flux:callout.heading>
+                                {{ __('Copying :file off-site…', ['file' => $offsiteState['file']]) }}</flux:callout.heading>
+                        </flux:callout>
+                    </div>
+                @elseif ($offsiteState !== null)
+                    <flux:callout icon="exclamation-triangle" variant="danger">
+                        <flux:callout.heading>
+                            {{ __('Copying :file off-site failed', ['file' => $offsiteState['file']]) }}</flux:callout.heading>
+                        <flux:callout.text>
+                            @if ($offsiteState['output'] !== null && $offsiteState['output'] !== '')
+                                <pre class="mt-3 max-h-64 overflow-auto rounded-lg bg-zinc-900 p-3 text-xs whitespace-pre-wrap text-zinc-100">{{ $offsiteState['output'] }}</pre>
+                            @endif
+                            @can('settings.edit')
+                                <div class="mt-3 flex gap-2">
+                                    <flux:button size="sm" variant="filled" wire:click="retryOffsite">
+                                        {{ __('Try again') }}</flux:button>
+                                    <flux:button size="sm" variant="ghost" wire:click="dismissOffsite">
+                                        {{ __('Dismiss') }}</flux:button>
+                                </div>
+                            @endcan
+                        </flux:callout.text>
+                    </flux:callout>
+                @endif
+
+                @if ($this->offsiteConnected && $this->offsiteFiles === null)
+                    <flux:text variant="subtle">
+                        {{ __('Off-site storage could not be reached, so off-site copies are not shown.') }}</flux:text>
+                @endif
+
+                @if ($this->rows === [])
                     <flux:text variant="subtle">{{ __('No backups yet.') }}</flux:text>
                 @else
                     <flux:table>
@@ -262,7 +396,7 @@ return new class extends Component
                         </flux:table.columns>
 
                         <flux:table.rows>
-                            @foreach ($this->backups as $backup)
+                            @foreach ($this->rows as $backup)
                                 <flux:table.row wire:key="backup-{{ $backup['file'] }}">
                                     <flux:table.cell class="whitespace-nowrap">
                                         {{ $backup['created_at']->translatedFormat('M j, Y H:i') }}</flux:table.cell>
@@ -278,6 +412,21 @@ return new class extends Component
                                                     default => __('Before update'),
                                                 }
                                             }}</flux:badge>
+                                        @if (! $backup['local'])
+                                            <flux:text
+                                                size="sm"
+                                                class="ms-2 inline"
+                                            >{{ __('Off-site only') }}</flux:text>
+                                        @elseif ($backup['offsite'])
+                                            <flux:tooltip :content="__('Also copied off-site')">
+                                                <flux:icon
+                                                    name="cloud"
+                                                    variant="micro"
+                                                    class="ms-2 inline text-zinc-400"
+                                                    aria-label="{{ __('Also copied off-site') }}"
+                                                />
+                                            </flux:tooltip>
+                                        @endif
                                     </flux:table.cell>
                                     <flux:table.cell align="end" class="whitespace-nowrap tabular-nums">
                                         {{ \Illuminate\Support\Number::fileSize($backup['bytes'], precision: 1) }}</flux:table.cell>
@@ -293,10 +442,10 @@ return new class extends Component
                                                 <flux:menu>
                                                     <flux:menu.item
                                                         icon="arrow-down-tray"
-                                                        href="{{ route('admin.backups-download', ['file' => $backup['file']]) }}"
+                                                        href="{{ $backup['local'] ? route('admin.backups-download', ['file' => $backup['file']]) : route('admin.backups-offsite-download', ['file' => $backup['file']]) }}"
                                                     >
                                                         {{ __('Download') }}</flux:menu.item>
-                                                    @if ($backup['kind'] !== 'update')
+                                                    @if ($backup['local'] && $backup['kind'] !== 'update')
                                                         <flux:menu.separator />
                                                         <flux:menu.item
                                                             icon="trash"
@@ -318,6 +467,10 @@ return new class extends Component
                 <flux:text variant="subtle">
                     {{ __('To restore a backup, run on the server:') }}
                     <code class="text-xs">{{ 'php artisan wireup:backup:restore <file>' }}</code>
+                    @if ($this->offsiteConnected)
+                        {{ __('For a copy that is only off-site, run this first:') }}
+                        <code class="text-xs">{{ 'php artisan wireup:backup:fetch <file>' }}</code>
+                    @endif
                 </flux:text>
             </div>
         </div>

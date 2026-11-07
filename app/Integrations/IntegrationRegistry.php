@@ -33,6 +33,7 @@ final class IntegrationRegistry
             new Newsletter,
             new Assistant,
             new Mail,
+            new OffsiteBackups,
             new ErrorReports,
             new Sentry,
             new Nightwatch,

@@ -12,6 +12,7 @@ use App\Integrations\IntegrationRegistry;
 use App\Integrations\Mail;
 use App\Integrations\Newsletter;
 use App\Integrations\Nightwatch;
+use App\Integrations\OffsiteBackups;
 use App\Integrations\Pexels;
 use App\Integrations\Sentry;
 use App\Integrations\Slack;
@@ -22,7 +23,7 @@ it('encrypts exactly the credential settings', function (): void {
     expect(IntegrationRegistry::secretKeys())->toEqualCanonicalizing([
         'pexels_api_key', 'google_analytics_credentials', 'google_maps_api_key', 'slack_webhook_url', 'ai_api_key',
         'mail_password', 'stripe_secret_key', 'stripe_webhook_secret', 'error_report_slack_webhook_url',
-        'turnstile_secret_key', 'newsletter_api_key', 'sentry_dsn', 'nightwatch_token',
+        'turnstile_secret_key', 'newsletter_api_key', 'sentry_dsn', 'nightwatch_token', 'offsite_secret_key',
     ]);
 });
 
@@ -34,7 +35,8 @@ it('leaves every credential and install-specific setting out of site exports', f
         'stripe_webhook_secret', 'stripe_webhook_endpoint_id', 'error_report_email', 'error_report_slack_webhook_url',
         'turnstile_site_key', 'turnstile_secret_key', 'newsletter_provider', 'newsletter_api_key', 'newsletter_list_id',
         'newsletter_double_opt_in', 'sentry_dsn', 'sentry_traces_sample_rate', 'nightwatch_token',
-        'nightwatch_ingest_uri', 'nightwatch_request_sample_rate',
+        'nightwatch_ingest_uri', 'nightwatch_request_sample_rate', 'offsite_endpoint', 'offsite_region',
+        'offsite_bucket', 'offsite_folder', 'offsite_access_key', 'offsite_secret_key',
     ])->and(array_diff(IntegrationRegistry::secretKeys(), IntegrationRegistry::unexportedKeys()))->toBeEmpty();
 });
 
@@ -51,6 +53,7 @@ it('shows a saved secret only as a hint', function (Integration $integration, st
     'error report webhook' => [new ErrorReports, 'error_report_slack_webhook_url', 'https://hooks.slack.com/services/T0/B0/wxyz', 'https://hooks.slack.com/services/…wxyz'],
     'sentry dsn' => [new Sentry, 'sentry_dsn', 'https://key@o1.ingest.sentry.io/1', 'https://…@o1.ingest.sentry.io/1'],
     'nightwatch token' => [new Nightwatch, 'nightwatch_token', 'token-4321', '…4321'],
+    'off-site secret key' => [new OffsiteBackups, 'offsite_secret_key', 'off-site-secret-2468', '…2468'],
 ]);
 
 it('counts an integration as connected once its key settings are saved', function (CardIntegration $integration, array $saved): void {
@@ -66,6 +69,7 @@ it('counts an integration as connected once its key settings are saved', functio
     'newsletter' => [new Newsletter, ['newsletter_provider' => 'kit', 'newsletter_api_key' => 'key']],
     'assistant' => [new Assistant, ['ai_api_key' => 'sk-ant-1']],
     'mail' => [new Mail, ['mail_password' => 'secret']],
+    'off-site backups' => [new OffsiteBackups, ['offsite_bucket' => 'backups', 'offsite_access_key' => 'key', 'offsite_secret_key' => 'secret']],
 ]);
 
 it('needs a known newsletter service before counting it as connected', function (): void {
