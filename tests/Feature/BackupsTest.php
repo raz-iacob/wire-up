@@ -239,14 +239,17 @@ it('lists backups newest first and only hands out real backup files', function (
     File::put("{$directory}/backup-2026-01-02-030000-automatic.zip", 'aa');
     File::put("{$directory}/backup-2026-01-03-120000-manual.zip", 'bbb');
     File::put("{$directory}/db-backup-2026-01-01-000000.sqlite", 'c');
+    File::put("{$directory}/db-backup-2025-12-31-230000-before-v0.8.0.sqlite", 'dddd');
     File::put("{$directory}/notes.txt", 'ignored');
 
     expect($backups->all())->toMatchArray([
         ['file' => 'backup-2026-01-03-120000-manual.zip', 'kind' => 'manual', 'bytes' => 3, 'created_at' => CarbonImmutable::parse('2026-01-03 12:00:00')],
         ['file' => 'backup-2026-01-02-030000-automatic.zip', 'kind' => 'automatic', 'bytes' => 2, 'created_at' => CarbonImmutable::parse('2026-01-02 03:00:00')],
         ['file' => 'db-backup-2026-01-01-000000.sqlite', 'kind' => 'update', 'bytes' => 1, 'created_at' => CarbonImmutable::parse('2026-01-01 00:00:00')],
+        ['file' => 'db-backup-2025-12-31-230000-before-v0.8.0.sqlite', 'kind' => 'update', 'bytes' => 4, 'created_at' => CarbonImmutable::parse('2025-12-31 23:00:00')],
     ])
-        ->and($backups->totalBytes())->toBe(6)
+        ->and($backups->totalBytes())->toBe(10)
+        ->and($backups->find('db-backup-2025-12-31-230000-before-v0.8.0.sqlite'))->toBe("{$directory}/db-backup-2025-12-31-230000-before-v0.8.0.sqlite")
         ->and($backups->lastAutomatic()?->toDateTimeString())->toBe('2026-01-02 03:00:00')
         ->and($backups->find('notes.txt'))->toBeNull()
         ->and($backups->find('../backup-2026-01-02-030000-automatic.zip'))->toBeNull()

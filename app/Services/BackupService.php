@@ -25,7 +25,7 @@ final readonly class BackupService
 
     private const string ARCHIVE_PATTERN = '/^backup-(\d{4}-\d{2}-\d{2}-\d{6})-(automatic|manual)\.zip$/';
 
-    private const string UPDATE_PATTERN = '/^db-backup-(\d{4}-\d{2}-\d{2}-\d{6})\.(sql|sqlite)$/';
+    private const string UPDATE_PATTERN = '/^db-backup-(\d{4}-\d{2}-\d{2}-\d{6})(?:-before-v[\w.-]+)?\.(sql|sqlite)$/';
 
     private const string CACHE_STATE = 'wireup:backup:state';
 
